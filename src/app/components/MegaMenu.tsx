@@ -1,4 +1,5 @@
-import { Facebook, Twitter, Instagram, Linkedin, Mail, Phone, MapPin, ExternalLink } from 'lucide-react';
+import { Mail, Phone, MapPin, ExternalLink } from 'lucide-react';
+import { SiFacebook, SiX, SiInstagram, SiLinkedin } from 'react-icons/si';
 
 interface MegaMenuProps {
   isOpen: boolean;
@@ -6,34 +7,33 @@ interface MegaMenuProps {
 
 export function MegaMenu({ isOpen }: MegaMenuProps) {
   const navigation = [
-    { label: 'Communities', href: '#communities' },
-    { label: 'Events', href: '#events' },
-    { label: 'Careers', href: '#careers' },
-    { label: 'Bulletin', href: '#bulletin' },
-    { label: 'About', href: '#about' },
+    { label: 'Alumni Directory', href: '/directory' },
+    { label: 'Events', href: '/events' },
+    { label: 'Bulletin', href: 'https://www.facebook.com/usjr.official' },
+    { label: 'About', href: '/about' },
   ];
 
   const resources = [
-    { label: 'Alumni Directory', href: '#directory' },
-    { label: 'Mentorship Program', href: '#mentorship' },
-    { label: 'Benefits & Services', href: '#benefits' },
-    { label: 'Career Resources', href: '#career-resources' },
-    { label: 'Alumni Chapters', href: '#chapters' },
-    { label: 'Contact Us', href: '#contact' },
+    { label: 'Alumni Directory', href: '/directory' },
+    { label: 'Mentorship Program', href: '/mentorship' },
+    { label: 'Benefits & Services', href: '/benefits' },
+    { label: 'Career Resources', href: '/career-resources' },
+    { label: 'Alumni Chapters', href: '/chapters' },
+    { label: 'Contact Us', href: '/contact' },
   ];
 
   const socialLinks = [
-    { icon: Facebook, label: 'Facebook', href: '#', color: 'hover:bg-blue-600' },
-    { icon: Twitter, label: 'Twitter', href: '#', color: 'hover:bg-blue-400' },
-    { icon: Instagram, label: 'Instagram', href: '#', color: 'hover:bg-pink-600' },
-    { icon: Linkedin, label: 'LinkedIn', href: '#', color: 'hover:bg-blue-700' },
+    { icon: SiFacebook, label: 'Facebook', href: '#', color: 'hover:bg-blue-600' },
+    { icon: SiX, label: 'X (formerly Twitter)', href: '#', color: 'hover:bg-black' },
+    { icon: SiInstagram, label: 'Instagram', href: '#', color: 'hover:bg-pink-600' },
+    { icon: SiLinkedin, label: 'LinkedIn', href: '#', color: 'hover:bg-blue-700' },
   ];
 
   if (!isOpen) return null;
 
   return (
     <div className="fixed top-[60px] left-0 right-0 bg-white shadow-xl z-40 max-h-[calc(100vh-60px)] overflow-y-auto">
-      <div className="max-w-7xl mx-auto px-4 md:px-8 py-8">
+      <div className="max-w-6xl mx-auto px-4 md:px-8 py-8">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {/* Main Navigation */}
           <div>
@@ -65,24 +65,6 @@ export function MegaMenu({ isOpen }: MegaMenuProps) {
           {/* Resources */}
           <div>
             <h3 className="text-[#1a5f3f] font-bold text-lg mb-4 uppercase tracking-wide">
-              Resources
-            </h3>
-            <div className="grid grid-cols-1 gap-3">
-              {resources.map((link) => (
-                <a
-                  key={link.label}
-                  href={link.href}
-                  className="text-gray-700 hover:text-[#1a5f3f] transition-colors"
-                >
-                  {link.label}
-                </a>
-              ))}
-            </div>
-          </div>
-
-          {/* Follow Us & Contact */}
-          <div>
-            <h3 className="text-[#1a5f3f] font-bold text-lg mb-4 uppercase tracking-wide">
               Follow Us
             </h3>
             <div className="grid grid-cols-2 gap-3 mb-8">
@@ -99,7 +81,10 @@ export function MegaMenu({ isOpen }: MegaMenuProps) {
                 </a>
               ))}
             </div>
+          </div>
 
+          {/* Follow Us & Contact */}
+          <div>
             <div className="bg-gray-50 p-4 rounded-lg">
               <h4 className="text-[#1a5f3f] font-bold mb-3 uppercase tracking-wide text-sm">
                 Contact

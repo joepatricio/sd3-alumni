@@ -26,22 +26,6 @@ export function CallToAction() {
       color: "bg-[#2d7a4f]",
     },
     {
-      icon: Heart,
-      title: "Support USJR",
-      description:
-        "Make a difference by contributing to scholarships and campus development.",
-      link: "#donate",
-      color: "bg-[#c19b2a]",
-    },
-    {
-      icon: Users,
-      title: "Join Communities",
-      description:
-        "Connect with alumni who share your interests, profession, or location.",
-      link: "#communities",
-      color: "bg-[#3a8f63]",
-    },
-    {
       icon: BookOpen,
       title: "Alumni Directory",
       description:
@@ -50,29 +34,29 @@ export function CallToAction() {
       color: "bg-[#4aa573]",
     },
     {
-      icon: Briefcase,
-      title: "Career Resources",
+      icon: Heart,
+      title: "Support USJR",
       description:
-        "Access job postings, mentorship programs, and professional development.",
-      link: "#careers",
-      color: "bg-[#d4af37]",
+        "Make a difference by contributing to scholarships and campus development.",
+      link: "#donate",
+      color: "bg-[#c19b2a]",
     },
   ];
 
   return (
     <section className="py-16 bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 md:px-8">
+      <div className="max-w-6xl mx-auto px-4 md:px-8">
         <div className="text-center mb-12">
           <h2 className="text-3xl md:text-4xl font-bold mb-4">
             Get Involved
           </h2>
-          <p className="text-gray-600 text-lg max-w-2xl mx-auto">
+          <p className="text-gray-600 text-lg max-w-3xl mx-auto">
             Discover ways to stay connected, give back, and grow
             with the USJR Alumni community.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-4 gap-6">
           {ctaCards.map((card) => (
             <a
               key={card.title}

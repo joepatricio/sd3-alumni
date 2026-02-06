@@ -1,5 +1,7 @@
 import { User, Menu, X, ExternalLink } from "lucide-react";
 import { useState } from "react";
+import usjrFavi from "@/assets/usjr-white.png";
+import alumniLogo from "@/assets/alumni-logo.jpg";
 
 interface TopBarProps {
   isMenuOpen: boolean;
@@ -14,7 +16,7 @@ export function TopBar({
 
   return (
     <div className="bg-[#1a5f3f] text-white py-3 px-4 md:px-8 fixed top-0 left-0 right-0 z-50 shadow-md">
-      <div className="max-w-7xl mx-auto flex justify-between items-center">
+      <div className="max-w-6xl mx-auto flex justify-between items-center">
         <div className="flex items-center gap-4">
           {/* Hamburger Menu */}
           <button
@@ -30,11 +32,13 @@ export function TopBar({
           </button>
 
           {/* Logo */}
-          <a href="" className="favi-alum">
+          <a href="/" className="favi-alum">
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-[#d4af37] rounded flex items-center justify-center font-bold text-[#1a5f3f]">
-                U
-              </div>
+              <img
+                src={alumniLogo}
+                alt="Alumni"
+                className="h-8 w-8 object-contain rounded"
+              />
               <span className="font-semibold hidden sm:inline">
                 USJR Alumni
               </span>
@@ -43,14 +47,6 @@ export function TopBar({
         </div>
 
         <div className="flex items-center gap-4">
-          {/* Alumni Directory */}
-          <a
-            href="#directory"
-            className="hover:text-[#d4af37] transition-colors text-sm md:text-base"
-          >
-            Alumni Directory
-          </a>
-
           {/* Login/Profile */}
           <button
             onClick={() => setIsLoggedIn(!isLoggedIn)}
@@ -61,21 +57,6 @@ export function TopBar({
               {isLoggedIn ? "Profile" : "Login"}
             </span>
           </button>
-
-          {/* USJR Website Link */}
-          <a
-            href="https://usjr.edu.ph/"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="hover:opacity-80 transition-opacity"
-            title="Visit USJR Website"
-          >
-            <img
-              src="/images/usjr-logo.png"
-              alt="USJR"
-              className="h-8 w-8 object-contain"
-            />
-          </a>
         </div>
       </div>
     </div>
