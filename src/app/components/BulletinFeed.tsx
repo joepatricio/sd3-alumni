@@ -87,7 +87,7 @@ export function BulletinFeed() {
             </p>
           </div>
           <a
-            href="#all-bulletins"
+            href="https://www.facebook.com/usjr.official"
             className="text-[#1a5f3f] hover:text-[#2d7a4f] font-semibold hidden sm:block"
           >
             View All →
@@ -103,7 +103,7 @@ export function BulletinFeed() {
                 alt={bulletins[0].title}
                 className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
               />
-              <span className="absolute top-4 left-4 bg-[#d4af37] text-white px-3 py-1 rounded-full text-sm font-semibold">
+              <span className="absolute top-4 left-4 bg-[#1a5f3f] text-white px-3 py-1 rounded-full text-sm font-semibold">
                 Featured
               </span>
             </div>
@@ -177,7 +177,7 @@ export function BulletinFeed() {
 
         <div className="text-center mt-8 sm:hidden">
           <a
-            href="#all-bulletins"
+            href="https://www.facebook.com/usjr.official"
             className="text-[#1a5f3f] hover:text-[#2d7a4f] font-semibold"
           >
             View All Bulletins →

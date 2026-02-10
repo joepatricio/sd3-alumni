@@ -55,7 +55,7 @@ export function EventsFeed() {
             </p>
           </div>
           <a
-            href="#all-events"
+            href="/events"
             className="text-[#1a5f3f] hover:text-[#2d7a4f] font-semibold hidden sm:block"
           >
             View All →
@@ -104,7 +104,7 @@ export function EventsFeed() {
 
         <div className="text-center mt-8 sm:hidden">
           <a
-            href="#all-events"
+            href="/events"
             className="text-[#1a5f3f] hover:text-[#2d7a4f] font-semibold"
           >
             View All Events →

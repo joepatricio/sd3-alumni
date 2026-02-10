@@ -9,17 +9,8 @@ export function MegaMenu({ isOpen }: MegaMenuProps) {
   const navigation = [
     { label: 'Alumni Directory', href: '/directory' },
     { label: 'Events', href: '/events' },
-    { label: 'Bulletin', href: 'https://www.facebook.com/usjr.official' },
+    { label: 'Bulletin', href: '/bulletin' },
     { label: 'About', href: '/about' },
-  ];
-
-  const resources = [
-    { label: 'Alumni Directory', href: '/directory' },
-    { label: 'Mentorship Program', href: '/mentorship' },
-    { label: 'Benefits & Services', href: '/benefits' },
-    { label: 'Career Resources', href: '/career-resources' },
-    { label: 'Alumni Chapters', href: '/chapters' },
-    { label: 'Contact Us', href: '/contact' },
   ];
 
   const socialLinks = [

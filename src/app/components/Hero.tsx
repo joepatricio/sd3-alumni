@@ -17,18 +17,17 @@ export function Hero() {
             USJR Alumni Association
           </h1>
           <p className="text-lg md:text-xl mb-8 text-gray-100">
-            Connect with fellow Josenians worldwide. Build lasting relationships,
-            advance your career, and give back to the community that shaped your future.
+            Build lasting relationships, advance your career, and give back to the community that shaped your future.
           </p>
           <div className="flex flex-wrap gap-4">
             <a
-              href="#join"
+              href="/login"
               className="bg-[#d4af37] text-white px-8 py-3 rounded-full hover:bg-[#c19b2a] transition-colors font-semibold"
             >
               Join the Community
             </a>
             <a
-              href="#about"
+              href="/about"
               className="bg-white text-[#1a5f3f] px-8 py-3 rounded-full hover:bg-gray-100 transition-colors font-semibold"
             >
               Learn More

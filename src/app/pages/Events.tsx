@@ -141,7 +141,7 @@ export function Events() {
                                         alt={event.title}
                                         className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
                                     />
-                                    <span className="absolute top-4 left-4 bg-[#d4af37] text-white px-3 py-1 rounded-full text-sm font-semibold">
+                                    <span className="absolute top-4 left-4 bg-[#1a5f3f] text-white px-3 py-1 rounded-full text-sm font-semibold">
                                         {event.category}
                                     </span>
                                 </div>

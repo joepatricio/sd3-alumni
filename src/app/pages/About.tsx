@@ -59,7 +59,7 @@ export function About() {
                 </section>
 
                 {/* Main Content */}
-                <section className="grid md:grid-cols-2 gap-12 items-start">
+                <section id="info" className="grid md:grid-cols-2 gap-12 items-start">
                     <div className="space-y-6 text-gray-700 leading-relaxed">
                         <p>
                             The Alumni Unit under the Public Affairs and
@@ -117,7 +117,7 @@ export function About() {
                 </section>
 
                 {/* Contact Section */}
-                <section className="bg-white rounded-xl shadow-sm border border-gray-100 p-8 md:p-12">
+                <section id="contact" className="bg-white rounded-xl shadow-sm border border-gray-100 p-8 md:p-12">
                     <div className="flex flex-col md:flex-row gap-8 justify-between items-start md:items-center">
                         <div>
                             <h2 className="text-2xl font-bold text-[#1a5f3f] mb-2">

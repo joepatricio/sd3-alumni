@@ -2,7 +2,7 @@ export function Navbar() {
   const navLinks = [
     { label: 'Alumni Directory', href: '/directory' },
     { label: 'Events', href: '/events' },
-    { label: 'Bulletin', href: 'https://www.facebook.com/usjr.official' },
+    { label: 'Bulletin', href: '/bulletin' },
     { label: 'About', href: '/about' },
   ];
 

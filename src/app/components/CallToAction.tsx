@@ -10,12 +10,20 @@ import {
 export function CallToAction() {
   const ctaCards = [
     {
+      icon: BookOpen,
+      title: "Alumni Directory",
+      description:
+        "Find and reconnect with classmates and fellow Josenians worldwide.",
+      link: "/directory",
+      color: "bg-[#1a5f3f]",
+    },
+    {
       icon: Calendar,
       title: "Upcoming Events",
       description:
         "Join alumni gatherings, networking sessions, and special celebrations.",
-      link: "#events",
-      color: "bg-[#1a5f3f]",
+      link: "/events",
+      color: "bg-[#2d7a4f]",
     },
     {
       icon: Newspaper,
@@ -23,14 +31,6 @@ export function CallToAction() {
       description:
         "Stay updated with news, achievements, and stories from fellow alumni.",
       link: "#bulletin",
-      color: "bg-[#2d7a4f]",
-    },
-    {
-      icon: BookOpen,
-      title: "Alumni Directory",
-      description:
-        "Find and reconnect with classmates and fellow Josenians worldwide.",
-      link: "#directory",
       color: "bg-[#4aa573]",
     },
     {
@@ -39,7 +39,7 @@ export function CallToAction() {
       description:
         "Make a difference by contributing to scholarships and campus development.",
       link: "#donate",
-      color: "bg-[#c19b2a]",
+      color: "bg-[#d4af37]",
     },
   ];
 
