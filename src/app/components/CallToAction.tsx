@@ -2,8 +2,6 @@ import {
   Calendar,
   Newspaper,
   Heart,
-  Users,
-  Briefcase,
   BookOpen,
 } from "lucide-react";
 
@@ -30,7 +28,7 @@ export function CallToAction() {
       title: "Latest Bulletin",
       description:
         "Stay updated with news, achievements, and stories from fellow alumni.",
-      link: "#bulletin",
+      link: "/bulletin",
       color: "bg-[#4aa573]",
     },
     {
@@ -38,7 +36,7 @@ export function CallToAction() {
       title: "Support USJR",
       description:
         "Make a difference by contributing to scholarships and campus development.",
-      link: "#donate",
+      link: "/donate",
       color: "bg-[#d4af37]",
     },
   ];

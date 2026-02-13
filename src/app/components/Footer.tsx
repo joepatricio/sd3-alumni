@@ -7,7 +7,7 @@ export function Footer() {
     'Quick Links': [
       { label: 'Alumni Directory', href: '/directory' },
       { label: 'Events', href: '/events' },
-      { label: 'Bulletin', href: 'https://www.facebook.com/usjr.official' },
+      { label: 'Bulletin', href: '/bulletin' },
       { label: 'About', href: '/about' },
     ],
   };
@@ -19,12 +19,14 @@ export function Footer() {
           {/* About Section */}
           <div>
             <div className="flex items-center gap-2 mb-4">
-              <img
-                src={alumniLogo}
-                alt="Alumni"
-                className="h-8 w-8 object-contain rounded"
-              />
-              <span className="font-bold text-[#1a5f3f] text-lg">USJR Alumni</span>
+              <a href="/" className="flex items-center gap-2">
+                <img
+                  src={alumniLogo}
+                  alt="Alumni"
+                  className="h-8 w-8 object-contain rounded"
+                />
+                <span className="font-bold text-[#1a5f3f] text-lg">USJR Alumni</span>
+              </a>
             </div>
             <p className="text-sm mb-4 text-gray-700">
               University of San Jose-Recoletos Alumni Association connects Josenians
@@ -32,25 +34,29 @@ export function Footer() {
             </p>
             <div className="flex gap-3">
               <a
-                href="#"
+                href="https://www.facebook.com/usjr.official"
+                target='_blank'
                 className="w-9 h-9 bg-white rounded-full flex items-center justify-center hover:bg-[#1a5f3f] hover:text-white text-[#1a5f3f] transition-colors shadow-sm"
               >
                 <SiFacebook className="w-4 h-4" />
               </a>
               <a
-                href="#"
+                href="https://x.com/USJR_official"
+                target='_blank'
                 className="w-9 h-9 bg-white rounded-full flex items-center justify-center hover:bg-[#1a5f3f] hover:text-white text-[#1a5f3f] transition-colors shadow-sm"
               >
                 <SiX className="w-4 h-4" />
               </a>
               <a
-                href="#"
+                href="https://www.instagram.com/usjr_official/"
+                target='_blank'
                 className="w-9 h-9 bg-white rounded-full flex items-center justify-center hover:bg-[#1a5f3f] hover:text-white text-[#1a5f3f] transition-colors shadow-sm"
               >
                 <SiInstagram className="w-4 h-4" />
               </a>
               <a
-                href="#"
+                href="https://www.linkedin.com/school/usjrofficial/"
+                target='_blank'
                 className="w-9 h-9 bg-white rounded-full flex items-center justify-center hover:bg-[#1a5f3f] hover:text-white text-[#1a5f3f] transition-colors shadow-sm"
               >
                 <SiLinkedin className="w-4 h-4" />
@@ -103,11 +109,11 @@ export function Footer() {
           {/* Donate */}
           <div>
             <h3 className="text-[#1a5f3f] font-semibold mb-4">Donate</h3>
-            <p className="text-sm mb-4 text-gray-700">
+            <p className="text-sm mb-6 text-gray-700 w-2/3 md:w-full">
               Support the USJR Alumni Association through donations.
             </p>
             <a
-              href="#donate"
+              href="/donate"
               className="bg-[#d4af37] text-white px-6 py-2 rounded-full hover:bg-[#c19b2a] transition-colors font-semibold"
             >
               Donate

@@ -1,14 +1,17 @@
+// Create dialogue boxes for the Create Bulletin and the Create Events bulletin. Refer to the respective webpage for the required and optional fields. Additionally, create a popup to confirm that the entry has been "successfully created." For now, the create function does not need to actually create an entry in their corresponding feeds.
+
+
+
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
     Plus,
     List,
     LayoutGrid,
-    Calendar,
     Filter,
-    User,
     Clock,
 } from 'lucide-react';
+import { CreateBulletinModal } from '@/app/components/CreateBulletinModal';
 
 type ViewMode = 'headline' | 'article';
 
@@ -125,7 +128,7 @@ export function Bulletin() {
     return (
         <div className="min-h-screen bg-gray-50">
             {/* Header */}
-            <div className="bg-white border-b border-gray-200">
+            <div className="">
                 <div className="max-w-6xl mx-auto px-4 md:px-8 py-8">
                     <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                         <div>
@@ -135,13 +138,16 @@ export function Bulletin() {
                                 USJR alumni community
                             </p>
                         </div>
-                        <Link
-                            to="/bulletin/create"
-                            className="flex items-center justify-center gap-2 bg-[#1a5f3f] text-white px-6 py-3 rounded-lg hover:bg-[#2d7a4f] transition-colors font-semibold"
-                        >
-                            <Plus className="w-5 h-5" />
-                            Create Bulletin
-                        </Link>
+                        <CreateBulletinModal
+                            trigger={
+                                <button
+                                    className="flex items-center justify-center gap-2 bg-[#1a5f3f] text-white px-6 py-3 rounded-lg hover:bg-[#2d7a4f] transition-colors font-semibold"
+                                >
+                                    <Plus className="w-5 h-5" />
+                                    Create Bulletin
+                                </button>
+                            }
+                        />
                     </div>
                 </div>
             </div>

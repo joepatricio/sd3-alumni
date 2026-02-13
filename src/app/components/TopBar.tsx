@@ -1,6 +1,5 @@
 import { User, Menu, X, ExternalLink } from "lucide-react";
 import { useState } from "react";
-import usjrFavi from "@/assets/usjr-white.png";
 import alumniLogo from "@/assets/alumni-logo.jpg";
 
 interface TopBarProps {

@@ -1,4 +1,6 @@
-import { Calendar, MapPin, Tag, Clock } from 'lucide-react';
+import { Calendar, MapPin, Clock } from 'lucide-react';
+import { Plus } from 'lucide-react';
+import { CreateEventModal } from '@/app/components/CreateEventModal';
 
 interface Event {
     id: number;
@@ -114,19 +116,35 @@ export function Events() {
     });
 
     return (
-        <div className="min-h-screen bg-white">
-            <div className="max-w-6xl mx-auto px-4 md:px-8 py-12">
+        <div className="min-h-screen bg-gray-50">
+            <div className="max-w-6xl mx-auto">
                 {/* Header */}
-                <div className="mb-12">
-                    <h1 className="text-4xl md:text-5xl font-bold mb-4">Alumni Events</h1>
-                    <p className="text-gray-600 text-lg">
-                        Connect, learn, and celebrate with fellow Josenians at our upcoming
-                        events
-                    </p>
+                <div>
+                    <div className="max-w-6xl mx-auto px-4 md:px-8 py-8">
+                        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                            <div>
+                                <h1 className="text-3xl font-bold mb-2">Upcoming Events</h1>
+                                <p className="text-gray-600">
+                                    Connect, learn, and celebrate with fellow Josenians at our upcoming
+                                    events
+                                </p>
+                            </div>
+                            <CreateEventModal
+                                trigger={
+                                    <button
+                                        className="flex items-center justify-center gap-2 bg-[#1a5f3f] text-white px-6 py-3 rounded-lg hover:bg-[#2d7a4f] transition-colors font-semibold"
+                                    >
+                                        <Plus className="w-5 h-5" />
+                                        Create Event
+                                    </button>
+                                }
+                            />
+                        </div>
+                    </div>
                 </div>
 
                 {/* Events List */}
-                <div className="space-y-6">
+                <div className="space-y-6 mb-6">
                     {filteredEvents.map((event) => (
                         <a
                             key={event.id}

@@ -80,7 +80,8 @@ export function Profile() {
                                     alt={userData.name}
                                     className="w-32 h-32 rounded-full border-4 border-white object-cover"
                                 />
-                                <div className="mb-2">
+                                {/* Profile Info */}
+                                <div className="gap-3 mt-4 md:mt-0">
                                     <h1 className="text-2xl font-bold">{userData.name}</h1>
                                     <p className="text-gray-600">
                                         Class of {userData.graduationYear}
@@ -89,7 +90,7 @@ export function Profile() {
                             </div>
 
                             {/* Action Buttons */}
-                            <div className="flex gap-3 mt-4 md:mt-0">
+                            <div className="flex gap-3 mt-4 md:mt-0 md:pb-2">
                                 <button
                                     onClick={() => setIsEditing(!isEditing)}
                                     className="flex items-center gap-2 px-4 py-2 bg-[#1a5f3f] text-white rounded-lg hover:bg-[#2d7a4f] transition-colors font-semibold"

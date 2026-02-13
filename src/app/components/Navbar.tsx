@@ -27,7 +27,7 @@ export function Navbar() {
           {/* Donate Button */}
           <div className="hidden lg:block ml-auto">
             <a
-              href="#donate"
+              href="/donate"
               className="bg-[#d4af37] text-white px-6 py-2 rounded-full hover:bg-[#c19b2a] transition-colors font-semibold"
             >
               Donate

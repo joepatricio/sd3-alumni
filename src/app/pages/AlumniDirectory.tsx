@@ -97,10 +97,10 @@ export function AlumniDirectory() {
             {/* Hero Section */}
             <div className="text-black py-20">
                 <div className="max-w-6xl mx-auto px-4 md:px-8 text-center">
-                    <h1 className="text-4xl md:text-5xl font-bold mb-4 text-[#1a5f3f]">
+                    <h1 className="text-5xl md:text-6xl font-bold mb-4 text-[#1a5f3f]">
                         Welcome to the home of
                     </h1>
-                    <h2 className="text-3xl md:text-4xl font-bold mb-8 text-[#d4af37]">
+                    <h2 className="text-4xl md:text-5xl font-bold mb-8 text-[#d4af37]">
                         15,234 alumna
                     </h2>
                     <p className="text-lg mb-12 text-gray-700 max-w-2xl mx-auto">

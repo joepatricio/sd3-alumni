@@ -14,10 +14,10 @@ export function MegaMenu({ isOpen }: MegaMenuProps) {
   ];
 
   const socialLinks = [
-    { icon: SiFacebook, label: 'Facebook', href: '#', color: 'hover:bg-blue-600' },
-    { icon: SiX, label: 'X (formerly Twitter)', href: '#', color: 'hover:bg-black' },
-    { icon: SiInstagram, label: 'Instagram', href: '#', color: 'hover:bg-pink-600' },
-    { icon: SiLinkedin, label: 'LinkedIn', href: '#', color: 'hover:bg-blue-700' },
+    { icon: SiFacebook, label: 'Facebook', href: 'https://www.facebook.com/usjr.official', color: 'hover:bg-blue-600' },
+    { icon: SiX, label: 'X (formerly Twitter)', href: 'https://x.com/USJR_official', color: 'hover:bg-black' },
+    { icon: SiInstagram, label: 'Instagram', href: 'https://www.instagram.com/usjr_official/', color: 'hover:bg-pink-600' },
+    { icon: SiLinkedin, label: 'LinkedIn', href: 'https://www.linkedin.com/school/usjrofficial/', color: 'hover:bg-blue-700' },
   ];
 
   if (!isOpen) return null;
@@ -44,7 +44,7 @@ export function MegaMenu({ isOpen }: MegaMenuProps) {
               ))}
               <li>
                 <a
-                  href="#donate"
+                  href="/donate"
                   className="inline-block bg-[#d4af37] text-white px-6 py-2 rounded-full hover:bg-[#c19b2a] transition-colors font-semibold mt-2"
                 >
                   Donate
@@ -63,6 +63,7 @@ export function MegaMenu({ isOpen }: MegaMenuProps) {
                 <a
                   key={social.label}
                   href={social.href}
+                  target='_blank'
                   className={`flex items-center gap-3 p-3 bg-gray-100 rounded-lg ${social.color} transition-colors group`}
                 >
                   <social.icon className="w-5 h-5 text-gray-700 group-hover:text-white" />

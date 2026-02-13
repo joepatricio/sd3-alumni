@@ -7,7 +7,10 @@ import {
     User,
     Send,
     ThumbsUp,
+    Edit,
 } from 'lucide-react';
+import { CreateBulletinModal } from '../components/CreateBulletinModal';
+import { Button } from '../components/ui/button';
 
 export function BulletinDetail() {
     const { id } = useParams();
@@ -23,7 +26,7 @@ export function BulletinDetail() {
                 'https://images.unsplash.com/photo-1655249493799-9cee4fe983bb?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxwcm9mZXNzaW9uYWwlMjBwb3J0cmFpdCUyMGJ1c2luZXNzJTIwcGVyc29ufGVufDF8fHx8MTc3MDMzODgyMHww&ixlib=rb-4.1.0&q=80&w=1080',
             role: 'Alumni Relations Director',
         },
-        date: 'February 8, 2026',
+        date: '2026-02-08', // Converted to YYYY-MM-DD for form compatibility
         readTime: '5 min read',
         content: `We are thrilled to announce the launch of our new scholarship program aimed at supporting deserving students from underserved communities. This initiative reflects our commitment to giving back and ensuring that quality education remains accessible to all.
 
@@ -77,7 +80,7 @@ We are grateful to the many alumni who have already pledged their support for th
         },
     ];
 
-    const handleSubmitComment = (e: React.FormEvent) => {
+    const handleSubmitComment = (e: React.SubmitEvent) => {
         e.preventDefault();
         console.log('Comment submitted:', comment);
         setComment('');
@@ -86,9 +89,9 @@ We are grateful to the many alumni who have already pledged their support for th
 
     return (
         <div className="min-h-screen bg-gray-50">
-            {/* Back Button */}
+            {/* Back Button and Edit Button */}
             <div className="bg-white border-b border-gray-200">
-                <div className="max-w-4xl mx-auto px-4 md:px-8 py-4">
+                <div className="max-w-4xl mx-auto px-4 md:px-8 py-4 flex justify-between items-center">
                     <Link
                         to="/bulletin"
                         className="inline-flex items-center gap-2 text-gray-600 hover:text-[#1a5f3f] transition-colors"
@@ -96,6 +99,16 @@ We are grateful to the many alumni who have already pledged their support for th
                         <ArrowLeft className="w-4 h-4" />
                         <span>Back to Bulletin</span>
                     </Link>
+
+                    <CreateBulletinModal
+                        trigger={
+                            <Button variant="outline" className="gap-2 text-[#1a5f3f] border-[#1a5f3f] hover:bg-[#1a5f3f] hover:text-white transition-colors">
+                                <Edit className="w-4 h-4" />
+                                Edit Bulletin
+                            </Button>
+                        }
+                        initialData={bulletin}
+                    />
                 </div>
             </div>
 
