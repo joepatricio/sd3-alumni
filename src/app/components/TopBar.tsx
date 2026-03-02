@@ -1,17 +1,19 @@
-import { User, Menu, X, ExternalLink } from "lucide-react";
-import { useState } from "react";
+import { User, Menu, X } from "lucide-react";
 import alumniLogo from "@/assets/alumni-logo.jpg";
 
 interface TopBarProps {
   isMenuOpen: boolean;
   setIsMenuOpen: (open: boolean) => void;
+  isLoggedIn: boolean;
+  setIsLoggedIn: (loggedIn: boolean) => void;
 }
 
 export function TopBar({
   isMenuOpen,
   setIsMenuOpen,
+  isLoggedIn,
+  setIsLoggedIn,
 }: TopBarProps) {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   return (
     <div className="bg-[#1a5f3f] text-white py-3 px-4 md:px-8 fixed top-0 left-0 right-0 z-50 shadow-md">

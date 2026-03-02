@@ -7,7 +7,7 @@ import * as z from 'zod';
 import { Loader2, Upload, X } from 'lucide-react';
 import { toast } from 'sonner';
 
-import { Button } from '@/app/components/ui/button';
+import { Button } from '@ui-components/button';
 import {
     Dialog,
     DialogContent,
@@ -26,8 +26,8 @@ import {
     FormLabel,
     FormMessage,
 } from '@/app/components/ui/form';
-import { Input } from '@/app/components/ui/input';
-import { Textarea } from '@/app/components/ui/textarea';
+import { Input } from '@ui-components/input';
+import { Textarea } from '@ui-components/textarea';
 import { cn } from '@/lib/utils';
 
 const formSchema = z.object({

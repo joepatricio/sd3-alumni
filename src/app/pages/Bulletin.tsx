@@ -13,21 +13,9 @@ import {
 } from 'lucide-react';
 import { CreateBulletinModal } from '@/app/components/CreateBulletinModal';
 
-type ViewMode = 'headline' | 'article';
+import { bulletins } from '../../assets/mockData';
 
-interface BulletinItem {
-    id: string;
-    title: string;
-    author: {
-        name: string;
-        image: string;
-    };
-    date: string;
-    preview: string;
-    content: string;
-    heroImage?: string;
-    isUserSubmitted: boolean;
-}
+type ViewMode = 'headline' | 'article';
 
 export function Bulletin() {
     const [viewMode, setViewMode] = useState<ViewMode>('headline');
@@ -35,95 +23,9 @@ export function Bulletin() {
     const [dateFrom, setDateFrom] = useState('');
     const [dateTo, setDateTo] = useState('');
 
-    const bulletinItems: BulletinItem[] = [
-        {
-            id: '1',
-            title: 'USJR Alumni Association Announces New Scholarship Program',
-            author: {
-                name: 'Maria Santos',
-                image:
-                    'https://images.unsplash.com/photo-1655249493799-9cee4fe983bb?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxwcm9mZXNzaW9uYWwlMjBwb3J0cmFpdCUyMGJ1c2luZXNzJTIwcGVyc29ufGVufDF8fHx8MTc3MDMzODgyMHww&ixlib=rb-4.1.0&q=80&w=1080',
-            },
-            date: 'February 8, 2026',
-            preview:
-                'We are thrilled to announce the launch of our new scholarship program aimed at supporting deserving students...',
-            content:
-                'We are thrilled to announce the launch of our new scholarship program aimed at supporting deserving students from underserved communities. This initiative reflects our commitment to giving back and ensuring that quality education remains accessible to all. The scholarship will cover full tuition for qualified applicants and includes a mentorship component where recipients will be paired with successful alumni in their field of interest.',
-            heroImage:
-                'https://images.unsplash.com/photo-1725738704638-361eac814fca?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxlZHVjYXRpb24lMjBjYW1wdXMlMjBsaWZlfGVufDF8fHx8MTc3MDcwNTY0OXww&ixlib=rb-4.1.0&q=80&w=1080',
-            isUserSubmitted: false,
-        },
-        {
-            id: '2',
-            title: 'Tech Startup Founded by USJR Alumnus Raises $2M in Seed Funding',
-            author: {
-                name: 'John Reyes',
-                image:
-                    'https://images.unsplash.com/photo-1655249493799-9cee4fe983bb?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxwcm9mZXNzaW9uYWwlMjBwb3J0cmFpdCUyMGJ1c2luZXNzJTIwcGVyc29ufGVufDF8fHx8MTc3MDMzODgyMHww&ixlib=rb-4.1.0&q=80&w=1080',
-            },
-            date: 'February 6, 2026',
-            preview:
-                'A technology startup founded by USJR alumnus Michael Torres has successfully raised $2 million in seed funding...',
-            content:
-                'A technology startup founded by USJR alumnus Michael Torres has successfully raised $2 million in seed funding from prominent venture capital firms. The company, which focuses on AI-powered educational tools, aims to revolutionize how students learn and engage with course materials. Torres, who graduated with a degree in Computer Science in 2018, credits his education at USJR for laying the foundation of his entrepreneurial journey.',
-            heroImage:
-                'https://images.unsplash.com/photo-1725203653092-494c7eec1a30?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHx0ZWNobm9sb2d5JTIwaW5ub3ZhdGlvbiUyMGFydGljbGV8ZW58MXx8fHwxNzcwNzA1NjQ4fDA&ixlib=rb-4.1.0&q=80&w=1080',
-            isUserSubmitted: true,
-        },
-        {
-            id: '3',
-            title: 'Annual Homecoming 2026: A Grand Celebration of Josenian Spirit',
-            author: {
-                name: 'Alumni Relations Office',
-                image:
-                    'https://images.unsplash.com/photo-1655249493799-9cee4fe983bb?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxwcm9mZXNzaW9uYWwlMjBwb3J0cmFpdCUyMGJ1c2luZXNzJTIwcGVyc29ufGVufDF8fHx8MTc3MDMzODgyMHww&ixlib=rb-4.1.0&q=80&w=1080',
-            },
-            date: 'February 5, 2026',
-            preview:
-                'This year\'s homecoming was truly unforgettable! Over 5,000 alumni gathered to reconnect, reminisce...',
-            content:
-                'This year\'s homecoming was truly unforgettable! Over 5,000 alumni gathered to reconnect, reminisce, and celebrate the enduring Josenian spirit that binds us all. The event featured inspiring talks from distinguished alumni, cultural performances, and a grand alumni parade. Special recognition was given to the Golden Jubilarians - members of the Class of 1976 - who celebrated 50 years since graduation. The festivities concluded with a spectacular fireworks display that lit up the Cebu sky.',
-            heroImage:
-                'https://images.unsplash.com/photo-1758270703662-b7d58bf0a8a2?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHx1bml2ZXJzaXR5JTIwZ3JhZHVhdGVzJTIwY2VsZWJyYXRpb258ZW58MXx8fHwxNzcwNjkwNjQ5fDA&ixlib=rb-4.1.0&q=80&w=1080',
-            isUserSubmitted: false,
-        },
-        {
-            id: '4',
-            title: 'Looking for Batch 2010 Classmates for Mini Reunion',
-            author: {
-                name: 'Anna Cruz',
-                image:
-                    'https://images.unsplash.com/photo-1655249493799-9cee4fe983bb?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxwcm9mZXNzaW9uYWwlMjBwb3J0cmFpdCUyMGJ1c2luZXNzJTIwcGVyc29ufGVufDF8fHx8MTc3MDMzODgyMHww&ixlib=rb-4.1.0&q=80&w=1080',
-            },
-            date: 'February 3, 2026',
-            preview:
-                'Hello fellow Josenians from the Class of 2010! I\'m organizing a mini reunion for our batch...',
-            content:
-                'Hello fellow Josenians from the Class of 2010! I\'m organizing a mini reunion for our batch and would love to reconnect with everyone. We\'re planning to meet on March 15th at the campus. Please reach out if you\'re interested in joining! It\'s been 16 years since we graduated, and I think it would be wonderful to catch up, share stories, and see how everyone\'s journey has unfolded. Looking forward to seeing familiar faces!',
-            isUserSubmitted: true,
-        },
-        {
-            id: '5',
-            title: 'New Alumni Mentorship Program Launches Next Month',
-            author: {
-                name: 'Career Development Office',
-                image:
-                    'https://images.unsplash.com/photo-1655249493799-9cee4fe983bb?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxwcm9mZXNzaW9uYWwlMjBwb3J0cmFpdCUyMGJ1c2luZXNzJTIwcGVyc29ufGVufDF8fHx8MTc3MDMzODgyMHww&ixlib=rb-4.1.0&q=80&w=1080',
-            },
-            date: 'February 1, 2026',
-            preview:
-                'We are excited to introduce our new Alumni Mentorship Program, connecting experienced professionals with recent graduates...',
-            content:
-                'We are excited to introduce our new Alumni Mentorship Program, connecting experienced professionals with recent graduates and current students. This program aims to foster meaningful relationships that will help guide the next generation of Josenians in their career paths. Mentors will provide insights, advice, and support based on their own professional experiences. If you\'re interested in becoming a mentor or mentee, registration opens next month through the alumni portal.',
-            heroImage:
-                'https://images.unsplash.com/photo-1741835698663-c1860b7d1f53?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxidXNpbmVzcyUyMG5ld3MlMjBhcnRpY2xlfGVufDF8fHx8MTc3MDY5MjYwMXww&ixlib=rb-4.1.0&q=80&w=1080',
-            isUserSubmitted: false,
-        },
-    ];
-
     const filteredItems = showUserSubmitted
-        ? bulletinItems.filter((item) => !item.isUserSubmitted)
-        : bulletinItems;
+        ? bulletins.filter((item) => !item.isUserSubmitted)
+        : bulletins;
 
     return (
         <div className="min-h-screen bg-gray-50">

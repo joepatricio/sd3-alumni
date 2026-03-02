@@ -1,80 +1,15 @@
 import { Clock, Tag } from 'lucide-react';
+import { bulletins as mockBulletins } from '../../assets/mockData';
 
 export function BulletinFeed() {
-  const bulletins = [
-    {
-      id: 1,
-      title: 'USJR Alumni Launches New Scholarship Program for Underprivileged Students',
-      excerpt:
-        'The USJR Alumni Association announces a groundbreaking scholarship initiative aimed at providing educational opportunities to deserving students from low-income families.',
-      date: 'February 1, 2026',
-      author: 'Alumni Relations Office',
-      category: 'Announcements',
-      image:
-        'https://images.unsplash.com/photo-1603857365671-93cd96dc1df8?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHx1bml2ZXJzaXR5JTIwY2FtcHVzJTIwYnVpbGRpbmclMjBhZXJpYWx8ZW58MXx8fHwxNzcwMDQ5MzI5fDA&ixlib=rb-4.1.0&q=80&w=1080',
-      readTime: '5 min read',
-    },
-    {
-      id: 2,
-      title: 'Distinguished Alumnus Receives National Recognition for Medical Research',
-      excerpt:
-        'Dr. Maria Santos (Class of 2005) has been awarded the prestigious National Science Award for her groundbreaking research in infectious disease prevention.',
-      date: 'January 28, 2026',
-      author: 'Communications Team',
-      category: 'Alumni Spotlight',
-      image:
-        'https://images.unsplash.com/photo-1763718432504-7716caff6e99?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxjYXJlZXIlMjBwcm9mZXNzaW9uYWwlMjBzdWNjZXNzJTIwbWVudG9yfGVufDF8fHx8MTc3MDA5MTg0MHww&ixlib=rb-4.1.0&q=80&w=1080',
-      readTime: '4 min read',
-    },
-    {
-      id: 3,
-      title: 'Record-Breaking Fundraiser Raises ₱5 Million for Campus Development',
-      excerpt:
-        'The annual alumni giving campaign exceeded all expectations, with contributions funding new laboratories, library resources, and student support programs.',
-      date: 'January 25, 2026',
-      author: 'Development Office',
-      category: 'News',
-      image:
-        'https://images.unsplash.com/photo-1767274101063-a735a6849afc?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxjb21tdW5pdHklMjBnYXRoZXJpbmclMjBwZW9wbGUlMjBkaXZlcnNlfGVufDF8fHx8MTc3MDA5MTgzOXww&ixlib=rb-4.1.0&q=80&w=1080',
-      readTime: '3 min read',
-    },
-    {
-      id: 4,
-      title: 'New Alumni Chapter Established in Singapore',
-      excerpt:
-        'USJR alumni residing in Singapore have officially formed a regional chapter, creating new opportunities for networking and collaboration in Southeast Asia.',
-      date: 'January 22, 2026',
-      author: 'International Relations',
-      category: 'Community',
-      image:
-        'https://images.unsplash.com/photo-1768508948485-a7adc1f3427f?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxidXNpbmVzcyUyMG5ldHdvcmtpbmclMjBldmVudCUyMHByb2Zlc3Npb25hbHxlbnwxfHx8fDE3NzAwOTE4Mzh8MA&ixlib=rb-4.1.0&q=80&w=1080',
-      readTime: '6 min read',
-    },
-    {
-      id: 5,
-      title: 'Alumni Mentorship Program Celebrates 100th Match',
-      excerpt:
-        'The successful mentorship initiative has now connected over 100 recent graduates with experienced professionals in their fields of interest.',
-      date: 'January 20, 2026',
-      author: 'Career Services',
-      category: 'Programs',
-      image:
-        'https://images.unsplash.com/photo-1684841565710-168022dfda52?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxidWxsZXRpbiUyMGJvYXJkJTIwbmV3cyUyMGFubm91bmNlbWVudHxlbnwxfHx8fDE3NzAwOTE4NDB8MA&ixlib=rb-4.1.0&q=80&w=1080',
-      readTime: '4 min read',
-    },
-    {
-      id: 6,
-      title: 'Virtual Campus Tour Now Available for Global Alumni',
-      excerpt:
-        'Experience the newly renovated USJR campus from anywhere in the world with our interactive 360-degree virtual tour featuring all major facilities.',
-      date: 'January 18, 2026',
-      author: 'Digital Services',
-      category: 'Updates',
-      image:
-        'https://images.unsplash.com/photo-1603857365671-93cd96dc1df8?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHx1bml2ZXJzaXR5JTIwY2FtcHVzJTIwYnVpbGRpbmclMjBhZXJpYWx8ZW58MXx8fHwxNzcwMDQ5MzI5fDA&ixlib=rb-4.1.0&q=80&w=1080',
-      readTime: '2 min read',
-    },
-  ];
+  const bulletins = mockBulletins.slice(0, 6).map((b) => ({
+    ...b,
+    excerpt: b.preview,
+    author: b.author.name,
+    // category missing in mockData, defaulting
+    category: 'News',
+    image: b.heroImage,
+  }));
 
   return (
     <section id="bulletin" className="py-16 bg-gray-50">
@@ -97,7 +32,7 @@ export function BulletinFeed() {
         {/* Featured Article */}
         <div className="bg-white rounded-lg overflow-hidden shadow-md hover:shadow-xl transition-shadow mb-8">
           <div className="grid md:grid-cols-2 gap-0">
-            <div className="relative h-64 md:h-auto overflow-hidden">
+            <div className="relative h-64 md:h-full max-h-[20rem] overflow-hidden">
               <img
                 src={bulletins[0].image}
                 alt={bulletins[0].title}
@@ -107,7 +42,7 @@ export function BulletinFeed() {
                 Featured
               </span>
             </div>
-            <div className="p-8">
+            <div className="content-center p-8">
               <div className="flex items-center gap-4 mb-4">
                 <span className="text-sm text-gray-500 flex items-center gap-1">
                   <Tag className="w-4 h-4" />

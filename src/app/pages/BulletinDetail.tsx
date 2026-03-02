@@ -12,73 +12,13 @@ import {
 import { CreateBulletinModal } from '../components/CreateBulletinModal';
 import { Button } from '../components/ui/button';
 
+import { bulletins, comments } from '../../assets/mockData';
+
 export function BulletinDetail() {
     const { id } = useParams();
     const [comment, setComment] = useState('');
 
-    // Mock data - in production, fetch based on id
-    const bulletin = {
-        id: id || '1',
-        title: 'USJR Alumni Association Announces New Scholarship Program',
-        author: {
-            name: 'Maria Santos',
-            image:
-                'https://images.unsplash.com/photo-1655249493799-9cee4fe983bb?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxwcm9mZXNzaW9uYWwlMjBwb3J0cmFpdCUyMGJ1c2luZXNzJTIwcGVyc29ufGVufDF8fHx8MTc3MDMzODgyMHww&ixlib=rb-4.1.0&q=80&w=1080',
-            role: 'Alumni Relations Director',
-        },
-        date: '2026-02-08', // Converted to YYYY-MM-DD for form compatibility
-        readTime: '5 min read',
-        content: `We are thrilled to announce the launch of our new scholarship program aimed at supporting deserving students from underserved communities. This initiative reflects our commitment to giving back and ensuring that quality education remains accessible to all.
-
-The scholarship will cover full tuition for qualified applicants and includes a mentorship component where recipients will be paired with successful alumni in their field of interest. This mentorship aspect is designed to provide not just financial support, but also guidance and networking opportunities that can help shape successful careers.
-
-Our goal is to support 50 students in the first year, with plans to expand the program based on available funding and alumni contributions. We believe that investing in education is one of the most impactful ways we can contribute to society and honor the legacy of USJR.
-
-Applications will open on March 1, 2026, and will be evaluated based on academic merit, financial need, and demonstrated commitment to community service. We encourage all eligible students to apply and take advantage of this opportunity.
-
-We are grateful to the many alumni who have already pledged their support for this program. If you're interested in contributing or learning more about how you can help, please visit our donations page or contact the Alumni Relations Office directly.`,
-        heroImage:
-            'https://images.unsplash.com/photo-1725738704638-361eac814fca?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxlZHVjYXRpb24lMjBjYW1wdXMlMjBsaWZlfGVufDF8fHx8MTc3MDcwNTY0OXww&ixlib=rb-4.1.0&q=80&w=1080',
-    };
-
-    const comments = [
-        {
-            id: 1,
-            author: {
-                name: 'John Reyes',
-                image:
-                    'https://images.unsplash.com/photo-1655249493799-9cee4fe983bb?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxwcm9mZXNzaW9uYWwlMjBwb3J0cmFpdCUyMGJ1c2luZXNzJTIwcGVyc29ufGVufDF8fHx8MTc3MDMzODgyMHww&ixlib=rb-4.1.0&q=80&w=1080',
-            },
-            date: 'February 8, 2026, 3:45 PM',
-            content:
-                'This is wonderful news! So proud to be part of an alumni community that gives back. Count me in as a contributor!',
-            likes: 12,
-        },
-        {
-            id: 2,
-            author: {
-                name: 'Anna Cruz',
-                image:
-                    'https://images.unsplash.com/photo-1655249493799-9cee4fe983bb?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxwcm9mZXNzaW9uYWwlMjBwb3J0cmFpdCUyMGJ1c2luZXNzJTIwcGVyc29ufGVufDF8fHx8MTc3MDMzODgyMHww&ixlib=rb-4.1.0&q=80&w=1080',
-            },
-            date: 'February 8, 2026, 5:20 PM',
-            content:
-                'Love the mentorship component! I\'d be happy to volunteer as a mentor. How do I sign up?',
-            likes: 8,
-        },
-        {
-            id: 3,
-            author: {
-                name: 'Robert Tan',
-                image:
-                    'https://images.unsplash.com/photo-1655249493799-9cee4fe983bb?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxwcm9mZXNzaW9uYWwlMjBwb3J0cmFpdCUyMGJ1c2luZXNzJTIwcGVyc29ufGVufDF8fHx8MTc3MDMzODgyMHww&ixlib=rb-4.1.0&q=80&w=1080',
-            },
-            date: 'February 9, 2026, 9:10 AM',
-            content:
-                'Excellent initiative! Will there be any information sessions for prospective applicants?',
-            likes: 5,
-        },
-    ];
+    const bulletin = bulletins.find((b) => b.id === id) || bulletins[0];
 
     const handleSubmitComment = (e: React.SubmitEvent) => {
         e.preventDefault();

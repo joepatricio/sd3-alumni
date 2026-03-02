@@ -1,48 +1,12 @@
 import { Calendar, MapPin, Users } from 'lucide-react';
 
+import { events as mockEvents } from '../../assets/mockData';
+
 export function EventsFeed() {
-  const events = [
-    {
-      id: 1,
-      title: 'Annual Homecoming 2026',
-      date: 'March 15, 2026',
-      location: 'USJR Main Campus',
-      attendees: 450,
-      image:
-        'https://images.unsplash.com/photo-1758270703262-2b40b6b66be6?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHx1bml2ZXJzaXR5JTIwYWx1bW5pJTIwY2VsZWJyYXRpb24lMjBncmFkdWF0aW9ufGVufDF8fHx8MTc3MDA5MTgzOHww&ixlib=rb-4.1.0&q=80&w=1080',
-      category: 'Reunion',
-    },
-    {
-      id: 2,
-      title: 'Business Networking Night',
-      date: 'February 20, 2026',
-      location: 'Cebu Business Park',
-      attendees: 120,
-      image:
-        'https://images.unsplash.com/photo-1768508948485-a7adc1f3427f?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxidXNpbmVzcyUyMG5ldHdvcmtpbmclMjBldmVudCUyMHByb2Zlc3Npb25hbHxlbnwxfHx8fDE3NzAwOTE4Mzh8MA&ixlib=rb-4.1.0&q=80&w=1080',
-      category: 'Networking',
-    },
-    {
-      id: 3,
-      title: 'Community Service Day',
-      date: 'February 28, 2026',
-      location: 'Various Locations, Cebu',
-      attendees: 85,
-      image:
-        'https://images.unsplash.com/photo-1767274101063-a735a6849afc?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxjb21tdW5pdHklMjBnYXRoZXJpbmclMjBwZW9wbGUlMjBkaXZlcnNlfGVufDF8fHx8MTc3MDA5MTgzOXww&ixlib=rb-4.1.0&q=80&w=1080',
-      category: 'Community',
-    },
-    {
-      id: 4,
-      title: 'Career Development Workshop',
-      date: 'March 5, 2026',
-      location: 'Online Event',
-      attendees: 200,
-      image:
-        'https://images.unsplash.com/photo-1763718432504-7716caff6e99?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxjYXJlZXIlMjBwcm9mZXNzaW9uYWwlMjBzdWNjZXNzJTIwbWVudG9yfGVufDF8fHx8MTc3MDA5MTg0MHww&ixlib=rb-4.1.0&q=80&w=1080',
-      category: 'Professional',
-    },
-  ];
+  const events = mockEvents.slice(0, 4).map(e => ({
+    ...e,
+    attendees: e.responses.going,
+  }));
 
   return (
     <section id="events" className="py-16 bg-white">

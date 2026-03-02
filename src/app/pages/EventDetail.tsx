@@ -17,44 +17,15 @@ import { Button } from '../components/ui/button';
 import { Badge } from '../components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '../components/ui/avatar';
 
+import { events } from '../../assets/mockData';
+
 export function EventDetail() {
     const { id } = useParams<{ id: string }>();
     const [rsvpStatus, setRsvpStatus] = useState<'going' | 'not_going' | null>(null);
 
     // Mock data for the event being edited
     // In a real app, this would be fetched based on the ID
-    const eventData = {
-        id: id || '1',
-        title: "Annual Alumni Homecoming 2026",
-        category: "Reunion",
-        date: "2026-12-15",
-        startTimeHour: "5",
-        startTimeMinute: "00",
-        startTimeAmPm: "PM",
-        endTimeHour: "10",
-        endTimeMinute: "00",
-        endTimeAmPm: "PM",
-        location: "Grand Ballroom, City Hotel",
-        address: "123 Main St, Cebu City, Philippines", // For map
-        description: `Join us for our biggest event of the year! Reconnect with old friends, network with fellow alumni, and celebrate the spirit of our alma mater. The evening will feature a buffet dinner, live entertainment, and an awards ceremony honoring outstanding alumni achievements.
-
-        We will also be unveiling the new scholarship fund initiatives and recognizing the Golden Jubilarians (Class of 1976). Don't miss this opportunity to walk down memory lane and make new memories.
-        
-        Attire is semi-formal. Please RSVP by December 1st to ensure your seat.`,
-        organizer: {
-            name: "USJR Alumni Association",
-            contactName: "Maria Santos",
-            email: "alumni@usjr.edu.ph",
-            phone: "(032) 123-4567",
-            website: "www.usjr-alumni.org",
-            image: "https://images.unsplash.com/photo-1556761175-5973dc0f32e7?ixlib=rb-4.0.3&auto=format&fit=crop&w=100&q=80"
-        },
-        responses: {
-            going: 142,
-            invited: 500
-        },
-        image: "https://images.unsplash.com/photo-1511578314322-379afb476865?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80"
-    };
+    const eventData = events.find((e) => e.id === Number(id)) || events[0];
 
     // Calculate display time
     const displayTime = `${eventData.startTimeHour}:${eventData.startTimeMinute} ${eventData.startTimeAmPm} - ${eventData.endTimeHour}:${eventData.endTimeMinute} ${eventData.endTimeAmPm}`;

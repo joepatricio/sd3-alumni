@@ -27,10 +27,19 @@
     "erasableSyntaxOnly": true,
     "noFallthroughCasesInSwitch": true,
     "noUncheckedSideEffectImports": true,
-    "baseUrl": ".",
+    "baseUrl": "./src",
     "paths": {
       "@/*": [
-        "./src/*"
+        "*"
+      ],
+      "@ui-components/*": [
+        "app/components/ui/*"
+      ],
+      "@data/*": [
+        "app/components/data/*"
+      ],
+      "@assets/*": [
+        "assets/*"
       ]
     }
   },
