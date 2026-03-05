@@ -7,12 +7,12 @@
     "Create an online directory for graduates with profiles, job updates, and event RSVPs, using a database for connections, achievements, and donations. Add search by graduation year or industry, plus messaging for networking. It practices many-to-many relationships and data privacy controls."
 
   The following features have been identified based off the project brief:
-    * Online directory with filters for graduation year and industry.
-    * Login/Profile with features for career networking, achievements, and donations.
-    * Event RSVPs
-    * Messaging capabilities (achieved through the Bulletin system.)
-    * Age verification for data privacy controls (see Messaging). 
-    * Dashboard to create a portal for aforementioned features.
+  * Online directory with filters for graduation year and industry.
+  * Login/Profile with features for career networking, achievements, and donations.
+  * Event RSVPs
+  * Messaging capabilities (achieved through the Bulletin system.)
+  * Age verification for data privacy controls (see Messaging). 
+  * Dashboard to create a portal for aforementioned features.
   
   ## Running the code
 
