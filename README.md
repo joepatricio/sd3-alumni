@@ -47,18 +47,13 @@
   This project follows a top-down model of development. In essence, we focus on the UI until the client is happy with the design. Backend specifications will be developed based on the needs of the UI.
 
   Uses mock data for now (check @/data/mockData.ts/.)
-  CRUD operations will not be implemented until DB development.
-  Therefore:
-    * Login/Profile button in Topbar is a placeholder for now. 
-    * Login can be accessed via Hero button or URL hacking. 
-		localhost:5173/login
-    * Register and Profile can be accessed from Login or URL hacking. 
-		localhost:5173/register
-		localhost:5173/profile  
-    * Login does not check against mock data. Any valid Login form will redirect to Profile.
-	* Admin can only be accessed by URL hacking
-		localhost:5173/admin
-    * Other stuff like Events, Bulletin, and Connections will not be implemented until DB development.
+  CRUD operations will not be implemented until DB development, therefore:
+  * Login/Profile button in Topbar is a placeholder for now.
+  * Login can be accessed via Hero button or URL hacking. localhost:5173/login
+  * Register and Profile can be accessed from Login or URL hacking. localhost:5173/register localhost:5173/profile  
+  * Login does not check against mock data. Any valid Login form will redirect to Profile.
+  * Admin can only be accessed by URL hacking. localhost:5173/admin
+  * Other stuff like Events, Bulletin, and Connections will not be implemented until DB development.
   
   ## TODO before client approval
 
