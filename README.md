@@ -26,9 +26,8 @@
 
   * `@/app/pages` contains the pages.
   * `@/app/components` contains the components.
-  * `@/app/data` contains the mock data.
   * `@/lib` contains the utilities.
-  * `@/app/assets` contains the static files.
+  * `@/app/assets` contains the static files, including mock data.
 
   Routes are implemented using React Router. Router logic is placed on App.tsx. This is a good place to start when reading the code.
   
