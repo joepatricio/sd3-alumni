@@ -11,9 +11,9 @@ import {
     Filter,
     Clock,
 } from 'lucide-react';
-import { CreateBulletinModal } from '@/app/components/CreateBulletinModal';
+import { CreateBulletinModal } from '@/app/components/user/CreateBulletinModal';
 
-import { bulletins } from '../../assets/mockData';
+import { bulletins } from '../../../assets/mockData';
 
 type ViewMode = 'headline' | 'article';
 

@@ -12,12 +12,12 @@ import {
     CheckCircle2,
     XCircle
 } from 'lucide-react';
-import { CreateEventModal } from '../components/CreateEventModal';
-import { Button } from '../components/ui/button';
-import { Badge } from '../components/ui/badge';
-import { Avatar, AvatarFallback, AvatarImage } from '../components/ui/avatar';
+import { CreateEventModal } from '../../components/user/CreateEventModal';
+import { Button } from '../../components/ui/button';
+import { Badge } from '../../components/ui/badge';
+import { Avatar, AvatarFallback, AvatarImage } from '../../components/ui/avatar';
 
-import { events } from '../../assets/mockData';
+import { events } from '../../../assets/mockData';
 
 export function EventDetail() {
     const { id } = useParams<{ id: string }>();
@@ -128,11 +128,7 @@ export function EventDetail() {
                                         </div>
                                         <div className="flex items-center gap-2">
                                             <Phone className="w-4 h-4 text-[#1a5f3f]" />
-                                            <a href={`tel:${eventData.organizer.phone}`} className="hover:text-[#1a5f3f] transition-colors">{eventData.organizer.phone}</a>
-                                        </div>
-                                        <div className="flex items-center gap-2">
-                                            <Globe className="w-4 h-4 text-[#1a5f3f]" />
-                                            <a href={`https://${eventData.organizer.website}`} target="_blank" rel="noopener noreferrer" className="hover:text-[#1a5f3f] transition-colors">{eventData.organizer.website}</a>
+                                            <p className="hover:text-[#1a5f3f] transition-colors">{eventData.organizer.phone}</p>
                                         </div>
                                     </div>
                                 </div>

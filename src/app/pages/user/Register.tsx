@@ -95,7 +95,7 @@ export function Register() {
                                                 <User className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
                                                 <Input
                                                     placeholder="John Doe"
-                                                    className="pl-10"
+                                                    className="pl-10 selection:bg-blue-500 selection:text-white"
                                                     {...field}
                                                 />
                                             </div>
@@ -116,7 +116,7 @@ export function Register() {
                                                 <User className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
                                                 <Input
                                                     placeholder="Enter your Alumni ID"
-                                                    className="pl-10"
+                                                    className="pl-10 selection:bg-blue-500 selection:text-white"
                                                     {...field}
                                                 />
                                             </div>
@@ -137,7 +137,7 @@ export function Register() {
                                                 <Mail className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
                                                 <Input
                                                     placeholder="alumni@example.com"
-                                                    className="pl-10"
+                                                    className="pl-10 selection:bg-blue-500 selection:text-white"
                                                     {...field}
                                                 />
                                             </div>
@@ -159,7 +159,7 @@ export function Register() {
                                                 <Input
                                                     type={showPassword ? "text" : "password"}
                                                     placeholder="Create a password"
-                                                    className="pl-10 pr-10"
+                                                    className="pl-10 pr-10 selection:bg-blue-500 selection:text-white"
                                                     {...field}
                                                 />
                                                 <button
@@ -192,7 +192,7 @@ export function Register() {
                                                 <Input
                                                     type={showConfirmPassword ? "text" : "password"}
                                                     placeholder="Confirm your password"
-                                                    className="pl-10 pr-10"
+                                                    className="pl-10 pr-10 selection:bg-blue-500 selection:text-white"
                                                     {...field}
                                                 />
                                                 <button
@@ -228,13 +228,13 @@ export function Register() {
                                         <div className="space-y-1 leading-none">
                                             <FormLabel className="font-normal text-gray-600">
                                                 I agree to the{' '}
-                                                <a href="#" className="text-[#1a5f3f] hover:text-[#2d7a4f] font-medium">
+                                                <Link to="#" className="text-[#1a5f3f] hover:text-[#2d7a4f] font-medium">
                                                     Terms of Service
-                                                </a>{' '}
+                                                </Link>{' '}
                                                 and{' '}
-                                                <a href="#" className="text-[#1a5f3f] hover:text-[#2d7a4f] font-medium">
+                                                <Link to="#" className="text-[#1a5f3f] hover:text-[#2d7a4f] font-medium">
                                                     Privacy Policy
-                                                </a>
+                                                </Link>
                                             </FormLabel>
                                             <FormMessage />
                                         </div>

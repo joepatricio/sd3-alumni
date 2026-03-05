@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
-import { ProfileHeader } from '@/app/components/ProfileHeader';
+import { ProfileHeader } from '@/app/components/user/ProfileHeader';
 import { userData } from '@/assets/mockData';
 import { Save, X } from 'lucide-react';
 

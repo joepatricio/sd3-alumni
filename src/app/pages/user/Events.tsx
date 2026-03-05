@@ -1,8 +1,9 @@
 import { Calendar, MapPin, Clock } from 'lucide-react';
 import { Plus } from 'lucide-react';
-import { CreateEventModal } from '@/app/components/CreateEventModal';
+import { CreateEventModal } from '@/app/components/user/CreateEventModal';
 
 import { events } from '@/assets/mockData';
+import { Link } from 'react-router-dom';
 
 export function Events() {
     // Filter events not older than 5 years
@@ -46,9 +47,9 @@ export function Events() {
                 {/* Events List */}
                 <div className="space-y-6 mb-6">
                     {filteredEvents.map((event) => (
-                        <a
+                        <Link
                             key={event.id}
-                            href={`/events/${event.id}`}
+                            to={`/events/${event.id}`}
                             className="block bg-white border border-gray-200 rounded-lg overflow-hidden hover:shadow-lg transition-shadow duration-300"
                         >
                             <div className="flex flex-col md:flex-row">
@@ -99,7 +100,7 @@ export function Events() {
                                     </div>
                                 </div>
                             </div>
-                        </a>
+                        </Link>
                     ))}
                 </div>
 

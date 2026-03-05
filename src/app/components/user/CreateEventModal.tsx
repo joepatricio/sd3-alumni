@@ -1,5 +1,3 @@
-'use client';
-
 import { useState, useRef, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -7,7 +5,7 @@ import * as z from 'zod';
 import { Loader2, MapPin, X, Upload } from 'lucide-react';
 import { toast } from 'sonner';
 
-import { Button } from '@/app/components/ui/button';
+import { Button } from '@components/ui/button';
 import {
     Dialog,
     DialogContent,
@@ -16,7 +14,7 @@ import {
     DialogHeader,
     DialogTitle,
     DialogTrigger,
-} from '@/app/components/ui/dialog';
+} from '@components/ui/dialog';
 import {
     Form,
     FormControl,
@@ -25,16 +23,16 @@ import {
     FormItem,
     FormLabel,
     FormMessage,
-} from '@/app/components/ui/form';
-import { Input } from '@/app/components/ui/input';
-import { Textarea } from '@/app/components/ui/textarea';
+} from '@components/ui/form';
+import { Input } from '@components/ui/input';
+import { Textarea } from '@components/ui/textarea';
 import {
     Select,
     SelectContent,
     SelectItem,
     SelectTrigger,
     SelectValue,
-} from '@/app/components/ui/select';
+} from '@components/ui/select';
 import { cn } from '@/lib/utils';
 
 const formSchema = z.object({

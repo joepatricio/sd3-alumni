@@ -24,31 +24,31 @@ export function AlumniDirectory() {
         setExpandedSection(expandedSection === section ? null : section);
     };
 
-    const handleNameSearch = (e: React.FormEvent) => {
+    const handleNameSearch = (e: React.SubmitEvent) => {
         e.preventDefault();
         console.log('Searching for:', searchName);
         // Implement search logic
     };
 
-    const handleCollegeSearch = (e: React.FormEvent) => {
+    const handleCollegeSearch = (e: React.SubmitEvent) => {
         e.preventDefault();
         console.log('College search:', { collegeYear, collegeIndustry, collegeDegreeLevel });
         // Implement search logic
     };
 
-    const handleSHSSearch = (e: React.FormEvent) => {
+    const handleSHSSearch = (e: React.SubmitEvent) => {
         e.preventDefault();
         console.log('SHS search:', { shsYear, shsStrand });
         // Implement search logic
     };
 
-    const handleJHSSearch = (e: React.FormEvent) => {
+    const handleJHSSearch = (e: React.SubmitEvent) => {
         e.preventDefault();
         console.log('JHS search:', { jhsYear });
         // Implement search logic
     };
 
-    const handleBasicSearch = (e: React.FormEvent) => {
+    const handleBasicSearch = (e: React.SubmitEvent) => {
         e.preventDefault();
         console.log('Basic Education search:', { basicYear });
         // Implement search logic

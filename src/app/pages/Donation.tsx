@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Heart, Globe, GraduationCap, Users, Lock, Mail, Phone, ArrowLeft } from 'lucide-react';
 import { SiFacebook, SiX, SiInstagram, SiLinkedin } from 'react-icons/si';
 import { toast } from 'sonner';
@@ -52,24 +53,24 @@ export function Donation() {
                 </div>
 
                 <div className="absolute top-6 left-8 z-10 hidden md:block">
-                    <a href="/" className="flex items-center gap-2 text-white/80 hover:text-white transition-colors text-sm font-medium p-2 rounded-lg hover:bg-white/10">
+                    <Link to="/" className="flex items-center gap-2 text-white/80 hover:text-white transition-colors text-sm font-medium p-2 rounded-lg hover:bg-white/10">
                         <ArrowLeft className="w-4 h-4" />
                         Back to site
-                    </a>
+                    </Link>
                 </div>
 
                 <div className="relative max-w-6xl mx-auto px-4 md:px-8 h-full flex flex-col justify-center text-white">
                     <div className="md:hidden mb-6">
-                        <a href="/" className="flex items-center gap-2 text-white/80 hover:text-white transition-colors text-sm font-medium w-fit">
+                        <Link to="/" className="flex items-center gap-2 text-white/80 hover:text-white transition-colors text-sm font-medium w-fit">
                             <ArrowLeft className="w-4 h-4" />
                             Back to site
-                        </a>
+                        </Link>
                     </div>
                     <div className="flex items-center gap-3 mb-6">
-                        <a href="/" className="flex items-center gap-3 ">
+                        <Link to="/" className="flex items-center gap-3 ">
                             <img src={alumniLogo} alt="USJR Logo" className="w-12 h-12 rounded-full border-2 border-white/30" />
                             <span className="font-bold text-xl tracking-wide">USJR Alumni</span>
-                        </a>
+                        </Link>
                     </div>
                     <h1 className="text-4xl md:text-6xl font-bold mb-6 max-w-3xl leading-tight">
                         Empower the Next Generation of Josenians
@@ -201,10 +202,10 @@ export function Donation() {
                     <div className="flex flex-col md:flex-row justify-between items-center gap-8">
                         <div className="flex flex-col items-center md:items-start gap-4">
                             <div className="flex items-center gap-2 text-white/90">
-                                <a href="/" className="flex items-center gap-2">
+                                <Link to="/" className="flex items-center gap-2">
                                     <img src={alumniLogo} alt="Logo" className="w-8 h-8 rounded opacity-80" />
                                     <span className="font-semibold tracking-wide">USJR Alumni Association</span>
-                                </a>
+                                </Link>
                             </div>
                             <p className="text-gray-400 text-sm text-center md:text-left">
                                 © 2026 University of San Jose-Recoletos Alumni Association.<br />All rights reserved.

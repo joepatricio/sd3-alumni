@@ -80,7 +80,7 @@ export function Login() {
                                                 <Mail className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
                                                 <Input
                                                     placeholder="alumni@example.com"
-                                                    className="pl-10"
+                                                    className="pl-10 selection:bg-blue-500 selection:text-white"
                                                     {...field}
                                                 />
                                             </div>
@@ -102,7 +102,7 @@ export function Login() {
                                                 <Input
                                                     type={showPassword ? "text" : "password"}
                                                     placeholder="Enter your password"
-                                                    className="pl-10 pr-10"
+                                                    className="pl-10 pr-10 selection:bg-blue-500 selection:text-white"
                                                     {...field}
                                                 />
                                                 <button
