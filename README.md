@@ -46,7 +46,7 @@
 
   This project follows a top-down model of development. In essence, we focus on the UI until the client is happy with the design. Backend specifications will be developed based on the needs of the UI.
 
-  Uses mock data for now (check @assets/mockData.ts/.)
+  Uses mock data for now (check `@assets/mockData.ts/`).
   CRUD operations will not be implemented until DB development, therefore:
   * Login/Profile button in Topbar is a placeholder for now.
   * Login can be accessed via Hero button or URL hacking. `localhost:5173/login`
