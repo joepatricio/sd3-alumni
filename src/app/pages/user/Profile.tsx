@@ -6,9 +6,9 @@ import {
     Heart,
 } from 'lucide-react';
 import { useNavigate, useOutletContext } from 'react-router-dom';
-import { ProfileHeader } from '../components/ProfileHeader';
-import { QuickActions } from '../components/QuickActions';
-import { userData } from '../../assets/mockData';
+import { ProfileHeader } from '../../components/user/ProfileHeader';
+import { QuickActions } from '../../components/user/QuickActions';
+import { userData } from '../../../assets/mockData';
 
 export function Profile() {
     const navigate = useNavigate();

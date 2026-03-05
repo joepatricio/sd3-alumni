@@ -1,5 +1,6 @@
 import { Mail, Phone, MapPin } from 'lucide-react';
 import { SiFacebook, SiX, SiInstagram, SiLinkedin } from 'react-icons/si';
+import { Link } from 'react-router-dom';
 import alumniLogo from "@/assets/alumni-logo.jpg";
 
 export function Footer() {
@@ -19,14 +20,14 @@ export function Footer() {
           {/* About Section */}
           <div>
             <div className="flex items-center gap-2 mb-4">
-              <a href="/" className="flex items-center gap-2">
+              <Link to="/" className="flex items-center gap-2">
                 <img
                   src={alumniLogo}
                   alt="Alumni"
                   className="h-8 w-8 object-contain rounded"
                 />
                 <span className="font-bold text-[#1a5f3f] text-lg">USJR Alumni</span>
-              </a>
+              </Link>
             </div>
             <p className="text-sm mb-4 text-gray-700">
               University of San Jose-Recoletos Alumni Association connects Josenians
@@ -71,12 +72,12 @@ export function Footer() {
               <ul className="space-y-2">
                 {links.map((link) => (
                   <li key={link.label}>
-                    <a
-                      href={link.href}
+                    <Link
+                      to={link.href}
                       className="text-sm text-gray-700 hover:text-[#1a5f3f] transition-colors"
                     >
                       {link.label}
-                    </a>
+                    </Link>
                   </li>
                 ))}
               </ul>
@@ -112,12 +113,12 @@ export function Footer() {
             <p className="text-sm mb-6 text-gray-700 w-2/3 md:w-full">
               Support the USJR Alumni Association through donations.
             </p>
-            <a
-              href="/donate"
+            <Link
+              to="/donate"
               className="bg-[#d4af37] text-white px-6 py-2 rounded-full hover:bg-[#c19b2a] transition-colors font-semibold"
             >
               Donate
-            </a>
+            </Link>
           </div>
         </div>
 

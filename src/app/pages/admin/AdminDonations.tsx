@@ -1,8 +1,8 @@
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../../components/ui/card';
-import { Button } from '../../components/ui/button';
-import { Badge } from '../../components/ui/badge';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@components/ui/card';
+import { Button } from '@components/ui/button';
+import { Badge } from '@components/ui/badge';
 import { Download } from 'lucide-react';
-import { adminDonationsMock } from '../../../assets/mockData';
+import { adminDonationsMock } from '@assets/mockData';
 
 export function AdminDonations() {
     return (

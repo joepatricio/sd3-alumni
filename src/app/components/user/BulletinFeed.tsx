@@ -1,13 +1,12 @@
-import { Clock, Tag } from 'lucide-react';
-import { bulletins as mockBulletins } from '../../assets/mockData';
+import { Clock, Calendar } from 'lucide-react';
+import { bulletins as mockBulletins } from '@assets/mockData';
+import { Link } from 'react-router-dom';
 
 export function BulletinFeed() {
   const bulletins = mockBulletins.slice(0, 6).map((b) => ({
     ...b,
     excerpt: b.preview,
     author: b.author.name,
-    // category missing in mockData, defaulting
-    category: 'News',
     image: b.heroImage,
   }));
 
@@ -45,8 +44,8 @@ export function BulletinFeed() {
             <div className="content-center p-8">
               <div className="flex items-center gap-4 mb-4">
                 <span className="text-sm text-gray-500 flex items-center gap-1">
-                  <Tag className="w-4 h-4" />
-                  {bulletins[0].category}
+                  <Calendar className="w-4 h-4" />
+                  {bulletins[0].date}
                 </span>
                 <span className="text-sm text-gray-500 flex items-center gap-1">
                   <Clock className="w-4 h-4" />
@@ -57,12 +56,11 @@ export function BulletinFeed() {
               <p className="text-gray-600 mb-4">{bulletins[0].excerpt}</p>
               <div className="flex items-center justify-between">
                 <div className="text-sm text-gray-500">
-                  <p>{bulletins[0].author}</p>
-                  <p>{bulletins[0].date}</p>
+                  <p>By {bulletins[0].author}</p>
                 </div>
-                <button className="bg-[#1a5f3f] text-white px-6 py-2 rounded-lg hover:bg-[#2d7a4f] transition-colors font-semibold">
+                <Link to={`/bulletin/${bulletins[0].id}`} className="bg-[#1a5f3f] cursor-pointer text-white px-6 py-2 rounded-lg hover:bg-[#2d7a4f] transition-colors font-semibold">
                   Read More
-                </button>
+                </Link>
               </div>
             </div>
           </div>
@@ -85,8 +83,8 @@ export function BulletinFeed() {
               <div className="p-6">
                 <div className="flex items-center gap-4 mb-3">
                   <span className="text-xs text-gray-500 flex items-center gap-1">
-                    <Tag className="w-3 h-3" />
-                    {bulletin.category}
+                    <Calendar className="w-3 h-3" />
+                    {bulletin.date}
                   </span>
                   <span className="text-xs text-gray-500 flex items-center gap-1">
                     <Clock className="w-3 h-3" />
@@ -100,10 +98,10 @@ export function BulletinFeed() {
                   {bulletin.excerpt}
                 </p>
                 <div className="flex items-center justify-between text-sm text-gray-500">
-                  <span>{bulletin.date}</span>
-                  <button className="text-[#1a5f3f] hover:text-[#2d7a4f] font-semibold">
+                  <span>By {bulletin.author}</span>
+                  <Link to={`/bulletin/${bulletin.id}`} className="text-[#1a5f3f] cursor-pointer hover:text-[#2d7a4f] font-semibold">
                     Read →
-                  </button>
+                  </Link>
                 </div>
               </div>
             </div>

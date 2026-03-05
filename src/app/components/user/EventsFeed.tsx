@@ -1,11 +1,13 @@
 import { Calendar, MapPin, Users } from 'lucide-react';
-
-import { events as mockEvents } from '../../assets/mockData';
+import { Link } from 'react-router-dom';
+import { events as mockEvents } from '@assets/mockData';
 
 export function EventsFeed() {
   const events = mockEvents.slice(0, 4).map(e => ({
     ...e,
     attendees: e.responses.going,
+    // Placeholder for now FIXME
+    url: `/events/${e.id}`,
   }));
 
   return (
@@ -18,12 +20,12 @@ export function EventsFeed() {
               Join us for exciting gatherings and networking opportunities
             </p>
           </div>
-          <a
-            href="/events"
+          <Link
+            to="/events"
             className="text-[#1a5f3f] hover:text-[#2d7a4f] font-semibold hidden sm:block"
           >
             View All →
-          </a>
+          </Link>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -58,21 +60,24 @@ export function EventsFeed() {
                     <span className="text-sm">{event.attendees} attending</span>
                   </div>
                 </div>
-                <button className="mt-4 w-full bg-[#1a5f3f] text-white py-2 rounded-lg hover:bg-[#2d7a4f] transition-colors font-semibold">
-                  Register Now
-                </button>
+                <Link
+                  to={event.url}
+                  className="mt-4 block text-center w-full bg-[#1a5f3f] cursor-pointer text-white py-2 rounded-lg hover:bg-[#2d7a4f] transition-colors font-semibold"
+                >
+                  View Details
+                </Link>
               </div>
             </div>
           ))}
         </div>
 
         <div className="text-center mt-8 sm:hidden">
-          <a
-            href="/events"
-            className="text-[#1a5f3f] hover:text-[#2d7a4f] font-semibold"
+          <Link
+            to="/events"
+            className="text-[#1a5f3f] cursor-pointer hover:text-[#2d7a4f] font-semibold"
           >
             View All Events →
-          </a>
+          </Link>
         </div>
       </div>
     </section>

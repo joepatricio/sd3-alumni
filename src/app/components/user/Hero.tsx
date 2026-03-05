@@ -1,3 +1,5 @@
+import { Link } from 'react-router-dom'
+
 export function Hero() {
   return (
     <div className="relative h-[500px] md:h-[600px] overflow-hidden">
@@ -20,18 +22,18 @@ export function Hero() {
             Build lasting relationships, advance your career, and give back to the community that shaped your future.
           </p>
           <div className="flex flex-wrap gap-4">
-            <a
-              href="/login"
+            <Link
+              to="/login"
               className="bg-[#d4af37] text-white px-8 py-3 rounded-full hover:bg-[#c19b2a] transition-colors font-semibold"
             >
               Join the Community
-            </a>
-            <a
-              href="/about"
+            </Link>
+            <Link
+              to="/about"
               className="bg-white text-[#1a5f3f] px-8 py-3 rounded-full hover:bg-gray-100 transition-colors font-semibold"
             >
               Learn More
-            </a>
+            </Link>
           </div>
         </div>
       </div>

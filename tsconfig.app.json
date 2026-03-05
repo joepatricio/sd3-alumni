@@ -32,15 +32,15 @@
       "@/*": [
         "*"
       ],
-      "@ui-components/*": [
-        "app/components/ui/*"
-      ],
-      "@data/*": [
-        "app/components/data/*"
+      "@components/*": [
+        "app/components/*"
       ],
       "@assets/*": [
         "assets/*"
-      ]
+      ],
+      "@pages/*": [
+        "app/pages/*"
+      ],
     }
   },
   "include": [

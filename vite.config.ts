@@ -14,9 +14,9 @@ export default defineConfig({
     alias: {
       // Alias @ to the src directory
       '@': path.resolve(__dirname, './src'),
-      '@ui-components': path.resolve(__dirname, './src/app/components/ui'),
-      '@data': path.resolve(__dirname, './src/app/components/data'),
+      '@components': path.resolve(__dirname, './src/app/components'),
       '@assets': path.resolve(__dirname, './src/assets'),
+      '@pages': path.resolve(__dirname, './src/app/pages'),
     },
   },
 

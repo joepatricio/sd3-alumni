@@ -4,6 +4,7 @@ import {
   Heart,
   BookOpen,
 } from "lucide-react";
+import { Link } from "react-router-dom";
 
 export function CallToAction() {
   const ctaCards = [
@@ -56,9 +57,9 @@ export function CallToAction() {
 
         <div className="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-4 gap-6">
           {ctaCards.map((card) => (
-            <a
+            <Link
               key={card.title}
-              href={card.link}
+              to={card.link}
               className="bg-white rounded-lg p-6 shadow-md hover:shadow-xl transition-all hover:-translate-y-1 duration-300"
             >
               <div
@@ -72,7 +73,7 @@ export function CallToAction() {
               <p className="text-gray-600">
                 {card.description}
               </p>
-            </a>
+            </Link>
           ))}
         </div>
       </div>

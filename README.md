@@ -11,7 +11,7 @@
   * Login/Profile with features for career networking, achievements, and donations.
   * Event RSVPs
   * Messaging capabilities (achieved through the Bulletin system.)
-  * Age verification for data privacy controls (see Messaging). 
+  * Age verification for data privacy controls. 
   * Dashboard to create a portal for aforementioned features.
   
   ## Running the code
@@ -26,10 +26,10 @@
 
   * `@/app/pages` contains the pages.
   * `@/app/components` contains the components.
-  * `@/lib` contains the utilities.
+  * `@/app/components/ui` contains third-party UI components.
   * `@/app/assets` contains the static files, including mock data.
 
-  Routes are implemented using React Router. Router logic is placed on App.tsx. This is a good place to start when reading the code.
+  App.tsx is a good place to start when reading the code. Routes are defined in AppRoutes.tsx. From there, pick your favorite webpage and look for its corresponding files in `@/app/pages` and `@/app/components` to learn the code behind it. `@/app/components/ui` can be ignored for the most part, and they "just work."
   
   ## Summary of dependencies
 
@@ -52,18 +52,21 @@
   * Register and Profile can be accessed from Login or URL hacking. `localhost:5173/register localhost:5173/profile`  
   * Login does not check against mock data. Any valid Login form will redirect to Profile.
   * Admin can only be accessed by URL hacking. `localhost:5173/admin`
-  * Other stuff like Events, Bulletin, and Connections will not be implemented until DB development.
+  * Other stuff like Events, Bulletin, and Connections will not be fully implemented until DB development.
   
   ## TODO before client approval
 
   * Admin Login
   * Everything in Admin
-  * UX stuff (scroll to top, secure routing, toasts everywhere, blablabla.)
+  * Admin, admin, admin, admin, admin
+  * UX stuff (Bulletin and Events sticky, happy pathing, toasts everywhere)
+  * Event RSVP is wonky and needs to be redesigned.
+  * Dynamic profile page based off of DB content (profile picture, bio, contacts, connections, etc.)
   * Look for solutions to LocationPicker for AddEventModal.
-  * Refactor code for better readability and maintainability.
+  * Refactor code for better readability and maintainability. Should be done last to avoid breaking stuff and make it easier to prototype
 
   ## TODO after client approval
 
   * Implement DB development with CRUD.
-  * Implement secure routing. Clean up App.tsx with extracted routes.
+  * Implement secure routing.
   * Implement CDN for images. Unsure whether cloud or self-hosted.

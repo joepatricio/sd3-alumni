@@ -9,10 +9,10 @@ import {
     ThumbsUp,
     Edit,
 } from 'lucide-react';
-import { CreateBulletinModal } from '../components/CreateBulletinModal';
-import { Button } from '../components/ui/button';
+import { CreateBulletinModal } from '../../components/user/CreateBulletinModal';
+import { Button } from '../../components/ui/button';
 
-import { bulletins, comments } from '../../assets/mockData';
+import { bulletins, comments } from '../../../assets/mockData';
 
 export function BulletinDetail() {
     const { id } = useParams();

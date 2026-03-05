@@ -1,3 +1,5 @@
+import { Link } from 'react-router-dom';
+
 export function Navbar() {
   const navLinks = [
     { label: 'Alumni Directory', href: '/directory' },
@@ -13,25 +15,25 @@ export function Navbar() {
           {/* Desktop Navigation */}
           <div className="hidden lg:flex items-center gap-8">
             {navLinks.map((link) => (
-              <a
+              <Link
                 key={link.label}
-                href={link.href}
+                to={link.href}
                 target={link.href.startsWith('http') ? '_blank' : '_self'}
                 className="text-gray-700 hover:text-[#1a5f3f] transition-colors font-medium"
               >
                 {link.label}
-              </a>
+              </Link>
             ))}
           </div>
 
           {/* Donate Button */}
           <div className="hidden lg:block ml-auto">
-            <a
-              href="/donate"
+            <Link
+              to="/donate"
               className="bg-[#d4af37] text-white px-6 py-2 rounded-full hover:bg-[#c19b2a] transition-colors font-semibold"
             >
               Donate
-            </a>
+            </Link>
           </div>
 
           {/* Mobile view - centered text */}

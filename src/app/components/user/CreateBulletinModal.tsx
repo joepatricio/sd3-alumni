@@ -1,5 +1,3 @@
-'use client';
-
 import { useState, useRef, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -7,7 +5,7 @@ import * as z from 'zod';
 import { Loader2, Upload, X } from 'lucide-react';
 import { toast } from 'sonner';
 
-import { Button } from '@ui-components/button';
+import { Button } from '@components/ui/button';
 import {
     Dialog,
     DialogContent,
@@ -25,9 +23,9 @@ import {
     FormItem,
     FormLabel,
     FormMessage,
-} from '@/app/components/ui/form';
-import { Input } from '@ui-components/input';
-import { Textarea } from '@ui-components/textarea';
+} from '@components/ui/form';
+import { Input } from '@components/ui/input';
+import { Textarea } from '@components/ui/textarea';
 import { cn } from '@/lib/utils';
 
 const formSchema = z.object({

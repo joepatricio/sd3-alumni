@@ -9,7 +9,7 @@ interface LayoutProps {
     children?: ReactNode;
 }
 
-export function Layout({ children }: LayoutProps) {
+export function MainLayout({ children }: LayoutProps) {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [isLoggedIn, setIsLoggedIn] = useState(false);
 

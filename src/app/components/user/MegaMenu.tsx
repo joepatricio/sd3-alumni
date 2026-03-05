@@ -1,5 +1,6 @@
 import { Mail, Phone, MapPin, ExternalLink } from 'lucide-react';
 import { SiFacebook, SiX, SiInstagram, SiLinkedin } from 'react-icons/si';
+import { Link } from 'react-router-dom';
 
 interface MegaMenuProps {
   isOpen: boolean;
@@ -34,21 +35,21 @@ export function MegaMenu({ isOpen }: MegaMenuProps) {
             <ul className="space-y-3">
               {navigation.map((link) => (
                 <li key={link.label}>
-                  <a
-                    href={link.href}
+                  <Link
+                    to={link.href}
                     className="text-gray-700 hover:text-[#1a5f3f] transition-colors text-lg font-medium block"
                   >
                     {link.label}
-                  </a>
+                  </Link>
                 </li>
               ))}
               <li>
-                <a
-                  href="/donate"
+                <Link
+                  to="/donate"
                   className="inline-block bg-[#d4af37] text-white px-6 py-2 rounded-full hover:bg-[#c19b2a] transition-colors font-semibold mt-2"
                 >
                   Donate
-                </a>
+                </Link>
               </li>
             </ul>
           </div>

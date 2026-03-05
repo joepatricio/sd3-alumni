@@ -1,8 +1,8 @@
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@ui-components/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@components/ui/card';
 import { Users, FileText, Calendar, CreditCard, Activity } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { adminStats, adminRecentActivity } from '../../../assets/mockData';
+import { adminStats, adminRecentActivity } from '@assets/mockData';
 
 const iconMap: Record<string, LucideIcon> = {
     Users,

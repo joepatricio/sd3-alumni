@@ -1,5 +1,6 @@
 import { User, Menu, X } from "lucide-react";
 import alumniLogo from "@/assets/alumni-logo.jpg";
+import { Link } from "react-router-dom";
 
 interface TopBarProps {
   isMenuOpen: boolean;
@@ -33,7 +34,7 @@ export function TopBar({
           </button>
 
           {/* Logo */}
-          <a href="/" className="favi-alum">
+          <Link to="/" className="favi-alum">
             <div className="flex items-center gap-2">
               <img
                 src={alumniLogo}
@@ -44,7 +45,7 @@ export function TopBar({
                 USJR Alumni
               </span>
             </div>
-          </a>
+          </Link>
         </div>
 
         <div className="flex items-center gap-4">
