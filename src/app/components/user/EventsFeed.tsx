@@ -3,10 +3,16 @@ import { Link } from 'react-router-dom';
 import { events as mockEvents } from '@assets/mockData';
 
 export function EventsFeed() {
+  const formatLocation = (loc: any) => {
+    if (typeof loc === 'string') return loc;
+    const parts = [loc.streetOrLandmark, loc.barangay, loc.cityMunicipality, loc.province].filter(Boolean);
+    return parts.join(', ');
+  };
+
   const events = mockEvents.slice(0, 4).map(e => ({
     ...e,
     attendees: e.responses.going,
-    // Placeholder for now FIXME
+    location: formatLocation(e.location),
     url: `/events/${e.id}`,
   }));
 

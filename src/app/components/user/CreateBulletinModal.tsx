@@ -1,9 +1,10 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { Loader2, Upload, X } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { ImageUpload } from './ImageUpload';
 
 import { Button } from '@components/ui/button';
 import {
@@ -26,7 +27,6 @@ import {
 } from '@components/ui/form';
 import { Input } from '@components/ui/input';
 import { Textarea } from '@components/ui/textarea';
-import { cn } from '@/lib/utils';
 
 const formSchema = z.object({
     title: z.string().min(2, {
@@ -56,8 +56,6 @@ interface CreateBulletinModalProps {
 export function CreateBulletinModal({ trigger, initialData }: CreateBulletinModalProps) {
     const [open, setOpen] = useState(false);
     const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-    const [isDragging, setIsDragging] = useState(false);
-    const fileInputRef = useRef<HTMLInputElement>(null);
 
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
@@ -101,55 +99,15 @@ export function CreateBulletinModal({ trigger, initialData }: CreateBulletinModa
         }, 1000);
     }
 
-    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (file) {
-            const url = URL.createObjectURL(file);
-            setPreviewUrl(url);
-            form.setValue('heroImage', file);
-        }
+    const handleFileSelect = (file: File) => {
+        const url = URL.createObjectURL(file);
+        setPreviewUrl(url);
+        form.setValue('heroImage', file);
     };
 
-    const clearImage = (e: React.MouseEvent) => {
-        e.stopPropagation();
+    const handleClearImage = () => {
         setPreviewUrl(null);
         form.setValue('heroImage', undefined);
-        if (fileInputRef.current) {
-            fileInputRef.current.value = '';
-        }
-    };
-
-    const handleUploadClick = () => {
-        fileInputRef.current?.click();
-    };
-
-    const handleDragOver = (e: React.DragEvent) => {
-        e.preventDefault();
-        setIsDragging(true);
-    };
-
-    const handleDragLeave = (e: React.DragEvent) => {
-        e.preventDefault();
-        setIsDragging(false);
-    };
-
-    const handleDrop = (e: React.DragEvent) => {
-        e.preventDefault();
-        setIsDragging(false);
-        const file = e.dataTransfer.files?.[0];
-        if (file && file.type.startsWith('image/')) {
-            const url = URL.createObjectURL(file);
-            setPreviewUrl(url);
-            form.setValue('heroImage', file);
-            // Also update the input element if possible, though mostly for consistency
-            if (fileInputRef.current) {
-                const dataTransfer = new DataTransfer();
-                dataTransfer.items.add(file);
-                fileInputRef.current.files = dataTransfer.files;
-            }
-        } else if (file) {
-            toast.error("Please upload an image file.");
-        }
     };
 
     const isEditMode = !!initialData;
@@ -203,53 +161,17 @@ export function CreateBulletinModal({ trigger, initialData }: CreateBulletinModa
                             )}
                         />
 
-                        {/* Hero Image */}
+                        {/* Banner Image */}
                         <FormItem>
-                            <FormLabel>Hero Image (Optional)</FormLabel>
+                            <FormLabel>Banner Image (Optional)</FormLabel>
                             <FormControl>
                                 <div className="space-y-2">
-                                    <div
-                                        onClick={handleUploadClick}
-                                        onDragOver={handleDragOver}
-                                        onDragLeave={handleDragLeave}
-                                        onDrop={handleDrop}
-                                        className={cn(
-                                            "border-2 border-dashed rounded-lg p-6 flex flex-col items-center justify-center cursor-pointer transition-colors relative",
-                                            isDragging ? "border-[#1a5f3f] bg-[#1a5f3f]/10" : "border-gray-300 hover:border-[#1a5f3f]"
-                                        )}
-                                    >
-                                        <input
-                                            type="file"
-                                            accept="image/*"
-                                            onChange={handleFileChange}
-                                            ref={fileInputRef}
-                                            className="hidden"
-                                            style={{ display: 'none' }}
-                                        />
-
-                                        {previewUrl ? (
-                                            <div className="relative w-full h-48 rounded-lg overflow-hidden">
-                                                <img
-                                                    src={previewUrl}
-                                                    alt="Preview"
-                                                    className="w-full h-full object-cover"
-                                                />
-                                                <button
-                                                    type="button"
-                                                    onClick={clearImage}
-                                                    className="absolute top-2 right-2 p-1 bg-black/50 hover:bg-black/70 text-white rounded-full transition-colors z-10"
-                                                >
-                                                    <X className="w-4 h-4" />
-                                                </button>
-                                            </div>
-                                        ) : (
-                                            <>
-                                                <Upload className={cn("w-8 h-8 mb-2", isDragging ? "text-[#1a5f3f]" : "text-gray-400")} />
-                                                <p className="text-sm text-gray-600 font-medium">Click or drag to upload hero image</p>
-                                                <p className="text-xs text-gray-400 mt-1">SVG, PNG, JPG (max. 5MB)</p>
-                                            </>
-                                        )}
-                                    </div>
+                                    <ImageUpload
+                                        previewUrl={previewUrl}
+                                        onFileSelect={handleFileSelect}
+                                        onClear={handleClearImage}
+                                        placeholderText="Click or drag to upload"
+                                    />
                                 </div>
                             </FormControl>
                             <FormDescription>
