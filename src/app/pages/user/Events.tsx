@@ -16,6 +16,12 @@ export function Events() {
         return eventDate >= fiveYearsAgo;
     });
 
+    const formatLocation = (loc: any) => {
+        if (typeof loc === 'string') return loc;
+        const parts = [loc.streetOrLandmark, loc.barangay, loc.cityMunicipality, loc.province].filter(Boolean);
+        return parts.join(', ');
+    };
+
     return (
         <div className="min-h-screen bg-gray-50">
             <div className="max-w-6xl mx-auto">
@@ -52,9 +58,9 @@ export function Events() {
                             to={`/events/${event.id}`}
                             className="block bg-white border border-gray-200 rounded-lg overflow-hidden hover:shadow-lg transition-shadow duration-300"
                         >
-                            <div className="flex flex-col md:flex-row">
+                            <div className="flex flex-col md:flex-row md:h-[260px] lg:h-[280px]">
                                 {/* Image */}
-                                <div className="relative w-full md:w-64 h-48 md:h-auto flex-shrink-0 overflow-hidden">
+                                <div className="relative w-full md:w-64 lg:w-80 h-48 md:h-full flex-shrink-0 overflow-hidden">
                                     <img
                                         src={event.image}
                                         alt={event.title}
@@ -66,33 +72,35 @@ export function Events() {
                                 </div>
 
                                 {/* Content */}
-                                <div className="flex-1 p-6">
-                                    <h2 className="text-2xl font-bold mb-3 text-gray-900 hover:text-[#1a5f3f] transition-colors">
-                                        {event.title}
-                                    </h2>
+                                <div className="flex-1 p-6 flex flex-col">
+                                    <div className="flex-1 overflow-hidden">
+                                        <h2 className="text-2xl font-bold mb-3 text-gray-900 hover:text-[#1a5f3f] transition-colors line-clamp-2">
+                                            {event.title}
+                                        </h2>
 
-                                    <p className="text-gray-600 mb-4 line-clamp-2">
-                                        {event.description}
-                                    </p>
+                                        <p className="text-gray-600 mb-4 line-clamp-2">
+                                            {event.description}
+                                        </p>
 
-                                    {/* Event Meta Information */}
-                                    <div className="flex flex-wrap gap-4 text-sm text-gray-600">
-                                        <div className="flex items-center gap-2">
-                                            <Calendar className="w-4 h-4 text-[#1a5f3f]" />
-                                            <span>{event.date}</span>
-                                        </div>
-                                        <div className="flex items-center gap-2">
-                                            <Clock className="w-4 h-4 text-[#1a5f3f]" />
-                                            <span>{event.time}</span>
-                                        </div>
-                                        <div className="flex items-center gap-2">
-                                            <MapPin className="w-4 h-4 text-[#1a5f3f]" />
-                                            <span>{event.location}</span>
+                                        {/* Event Meta Information */}
+                                        <div className="flex flex-wrap gap-4 text-sm text-gray-600">
+                                            <div className="flex items-center gap-2">
+                                                <Calendar className="w-4 h-4 text-[#1a5f3f]" />
+                                                <span>{event.date}</span>
+                                            </div>
+                                            <div className="flex items-center gap-2">
+                                                <Clock className="w-4 h-4 text-[#1a5f3f]" />
+                                                <span>{event.time}</span>
+                                            </div>
+                                            <div className="flex items-center gap-2">
+                                                <MapPin className="w-4 h-4 text-[#1a5f3f]" />
+                                                <span>{formatLocation(event.location)}</span>
+                                            </div>
                                         </div>
                                     </div>
 
                                     {/* View Details Link */}
-                                    <div className="mt-4">
+                                    <div className="pt-2 mt-auto">
                                         <span className="text-[#1a5f3f] font-semibold hover:text-[#2d7a4f] inline-flex items-center gap-1">
                                             View Details
                                             <span aria-hidden="true">→</span>

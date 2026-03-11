@@ -8,7 +8,6 @@ import {
     Edit,
     Mail,
     Phone,
-    Globe,
     CheckCircle2,
     XCircle
 } from 'lucide-react';
@@ -35,30 +34,38 @@ export function EventDetail() {
         // In a real app, this would accept the invite via API
     };
 
+    const formatLocation = (loc: any) => {
+        if (typeof loc === 'string') return loc;
+        const parts = [loc.landmark, loc.street, loc.barangay, loc.cityMunicipality, loc.province].filter(Boolean);
+        return parts.join(', ');
+    };
+
+    const loc: any = eventData.location;
+    const mapLat = typeof loc === 'object' && loc.lat ? loc.lat : 10.2954;
+    const mapLng = typeof loc === 'object' && loc.lng ? loc.lng : 123.8944;
+
     return (
         <div className="min-h-screen bg-gray-50 pb-12">
             {/* Header / Nav */}
-            <div className="bg-white border-b border-gray-200 sticky top-0 z-10">
-                <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
-                    <Link
-                        to="/events"
-                        className="inline-flex items-center gap-2 text-gray-600 hover:text-[#1a5f3f] transition-colors"
-                    >
-                        <ArrowLeft className="w-4 h-4" />
-                        <span className="font-medium">Back to Events</span>
-                    </Link>
+            <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 flex justify-between items-center">
+                <Link
+                    to="/events"
+                    className="inline-flex items-center gap-2 text-gray-600 hover:text-[#1a5f3f] transition-colors"
+                >
+                    <ArrowLeft className="w-4 h-4" />
+                    <span className="font-medium">Back to Events</span>
+                </Link>
 
-                    <div className="flex gap-2">
-                        <CreateEventModal
-                            trigger={
-                                <Button variant="outline" className="gap-2 text-[#1a5f3f] border-[#1a5f3f] hover:bg-[#1a5f3f] hover:text-white transition-colors">
-                                    <Edit className="w-4 h-4" />
-                                    Edit Event
-                                </Button>
-                            }
-                            initialData={eventData}
-                        />
-                    </div>
+                <div className="flex gap-2">
+                    <CreateEventModal
+                        trigger={
+                            <Button variant="outline" className="gap-2 text-[#1a5f3f] border-[#1a5f3f] hover:bg-[#1a5f3f] hover:text-white transition-colors">
+                                <Edit className="w-4 h-4" />
+                                Edit Event
+                            </Button>
+                        }
+                        initialData={eventData as any}
+                    />
                 </div>
             </div>
 
@@ -74,7 +81,7 @@ export function EventDetail() {
                                     alt={eventData.title}
                                     className="w-full h-full object-cover"
                                 />
-                                <div className="absolute top-4 right-4">
+                                <div className="absolute top-4 left-4">
                                     <Badge className="bg-white/90 text-[#1a5f3f] hover:bg-white text-sm px-3 py-1 shadow-sm font-semibold backdrop-blur-sm border-none">
                                         {eventData.category}
                                     </Badge>
@@ -95,7 +102,7 @@ export function EventDetail() {
                                     </div>
                                     <div className="flex items-center gap-2">
                                         <MapPin className="w-5 h-5 text-[#1a5f3f]" />
-                                        <span>{eventData.location}</span>
+                                        <span>{formatLocation(eventData.location)}</span>
                                     </div>
                                 </div>
 
@@ -169,13 +176,6 @@ export function EventDetail() {
                                     <span className="text-gray-600 font-medium">Responses</span>
                                     <span className="text-[#1a5f3f] font-bold">{eventData.responses.going + (rsvpStatus === 'going' ? 1 : 0)} Going</span>
                                 </div>
-                                <div className="w-full bg-gray-100 rounded-full h-2 mb-2 overflow-hidden">
-                                    <div
-                                        className="bg-[#1a5f3f] h-2 rounded-full transition-all duration-500"
-                                        style={{ width: `${((eventData.responses.going + (rsvpStatus === 'going' ? 1 : 0)) / eventData.responses.invited) * 100}%` }}
-                                    ></div>
-                                </div>
-                                <p className="text-xs text-gray-400 text-right">{eventData.responses.invited} Invited</p>
                             </div>
 
                             <div className="mt-6 pt-6 border-t border-gray-100">
@@ -195,7 +195,7 @@ export function EventDetail() {
                                         />
                                     ))}
                                     <div className="flex items-center justify-center h-8 w-8 rounded-full ring-2 ring-white bg-gray-100 text-xs text-gray-500 font-medium">
-                                        +{(eventData.responses.going - 5) + (rsvpStatus === 'going' ? 1 : 0)}
+                                        +{(eventData.responses.going - 5)}
                                     </div>
                                 </div>
                                 <p className="text-center text-sm text-gray-500">
@@ -221,16 +221,16 @@ export function EventDetail() {
                                     scrolling="no"
                                     marginHeight={0}
                                     marginWidth={0}
-                                    src="https://www.openstreetmap.org/export/embed.html?bbox=123.8850%2C10.2900%2C123.9050%2C10.3100&amp;layer=mapnik&amp;marker=10.3000%2C123.8950"
+                                    src={`https://www.openstreetmap.org/export/embed.html?bbox=${mapLng - 0.01}%2C${mapLat - 0.01}%2C${mapLng + 0.01}%2C${mapLat + 0.01}&layer=mapnik&marker=${mapLat}%2C${mapLng}`}
                                     style={{ border: 0 }}
                                     title="Event Location"
                                 ></iframe>
                             </div>
                             <div className="p-4 bg-gray-50">
-                                <p className="font-medium text-gray-900 text-sm">{eventData.location}</p>
-                                <p className="text-gray-500 text-xs mt-1">{eventData.address}</p>
+                                <p className="font-medium text-gray-900 text-sm">{typeof loc === 'string' ? loc : loc.landmark || loc.street}</p>
+                                <p className="text-gray-500 text-xs mt-1">{formatLocation(loc)}</p>
                                 <a
-                                    href={`https://www.openstreetmap.org/?mlat=10.3000&mlon=123.8950#map=16/10.3000/123.8950`}
+                                    href={`https://www.openstreetmap.org/?mlat=${mapLat}&mlon=${mapLng}#map=16/${mapLat}/${mapLng}`}
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     className="block mt-3 text-xs text-[#1a5f3f] font-medium hover:underline"

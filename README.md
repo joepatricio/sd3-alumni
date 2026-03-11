@@ -53,20 +53,20 @@
   * Login does not check against mock data. Any valid Login form will redirect to Profile.
   * Admin can only be accessed by URL hacking. `localhost:5173/admin`
   * Other stuff like Events, Bulletin, and Connections will not be fully implemented until DB development.
-  
-  ## TODO before client approval
+
+  ## TODO before client approval (FINISH BY MARCH 20 PLEASE)
 
   * Admin Login
   * Everything in Admin
   * Admin, admin, admin, admin, admin
-  * UX stuff (Bulletin and Events sticky, happy pathing, toasts everywhere)
-  * Event RSVP is wonky and needs to be redesigned.
+  * Improve CreateEventModal UI/UX (error messages, Virtual should not require location)
   * Dynamic profile page based off of DB content (profile picture, bio, contacts, connections, etc.)
-  * Look for solutions to LocationPicker for AddEventModal.
+  * UX stuff (Bulletin and Events sticky, happy pathing, toasts everywhere)
   * Refactor code for better readability and maintainability. Should be done last to avoid breaking stuff and make it easier to prototype
 
   ## TODO after client approval
 
+  * Look into TanStack Query, SQLite
   * Implement DB development with CRUD.
   * Implement secure routing.
   * Implement CDN for images. Unsure whether cloud or self-hosted.
