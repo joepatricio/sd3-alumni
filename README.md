@@ -20,7 +20,8 @@
 
   Run `pnpm dev` to start the development server.
 
-  This will expose port 5173 to the network. You can access the site at `localhost:5173`.
+  This will expose port 5173 to the network by default. This can be changed to run on localhost only removing the `--host` option in `package.json`. 
+  In both cases, the website can be accessed at `localhost:5173`.
 
   ## Project structure
 
@@ -38,7 +39,7 @@
   * TypeScript
   * React and friends (Mostly using Hook Form/Query/Router)
   * Shadcn UI for components
-  * Zod for validation
+  * Zod for forum validation
   * Sonner for notifications
 
   ## Notes
