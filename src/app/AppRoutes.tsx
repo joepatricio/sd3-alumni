@@ -12,6 +12,8 @@ import { BulletinDetail } from '@pages/user/BulletinDetail';
 import { About } from '@pages/user/About';
 import { Login } from '@pages/user/Login';
 import { ForgotPassword } from '@pages/user/ForgotPassword';
+import { TermsOfService } from '@pages/user/TermsOfService';
+import { PrivacyPolicy } from '@pages/user/PrivacyPolicy';
 import { Profile } from '@pages/user/Profile';
 import { EditProfile } from '@pages/user/EditProfile';
 import { Connections } from '@pages/user/Connections';
@@ -38,6 +40,8 @@ export default function AppRoutes() {
                 <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<Register />} />
                 <Route path="/forgot-password" element={<ForgotPassword />} />
+                <Route path="/terms" element={<TermsOfService />} />
+                <Route path="/privacy" element={<PrivacyPolicy />} />
                 <Route path="/profile" element={<Profile />} />
                 <Route path="/profile/edit" element={<EditProfile />} />
                 <Route path="/profile/connections" element={<Connections />} />

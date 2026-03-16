@@ -142,25 +142,6 @@ export function CreateBulletinModal({ trigger, initialData }: CreateBulletinModa
                             )}
                         />
 
-                        {/* Date */}
-                        <FormField
-                            control={form.control}
-                            name="date"
-                            render={({ field }) => (
-                                <FormItem className="flex flex-col">
-                                    <FormLabel>Date</FormLabel>
-                                    <FormControl>
-                                        <Input
-                                            type="date"
-                                            {...field}
-                                            className="w-full"
-                                        />
-                                    </FormControl>
-                                    <FormMessage />
-                                </FormItem>
-                            )}
-                        />
-
                         {/* Banner Image */}
                         <FormItem>
                             <FormLabel>Banner Image (Optional)</FormLabel>
@@ -170,13 +151,10 @@ export function CreateBulletinModal({ trigger, initialData }: CreateBulletinModa
                                         previewUrl={previewUrl}
                                         onFileSelect={handleFileSelect}
                                         onClear={handleClearImage}
-                                        placeholderText="Click or drag to upload"
+                                        placeholderText="Click or drag to upload bulletin banner"
                                     />
                                 </div>
                             </FormControl>
-                            <FormDescription>
-                                Upload an image to be displayed at the top of the bulletin.
-                            </FormDescription>
                         </FormItem>
 
                         {/* Content */}

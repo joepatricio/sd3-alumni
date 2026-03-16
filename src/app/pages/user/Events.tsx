@@ -58,7 +58,7 @@ export function Events() {
                             to={`/events/${event.id}`}
                             className="block bg-white border border-gray-200 rounded-lg overflow-hidden hover:shadow-lg transition-shadow duration-300"
                         >
-                            <div className="flex flex-col md:flex-row md:h-[260px] lg:h-[280px]">
+                            <div className="flex flex-col md:flex-row md:h-[200px] lg:h-[220px]">
                                 {/* Image */}
                                 <div className="relative w-full md:w-64 lg:w-80 h-48 md:h-full flex-shrink-0 overflow-hidden">
                                     <img
@@ -94,7 +94,11 @@ export function Events() {
                                             </div>
                                             <div className="flex items-center gap-2">
                                                 <MapPin className="w-4 h-4 text-[#1a5f3f]" />
-                                                <span>{formatLocation(event.location)}</span>
+                                                <span>
+                                                    {event.category === 'Virtual'
+                                                        ? `Virtual (${event.modality || 'Online'})`
+                                                        : formatLocation(event.location)}
+                                                </span>
                                             </div>
                                         </div>
                                     </div>

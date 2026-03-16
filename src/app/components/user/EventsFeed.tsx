@@ -3,7 +3,9 @@ import { Link } from 'react-router-dom';
 import { events as mockEvents } from '@assets/mockData';
 
 export function EventsFeed() {
-  const formatLocation = (loc: any) => {
+  const formatLocation = (event: any) => {
+    if (event.category === 'Virtual') return `Virtual (${event.modality || 'Online'})`;
+    const loc = event.location;
     if (typeof loc === 'string') return loc;
     const parts = [loc.streetOrLandmark, loc.barangay, loc.cityMunicipality, loc.province].filter(Boolean);
     return parts.join(', ');
@@ -12,7 +14,7 @@ export function EventsFeed() {
   const events = mockEvents.slice(0, 4).map(e => ({
     ...e,
     attendees: e.responses.going,
-    location: formatLocation(e.location),
+    location: formatLocation(e),
     url: `/events/${e.id}`,
   }));
 

@@ -9,14 +9,14 @@ import {
     Mail,
     Phone,
     CheckCircle2,
-    XCircle
+    XCircle,
 } from 'lucide-react';
-import { CreateEventModal } from '../../components/user/CreateEventModal';
-import { Button } from '../../components/ui/button';
-import { Badge } from '../../components/ui/badge';
-import { Avatar, AvatarFallback, AvatarImage } from '../../components/ui/avatar';
+import { CreateEventModal } from '@components/user/CreateEventModal';
+import { Button } from '@components/ui/button';
+import { Badge } from '@components/ui/badge';
+import { Avatar, AvatarFallback, AvatarImage } from '@components/ui/avatar';
 
-import { events } from '../../../assets/mockData';
+import { events } from '@assets/mockData';
 
 export function EventDetail() {
     const { id } = useParams<{ id: string }>();
@@ -34,7 +34,9 @@ export function EventDetail() {
         // In a real app, this would accept the invite via API
     };
 
-    const formatLocation = (loc: any) => {
+    const formatLocation = (event: any) => {
+        if (event.category === 'Virtual') return `Virtual (${event.modality || 'Online'})`;
+        const loc = event.location;
         if (typeof loc === 'string') return loc;
         const parts = [loc.landmark, loc.street, loc.barangay, loc.cityMunicipality, loc.province].filter(Boolean);
         return parts.join(', ');
@@ -45,7 +47,7 @@ export function EventDetail() {
     const mapLng = typeof loc === 'object' && loc.lng ? loc.lng : 123.8944;
 
     return (
-        <div className="min-h-screen bg-gray-50 pb-12">
+        <div className="bg-gray-50 pb-12">
             {/* Header / Nav */}
             <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 flex justify-between items-center">
                 <Link
@@ -102,7 +104,7 @@ export function EventDetail() {
                                     </div>
                                     <div className="flex items-center gap-2">
                                         <MapPin className="w-5 h-5 text-[#1a5f3f]" />
-                                        <span>{formatLocation(eventData.location)}</span>
+                                        <span>{formatLocation(eventData)}</span>
                                     </div>
                                 </div>
 
@@ -115,38 +117,48 @@ export function EventDetail() {
                             </div>
                         </div>
 
-                        {/* Organizer Info */}
-                        <div className="bg-white rounded-xl shadow-sm p-6 sm:p-8 border border-gray-100">
-                            <h3 className="text-lg font-bold text-gray-900 mb-6">Organizer</h3>
-                            <div className="flex items-start sm:items-center gap-4">
-                                <Avatar className="w-16 h-16 border-2 border-gray-100">
-                                    <AvatarImage src={eventData.organizer.image} />
-                                    <AvatarFallback className="bg-[#1a5f3f] text-white text-xl">
-                                        {eventData.organizer.name.charAt(0)}
-                                    </AvatarFallback>
-                                </Avatar>
-                                <div className="flex-1">
-                                    <h4 className="text-xl font-semibold text-gray-900">{eventData.organizer.name}</h4>
-                                    <p className="text-gray-500 mb-2">Point of Contact: {eventData.organizer.contactName}</p>
-                                    <div className="flex flex-wrap gap-y-2 gap-x-6 text-sm text-gray-600">
-                                        <div className="flex items-center gap-2">
-                                            <Mail className="w-4 h-4 text-[#1a5f3f]" />
-                                            <a href={`mailto:${eventData.organizer.email}`} className="hover:text-[#1a5f3f] transition-colors">{eventData.organizer.email}</a>
-                                        </div>
-                                        <div className="flex items-center gap-2">
-                                            <Phone className="w-4 h-4 text-[#1a5f3f]" />
-                                            <p className="hover:text-[#1a5f3f] transition-colors">{eventData.organizer.phone}</p>
-                                        </div>
-                                    </div>
+                        {eventData.category !== 'Virtual' && (
+                            <div className="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-100">
+                                <div className="p-4 border-b border-gray-100 bg-gray-50/50">
+                                    <h3 className="font-semibold text-gray-900 flex items-center gap-2">
+                                        <MapPin className="w-4 h-4 text-[#1a5f3f]" />
+                                        Location
+                                    </h3>
+                                </div>
+                                <div className="aspect-2/1 w-full relative">
+                                    {/* OpenStreetMap Iframe */}
+                                    <iframe
+                                        width="100%"
+                                        height="100%"
+                                        frameBorder="0"
+                                        scrolling="no"
+                                        marginHeight={0}
+                                        marginWidth={0}
+                                        src={`https://www.openstreetmap.org/export/embed.html?bbox=${mapLng - 0.001}%2C${mapLat - 0.001}%2C${mapLng + 0.001}%2C${mapLat + 0.001}&layer=mapnik&marker=${mapLat}%2C${mapLng}`}
+                                        style={{ border: 0 }}
+                                        title="Event Location"
+                                    ></iframe>
+                                </div>
+                                <div className="p-4 bg-gray-50">
+                                    <p className="font-medium text-gray-900 text-sm">{typeof loc === 'string' ? loc : loc.landmark || loc.street}</p>
+                                    <p className="text-gray-500 text-xs mt-1">{formatLocation(eventData)}</p>
+                                    <a
+                                        href={`https://www.openstreetmap.org/?mlat=${mapLat}&mlon=${mapLng}#map=16/${mapLat}/${mapLng}`}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="block mt-3 text-xs text-[#1a5f3f] font-medium hover:underline"
+                                    >
+                                        View larger map
+                                    </a>
                                 </div>
                             </div>
-                        </div>
+                        )}
                     </div>
 
                     {/* Right Column: Sidebar */}
-                    <div className="space-y-8">
+                    <div className="space-y-8 sticky top-24 self-start">
                         {/* RSVP Card */}
-                        <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100 top-24">
+                        <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
                             <div className="text-center mb-6">
                                 <h3 className="text-lg font-bold text-gray-900 mb-2">Are you going?</h3>
                                 <p className="text-gray-500 text-sm">Let us know if you'll be there!</p>
@@ -204,39 +216,44 @@ export function EventDetail() {
                             </div>
                         </div>
 
-                        {/* Map Card */}
-                        <div className="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-100">
-                            <div className="p-4 border-b border-gray-100 bg-gray-50/50">
-                                <h3 className="font-semibold text-gray-900 flex items-center gap-2">
-                                    <MapPin className="w-4 h-4 text-[#1a5f3f]" />
-                                    Location
-                                </h3>
+                        {/* Organizer Info */}
+                        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6 sm:p-8">
+                            <h3 className="text-xl font-bold text-gray-900 mb-6">Event Organizer</h3>
+
+                            {/* Organizer header */}
+                            <div className="flex items-center gap-4 mb-6">
+                                <Avatar className="w-16 h-16 border-2 border-gray-100 shadow-sm">
+                                    <AvatarImage src={eventData.organizer.image} />
+                                    <AvatarFallback className="bg-[#1a5f3f] text-white text-xl font-semibold">
+                                        {eventData.organizer.name.charAt(0)}
+                                    </AvatarFallback>
+                                </Avatar>
+
+                                <div>
+                                    <span className="text-lg font-semibold text-gray-900 leading-tight">
+                                        {eventData.organizer.name}
+                                    </span>
+                                </div>
                             </div>
-                            <div className="aspect-square w-full relative">
-                                {/* OpenStreetMap Iframe */}
-                                <iframe
-                                    width="100%"
-                                    height="100%"
-                                    frameBorder="0"
-                                    scrolling="no"
-                                    marginHeight={0}
-                                    marginWidth={0}
-                                    src={`https://www.openstreetmap.org/export/embed.html?bbox=${mapLng - 0.01}%2C${mapLat - 0.01}%2C${mapLng + 0.01}%2C${mapLat + 0.01}&layer=mapnik&marker=${mapLat}%2C${mapLng}`}
-                                    style={{ border: 0 }}
-                                    title="Event Location"
-                                ></iframe>
-                            </div>
-                            <div className="p-4 bg-gray-50">
-                                <p className="font-medium text-gray-900 text-sm">{typeof loc === 'string' ? loc : loc.landmark || loc.street}</p>
-                                <p className="text-gray-500 text-xs mt-1">{formatLocation(loc)}</p>
-                                <a
-                                    href={`https://www.openstreetmap.org/?mlat=${mapLat}&mlon=${mapLng}#map=16/${mapLat}/${mapLng}`}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="block mt-3 text-xs text-[#1a5f3f] font-medium hover:underline"
-                                >
-                                    View larger map
-                                </a>
+
+                            {/* Contact info */}
+                            <div className="space-y-3 text-sm">
+                                <div className="flex items-center gap-3 text-gray-600">
+                                    <Mail className="w-4 h-4 text-[#1a5f3f]" />
+                                    <a
+                                        href={`mailto:${eventData.organizer.email}`}
+                                        className="hover:text-[#1a5f3f] transition-colors"
+                                    >
+                                        {eventData.organizer.email}
+                                    </a>
+                                </div>
+
+                                <div className="flex items-center gap-3 text-gray-600">
+                                    <Phone className="w-4 h-4 text-[#1a5f3f]" />
+                                    <span className="hover:text-[#1a5f3f] transition-colors">
+                                        {eventData.organizer.phone}
+                                    </span>
+                                </div>
                             </div>
                         </div>
                     </div>

@@ -24,7 +24,7 @@ export function MegaMenu({ isOpen }: MegaMenuProps) {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed top-[60px] left-0 right-0 bg-white shadow-xl z-40 max-h-[calc(100vh-60px)] overflow-y-auto">
+    <div className="fixed top-[60px] left-0 right-0 bg-white shadow-xl z-45 max-h-[calc(100vh-60px)] overflow-y-auto">
       <div className="max-w-6xl mx-auto px-4 md:px-8 py-8">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {/* Main Navigation */}

@@ -49,8 +49,8 @@ async function run() {
         `export const psgcCities = ${JSON.stringify(mappedCities)};\n` +
         `export const psgcBarangays = ${JSON.stringify(mappedBarangays)};\n`;
 
-    fs.appendFileSync('src/assets/mockData.tsx', outputStr);
-    console.log('Successfully appended static PSGC arrays to src/assets/mockData.tsx!');
+    fs.appendFileSync('src/assets/psgc_prefetch.tsx', outputStr);
+    console.log('Successfully appended static PSGC arrays to src/assets/psgc_prefetch.tsx!');
 }
 
 run().catch(console.error);

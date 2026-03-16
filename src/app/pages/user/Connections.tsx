@@ -1,8 +1,8 @@
 import { MoreVertical, UserMinus } from 'lucide-react';
 import { useOutletContext, useNavigate } from 'react-router-dom';
-import { ProfileHeader } from '../../components/user/ProfileHeader';
-import { QuickActions } from '../../components/user/QuickActions';
-import { userData, connectionsData } from '../../../assets/mockData';
+import { ProfileHeader } from '@components/user/ProfileHeader';
+import { QuickActions } from '@components/user/QuickActions';
+import { userData, connectionsData } from '@assets/mockData';
 
 export function Connections() {
     const navigate = useNavigate();
@@ -14,7 +14,7 @@ export function Connections() {
                 {/* Profile Header */}
                 <ProfileHeader
                     userData={userData}
-                    isOwner={true}
+                    isOwner={false}
                     onEdit={() => navigate('/profile/edit')}
                 />
 

@@ -1,10 +1,14 @@
+// Very complicated component, here be dragons.
+// Relies on PSGC, OpenStreetMap, and Nominatim APIs
+// Est. more than half (70%) of the logic is for location-related fields.
+
 import React from 'react';
 import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import axios from 'axios';
-import { psgcRegions, psgcProvinces, psgcCities, psgcBarangays } from '@assets/mockData';
+import { psgcRegions, psgcProvinces, psgcCities, psgcBarangays } from '@assets/psgc_prefetch';
 import { Loader2, Navigation, Search } from 'lucide-react';
 import { toast } from 'sonner';
 import { MapContainer, TileLayer, Marker, useMap } from 'react-leaflet';
@@ -33,7 +37,6 @@ import {
 import {
     Form,
     FormControl,
-    FormDescription,
     FormField,
     FormItem,
     FormLabel,
@@ -73,22 +76,48 @@ const formSchema = z.object({
     endTimeMinute: z.string(),
     endTimeAmPm: z.string(),
     location: z.object({
-        region: z.string().min(1, 'Region is required'),
+        region: z.string().optional(),
         regionCode: z.string().optional(),
         province: z.string().optional(),
         provinceCode: z.string().optional(),
-        cityMunicipality: z.string().min(1, 'City/Municipality is required'),
+        cityMunicipality: z.string().optional(),
         cityCode: z.string().optional(),
-        barangay: z.string().min(1, 'Barangay is required'),
-        landmark: z.string().min(1, 'Landmark is required'),
+        barangay: z.string().optional(),
+        landmark: z.string().optional(),
         street: z.string().optional(),
         lat: z.number().optional(),
         lng: z.number().optional()
     }),
+    modality: z.string().optional(),
     description: z.string().min(10, {
         message: 'Description must be at least 10 characters.',
     }),
     image: z.any().optional(),
+}).superRefine((data, ctx) => {
+    if (data.category === 'Virtual') {
+        if (!data.modality || data.modality.trim() === '') {
+            ctx.addIssue({
+                code: z.ZodIssueCode.custom,
+                message: "Modality (e.g. Zoom, Google Meet) is required for virtual events.",
+                path: ['modality']
+            });
+        }
+    } else {
+        if (!data.location.cityMunicipality || data.location.cityMunicipality.trim() === '') {
+            ctx.addIssue({
+                code: z.ZodIssueCode.custom,
+                message: "City/Municipality is required",
+                path: ['location', 'cityCode']
+            });
+        }
+        if (!data.location.landmark || data.location.landmark.trim() === '') {
+            ctx.addIssue({
+                code: z.ZodIssueCode.custom,
+                message: "Landmark is required",
+                path: ['location', 'landmark']
+            });
+        }
+    }
 });
 
 export interface EventData {
@@ -114,6 +143,7 @@ export interface EventData {
         lat?: number;
         lng?: number;
     };
+    modality?: string;
     description: string;
     image?: string | File | null;
 }
@@ -164,7 +194,8 @@ export function CreateEventModal({ trigger, initialData }: CreateEventModalProps
                 barangay: '',
                 landmark: '',
                 street: '',
-            }
+            },
+            modality: ''
         },
     });
 
@@ -183,6 +214,7 @@ export function CreateEventModal({ trigger, initialData }: CreateEventModalProps
                 endTimeHour: initialData.endTimeHour,
                 endTimeMinute: initialData.endTimeMinute,
                 endTimeAmPm: initialData.endTimeAmPm,
+                modality: initialData.modality || '',
             });
             if (typeof initialData.image === 'string') {
                 setPreviewUrl(initialData.image);
@@ -471,6 +503,7 @@ export function CreateEventModal({ trigger, initialData }: CreateEventModalProps
     // Watch lat/lng for dynamic pointer updates
     const currentLat = form.watch('location.lat');
     const currentLng = form.watch('location.lng');
+    const selectedCategory = form.watch('category');
 
     const mapDisplay = React.useMemo(() => (
         <div className="h-[250px] w-full bg-gray-100 rounded-md overflow-hidden relative z-0 border border-input">
@@ -543,6 +576,7 @@ export function CreateEventModal({ trigger, initialData }: CreateEventModalProps
 
     const isEditMode = !!initialData;
 
+    // Return function
     return (
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
@@ -612,7 +646,7 @@ export function CreateEventModal({ trigger, initialData }: CreateEventModalProps
                                             <Input
                                                 type="date"
                                                 {...field}
-                                                className="w-full"
+                                                className="w-full selection:bg-blue-500 selection:text-white"
                                             />
                                         </FormControl>
                                         <FormMessage />
@@ -730,218 +764,244 @@ export function CreateEventModal({ trigger, initialData }: CreateEventModalProps
                                 </div>
                             </FormItem>
 
-                            <div className="md:col-span-2 space-y-4">
-                                <FormLabel className='mb-2'>Location</FormLabel>
-                                <div className="flex gap-2 mb-2 mt-1 relative items-start">
-                                    <FormField
-                                        control={form.control}
-                                        name="location.landmark"
-                                        render={({ field }) => (
-                                            <FormItem className="relative flex-1 space-y-0">
-                                                <FormControl>
-                                                    <Input
-                                                        placeholder="Input event location (e.g. USJ-R Main Campus)"
-                                                        {...field}
-                                                        onKeyDown={(e) => {
-                                                            if (e.key === 'Enter') {
-                                                                e.preventDefault();
-                                                                searchLocation();
-                                                            }
+                            {selectedCategory !== 'Virtual' ? (
+                                <div className="md:col-span-2 space-y-4">
+                                    <FormLabel className='mb-2'>Location</FormLabel>
+                                    <div className="flex gap-2 mb-2 mt-1 relative items-start">
+                                        <FormField
+                                            control={form.control}
+                                            name="location.landmark"
+                                            render={({ field }) => (
+                                                <FormItem className="relative flex-1 space-y-0">
+                                                    <FormControl>
+                                                        <Input
+                                                            className='selection:bg-blue-500 selection:text-white'
+                                                            placeholder="Input event location (e.g. USJ-R Main Campus)"
+                                                            {...field}
+                                                            onKeyDown={(e) => {
+                                                                if (e.key === 'Enter') {
+                                                                    e.preventDefault();
+                                                                    searchLocation();
+                                                                }
+                                                            }}
+                                                        />
+                                                    </FormControl>
+                                                    <FormMessage />
+
+                                                    {/* Autocomplete Dropdown */}
+                                                    {showSuggestions && searchResults.length > 0 && (
+                                                        <div className="absolute top-full left-0 right-0 mt-2 bg-white border rounded-md shadow-lg z-50 max-h-60 overflow-y-auto">
+                                                            {searchResults.map((feature, idx) => {
+                                                                const p = feature.address || {};
+                                                                const label = feature.display_name;
+                                                                const title = feature.name || p.city || p.town || p.state || label.split(',')[0];
+                                                                return (
+                                                                    <div
+                                                                        key={idx}
+                                                                        className="px-4 py-2 hover:bg-gray-100 cursor-pointer text-sm"
+                                                                        onMouseDown={(e) => { e.preventDefault(); handleSelectLocation(feature); }}
+                                                                    >
+                                                                        <div className="font-semibold">{title}</div>
+                                                                        <div className="text-xs text-gray-500">{label}</div>
+                                                                    </div>
+                                                                );
+                                                            })}
+                                                        </div>
+                                                    )}
+                                                </FormItem>
+                                            )}
+                                        />
+
+                                        <Button
+                                            className="cursor-pointer"
+                                            type="button"
+                                            onClick={searchLocation}
+                                            disabled={isSearchingLocation}
+                                            variant="secondary"
+                                        >
+                                            Search <Search className="w-4 h-4 ml-2" />
+                                        </Button>
+
+                                        <Button
+                                            className="cursor-pointer text-[#1a5f3f] border-[#1a5f3f]"
+                                            type="button"
+                                            variant="outline"
+                                            onClick={reverseGeocode}
+                                            disabled={isSearchingLocation || !form.getValues('location.lat')}
+                                        >
+                                            Auto-complete
+                                            <Navigation className="w-4 h-4 mr-2" />
+                                        </Button>
+                                    </div>
+
+                                    <div>
+                                        {mapDisplay}
+                                    </div>
+
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <FormField
+                                            control={form.control}
+                                            name="location.regionCode"
+                                            render={({ field }) => (
+                                                <FormItem className="relative mb-4">
+                                                    <FormLabel>Region</FormLabel>
+                                                    <Select
+                                                        key={`regionSelect-${programmaticKey}`}
+                                                        onValueChange={(val) => {
+                                                            field.onChange(val);
+                                                            handleRegionChange(val);
                                                         }}
-                                                    />
-                                                </FormControl>
-                                                <FormMessage />
-
-                                                {/* Autocomplete Dropdown */}
-                                                {showSuggestions && searchResults.length > 0 && (
-                                                    <div className="absolute top-full left-0 right-0 mt-2 bg-white border rounded-md shadow-lg z-50 max-h-60 overflow-y-auto">
-                                                        {searchResults.map((feature, idx) => {
-                                                            const p = feature.address || {};
-                                                            const label = feature.display_name;
-                                                            const title = feature.name || p.city || p.town || p.state || label.split(',')[0];
-                                                            return (
-                                                                <div
-                                                                    key={idx}
-                                                                    className="px-4 py-2 hover:bg-gray-100 cursor-pointer text-sm"
-                                                                    onMouseDown={(e) => { e.preventDefault(); handleSelectLocation(feature); }}
-                                                                >
-                                                                    <div className="font-semibold">{title}</div>
-                                                                    <div className="text-xs text-gray-500">{label}</div>
-                                                                </div>
-                                                            );
-                                                        })}
+                                                        value={field.value}
+                                                    >
+                                                        <FormControl>
+                                                            <SelectTrigger>
+                                                                <SelectValue placeholder="Select Region" />
+                                                            </SelectTrigger>
+                                                        </FormControl>
+                                                        <SelectContent>
+                                                            {regions.map((r) => (
+                                                                <SelectItem key={r.code} value={r.code}>{r.name}</SelectItem>
+                                                            ))}
+                                                        </SelectContent>
+                                                    </Select>
+                                                    <div className="absolute top-full mt-1 w-full text-xs">
+                                                        <FormMessage />
                                                     </div>
-                                                )}
-                                            </FormItem>
-                                        )}
-                                    />
-
-                                    <Button
-                                        className="cursor-pointer"
-                                        type="button"
-                                        onClick={searchLocation}
-                                        disabled={isSearchingLocation}
-                                        variant="secondary"
-                                    >
-                                        Search <Search className="w-4 h-4 ml-2" />
-                                    </Button>
-
-                                    <Button
-                                        className="cursor-pointer text-[#1a5f3f] border-[#1a5f3f]"
-                                        type="button"
-                                        variant="outline"
-                                        onClick={reverseGeocode}
-                                        disabled={isSearchingLocation || !form.getValues('location.lat')}
-                                    >
-                                        Auto-complete
-                                        <Navigation className="w-4 h-4 mr-2" />
-                                    </Button>
-                                </div>
-
-                                <div>
-                                    {mapDisplay}
-                                </div>
-
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <FormField
-                                        control={form.control}
-                                        name="location.regionCode"
-                                        render={({ field }) => (
-                                            <FormItem>
-                                                <FormLabel>Region</FormLabel>
-                                                <Select
-                                                    key={`regionSelect-${programmaticKey}`}
-                                                    onValueChange={(val) => {
-                                                        field.onChange(val);
-                                                        handleRegionChange(val);
-                                                    }}
-                                                    value={field.value}
-                                                >
-                                                    <FormControl>
-                                                        <SelectTrigger>
-                                                            <SelectValue placeholder="Select Region" />
-                                                        </SelectTrigger>
-                                                    </FormControl>
-                                                    <SelectContent>
-                                                        {regions.map((r) => (
-                                                            <SelectItem key={r.code} value={r.code}>{r.name}</SelectItem>
-                                                        ))}
-                                                    </SelectContent>
-                                                </Select>
-                                                <FormMessage />
-                                            </FormItem>
-                                        )}
-                                    />
-                                    <FormField
-                                        control={form.control}
-                                        name="location.provinceCode"
-                                        render={({ field }) => (
-                                            <FormItem>
-                                                <FormLabel>Province</FormLabel>
-                                                <Select
-                                                    key={`provinceSelect-${programmaticKey}`}
-                                                    onValueChange={(val) => {
-                                                        field.onChange(val);
-                                                        handleProvinceChange(val);
-                                                    }}
-                                                    value={field.value}
-                                                    disabled={provinces.length === 0}
-                                                >
-                                                    <FormControl>
-                                                        <SelectTrigger>
-                                                            <SelectValue placeholder={provinces.length === 0 && cities.length > 0 && form.getValues('location.regionCode') ? "N/A" : "Select Province"} />
-                                                        </SelectTrigger>
-                                                    </FormControl>
-                                                    <SelectContent>
-                                                        {provinces.map((p) => (
-                                                            <SelectItem key={p.code} value={p.code}>{p.name}</SelectItem>
-                                                        ))}
-                                                    </SelectContent>
-                                                </Select>
-                                                <FormMessage />
-                                            </FormItem>
-                                        )}
-                                    />
-                                    <FormField
-                                        control={form.control}
-                                        name="location.cityCode"
-                                        render={({ field }) => (
-                                            <FormItem>
-                                                <FormLabel>City / Municipality</FormLabel>
-                                                <Select
-                                                    key={`citySelect-${programmaticKey}`}
-                                                    onValueChange={(val) => {
-                                                        field.onChange(val);
-                                                        handleCityChange(val);
-                                                    }}
-                                                    value={field.value}
-                                                    disabled={cities.length === 0}
-                                                >
-                                                    <FormControl>
-                                                        <SelectTrigger>
-                                                            <SelectValue placeholder="Select City/Municipality" />
-                                                        </SelectTrigger>
-                                                    </FormControl>
-                                                    <SelectContent>
-                                                        {cities.map((c) => (
-                                                            <SelectItem key={c.code} value={c.code}>{c.name}</SelectItem>
-                                                        ))}
-                                                    </SelectContent>
-                                                </Select>
-                                                <FormMessage />
-                                            </FormItem>
-                                        )}
-                                    />
-                                    <FormField
-                                        control={form.control}
-                                        name="location.barangay"
-                                        render={({ field }) => (
-                                            <FormItem>
-                                                <FormLabel>Barangay</FormLabel>
-                                                <Select
-                                                    key={`barangaySelect-${programmaticKey}`}
-                                                    onValueChange={(val) => {
-                                                        const b = barangays.find(bg => bg.code === val);
-                                                        field.onChange(b?.name || '');
-                                                    }}
-                                                    // use value mapped to the name, we use barangay name in form state
-                                                    value={barangays.find(bg => bg.name === field.value)?.code || ''}
-                                                    disabled={barangays.length === 0}
-                                                >
-                                                    <FormControl>
-                                                        <SelectTrigger>
-                                                            <SelectValue placeholder="Select Barangay" />
-                                                        </SelectTrigger>
-                                                    </FormControl>
-                                                    <SelectContent>
-                                                        {barangays.map((b) => (
-                                                            <SelectItem key={b.code} value={b.code}>{b.name}</SelectItem>
-                                                        ))}
-                                                    </SelectContent>
-                                                </Select>
-                                                <FormMessage />
-                                            </FormItem>
-                                        )}
-                                    />
-                                </div>
-                                <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
-                                    <FormField
-                                        control={form.control}
-                                        name="location.street"
-                                        render={({ field }) => (
-                                            <FormItem className="md:col-span-1">
-                                                <FormLabel>Building / Street / Purok / Sitio</FormLabel>
-                                                <FormControl>
-                                                    <div className="relative">
-                                                        <Input placeholder="Enter precise address description" {...field} />
+                                                </FormItem>
+                                            )}
+                                        />
+                                        <FormField
+                                            control={form.control}
+                                            name="location.provinceCode"
+                                            render={({ field }) => (
+                                                <FormItem className="relative mb-4">
+                                                    <FormLabel>Province</FormLabel>
+                                                    <Select
+                                                        key={`provinceSelect-${programmaticKey}`}
+                                                        onValueChange={(val) => {
+                                                            field.onChange(val);
+                                                            handleProvinceChange(val);
+                                                        }}
+                                                        value={field.value}
+                                                        disabled={provinces.length === 0}
+                                                    >
+                                                        <FormControl>
+                                                            <SelectTrigger>
+                                                                <SelectValue placeholder={provinces.length === 0 && cities.length > 0 && form.getValues('location.regionCode') ? "N/A" : "Select Province"} />
+                                                            </SelectTrigger>
+                                                        </FormControl>
+                                                        <SelectContent>
+                                                            {provinces.map((p) => (
+                                                                <SelectItem key={p.code} value={p.code}>{p.name}</SelectItem>
+                                                            ))}
+                                                        </SelectContent>
+                                                    </Select>
+                                                    <div className="absolute top-full mt-1 w-full text-xs">
+                                                        <FormMessage />
                                                     </div>
-                                                </FormControl>
-                                                <FormMessage />
-                                            </FormItem>
-                                        )}
-                                    />
+                                                </FormItem>
+                                            )}
+                                        />
+                                        <FormField
+                                            control={form.control}
+                                            name="location.cityCode"
+                                            render={({ field }) => (
+                                                <FormItem className="relative mb-4">
+                                                    <FormLabel>City / Municipality</FormLabel>
+                                                    <Select
+                                                        key={`citySelect-${programmaticKey}`}
+                                                        onValueChange={(val) => {
+                                                            field.onChange(val);
+                                                            handleCityChange(val);
+                                                        }}
+                                                        value={field.value}
+                                                        disabled={cities.length === 0}
+                                                    >
+                                                        <FormControl>
+                                                            <SelectTrigger>
+                                                                <SelectValue placeholder="Select City/Municipality" />
+                                                            </SelectTrigger>
+                                                        </FormControl>
+                                                        <SelectContent>
+                                                            {cities.map((c) => (
+                                                                <SelectItem key={c.code} value={c.code}>{c.name}</SelectItem>
+                                                            ))}
+                                                        </SelectContent>
+                                                    </Select>
+                                                    <div className="absolute top-full mt-1 w-full text-xs">
+                                                        <FormMessage />
+                                                    </div>
+                                                </FormItem>
+                                            )}
+                                        />
+                                        <FormField
+                                            control={form.control}
+                                            name="location.barangay"
+                                            render={({ field }) => (
+                                                <FormItem className="relative mb-4">
+                                                    <FormLabel>Barangay</FormLabel>
+                                                    <Select
+                                                        key={`barangaySelect-${programmaticKey}`}
+                                                        onValueChange={(val) => {
+                                                            const b = barangays.find(bg => bg.code === val);
+                                                            field.onChange(b?.name || '');
+                                                        }}
+                                                        // use value mapped to the name, we use barangay name in form state
+                                                        value={barangays.find(bg => bg.name === field.value)?.code || ''}
+                                                        disabled={barangays.length === 0}
+                                                    >
+                                                        <FormControl>
+                                                            <SelectTrigger>
+                                                                <SelectValue placeholder="Select Barangay" />
+                                                            </SelectTrigger>
+                                                        </FormControl>
+                                                        <SelectContent>
+                                                            {barangays.map((b) => (
+                                                                <SelectItem key={b.code} value={b.code}>{b.name}</SelectItem>
+                                                            ))}
+                                                        </SelectContent>
+                                                    </Select>
+                                                    <div className="absolute top-full mt-1 w-full text-xs">
+                                                        <FormMessage />
+                                                    </div>
+                                                </FormItem>
+                                            )}
+                                        />
+                                    </div>
+                                    <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
+                                        <FormField
+                                            control={form.control}
+                                            name="location.street"
+                                            render={({ field }) => (
+                                                <FormItem className="md:col-span-1">
+                                                    <FormLabel>Building / Street / Purok / Sitio</FormLabel>
+                                                    <FormControl>
+                                                        <Input className='selection:bg-blue-500 selection:text-white' placeholder="Enter precise address description" {...field} />
+                                                    </FormControl>
+                                                    <FormMessage />
+                                                </FormItem>
+                                            )}
+                                        />
+                                    </div>
                                 </div>
-                            </div>
+                            ) : (
+                                <FormField
+                                    control={form.control}
+                                    name="modality"
+                                    render={({ field }) => (
+                                        <FormItem className="md:col-span-2">
+                                            <FormLabel>Modality</FormLabel>
+                                            <FormControl>
+                                                <Input
+                                                    placeholder="Input event modality (e.g. Zoom, Google Meet)"
+                                                    {...field}
+                                                />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+                            )}
 
                             <FormItem className="md:col-span-2">
                                 <FormLabel>Banner Image (Optional)</FormLabel>
@@ -955,9 +1015,6 @@ export function CreateEventModal({ trigger, initialData }: CreateEventModalProps
                                         />
                                     </div>
                                 </FormControl>
-                                <FormDescription>
-                                    Upload a banner image for the event.
-                                </FormDescription>
                             </FormItem>
 
                             <FormField

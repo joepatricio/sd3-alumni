@@ -228,11 +228,11 @@ export function Register() {
                                         <div className="space-y-1 leading-none">
                                             <FormLabel className="font-normal text-gray-600">
                                                 I agree to the{' '}
-                                                <Link to="#" className="text-[#1a5f3f] hover:text-[#2d7a4f] font-medium">
+                                                <Link to="/terms" className="text-[#1a5f3f] hover:text-[#2d7a4f] font-medium" target="_blank">
                                                     Terms of Service
                                                 </Link>{' '}
                                                 and{' '}
-                                                <Link to="#" className="text-[#1a5f3f] hover:text-[#2d7a4f] font-medium">
+                                                <Link to="/privacy" className="text-[#1a5f3f] hover:text-[#2d7a4f] font-medium" target="_blank">
                                                     Privacy Policy
                                                 </Link>
                                             </FormLabel>
