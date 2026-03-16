@@ -37,9 +37,9 @@
   * Next.js
   * TailwindCSS
   * TypeScript
-  * React and friends (Mostly using Hook Form/Query/Router)
+  * React
   * Shadcn UI for components
-  * Zod for forum validation
+  * Zod for form validation
   * Sonner for notifications
 
   ## Notes
@@ -60,13 +60,15 @@
   * Admin Login
   * Everything in Admin
   * Admin, admin, admin, admin, admin
-  * Improve CreateEventModal UI/UX (error messages, Virtual should not require location)
-  * Dynamic profile page based off of DB content (profile picture, bio, contacts, connections, etc.)
-  * UX stuff (Bulletin and Events sticky, happy pathing, toasts everywhere)
+  * Guest / User logic (e.g. guests can't create events, etc.)
+  * Try to think about how donations will be tracked.
+  * UX stuff (Mobile testing, happy pathing, toasts everywhere)
   * Refactor code for better readability and maintainability. Should be done last to avoid breaking stuff and make it easier to prototype
 
   ## TODO after client approval
 
+  * Profile pages """"work""""" but logic makes zero sense from a big-picture perspective. FIXME
+  * Rich-text formatting support for Bulletin and Events? :(
   * Look into TanStack Query, SQLite
   * Implement DB development with CRUD.
   * Implement secure routing.

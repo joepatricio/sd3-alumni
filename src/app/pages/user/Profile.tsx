@@ -6,41 +6,20 @@ import {
     Heart,
 } from 'lucide-react';
 import { useNavigate, useOutletContext } from 'react-router-dom';
-import { ProfileHeader } from '../../components/user/ProfileHeader';
-import { QuickActions } from '../../components/user/QuickActions';
-import { userData } from '../../../assets/mockData';
+import { ProfileHeader } from '@components/user/ProfileHeader';
+import { QuickActions } from '@components/user/QuickActions';
+import { userData } from '@assets/mockData';
 
 export function Profile() {
     const navigate = useNavigate();
     const { isLoggedIn } = useOutletContext<{ isLoggedIn: boolean }>();
 
-    const stats = [
-        { icon: Users, label: 'Connections', value: '248' },
-        { icon: Calendar, label: 'Events Attended', value: '12' },
-        { icon: Award, label: 'Achievements', value: '5' },
-        { icon: Heart, label: 'Donated Amount', value: '₱36,000.00' },
-    ];
-
-    const recentActivity = [
-        {
-            id: 1,
-            type: 'event',
-            title: 'Attended Annual Homecoming 2026',
-            date: 'March 15, 2026',
-        },
-        {
-            id: 2,
-            type: 'connection',
-            title: 'Connected with John Doe',
-            date: 'March 10, 2026',
-        },
-        {
-            id: 3,
-            type: 'volunteer',
-            title: 'Volunteered at Community Service Day',
-            date: 'February 28, 2026',
-        },
-    ];
+    const IconMap: Record<string, any> = {
+        Users,
+        Calendar,
+        Award,
+        Heart,
+    };
 
     return (
         <div className="min-h-screen bg-gray-50">
@@ -62,18 +41,21 @@ export function Profile() {
                         <div className="bg-white rounded-lg shadow-md p-6">
                             <h2 className="text-xl font-bold mb-4">Activity Overview</h2>
                             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                                {stats.map((stat, index) => (
-                                    <div
-                                        key={index}
-                                        className="text-center p-4 bg-gray-50 rounded-lg"
-                                    >
-                                        <stat.icon className="w-8 h-8 text-[#1a5f3f] mx-auto mb-2" />
-                                        <div className="text-2xl font-bold text-gray-900">
-                                            {stat.value}
+                                {userData.stats?.map((stat, index) => {
+                                    const Icon = IconMap[stat.iconName];
+                                    return (
+                                        <div
+                                            key={index}
+                                            className="text-center p-4 bg-gray-50 rounded-lg"
+                                        >
+                                            {Icon && <Icon className="w-8 h-8 text-[#1a5f3f] mx-auto mb-2" />}
+                                            <div className="text-2xl font-bold text-gray-900">
+                                                {stat.value}
+                                            </div>
+                                            <div className="text-sm text-gray-600">{stat.label}</div>
                                         </div>
-                                        <div className="text-sm text-gray-600">{stat.label}</div>
-                                    </div>
-                                ))}
+                                    );
+                                })}
                             </div>
                         </div>
 
@@ -81,7 +63,7 @@ export function Profile() {
                         <div className="bg-white rounded-lg shadow-md p-6">
                             <h2 className="text-xl font-bold mb-4">Recent Activity</h2>
                             <div className="space-y-4">
-                                {recentActivity.map((activity) => (
+                                {userData.recentActivity?.map((activity) => (
                                     <div
                                         key={activity.id}
                                         className="flex items-start gap-3 pb-4 border-b border-gray-200 last:border-0"
@@ -126,11 +108,13 @@ export function Profile() {
                                     </div>
                                 )}
 
-                                <div className="pb-3 border-b border-gray-100 last:border-0">
-                                    <p className="font-semibold text-gray-900">{userData.degree}</p>
-                                    <p className="text-sm text-gray-600">University of San Jose-Recoletos</p>
-                                    <p className="text-xs text-gray-500">Graduated {userData.graduationYear}</p>
-                                </div>
+                                {userData.degree && (
+                                    <div className="pb-3 border-b border-gray-100 last:border-0">
+                                        <p className="font-semibold text-gray-900">{userData.degree}</p>
+                                        {userData.school && <p className="text-sm text-gray-600">{userData.school}</p>}
+                                        <p className="text-xs text-gray-500">Graduated {userData.graduationYear}</p>
+                                    </div>
+                                )}
 
                                 {userData.secondaryEducationSHS && (
                                     <div className="pb-3 border-b border-gray-100 last:border-0">
