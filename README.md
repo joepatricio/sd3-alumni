@@ -16,9 +16,17 @@
   
   ## Running the code
 
-  Run `pnpm i` to install the dependencies.
+  1) Install Node.js `https://nodejs.org/`. Verify installation with `node -v` and `npm -v`.
 
-  Run `pnpm dev` to start the development server.
+  2) Install pnpm `npm install -g pnpm`. Verify installation with `pnpm -v`.
+
+  3) Install git `https://git-scm.com/`
+
+  4) Clone this repositry. `git clone joepatricio/sd3-alumni` then `cd sd3-alumni`
+
+  5) Run `pnpm i` to install the dependencies.
+
+  6) Run `pnpm dev` to start the development server.
 
   This will expose port 5173 to the network by default. This can be changed to run on localhost only removing the `--host` option in `package.json`. 
   In both cases, the website can be accessed at `localhost:5173`.
