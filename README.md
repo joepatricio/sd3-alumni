@@ -55,21 +55,26 @@
   * Admin can only be accessed by URL hacking. `localhost:5173/admin`
   * Other stuff like Events, Bulletin, and Connections will not be fully implemented until DB development.
 
-  ## TODO before client approval (FINISH BY MARCH 20 PLEASE)
+  ## TODO before client approval
 
-  * Admin Login
-  * Everything in Admin
-  * Admin, admin, admin, admin, admin
-  * Guest / User logic (e.g. guests can't create events, etc.)
-  * Try to think about how donations will be tracked.
+  * ADMIN: Generate report.
+  * ADMIN: Approved bulletins/events should be editable from this webpage. Logic for bulletin-modal and event-modal may be reused here, but strict dataflow should be observed. 
+  * ADMIN: Custom ordering for Status column sort.
+  * USER: Mock UI for Event, Donation
+  * USER: Guest / User logic (e.g. switch UI elements for guest vs user)
+    * Switch to Guest/User/Admin modes in Topbar
+    * Notifications
+    * Anonymous vs linked donations
+    * RSVP only for logged-in users
   * UX stuff (Mobile testing, happy pathing, toasts everywhere)
   * Refactor code for better readability and maintainability. Should be done last to avoid breaking stuff and make it easier to prototype
 
   ## TODO after client approval
-
-  * Profile pages """"work""""" but logic makes zero sense from a big-picture perspective. FIXME
+  * Redesign Profile pages to be API-friendly
   * Rich-text formatting support for Bulletin and Events? :(
   * Look into TanStack Query, SQLite
   * Implement DB development with CRUD.
   * Implement secure routing.
   * Implement CDN for images. Unsure whether cloud or self-hosted.
+  * Event RSVP system
+  * Donation system

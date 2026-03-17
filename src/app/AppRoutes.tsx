@@ -20,8 +20,10 @@ import { Connections } from '@pages/user/Connections';
 import { AlumniDirectory } from '@pages/user/AlumniDirectory';
 import { AdminDashboard } from '@pages/admin/AdminDashboard';
 import { AdminUsers } from '@pages/admin/AdminUsers';
-import { AdminContent } from '@pages/admin/AdminContent';
+import { AdminEvents } from '@pages/admin/AdminEvents';
+import { AdminBulletins } from '@pages/admin/AdminBulletins';
 import { AdminDonations } from '@pages/admin/AdminDonations';
+import { AdminLogin } from '@pages/admin/AdminLogin';
 
 export default function AppRoutes() {
     return (
@@ -50,9 +52,11 @@ export default function AppRoutes() {
             <Route path="/admin" element={<AdminLayout />}>
                 <Route index element={<AdminDashboard />} />
                 <Route path="users" element={<AdminUsers />} />
-                <Route path="content" element={<AdminContent />} />
+                <Route path="events" element={<AdminEvents />} />
+                <Route path="bulletins" element={<AdminBulletins />} />
                 <Route path="donations" element={<AdminDonations />} />
             </Route>
+            <Route path="/admin/login" element={<AdminLogin />} />
         </Routes>
     );
 }

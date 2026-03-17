@@ -1,14 +1,29 @@
-import { Outlet, Link, useLocation } from 'react-router-dom';
-import { LogOut, LayoutDashboard, Users, FileText, ChevronLeft, CreditCard } from 'lucide-react';
+import { useEffect } from 'react';
+import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
+import { LogOut, LayoutDashboard, Users, FileText, ChevronLeft, CreditCard, Calendar } from 'lucide-react';
 import alumniLogo from "@assets/alumni-logo.jpg";
 
 export function AdminLayout() {
     const location = useLocation();
+    const navigate = useNavigate();
+
+    useEffect(() => {
+        const token = localStorage.getItem('adminToken');
+        if (!token) {
+            navigate('/admin/login');
+        }
+    }, [navigate, location.pathname]);
+
+    const handleLogout = () => {
+        localStorage.removeItem('adminToken');
+        navigate('/admin/login');
+    };
 
     const navItems = [
         { path: '/admin', label: 'Dashboard', icon: LayoutDashboard },
         { path: '/admin/users', label: 'User Management', icon: Users },
-        { path: '/admin/content', label: 'Content Approval', icon: FileText },
+        { path: '/admin/bulletins', label: 'Bulletin Management', icon: FileText },
+        { path: '/admin/events', label: 'Event Management', icon: Calendar },
         { path: '/admin/donations', label: 'Donations Tracking', icon: CreditCard },
     ];
 
@@ -54,7 +69,10 @@ export function AdminLayout() {
                         <ChevronLeft size={20} />
                         <span>Return to Site</span>
                     </Link>
-                    <button className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-white/80 hover:bg-red-500/80 hover:text-white transition-colors">
+                    <button 
+                        onClick={handleLogout}
+                        className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-white/80 hover:bg-red-500/80 hover:text-white transition-colors"
+                    >
                         <LogOut size={20} />
                         <span>Logout</span>
                     </button>
@@ -77,7 +95,7 @@ export function AdminLayout() {
 
                 {/* Scrollable Content */}
                 <div className="flex-1 overflow-auto bg-gray-50/50 p-8">
-                    <div className="mx-auto max-w-6xl">
+                    <div className="mx-auto max-w-7xl">
                         <Outlet />
                     </div>
                 </div>

@@ -2,19 +2,20 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@comp
 import { Users, FileText, Calendar, CreditCard, Activity } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { adminStats, adminRecentActivity } from '@assets/mockData';
+import { getAdminStats, adminRecentActivity } from '@assets/adminMockData';
 
 const iconMap: Record<string, LucideIcon> = {
     Users,
-    FileText,
+    CreditCard,
     Calendar,
-    CreditCard
+    FileText
 };
 
 export function AdminDashboard() {
+    const stats = getAdminStats();
 
     return (
-        <div className="space-y-8 animate-in fade-in duration-500">
+        <div className="space-y-6 animate-in fade-in duration-500">
             <div className="flex flex-col gap-2">
                 <h1 className="text-3xl font-bold tracking-tight text-gray-900">Dashboard Overview</h1>
                 <p className="text-gray-500">Welcome to the Alumni Admin Panel. Here is what's happening today.</p>
@@ -22,7 +23,7 @@ export function AdminDashboard() {
 
             {/* Stats Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                {adminStats.map((stat, i) => {
+                {stats.map((stat, i) => {
                     const Icon = iconMap[stat.iconName] || Activity;
                     return (
                         <Card key={i} className="border-none shadow-md hover:shadow-lg transition-shadow">
@@ -49,13 +50,16 @@ export function AdminDashboard() {
                         <CardDescription>Common administrative tasks</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                        <Link to="/admin/users" className="block w-full text-center px-4 py-3 bg-[#1a5f3f]/10 text-[#1a5f3f] hover:bg-[#1a5f3f]/20 font-medium rounded-md transition-colors">
-                            Review New Users (5)
+                        <Link to="/admin/users" className="block w-full text-left px-4 py-3 border border-gray-200 text-gray-700 hover:bg-gray-50 font-medium rounded-md transition-colors">
+                            Manage Users
                         </Link>
-                        <Link to="/admin/content" className="block w-full text-center px-4 py-3 bg-amber-50 text-amber-700 hover:bg-amber-100 font-medium rounded-md transition-colors">
-                            Approve Content (14)
+                        <Link to="/admin/bulletins" className="block w-full text-left px-4 py-3 border border-gray-200 text-gray-700 hover:bg-gray-50 font-medium rounded-md transition-colors">
+                            Approve Bulletins
                         </Link>
-                        <button className="w-full px-4 py-3 border border-gray-200 text-gray-700 hover:bg-gray-50 font-medium rounded-md transition-colors">
+                        <Link to="/admin/events" className="block w-full text-left px-4 py-3 border border-gray-200 text-gray-700 hover:bg-gray-50 font-medium rounded-md transition-colors">
+                            Approve Events
+                        </Link>
+                        <button className="w-full text-left px-4 py-3 border border-gray-200 text-gray-700 hover:bg-gray-50 font-medium rounded-md transition-colors">
                             Generate Report
                         </button>
                     </CardContent>
@@ -74,9 +78,9 @@ export function AdminDashboard() {
                             {adminRecentActivity.map((activity) => (
                                 <div key={activity.id} className="flex items-start gap-4">
                                     <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 mt-0.5
-                    ${activity.type === 'user' ? 'bg-blue-100 text-blue-600' :
-                                            activity.type === 'content' ? 'bg-amber-100 text-amber-600' :
-                                                activity.type === 'donation' ? 'bg-green-100 text-green-600' :
+                    ${activity.type === 'user' ? 'bg-green-100 text-green-600' :
+                                            activity.type === 'content' ? 'bg-blue-100 text-blue-600' :
+                                                activity.type === 'donation' ? 'bg-amber-100 text-amber-600' :
                                                     'bg-purple-100 text-purple-600'}`}
                                     >
                                         {activity.type === 'user' && <Users size={14} />}
@@ -93,9 +97,6 @@ export function AdminDashboard() {
                                 </div>
                             ))}
                         </div>
-                        <button className="w-full mt-6 text-sm text-[#1a5f3f] font-medium hover:underline text-center">
-                            View All Activity
-                        </button>
                     </CardContent>
                 </Card>
             </div>
