@@ -13,12 +13,12 @@ export function Events() {
 
     const filteredEvents = events.filter((event) => {
         const eventDate = new Date(event.date);
-        return eventDate >= fiveYearsAgo;
+        return eventDate >= fiveYearsAgo && event.status === "Approved";
     });
 
     const formatLocation = (loc: any) => {
         if (typeof loc === 'string') return loc;
-        const parts = [loc.streetOrLandmark, loc.barangay, loc.cityMunicipality, loc.province].filter(Boolean);
+        const parts = [loc.landmark, loc.barangay, loc.cityMunicipality, loc.province].filter(Boolean);
         return parts.join(', ');
     };
 

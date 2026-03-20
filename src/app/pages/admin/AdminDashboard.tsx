@@ -3,6 +3,7 @@ import { Users, FileText, Calendar, CreditCard, Activity } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { getAdminStats, adminRecentActivity } from '@assets/adminMockData';
+import { getDashboardContentStats } from '@assets/mockData';
 
 const iconMap: Record<string, LucideIcon> = {
     Users,
@@ -12,7 +13,27 @@ const iconMap: Record<string, LucideIcon> = {
 };
 
 export function AdminDashboard() {
-    const stats = getAdminStats();
+    const userStats = getAdminStats();
+    const contentStats = getDashboardContentStats();
+
+    const stats = [
+        ...userStats,
+        { title: 'Upcoming Events', value: contentStats.upcomingEvents.toString(), iconName: 'Calendar', change: 'Next 30 days', positive: true },
+        { title: 'Pending Content', value: contentStats.pendingContent.toString(), iconName: 'FileText', change: 'Needs review', positive: false },
+    ];
+
+    const handleGenerateReport = () => {
+        const statsData = [
+            ['Metric', 'Value', 'Timeline'],
+            ...stats.map(s => `"${s.title}","${s.value}","${s.change}"`)
+        ];
+        const csvString = statsData.join('\n');
+        const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = `admin_dashboard_report_${new Date().toISOString().split('T')[0]}.csv`;
+        link.click();
+    };
 
     return (
         <div className="space-y-6 animate-in fade-in duration-500">
@@ -59,7 +80,7 @@ export function AdminDashboard() {
                         <Link to="/admin/events" className="block w-full text-left px-4 py-3 border border-gray-200 text-gray-700 hover:bg-gray-50 font-medium rounded-md transition-colors">
                             Approve Events
                         </Link>
-                        <button className="w-full text-left px-4 py-3 border border-gray-200 text-gray-700 hover:bg-gray-50 font-medium rounded-md transition-colors">
+                        <button onClick={handleGenerateReport} className="w-full text-left px-4 py-3 border border-gray-200 text-gray-700 hover:bg-gray-50 font-medium rounded-md transition-colors">
                             Generate Report
                         </button>
                     </CardContent>

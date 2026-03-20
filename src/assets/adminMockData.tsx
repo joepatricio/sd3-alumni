@@ -94,10 +94,6 @@ export const adminUsersMock = generateUsers(95);
 
 export const getAdminStats = () => {
     const totalAlumni = adminUsersMock.length;
-    const pendingContent = adminContentMock.filter(c => c.status === 'pending').length;
-
-    // An upcoming event is an Event that is not rejected.
-    const upcomingEvents = adminContentMock.filter(c => c.type === 'Event' && c.status !== 'rejected').length;
 
     // Total donations
     const donationsYTD = adminDonationsMock
@@ -107,8 +103,6 @@ export const getAdminStats = () => {
     return [
         { title: 'Total Alumni', value: totalAlumni.toString(), iconName: 'Users', change: '+12% this month', positive: true },
         { title: 'Donations YTD', value: `$${donationsYTD.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, iconName: 'CreditCard', change: '+5% vs last year', positive: true },
-        { title: 'Upcoming Events', value: upcomingEvents.toString(), iconName: 'Calendar', change: 'Next 30 days', positive: true },
-        { title: 'Pending Content', value: pendingContent.toString(), iconName: 'FileText', change: 'Needs review', positive: false },
     ];
 };
 
