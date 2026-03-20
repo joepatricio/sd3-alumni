@@ -78,6 +78,26 @@ export function AdminUsers() {
         setCurrentPage(1);
     };
 
+    const handleExportCSV = () => {
+        const headers = ['Name', 'Email', 'Batch', 'Status', 'Granted Date', 'Expiry Date', 'Reason'];
+        const csvContent = filteredUsers.map(u => 
+            `"${u.name}","${u.email}","${u.batch}","${u.status}","${u.grantedDate || ''}","${u.expiryDate || ''}","${u.reason || ''}"`
+        );
+        
+        const csvString = [headers.join(','), ...csvContent].join('\n');
+        const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        if (link.download !== undefined) {
+            const url = URL.createObjectURL(blob);
+            link.setAttribute('href', url);
+            link.setAttribute('download', 'users_export.csv');
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+    };
+
     const handleSaveEdit = () => {
         if (!editingUser) return;
         setUsers(users.map(u => {
@@ -129,6 +149,20 @@ export function AdminUsers() {
                     if (valA > valB) return sortConfig.direction === 'asc' ? 1 : -1;
                     return 0;
                 }
+                if (sortConfig.key === 'status') {
+                    const statusOrder: Record<string, number> = {
+                        'Official': 1,
+                        'Regular': 2,
+                        'Pending': 3,
+                        'Suspended': 4,
+                        'Banned': 5
+                    };
+                    const valA = statusOrder[a.status] || 99;
+                    const valB = statusOrder[b.status] || 99;
+                    if (valA < valB) return sortConfig.direction === 'asc' ? -1 : 1;
+                    if (valA > valB) return sortConfig.direction === 'asc' ? 1 : -1;
+                    return 0;
+                }
                 const valA = a[sortConfig.key] || '';
                 const valB = b[sortConfig.key] || '';
                 if (valA < valB) return sortConfig.direction === 'asc' ? -1 : 1;
@@ -147,9 +181,9 @@ export function AdminUsers() {
         setCurrentPage(1);
     };
 
-    const openEditModal = (user: User) => {
+    const openEditModal = (user: User, specificStatus?: string) => {
         setEditingUser(user);
-        setEditStatus(user.status);
+        setEditStatus(specificStatus || user.status);
         setEditReason(user.reason || '');
 
         let initialExpiry = '';
@@ -228,7 +262,17 @@ export function AdminUsers() {
                                         </td>
                                     )}
                                     <td className="px-6 py-4 text-right">
-                                        <Button variant="ghost" size="sm" onClick={() => openEditModal(user)}>Edit</Button>
+                                        {user.status !== 'Pending' && (
+                                            <div className="flex justify-end gap-2">
+                                                {user.status === 'Regular' && activeTab !== 'All' && (
+                                                    <>
+                                                        <Button variant="outline" size="sm" className="text-orange-600 border-orange-200 hover:bg-orange-50" onClick={() => openEditModal(user, 'Suspended')}>Suspend</Button>
+                                                        <Button variant="outline" size="sm" className="text-red-600 border-red-200 hover:bg-red-50" onClick={() => openEditModal(user, 'Banned')}>Ban</Button>
+                                                    </>
+                                                )}
+                                                <Button variant="ghost" size="sm" onClick={() => openEditModal(user)}>Edit</Button>
+                                            </div>
+                                        )}
                                     </td>
                                 </tr>
                             ))}
@@ -315,7 +359,7 @@ export function AdminUsers() {
                                         {status === 'All' ? 'Manage all accounts across the platform' : `Manage ${status.toLowerCase()} accounts`}
                                     </CardDescription>
                                 </div>
-                                <Button variant="outline">Export CSV</Button>
+                                <Button variant="outline" onClick={handleExportCSV}>Export CSV</Button>
                             </CardHeader>
                             <CardContent>
                                 {renderTable()}
@@ -338,7 +382,7 @@ export function AdminUsers() {
                                     <SelectValue placeholder="Select status" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    {statuses.filter(s => s !== 'All').map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                                    {statuses.filter(s => s !== 'All' && s !== 'Pending').map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
                                 </SelectContent>
                             </Select>
                         </div>

@@ -4,7 +4,8 @@ import { Button } from '@components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@components/ui/tabs';
 import { Input } from '@components/ui/input';
 import { Badge } from '@components/ui/badge';
-import { ArrowUp, ArrowDown, ArrowUpDown, ChevronLeft, ChevronRight, Search, CheckCircle, XCircle, RotateCcw, Eye } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@components/ui/select';
+import { ArrowUp, ArrowDown, ArrowUpDown, ChevronLeft, ChevronRight, Search, CheckCircle, XCircle, RotateCcw, Filter, Download, Eye } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 export interface ContentItem {
@@ -13,7 +14,7 @@ export interface ContentItem {
     author: string;
     date: string;
     type: 'Event' | 'Bulletin';
-    status: "Pending" | "Approved" | "Rejected" | string;
+    status: 'pending' | 'approved' | 'rejected' | string;
     description: string;
     rawDate: number;
 }
@@ -25,7 +26,7 @@ interface AdminContentTableProps {
     mockData: ContentItem[];
     primaryColorClass: string; // e.g., 'bg-[#1a5f3f] hover:bg-[#154d33]'
     outlineColorClass: string; // e.g., 'text-amber-600 border-amber-200 hover:bg-amber-50'
-    onStatusChange?: (id: number | string, newStatus: "Approved" | "Rejected" | "Pending") => void;
+    onStatusChange?: (id: number | string, newStatus: 'approved' | 'rejected' | 'pending') => void;
 }
 
 export function AdminContentTable({
@@ -36,10 +37,10 @@ export function AdminContentTable({
     primaryColorClass,
     onStatusChange
 }: AdminContentTableProps) {
-    const statuses = ["All", "Pending", "Approved", "Rejected"];
+    const statuses = ['all', 'pending', 'approved', 'rejected'];
     const ITEMS_PER_PAGE = 20;
 
-    const [activeTab, setActiveTab] = useState("All");
+    const [activeTab, setActiveTab] = useState('all');
 
     // Search & Filter state
     const [searchName, setSearchName] = useState('');
@@ -94,7 +95,7 @@ export function AdminContentTable({
     const filteredContent = useMemo(() => {
         let filtered = [...mockData];
 
-        if (activeTab !== "All") {
+        if (activeTab !== 'all') {
             filtered = filtered.filter(c => c.status === activeTab);
         }
 
@@ -130,10 +131,10 @@ export function AdminContentTable({
 
     const getStatusConfig = (status: string) => {
         switch (status) {
-            case "All": return { title: `All ${contentType}s`, description: `All ${contentType}s submitted to the platform` };
-            case "Pending": return { title: 'Needs Attention', description: `${contentType}s awaiting moderator approval before publishing` };
-            case "Approved": return { title: `Published ${contentType}s`, description: 'Previously approved and currently visible to the public' };
-            case "Rejected": return { title: `Rejected ${contentType}s`, description: 'Submissions that did not meet community guidelines' };
+            case 'all': return { title: `All ${contentType}s`, description: `All ${contentType}s submitted to the platform` };
+            case 'pending': return { title: 'Needs Attention', description: `${contentType}s awaiting moderator approval before publishing` };
+            case 'approved': return { title: `Published ${contentType}s`, description: 'Previously approved and currently visible to the public' };
+            case 'rejected': return { title: `Rejected ${contentType}s`, description: 'Submissions that did not meet community guidelines' };
             default: return { title: '', description: '' };
         }
     };
@@ -162,7 +163,7 @@ export function AdminContentTable({
                                 <th className="px-6 py-3 cursor-pointer hover:bg-gray-100 transition-colors" onClick={() => handleSort('date')}>
                                     <div className="flex items-center gap-1">Date Submitted {renderSortIcon('date')}</div>
                                 </th>
-                                {activeTab === "All" && (
+                                {activeTab === 'all' && (
                                     <th className="px-6 py-3 cursor-pointer hover:bg-gray-100 transition-colors" onClick={() => handleSort('status')}>
                                         <div className="flex items-center gap-1">Status {renderSortIcon('status')}</div>
                                     </th>
@@ -179,12 +180,12 @@ export function AdminContentTable({
                                     </td>
                                     <td className="px-6 py-4">{item.author}</td>
                                     <td className="px-6 py-4">{item.date}</td>
-                                    {activeTab === "All" && (
+                                    {activeTab === 'all' && (
                                         <td className="px-6 py-4">
                                             <Badge className={
-                                                item.status === "Approved" ? 'bg-green-100 text-green-800' :
-                                                    item.status === "Pending" ? 'bg-yellow-100 text-yellow-800' :
-                                                        'bg-red-100 text-red-800'
+                                                item.status === 'approved' ? 'bg-green-100 text-green-800' :
+                                                item.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                                                'bg-red-100 text-red-800'
                                             }>
                                                 {item.status}
                                             </Badge>
@@ -192,13 +193,13 @@ export function AdminContentTable({
                                     )}
                                     <td className="px-6 py-4">
                                         <div className="flex gap-2 justify-end">
-                                            {activeTab !== "All" && item.status === "Pending" && (
+                                            {activeTab !== 'all' && item.status === 'pending' && (
                                                 <>
                                                     <Button
                                                         variant="ghost"
                                                         size="sm"
                                                         className="text-green-600 hover:text-green-700 hover:bg-green-50"
-                                                        onClick={() => onStatusChange?.(item.id, "Approved")}
+                                                        onClick={() => onStatusChange?.(item.id, 'approved')}
                                                     >
                                                         <CheckCircle className="w-4 h-4 mr-1" />
                                                         Approve
@@ -207,19 +208,19 @@ export function AdminContentTable({
                                                         variant="ghost"
                                                         size="sm"
                                                         className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                                                        onClick={() => onStatusChange?.(item.id, "Rejected")}
+                                                        onClick={() => onStatusChange?.(item.id, 'rejected')}
                                                     >
                                                         <XCircle className="w-4 h-4 mr-1" />
                                                         Reject
                                                     </Button>
                                                 </>
                                             )}
-                                            {activeTab !== "All" && (item.status === "Approved" || item.status === "Rejected") && (
+                                            {activeTab !== 'all' && (item.status === 'approved' || item.status === 'rejected') && (
                                                 <Button
                                                     variant="ghost"
                                                     size="sm"
                                                     className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
-                                                    onClick={() => onStatusChange?.(item.id, "Pending")}
+                                                    onClick={() => onStatusChange?.(item.id, 'pending')}
                                                 >
                                                     <RotateCcw className="w-4 h-4 mr-1" />
                                                     Reset
@@ -271,10 +272,10 @@ export function AdminContentTable({
             <Tabs value={activeTab} onValueChange={onTabChange} className="w-full">
                 <div className="overflow-x-auto pb-2 flex justify-between items-center gap-4">
                     <TabsList className="mb-4 inline-flex min-w-full sm:min-w-0 flex-1">
-                        <TabsTrigger value="All">All</TabsTrigger>
-                        <TabsTrigger value="Pending">Pending</TabsTrigger>
-                        <TabsTrigger value="Approved">Approved</TabsTrigger>
-                        <TabsTrigger value="Rejected">Rejected</TabsTrigger>
+                        <TabsTrigger value="all">All</TabsTrigger>
+                        <TabsTrigger value="pending">Pending</TabsTrigger>
+                        <TabsTrigger value="approved">Approved</TabsTrigger>
+                        <TabsTrigger value="rejected">Rejected</TabsTrigger>
                     </TabsList>
                 </div>
 

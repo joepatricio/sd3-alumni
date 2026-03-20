@@ -63,6 +63,26 @@ export function AdminDonations() {
         setCurrentPage(1);
     };
 
+    const handleExportCSV = () => {
+        const headers = ['Date', 'Donor', 'Amount', 'Status'];
+        const csvContent = filteredDonations.map(d => 
+            `"${d.date}","${d.donor}","${d.amount}","${d.status}"`
+        );
+        
+        const csvString = [headers.join(','), ...csvContent].join('\n');
+        const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        if (link.download !== undefined) {
+            const url = URL.createObjectURL(blob);
+            link.setAttribute('href', url);
+            link.setAttribute('download', 'donations_export.csv');
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+    };
+
     const handleClearFilters = () => {
         setSearchDonor('');
         setMinAmount('');
@@ -125,6 +145,10 @@ export function AdminDonations() {
                 } else if (sortConfig.key === 'date') {
                     valA = a.rawDate;
                     valB = b.rawDate;
+                } else if (sortConfig.key === 'status') {
+                    const statusOrder: Record<string, number> = { 'Completed': 1, 'Processing': 2, 'Failed': 3 };
+                    valA = statusOrder[a.status] || 99;
+                    valB = statusOrder[b.status] || 99;
                 } else {
                     valA = a[sortConfig.key];
                     valB = b[sortConfig.key];
@@ -249,7 +273,7 @@ export function AdminDonations() {
                         <CardTitle className="text-lg">All Donations</CardTitle>
                         <CardDescription>Detailed log of all monetary contributions from alumni</CardDescription>
                     </div>
-                    <Button variant="outline" className="gap-2 shrink-0">
+                    <Button variant="outline" className="gap-2 shrink-0" onClick={handleExportCSV}>
                         <Download size={16} /> Export Report
                     </Button>
                 </CardHeader>

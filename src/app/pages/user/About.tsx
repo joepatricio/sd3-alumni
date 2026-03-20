@@ -10,7 +10,7 @@ export function About() {
     return (
         <div className="min-h-screen bg-gray-50">
 
-            <div className="max-w-6xl mx-auto px-4 md:px-8 py-12 space-y-16">
+            <div className="max-w-6xl mx-auto px-4 md:px-8 py-8 space-y-16">
                 {/* Videos Section */}
                 <section>
                     <h2 className="text-2xl font-bold text-[#1a5f3f] mb-8 flex items-center gap-2">

@@ -202,71 +202,21 @@ export function CreateEventModal({ trigger, initialData, isAdmin }: CreateEventM
 
     // Effect to update form values when initialData changes or modal opens
     useEffect(() => {
-        if (initialData && open) {
-            let formattedDate = initialData.date;
-            if (formattedDate) {
-                const d = new Date(formattedDate);
-                if (!isNaN(d.getTime())) {
-                    formattedDate = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-                }
-            }
-
-            let parsedLocation = initialData.location;
-            if (typeof parsedLocation === 'string') {
-                parsedLocation = {
-                    region: '',
-                    regionCode: '',
-                    province: '',
-                    provinceCode: '',
-                    cityMunicipality: '',
-                    cityCode: '',
-                    barangay: '',
-                    landmark: parsedLocation,
-                    street: '',
-                    lat: 10.2954,
-                    lng: 123.8944
-                };
-            } else if (parsedLocation && !parsedLocation.lat) {
-                 parsedLocation = { ...parsedLocation, lat: 10.2954, lng: 123.8944 };
-            }
-
+        if (initialData) {
             form.reset({
                 title: initialData.title,
                 category: initialData.category,
-                location: parsedLocation,
+                location: initialData.location,
                 description: initialData.description,
-                date: formattedDate,
-                startTimeHour: initialData.startTimeHour || '12',
-                startTimeMinute: initialData.startTimeMinute || '00',
-                startTimeAmPm: initialData.startTimeAmPm || 'AM',
-                endTimeHour: initialData.endTimeHour || '1',
-                endTimeMinute: initialData.endTimeMinute || '00',
-                endTimeAmPm: initialData.endTimeAmPm || 'PM',
+                date: initialData.date,
+                startTimeHour: initialData.startTimeHour,
+                startTimeMinute: initialData.startTimeMinute,
+                startTimeAmPm: initialData.startTimeAmPm,
+                endTimeHour: initialData.endTimeHour,
+                endTimeMinute: initialData.endTimeMinute,
+                endTimeAmPm: initialData.endTimeAmPm,
                 modality: initialData.modality || '',
             });
-
-            if (typeof parsedLocation === 'object' && parsedLocation) {
-                if (parsedLocation.regionCode) {
-                    const provs = psgcProvinces.filter((p: any) => p.regionCode === parsedLocation.regionCode);
-                    setProvinces(provs.length > 0 ? provs.sort((a: any, b: any) => a.name.localeCompare(b.name)) : []);
-                    if (provs.length === 0) {
-                        const fallbackCities = psgcCities.filter((c: any) => c.provinceCode === parsedLocation.regionCode);
-                        setCities(fallbackCities.sort((a: any, b: any) => a.name.localeCompare(b.name)));
-                    }
-                }
-                if (parsedLocation.provinceCode) {
-                    const matchedCities = psgcCities.filter((c: any) => c.provinceCode === parsedLocation.provinceCode);
-                    setCities(matchedCities.sort((a: any, b: any) => a.name.localeCompare(b.name)));
-                }
-                if (parsedLocation.cityCode) {
-                    const matchedBrgys = psgcBarangays.filter((b: any) => b.cityCode === parsedLocation.cityCode);
-                    setBarangays(matchedBrgys.sort((a: any, b: any) => a.name.localeCompare(b.name)));
-                }
-                if (parsedLocation.lat && parsedLocation.lng) {
-                    setMapCenter([parsedLocation.lat, parsedLocation.lng]);
-                }
-            }
-
             if (typeof initialData.image === 'string') {
                 setPreviewUrl(initialData.image);
             }
