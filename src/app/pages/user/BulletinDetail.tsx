@@ -11,14 +11,20 @@ import {
 } from 'lucide-react';
 import { CreateBulletinModal } from '@components/user/CreateBulletinModal';
 import { Button } from '@components/ui/button';
-
+import { NotFound } from '@pages/NotFound';
 import { bulletins, comments } from '@assets/mockData';
 
 export function BulletinDetail() {
     const { id } = useParams();
     const [comment, setComment] = useState('');
+    const isAdmin = !!localStorage.getItem('adminToken');
 
-    const bulletin = bulletins.find((b) => b.id === id) || bulletins[0];
+    const bulletin = bulletins.find((b) => b.id === id);
+
+    if (!bulletin || bulletin.status === "Rejected") {
+        // return <Navigate to="/404" replace />;
+        return <NotFound />;
+    }
 
     const handleSubmitComment = (e: React.SubmitEvent) => {
         e.preventDefault();
@@ -29,6 +35,13 @@ export function BulletinDetail() {
 
     return (
         <div className="min-h-screen bg-gray-50">
+            {bulletin.status === "Pending" && (
+                <div className="bg-yellow-50 px-4 py-3 border-b border-yellow-200 text-center">
+                    <p className="text-yellow-800 font-medium text-sm">
+                        ⚠️ This bulletin is currently under review by an administrator and is not visible to the public.
+                    </p>
+                </div>
+            )}
             {/* Back Button and Edit Button */}
             <div className="max-w-4xl mx-auto px-4 md:px-8 pt-4 flex justify-between items-center">
                 <Link
@@ -47,11 +60,12 @@ export function BulletinDetail() {
                         </Button>
                     }
                     initialData={bulletin}
+                    isAdmin={isAdmin}
                 />
             </div>
 
             {/* Article */}
-            <div className="max-w-4xl mx-auto px-4 md:px-8 py-12">
+            <div className="max-w-4xl mx-auto px-4 md:px-8 py-8">
                 <article className="bg-white rounded-lg shadow-md overflow-hidden">
                     {/* Hero Image */}
                     {bulletin.heroImage && (

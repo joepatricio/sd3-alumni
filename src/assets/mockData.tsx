@@ -120,8 +120,9 @@ Our goal is to support 50 students in the first year, with plans to expand the p
 Applications will open on March 1, 2026, and will be evaluated based on academic merit, financial need, and demonstrated commitment to community service. We encourage all eligible students to apply and take advantage of this opportunity.
 
 We are grateful to the many alumni who have already pledged their support for this program. If you're interested in contributing or learning more about how you can help, please visit our donations page or contact the Alumni Relations Office directly.`,
-        heroImage: 'https://images.unsplash.com/photo-1725738704638-361eac814fca?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxlZHVjYXRpb24lMjBjYW1wdXMlMjBsaWZlfGVufDF8fHx8MTc3MDcwNTY0OXww&ixlib=rb-4.1.0&q=80&w=1080',
+        heroImage: 'https://images.unsplash.com/photo-1725738704638-361eac814fca?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxlZHVjYXRpb24lMjBjYW1wdXNlJTIwbGlmZXxlbnwxfHx8fDE3NzA3MDU2NDl8MA&ixlib=rb-4.1.0&q=80&w=1080',
         isUserSubmitted: false,
+        status: "Pending",
     },
     {
         id: '2',
@@ -137,6 +138,7 @@ We are grateful to the many alumni who have already pledged their support for th
         content: 'A technology startup founded by USJR alumnus Michael Torres has successfully raised $2 million in seed funding from prominent venture capital firms. The company, which focuses on AI-powered educational tools, aims to revolutionize how students learn and engage with course materials. Torres, who graduated with a degree in Computer Science in 2018, credits his education at USJR for laying the foundation of his entrepreneurial journey.',
         heroImage: 'https://images.unsplash.com/photo-1725203653092-494c7eec1a30?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHx0ZWNobm9sb2d5JTIwaW5ub3ZhdGlvbiUyMGFydGljbGV8ZW58MXx8fHwxNzcwNzA1NjQ4fDA&ixlib=rb-4.1.0&q=80&w=1080',
         isUserSubmitted: true,
+        status: "Pending",
     },
     {
         id: '3',
@@ -152,6 +154,7 @@ We are grateful to the many alumni who have already pledged their support for th
         content: 'This year\'s homecoming was truly unforgettable! Over 5,000 alumni gathered to reconnect, reminisce, and celebrate the enduring Josenian spirit that binds us all. The event featured inspiring talks from distinguished alumni, cultural performances, and a grand alumni parade. Special recognition was given to the Golden Jubilarians - members of the Class of 1976 - who celebrated 50 years since graduation. The festivities concluded with a spectacular fireworks display that lit up the Cebu sky.',
         heroImage: 'https://images.unsplash.com/photo-1758270703662-b7d58bf0a8a2?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHx1bml2ZXJzaXR5JTIwZ3JhZHVhdGVzJTIwY2VsZWJyYXRpb258ZW58MXx8fHwxNzcwNjkwNjQ5fDA&ixlib=rb-4.1.0&q=80&w=1080',
         isUserSubmitted: false,
+        status: "Pending",
     },
     {
         id: '4',
@@ -161,12 +164,12 @@ We are grateful to the many alumni who have already pledged their support for th
             image: 'https://images.unsplash.com/photo-1655249493799-9cee4fe983bb?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxwcm9mZXNzaW9uYWwlMjBwb3J0cmFpdCUyMGJ1c2luZXNzJTIwcGVyc29ufGVufDF8fHx8MTc3MDMzODgyMHww&ixlib=rb-4.1.0&q=80&w=1080',
             role: 'Alumna',
         },
-        heroImage: 'https://images.unsplash.com/photo-1655249493799-9cee4fe983bb?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxwcm9mZXNzaW9uYWwlMjBwb3J0cmFpdCUyMGJ1c2luZXNzJTIwcGVyc29ufGVufDF8fHx8MTc3MDMzODgyMHww&ixlib=rb-4.1.0&q=80&w=1080',
         date: 'February 3, 2026',
         readTime: '2 min read',
         preview: 'Hello fellow Josenians from the Class of 2010! I\'m organizing a mini reunion for our batch...',
         content: 'Hello fellow Josenians from the Class of 2010! I\'m organizing a mini reunion for our batch and would love to reconnect with everyone. We\'re planning to meet on March 15th at the campus. Please reach out if you\'re interested in joining! It\'s been 16 years since we graduated, and I think it would be wonderful to catch up, share stories, and see how everyone\'s journey has unfolded. Looking forward to seeing familiar faces!',
         isUserSubmitted: true,
+        status: "Approved",
     },
     {
         id: '5',
@@ -182,6 +185,7 @@ We are grateful to the many alumni who have already pledged their support for th
         content: 'We are excited to introduce our new Alumni Mentorship Program, connecting experienced professionals with recent graduates and current students. This program aims to foster meaningful relationships that will help guide the next generation of Josenians in their career paths. Mentors will provide insights, advice, and support based on their own professional experiences. If you\'re interested in becoming a mentor or mentee, registration opens next month through the alumni portal.',
         heroImage: 'https://images.unsplash.com/photo-1741835698663-c1860b7d1f53?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxidXNpbmVzcyUyMG5ld3MlMjBhcnRpY2xlfGVufDF8fHx8MTc3MDY5MjYwMXww&ixlib=rb-4.1.0&q=80&w=1080',
         isUserSubmitted: false,
+        status: "Pending",
     },
     {
         id: '6',
@@ -197,7 +201,23 @@ We are grateful to the many alumni who have already pledged their support for th
         content: 'Experience the newly renovated USJR campus from anywhere in the world with our interactive 360-degree virtual tour featuring all major facilities. Walk through the halls, visit the library, and see the new sports complex from the comfort of your home. This virtual tour is part of our digital transformation initiative to keep alumni connected to the campus.',
         heroImage: 'https://images.unsplash.com/photo-1603857365671-93cd96dc1df8?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHx1bml2ZXJzaXR5JTIwY2FtcHVzJTIwYnVpbGRpbmclMjBhZXJpYWx8ZW58MXx8fHwxNzcwMDQ5MzI5fDA&ixlib=rb-4.1.0&q=80&w=1080',
         isUserSubmitted: false,
+        status: "Pending",
     },
+    {
+        id: '7',
+        title: 'New Alumni ID Details',
+        author: {
+            name: 'John Doe',
+            image: 'https://images.unsplash.com/photo-1599566150163-29194dcaad36?ixlib=rb-4.1.0&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=100&q=80',
+            role: 'Alumna',
+        },
+        date: 'March 1, 2026',
+        readTime: '2 min read',
+        preview: 'Need help concerning the new alumni ID details? Check out our FAQ...',
+        content: 'Details on the new Alumni ID, distribution, and benefits...',
+        isUserSubmitted: true,
+        status: "Approved",
+    }
 ];
 
 export const comments = [
@@ -240,7 +260,19 @@ export const events = [
         description: 'Join us for the biggest alumni gathering of the year! Reconnect with classmates, enjoy live entertainment, campus tours, and celebrate Josenian pride together.',
         date: 'March 15, 2026',
         time: '9:00 AM - 5:00 PM',
-        location: 'USJR Main Campus, Cebu City',
+        location: {
+            region: 'Central Visayas',
+            regionCode: '070000000',
+            province: 'Cebu',
+            provinceCode: '072200000',
+            cityMunicipality: 'City of Cebu',
+            cityCode: '072217000',
+            barangay: 'Ermita (Pob.)',
+            landmark: 'USJR Main Campus',
+            street: 'Magallanes St',
+            lat: 10.2937,
+            lng: 123.8974,
+        },
         category: 'Reunion',
         image: 'https://images.unsplash.com/photo-1770097042618-438684ff665f?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxjb21tdW5pdHklMjBjZWxlYnJhdGlvbiUyMGV2ZW50fGVufDF8fHx8MTc3MDI3MTkyOXww&ixlib=rb-4.1.0&q=80&w=1080',
         startTimeHour: "9",
@@ -261,7 +293,8 @@ export const events = [
         responses: {
             going: 142,
             invited: 500
-        }
+        },
+        status: "Pending",
     },
     {
         id: 2,
@@ -269,7 +302,19 @@ export const events = [
         description: 'Connect with fellow Josenian professionals in the technology and innovation sectors. Share insights, explore collaborations, and expand your network.',
         date: 'February 28, 2026',
         time: '6:00 PM - 9:00 PM',
-        location: 'Oakridge Business Park, Cebu',
+        location: {
+            region: 'Central Visayas',
+            regionCode: '070000000',
+            province: 'Cebu',
+            provinceCode: '072200000',
+            cityMunicipality: 'City of Mandaue',
+            cityCode: '072230000',
+            barangay: 'Banilad',
+            landmark: 'Oakridge Business Park',
+            street: 'A.S. Fortuna St',
+            lat: 10.3444,
+            lng: 123.9213,
+        },
         category: 'Networking',
         image: 'https://images.unsplash.com/photo-1761195689615-9469b65dac01?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxidXNpbmVzcyUyMG5ldHdvcmtpbmclMjBldmVudCUyMHByb2Zlc3Npb25hbHN8ZW58MXx8fHwxNzcwMTU3OTY3fDA&ixlib=rb-4.1.0&q=80&w=1080',
         startTimeHour: "6",
@@ -290,7 +335,8 @@ export const events = [
         responses: {
             going: 45,
             invited: 100
-        }
+        },
+        status: "Pending",
     },
     {
         id: 3,
@@ -298,7 +344,19 @@ export const events = [
         description: 'A full-day conference featuring keynote speakers, panel discussions, and workshops on leadership, entrepreneurship, and professional development.',
         date: 'March 22, 2026',
         time: '8:00 AM - 6:00 PM',
-        location: 'Radisson Blu Hotel, Cebu City',
+        location: {
+            region: 'Central Visayas',
+            regionCode: '070000000',
+            province: 'Cebu',
+            provinceCode: '072200000',
+            cityMunicipality: 'City of Cebu',
+            cityCode: '072217000',
+            barangay: 'Mabolo',
+            landmark: 'Radisson Blu Hotel',
+            street: 'Sergio Osmeña Jr Blvd',
+            lat: 10.3155,
+            lng: 123.9189,
+        },
         category: 'Conference',
         image: 'https://images.unsplash.com/photo-1769839271768-aee5469799ee?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxwcm9mZXNzaW9uYWwlMjBjb25mZXJlbmNlJTIwc2VtaW5hcnxlbnwxfHx8fDE3NzAyNzE5Mjh8MA&ixlib=rb-4.1.0&q=80&w=1080',
         startTimeHour: "8",
@@ -319,7 +377,8 @@ export const events = [
         responses: {
             going: 80,
             invited: 200
-        }
+        },
+        status: "Pending",
     },
     {
         id: 4,
@@ -327,7 +386,19 @@ export const events = [
         description: 'Celebrate a decade since graduation! Reminisce about college memories, catch up with classmates, and see how far we\'ve all come in our respective journeys.',
         date: 'April 5, 2026',
         time: '5:00 PM - 11:00 PM',
-        location: 'Waterfront Hotel, Cebu City',
+        location: {
+            region: 'Central Visayas',
+            regionCode: '070000000',
+            province: 'Cebu',
+            provinceCode: '072200000',
+            cityMunicipality: 'City of Cebu',
+            cityCode: '072217000',
+            barangay: 'Lahug (Pob.)',
+            landmark: 'Waterfront Hotel',
+            street: 'Salinas Dr',
+            lat: 10.3308,
+            lng: 123.9051,
+        },
         category: 'Reunion',
         image: 'https://images.unsplash.com/photo-1717944186818-c628ca7c2b99?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxwZW9wbGUlMjBtaW5nbGluZyUyMHNvY2lhbCUyMGV2ZW50fGVufDF8fHx8MTc3MDI3MTkyOXww&ixlib=rb-4.1.0&q=80&w=1080',
         startTimeHour: "5",
@@ -348,7 +419,8 @@ export const events = [
         responses: {
             going: 200,
             invited: 300
-        }
+        },
+        status: "Pending",
     },
     {
         id: 5,
@@ -356,7 +428,19 @@ export const events = [
         description: 'Learn effective mentorship strategies and connect with current students seeking guidance. Make a lasting impact on the future of USJR.',
         date: 'February 18, 2026',
         time: '2:00 PM - 5:00 PM',
-        location: 'USJR Alumni Center',
+        location: {
+            region: 'Central Visayas',
+            regionCode: '070000000',
+            province: 'Cebu',
+            provinceCode: '072200000',
+            cityMunicipality: 'City of Cebu',
+            cityCode: '072217000',
+            barangay: 'Ermita (Pob.)',
+            landmark: 'USJR Alumni Center',
+            street: 'Magallanes St',
+            lat: 10.2937,
+            lng: 123.8974,
+        },
         category: 'Workshop',
         image: 'https://images.unsplash.com/photo-1760420940953-3958ad9f6287?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHx3b3Jrc2hvcCUyMHRyYWluaW5nJTIwc2Vzc2lvbnxlbnwxfHx8fDE3NzAyNzE5Mjh8MA&ixlib=rb-4.1.0&q=80&w=1080',
         startTimeHour: "2",
@@ -377,7 +461,8 @@ export const events = [
         responses: {
             going: 30,
             invited: 50
-        }
+        },
+        status: "Pending",
     },
     {
         id: 6,
@@ -385,7 +470,19 @@ export const events = [
         description: 'Witness the graduation of the newest members of the Josenian alumni community. Alumni are invited to attend and welcome the graduates.',
         date: 'April 20, 2026',
         time: '3:00 PM - 6:00 PM',
-        location: 'USJR Gymnasium',
+        location: {
+            region: 'Central Visayas',
+            regionCode: '070000000',
+            province: 'Cebu',
+            provinceCode: '072200000',
+            cityMunicipality: 'City of Cebu',
+            cityCode: '072217000',
+            barangay: 'Basak San Nicolas',
+            landmark: 'USJR Gymnasium',
+            street: 'Cebu South Road',
+            lat: 10.2831,
+            lng: 123.8643,
+        },
         category: 'Ceremony',
         image: 'https://images.unsplash.com/photo-1738949538943-e54722a44ffc?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxncmFkdWF0aW9uJTIwY2VyZW1vbnklMjB1bml2ZXJzaXR5fGVufDF8fHx8MTc3MDI3MTkzMnww&ixlib=rb-4.1.0&q=80&w=1080',
         startTimeHour: "3",
@@ -406,7 +503,8 @@ export const events = [
         responses: {
             going: 500,
             invited: 1000
-        }
+        },
+        status: "Pending",
     },
     {
         id: 7,
@@ -436,7 +534,8 @@ export const events = [
         responses: {
             going: 300,
             invited: 10000
-        }
+        },
+        status: "Pending",
     },
     {
         id: 8,
@@ -444,7 +543,19 @@ export const events = [
         description: 'Show your competitive spirit at the annual alumni sports festival. Basketball, volleyball, and other games await. All skill levels welcome!',
         date: 'May 10, 2026',
         time: '7:00 AM - 4:00 PM',
-        location: 'USJR Sports Complex',
+        location: {
+            region: 'Central Visayas',
+            regionCode: '070000000',
+            province: 'Cebu',
+            provinceCode: '072200000',
+            cityMunicipality: 'City of Cebu',
+            cityCode: '072217000',
+            barangay: 'Basak Pardo',
+            landmark: 'USJR Sports Complex',
+            street: 'Cebu South Road',
+            lat: 10.2831,
+            lng: 123.8643,
+        },
         category: 'Sports',
         image: 'https://images.unsplash.com/photo-1770097042618-438684ff665f?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxjb21tdW5pdHklMjBjZWxlYnJhdGlvbiUyMGV2ZW50fGVufDF8fHx8MTc3MDI3MTkyOXww&ixlib=rb-4.1.0&q=80&w=1080',
         startTimeHour: "7",
@@ -465,7 +576,49 @@ export const events = [
         responses: {
             going: 120,
             invited: 300
-        }
+        },
+        status: "Approved",
     },
+    {
+        id: 9,
+        title: 'Software Developer Hiring Event',
+        description: 'Meet with local tech companies looking to hire Josenian talent.',
+        date: 'May 1, 2026',
+        time: '9:00 AM - 12:00 PM',
+        location: 'Virtual',
+        category: 'Virtual',
+        image: 'https://images.unsplash.com/photo-1517433670267-08bbd4be890f?auto=format&fit=crop&q=80&w=1080',
+        startTimeHour: "9",
+        startTimeMinute: "00",
+        startTimeAmPm: "AM",
+        endTimeHour: "12",
+        endTimeMinute: "00",
+        endTimeAmPm: "PM",
+        address: "Online",
+        organizer: {
+            name: "USJR Career Services",
+            contactName: "Career Center",
+            email: "career@usjr.edu.ph",
+            phone: "(032) 111-2323",
+            website: "www.usjr-careers.org",
+            image: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?ixlib=rb-4.0.3&auto=format&fit=crop&w=100&q=80"
+        },
+        responses: {
+            going: 80,
+            invited: 200
+        },
+        status: "Pending"
+    }
 ];
-
+
+export const getDashboardContentStats = () => {
+    const pendingEvents = events.filter(e => e.status === "Pending").length;
+    const pendingBulletins = bulletins.filter(b => b.status === "Pending").length;
+    const upcomingEvents = events.filter(e => e.status !== "Rejected").length;
+
+    return {
+        pendingContent: pendingEvents + pendingBulletins,
+        upcomingEvents: upcomingEvents
+    };
+};
+

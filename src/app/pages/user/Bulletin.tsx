@@ -8,7 +8,7 @@ import {
     Plus,
     List,
     LayoutGrid,
-    Filter,
+    FileText,
     Clock,
 } from 'lucide-react';
 import { CreateBulletinModal } from '@/app/components/user/CreateBulletinModal';
@@ -24,8 +24,8 @@ export function Bulletin() {
     const [dateTo, setDateTo] = useState('');
 
     const filteredItems = showUserSubmitted
-        ? bulletins.filter((item) => !item.isUserSubmitted)
-        : bulletins;
+        ? bulletins.filter((item) => !item.isUserSubmitted && item.status === "Approved")
+        : bulletins.filter(item => item.status === "Approved");
 
     return (
         <div className="min-h-screen bg-gray-50">
@@ -237,7 +237,7 @@ export function Bulletin() {
 
                         {filteredItems.length === 0 && (
                             <div className="bg-white rounded-lg shadow-md p-12 text-center">
-                                <Filter className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                                <FileText className="w-16 h-16 text-gray-300 mx-auto mb-4" />
                                 <h3 className="text-xl font-bold mb-2 text-gray-700">
                                     No Bulletin Items Found
                                 </h3>

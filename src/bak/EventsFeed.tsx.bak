@@ -2,7 +2,7 @@ import { Calendar, MapPin, Users } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { events } from '@assets/mockData';
 
-const mockEvents = events.filter(e => e.status === "Approved");
+const mockEvents = events.filter(e => e.status === 'approved');
 
 export function EventsFeed() {
   const formatLocation = (event: any) => {
@@ -19,23 +19,6 @@ export function EventsFeed() {
     location: formatLocation(e),
     url: `/events/${e.id}`,
   }));
-
-  if (events.length === 0) {
-    return (
-      <section id="events" className="py-16 bg-white">
-        <div className="max-w-6xl mx-auto px-4 md:px-8 text-center">
-          <div className="flex justify-between items-center mb-8">
-            <h2 className="text-3xl md:text-4xl font-bold">Upcoming Events</h2>
-          </div>
-          <div className="py-12 bg-gray-50 rounded-lg border border-dashed border-gray-300">
-            <Calendar className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-            <h3 className="text-xl font-medium text-gray-600 mb-1">No Upcoming Events</h3>
-            <p className="text-gray-500">Check back later for exciting events and gatherings.</p>
-          </div>
-        </div>
-      </section>
-    );
-  }
 
   return (
     <section id="events" className="py-16 bg-white">

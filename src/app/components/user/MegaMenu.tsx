@@ -4,9 +4,10 @@ import { Link } from 'react-router-dom';
 
 interface MegaMenuProps {
   isOpen: boolean;
+  onClose: () => void;
 }
 
-export function MegaMenu({ isOpen }: MegaMenuProps) {
+export function MegaMenu({ isOpen, onClose }: MegaMenuProps) {
   const navigation = [
     { label: 'Alumni Directory', href: '/directory' },
     { label: 'Events', href: '/events' },
@@ -37,6 +38,7 @@ export function MegaMenu({ isOpen }: MegaMenuProps) {
                 <li key={link.label}>
                   <Link
                     to={link.href}
+                    onClick={onClose}
                     className="text-gray-700 hover:text-[#1a5f3f] transition-colors text-lg font-medium block"
                   >
                     {link.label}
@@ -46,6 +48,7 @@ export function MegaMenu({ isOpen }: MegaMenuProps) {
               <li>
                 <Link
                   to="/donate"
+                  onClick={onClose}
                   className="inline-block bg-[#d4af37] text-white px-6 py-2 rounded-full hover:bg-[#c19b2a] transition-colors font-semibold mt-2"
                 >
                   Donate

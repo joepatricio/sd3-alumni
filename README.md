@@ -65,9 +65,8 @@
 
   ## TODO before client approval
 
-  * ADMIN: Generate report.
-  * ADMIN: Approved bulletins/events should be editable from this webpage. Logic for bulletin-modal and event-modal may be reused here, but strict dataflow should be observed. 
-  * ADMIN: Custom ordering for Status column sort.
+  * USER: Add more events and bulletins. Aim for at least 20 each.
+  * USER: Pagination for Events and Bulletins. Filters for Event (ref. https://alumcommunity.mit.edu/events/)
   * USER: Mock UI for Event, Donation
   * USER: Guest / User logic (e.g. switch UI elements for guest vs user)
     * Switch to Guest/User/Admin modes in Topbar

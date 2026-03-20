@@ -1,8 +1,8 @@
-import { Clock, FileText, Calendar } from 'lucide-react';
+import { Clock, Calendar } from 'lucide-react';
 import { bulletins } from '@assets/mockData';
 import { Link } from 'react-router-dom';
 
-const mockBulletins = bulletins.filter(b => b.status === "Approved");
+const mockBulletins = bulletins.filter(b => b.status === 'approved');
 
 export function BulletinFeed() {
   const bulletins = mockBulletins.slice(0, 6).map((b) => ({
@@ -11,23 +11,6 @@ export function BulletinFeed() {
     author: b.author.name,
     image: b.heroImage,
   }));
-
-  if (bulletins.length === 0) {
-    return (
-      <section id="bulletin" className="py-16 bg-gray-50">
-        <div className="max-w-6xl mx-auto px-4 md:px-8 text-center">
-          <div className="flex justify-between items-center mb-8">
-            <h2 className="text-3xl md:text-4xl font-bold">Latest Bulletin</h2>
-          </div>
-          <div className="py-12 bg-white rounded-lg border border-dashed border-gray-300 shadow-sm">
-            <FileText className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-            <h3 className="text-xl font-medium text-gray-600 mb-1">No Recent Bulletins</h3>
-            <p className="text-gray-500">Check back later for updates from the community.</p>
-          </div>
-        </div>
-      </section>
-    );
-  }
 
   return (
     <section id="bulletin" className="py-16 bg-gray-50">
@@ -50,18 +33,12 @@ export function BulletinFeed() {
         {/* Featured Article */}
         <div className="bg-white rounded-lg overflow-hidden shadow-md hover:shadow-xl transition-shadow mb-8">
           <div className="grid md:grid-cols-2 gap-0">
-            <div className="relative h-64 md:h-full max-h-[20rem] overflow-hidden bg-gray-100">
-              {bulletins[0].image ? (
-                <img
-                  src={bulletins[0].image}
-                  alt={bulletins[0].title}
-                  className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
-                />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center text-gray-400">
-                  <FileText className="w-12 h-12 opacity-50" />
-                </div>
-              )}
+            <div className="relative h-64 md:h-full max-h-[20rem] overflow-hidden">
+              <img
+                src={bulletins[0].image}
+                alt={bulletins[0].title}
+                className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+              />
               <span className="absolute top-4 left-4 bg-[#1a5f3f] text-white px-3 py-1 rounded-full text-sm font-semibold">
                 Featured
               </span>
@@ -98,18 +75,12 @@ export function BulletinFeed() {
               key={bulletin.id}
               className="bg-white rounded-lg overflow-hidden shadow-md hover:shadow-xl transition-shadow"
             >
-              <div className="relative h-48 overflow-hidden bg-gray-100">
-                {bulletin.image ? (
-                  <img
-                    src={bulletin.image}
-                    alt={bulletin.title}
-                    className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center text-gray-400">
-                    <FileText className="w-8 h-8 opacity-50" />
-                  </div>
-                )}
+              <div className="relative h-48 overflow-hidden">
+                <img
+                  src={bulletin.image}
+                  alt={bulletin.title}
+                  className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                />
               </div>
               <div className="p-6">
                 <div className="flex items-center gap-4 mb-3">

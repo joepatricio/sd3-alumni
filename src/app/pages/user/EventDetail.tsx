@@ -15,16 +15,22 @@ import { CreateEventModal } from '@components/user/CreateEventModal';
 import { Button } from '@components/ui/button';
 import { Badge } from '@components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@components/ui/avatar';
-
+import { NotFound } from '@pages/NotFound';
 import { events } from '@assets/mockData';
 
 export function EventDetail() {
     const { id } = useParams<{ id: string }>();
     const [rsvpStatus, setRsvpStatus] = useState<'going' | 'not_going' | null>(null);
+    const isAdmin = !!localStorage.getItem('adminToken');
 
     // Mock data for the event being edited
     // In a real app, this would be fetched based on the ID
-    const eventData = events.find((e) => e.id === Number(id)) || events[0];
+    const eventData = events.find((e) => e.id === Number(id));
+
+    if (!eventData || eventData.status === "Rejected") {
+        // return <Navigate to="/404" replace />;
+        return <NotFound />;
+    }
 
     // Calculate display time
     const displayTime = `${eventData.startTimeHour}:${eventData.startTimeMinute} ${eventData.startTimeAmPm} - ${eventData.endTimeHour}:${eventData.endTimeMinute} ${eventData.endTimeAmPm}`;
@@ -48,6 +54,13 @@ export function EventDetail() {
 
     return (
         <div className="bg-gray-50 pb-12">
+            {eventData.status === "Pending" && (
+                <div className="bg-yellow-50 px-4 py-3 border-b border-yellow-200 text-center">
+                    <p className="text-yellow-800 font-medium text-sm">
+                        ⚠️ This event is currently under review by an administrator. It is not visible to the public.
+                    </p>
+                </div>
+            )}
             {/* Header / Nav */}
             <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 flex justify-between items-center">
                 <Link
@@ -67,6 +80,7 @@ export function EventDetail() {
                             </Button>
                         }
                         initialData={eventData as any}
+                        isAdmin={isAdmin}
                     />
                 </div>
             </div>
