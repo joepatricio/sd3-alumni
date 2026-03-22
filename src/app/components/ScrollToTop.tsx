@@ -1,18 +1,69 @@
 import { useLocation } from 'react-router-dom';
-import { useLayoutEffect } from 'react';
+import { useLayoutEffect, useEffect, useState } from 'react';
+import { ArrowUp } from 'lucide-react';
 
-// Thanks Caden Chen from Medium
-// https://medium.com/@caden0002/fixing-scroll-position-issues-in-react-router-scroll-to-top-on-navigation-86bcfbdfc9db
-// Works, but throws error, `Warning: Function components cannot be given refs.`
-const ScrollToTop = ({ children }: { children: React.ReactNode }) => {
+interface ScrollToTopProps {
+    children?: React.ReactNode;
+    scrollContainerRef?: React.RefObject<any>;
+}
+
+const ScrollToTop = ({ children, scrollContainerRef }: ScrollToTopProps) => {
     const location = useLocation();
+    const [showScrollTop, setShowScrollTop] = useState(false);
+
+    const scrollToTop = () => {
+        if (scrollContainerRef?.current) {
+            scrollContainerRef.current.scrollTo({ top: 0, behavior: 'smooth' });
+        } else {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+    };
 
     useLayoutEffect(() => {
         // Scroll to the top of the page when the route changes
-        window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
-    }, [location.pathname]);
+        if (scrollContainerRef?.current) {
+            scrollContainerRef.current.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+        } else {
+            window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+        }
+    }, [location.pathname, scrollContainerRef]);
 
-    return children;
+    useEffect(() => {
+        const handleScroll = () => {
+            const scrollTop = scrollContainerRef?.current 
+                ? scrollContainerRef.current.scrollTop 
+                : window.scrollY;
+                
+            if (scrollTop > 300) {
+                setShowScrollTop(true);
+            } else {
+                setShowScrollTop(false);
+            }
+        };
+
+        const target = scrollContainerRef?.current || window;
+        target.addEventListener('scroll', handleScroll);
+        
+        // Initial check
+        handleScroll();
+
+        return () => target.removeEventListener('scroll', handleScroll as EventListener);
+    }, [scrollContainerRef]);
+
+    return (
+        <>
+            {children}
+            {showScrollTop && (
+                <button
+                    onClick={scrollToTop}
+                    className="fixed bottom-8 right-8 bg-[#1a5f3f] text-white p-3 rounded-full shadow-lg hover:bg-[#154e33] transition-all flex items-center justify-center z-50 animate-in fade-in slide-in-from-bottom-2"
+                    aria-label="Scroll to top"
+                >
+                    <ArrowUp className="w-6 h-6" />
+                </button>
+            )}
+        </>
+    );
 };
 
 export default ScrollToTop;

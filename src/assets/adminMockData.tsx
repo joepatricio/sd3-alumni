@@ -1,11 +1,11 @@
 // adminStats now generated dynamically via getAdminStats function below
 
 export const adminRecentActivity = [
-    { id: 1, action: 'Registered', user: 'Juan De Cruz', time: '2 hours ago', type: 'user' },
-    { id: 2, action: 'Submitted Bulletin', user: 'Maria Santos', time: '4 hours ago', type: 'content' },
-    { id: 3, action: 'Donated $500.00', user: 'Anonymous', time: '5 hours ago', type: 'donation' },
-    { id: 4, action: 'Event Pending Review', user: 'Batch 2010', time: '1 day ago', type: 'event' },
-    { id: 5, action: 'Registered', user: 'Jose Rizal', time: '1 day ago', type: 'user' },
+    { id: '1', action: 'Registered', user: 'Juan De Cruz', time: '2 hours ago', type: 'user' },
+    { id: '2', action: 'Submitted Bulletin', user: 'Maria Santos', time: '4 hours ago', type: 'content' },
+    { id: '3', action: 'Donated $500.00', user: 'Anonymous', time: '5 hours ago', type: 'donation' },
+    { id: '4', action: 'Event Pending Review', user: 'Batch 2010', time: '1 day ago', type: 'event' },
+    { id: '5', action: 'Registered', user: 'Jose Rizal', time: '1 day ago', type: 'user' },
 ];
 
 // Helper to generate a large amount of mock data for pagination
@@ -15,7 +15,7 @@ const generateUsers = (count: number) => {
     const lastNames = ['Spencer', 'Wong', 'Santos', 'Doe', 'Penduko', 'Cruz', 'Torres', 'Smith', 'Johnson', 'Williams', 'Brown', 'Jones', 'Garcia', 'Miller'];
 
     return Array.from({ length: count }, (_, i) => {
-        const id = i + 1;
+        const id = (i + 1).toString();
         const firstName = firstNames[i % firstNames.length];
         const lastName = lastNames[i % lastNames.length];
         const name = `${firstName} ${lastName}`;
@@ -54,7 +54,7 @@ const generateContent = (count: number) => {
     const titles = ['Reunion Pre-party', 'Looking for developers', 'Annual Meeting', 'Charity Run', 'Tech Talk', 'Startup Pitch', 'Mentoring Session', 'Job Fair'];
 
     return Array.from({ length: count }, (_, i) => {
-        const id = i + 1;
+        const id = (i + 1).toString();
         const type = types[i % types.length];
         const title = `${titles[i % titles.length]} ${i + 1}`;
         const description = `This is a randomly generated description for ${title} to showcase the content management features. More details available upon review.`;
@@ -73,7 +73,7 @@ const generateDonations = (count: number) => {
     const donors = ['Anonymous', 'Juan De Cruz', 'Maria Santos', 'Mark Spencer', 'Lisa Wong', 'Company XYZ'];
 
     return Array.from({ length: count }, (_, i) => {
-        const id = i + 1;
+        const id = (i + 1).toString();
         // Generate a random date in previous months
         const dateObj = new Date(2026, 1, 15 - (i % 30));
         const date = dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });

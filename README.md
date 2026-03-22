@@ -65,7 +65,6 @@
 
   ## TODO before client approval
 
-  * USER: Add more events and bulletins. Aim for at least 20 each.
   * USER: Pagination for Events and Bulletins. Filters for Event (ref. https://alumcommunity.mit.edu/events/)
   * USER: Mock UI for Event, Donation
   * USER: Guest / User logic (e.g. switch UI elements for guest vs user)
@@ -77,10 +76,11 @@
   * Refactor code for better readability and maintainability. Should be done last to avoid breaking stuff and make it easier to prototype
 
   ## TODO after client approval
+  * Performance optimizations to the website (CPU Throttle happy pathing, lazy loading, SSR, TTFB, LCP, etc.)
   * Redesign Profile pages to be API-friendly
   * Rich-text formatting support for Bulletin and Events? :(
   * Look into TanStack Query, SQLite
-  * Implement DB development with CRUD.
+  * Implement DB development with proper CRUD.
   * Implement secure routing.
   * Implement CDN for images. Unsure whether cloud or self-hosted.
   * Event RSVP system

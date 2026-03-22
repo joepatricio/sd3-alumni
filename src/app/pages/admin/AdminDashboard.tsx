@@ -71,13 +71,13 @@ export function AdminDashboard() {
                         <CardDescription>Common administrative tasks</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                        <Link to="/admin/users" className="block w-full text-left px-4 py-3 border border-gray-200 text-gray-700 hover:bg-gray-50 font-medium rounded-md transition-colors">
+                        <Link to="/admin/users?tab=Regular" className="block w-full text-left px-4 py-3 border border-gray-200 text-gray-700 hover:bg-gray-50 font-medium rounded-md transition-colors">
                             Manage Users
                         </Link>
-                        <Link to="/admin/bulletins" className="block w-full text-left px-4 py-3 border border-gray-200 text-gray-700 hover:bg-gray-50 font-medium rounded-md transition-colors">
+                        <Link to="/admin/bulletins?tab=Pending" className="block w-full text-left px-4 py-3 border border-gray-200 text-gray-700 hover:bg-gray-50 font-medium rounded-md transition-colors">
                             Approve Bulletins
                         </Link>
-                        <Link to="/admin/events" className="block w-full text-left px-4 py-3 border border-gray-200 text-gray-700 hover:bg-gray-50 font-medium rounded-md transition-colors">
+                        <Link to="/admin/events?tab=Pending" className="block w-full text-left px-4 py-3 border border-gray-200 text-gray-700 hover:bg-gray-50 font-medium rounded-md transition-colors">
                             Approve Events
                         </Link>
                         <button onClick={handleGenerateReport} className="w-full text-left px-4 py-3 border border-gray-200 text-gray-700 hover:bg-gray-50 font-medium rounded-md transition-colors">
