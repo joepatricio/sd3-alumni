@@ -18,7 +18,7 @@ export function AdminBulletins() {
         }))
     );
 
-    const handleStatusChange = (id: number | string, newStatus: "Approved" | "Rejected" | "Pending") => {
+    const handleStatusChange = (id: string, newStatus: "Approved" | "Rejected" | "Pending") => {
         setBulletinsData(prev => prev.map(item => item.id === id ? { ...item, status: newStatus } : item));
         
         // Mutate the original mock array so it persists for other components

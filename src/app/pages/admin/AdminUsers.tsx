@@ -9,10 +9,11 @@ import { Label } from '@components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@components/ui/select';
 import { Textarea } from '@components/ui/textarea';
 import { ArrowUp, ArrowDown, ArrowUpDown, ChevronLeft, ChevronRight, Search } from 'lucide-react';
+import { useSearchParams } from 'react-router-dom';
 import { adminUsersMock } from '@assets/adminMockData';
 
 interface User {
-    id: number;
+    id: string;
     name: string;
     email: string;
     batch: string;
@@ -28,8 +29,9 @@ export function AdminUsers() {
     const statuses = ['All', 'Pending', 'Official', 'Regular', 'Suspended', 'Banned'];
     const ITEMS_PER_PAGE = 20;
 
+    const [searchParams, setSearchParams] = useSearchParams();
     const [users, setUsers] = useState<User[]>(adminUsersMock as User[]);
-    const [activeTab, setActiveTab] = useState('All');
+    const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'All');
 
     // Search & Filter
     const [searchTerm, setSearchTerm] = useState('');
@@ -179,6 +181,7 @@ export function AdminUsers() {
     const onTabChange = (val: string) => {
         setActiveTab(val);
         setCurrentPage(1);
+        setSearchParams({ tab: val }, { replace: true });
     };
 
     const openEditModal = (user: User, specificStatus?: string) => {

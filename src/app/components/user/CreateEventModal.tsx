@@ -675,7 +675,7 @@ export function CreateEventModal({ trigger, initialData, isAdmin }: CreateEventM
                                 render={({ field }) => (
                                     <FormItem>
                                         <FormLabel>Category</FormLabel>
-                                        <Select onValueChange={field.onChange} defaultValue={field.value} value={field.value}>
+                                        <Select onValueChange={field.onChange} value={field.value || undefined}>
                                             <FormControl>
                                                 <SelectTrigger>
                                                     <SelectValue placeholder="Select a category" />
@@ -720,7 +720,7 @@ export function CreateEventModal({ trigger, initialData, isAdmin }: CreateEventM
                                         control={form.control}
                                         name="startTimeHour"
                                         render={({ field }) => (
-                                            <Select onValueChange={field.onChange} defaultValue={field.value} value={field.value}>
+                                            <Select onValueChange={field.onChange} value={field.value || undefined}>
                                                 <FormControl>
                                                     <SelectTrigger>
                                                         <SelectValue placeholder="Hour" />
@@ -736,7 +736,7 @@ export function CreateEventModal({ trigger, initialData, isAdmin }: CreateEventM
                                         control={form.control}
                                         name="startTimeMinute"
                                         render={({ field }) => (
-                                            <Select onValueChange={field.onChange} defaultValue={field.value} value={field.value}>
+                                            <Select onValueChange={field.onChange} value={field.value || undefined}>
                                                 <FormControl>
                                                     <SelectTrigger>
                                                         <SelectValue placeholder="Min" />
@@ -752,7 +752,7 @@ export function CreateEventModal({ trigger, initialData, isAdmin }: CreateEventM
                                         control={form.control}
                                         name="startTimeAmPm"
                                         render={({ field }) => (
-                                            <Select onValueChange={field.onChange} defaultValue={field.value} value={field.value}>
+                                            <Select onValueChange={field.onChange} value={field.value || undefined}>
                                                 <FormControl>
                                                     <SelectTrigger>
                                                         <SelectValue placeholder="AM/PM" />
@@ -775,7 +775,7 @@ export function CreateEventModal({ trigger, initialData, isAdmin }: CreateEventM
                                         control={form.control}
                                         name="endTimeHour"
                                         render={({ field }) => (
-                                            <Select onValueChange={field.onChange} defaultValue={field.value} value={field.value}>
+                                            <Select onValueChange={field.onChange} value={field.value || undefined}>
                                                 <FormControl>
                                                     <SelectTrigger>
                                                         <SelectValue placeholder="Hour" />
@@ -791,7 +791,7 @@ export function CreateEventModal({ trigger, initialData, isAdmin }: CreateEventM
                                         control={form.control}
                                         name="endTimeMinute"
                                         render={({ field }) => (
-                                            <Select onValueChange={field.onChange} defaultValue={field.value} value={field.value}>
+                                            <Select onValueChange={field.onChange} value={field.value || undefined}>
                                                 <FormControl>
                                                     <SelectTrigger>
                                                         <SelectValue placeholder="Min" />
@@ -807,7 +807,7 @@ export function CreateEventModal({ trigger, initialData, isAdmin }: CreateEventM
                                         control={form.control}
                                         name="endTimeAmPm"
                                         render={({ field }) => (
-                                            <Select onValueChange={field.onChange} defaultValue={field.value} value={field.value}>
+                                            <Select onValueChange={field.onChange} value={field.value || undefined}>
                                                 <FormControl>
                                                     <SelectTrigger>
                                                         <SelectValue placeholder="AM/PM" />
@@ -909,7 +909,7 @@ export function CreateEventModal({ trigger, initialData, isAdmin }: CreateEventM
                                                             field.onChange(val);
                                                             handleRegionChange(val);
                                                         }}
-                                                        value={field.value}
+                                                        value={field.value || undefined}
                                                     >
                                                         <FormControl>
                                                             <SelectTrigger>
@@ -940,7 +940,7 @@ export function CreateEventModal({ trigger, initialData, isAdmin }: CreateEventM
                                                             field.onChange(val);
                                                             handleProvinceChange(val);
                                                         }}
-                                                        value={field.value}
+                                                        value={field.value || undefined}
                                                         disabled={provinces.length === 0}
                                                     >
                                                         <FormControl>
@@ -972,7 +972,7 @@ export function CreateEventModal({ trigger, initialData, isAdmin }: CreateEventM
                                                             field.onChange(val);
                                                             handleCityChange(val);
                                                         }}
-                                                        value={field.value}
+                                                        value={field.value || undefined}
                                                         disabled={cities.length === 0}
                                                     >
                                                         <FormControl>
@@ -1005,7 +1005,7 @@ export function CreateEventModal({ trigger, initialData, isAdmin }: CreateEventM
                                                             field.onChange(b?.name || '');
                                                         }}
                                                         // use value mapped to the name, we use barangay name in form state
-                                                        value={barangays.find(bg => bg.name === field.value)?.code || ''}
+                                                        value={barangays.find(bg => bg.name === field.value)?.code || undefined}
                                                         disabled={barangays.length === 0}
                                                     >
                                                         <FormControl>

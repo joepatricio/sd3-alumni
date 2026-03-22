@@ -8,7 +8,7 @@ import { Download, Search, ArrowUp, ArrowDown, ArrowUpDown, ChevronLeft, Chevron
 import { adminDonationsMock, getDonationStats } from '@assets/adminMockData';
 
 interface Donation {
-    id: number;
+    id: string;
     date: string;
     donor: string;
     amount: string;
