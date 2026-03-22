@@ -25,7 +25,7 @@ export function EventDetail() {
 
     // Mock data for the event being edited
     // In a real app, this would be fetched based on the ID
-    const eventData = events.find((e) => e.id === Number(id));
+    const eventData = events.find((e) => e.id === id);
 
     if (!eventData || eventData.status === "Rejected") {
         // return <Navigate to="/404" replace />;

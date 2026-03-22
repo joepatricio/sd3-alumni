@@ -5,10 +5,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@components/ui/tabs';
 import { Input } from '@components/ui/input';
 import { Badge } from '@components/ui/badge';
 import { ArrowUp, ArrowDown, ArrowUpDown, ChevronLeft, ChevronRight, Search, CheckCircle, XCircle, RotateCcw, Eye } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 
 export interface ContentItem {
-    id: number | string;
+    id: string;
     title: string;
     author: string;
     date: string;
@@ -25,7 +25,7 @@ interface AdminContentTableProps {
     mockData: ContentItem[];
     primaryColorClass: string; // e.g., 'bg-[#1a5f3f] hover:bg-[#154d33]'
     outlineColorClass: string; // e.g., 'text-amber-600 border-amber-200 hover:bg-amber-50'
-    onStatusChange?: (id: number | string, newStatus: "Approved" | "Rejected" | "Pending") => void;
+    onStatusChange?: (id: string, newStatus: "Approved" | "Rejected" | "Pending") => void;
 }
 
 export function AdminContentTable({
@@ -39,7 +39,8 @@ export function AdminContentTable({
     const statuses = ["All", "Pending", "Approved", "Rejected"];
     const ITEMS_PER_PAGE = 20;
 
-    const [activeTab, setActiveTab] = useState("All");
+    const [searchParams, setSearchParams] = useSearchParams();
+    const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'All');
 
     // Search & Filter state
     const [searchName, setSearchName] = useState('');
@@ -126,6 +127,7 @@ export function AdminContentTable({
     const onTabChange = (val: string) => {
         setActiveTab(val);
         setCurrentPage(1);
+        setSearchParams({ tab: val }, { replace: true });
     };
 
     const getStatusConfig = (status: string) => {

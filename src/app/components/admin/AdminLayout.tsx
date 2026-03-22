@@ -1,13 +1,13 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
-import { LogOut, LayoutDashboard, Users, FileText, ChevronLeft, CreditCard, Calendar, ArrowUp } from 'lucide-react';
+import { LogOut, LayoutDashboard, Users, FileText, ChevronLeft, CreditCard, Calendar } from 'lucide-react';
 import alumniLogo from "@assets/alumni-logo.jpg";
+import ScrollToTop from '../ScrollToTop';
 
 export function AdminLayout() {
     const location = useLocation();
     const navigate = useNavigate();
     const scrollRef = useRef<HTMLDivElement>(null);
-    const [showScrollTop, setShowScrollTop] = useState(false);
 
     useEffect(() => {
         const token = localStorage.getItem('adminToken');
@@ -19,14 +19,6 @@ export function AdminLayout() {
     const scrollToTop = () => {
         if (scrollRef.current) {
             scrollRef.current.scrollTo({ top: 0, behavior: 'smooth' });
-        }
-    };
-
-    const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
-        if (e.currentTarget.scrollTop > 300) {
-            setShowScrollTop(true);
-        } else {
-            setShowScrollTop(false);
         }
     };
 
@@ -116,23 +108,14 @@ export function AdminLayout() {
                 {/* Scrollable Content */}
                 <div 
                     ref={scrollRef}
-                    onScroll={handleScroll}
                     className="flex-1 overflow-auto bg-gray-50/50 p-8 relative scroll-smooth"
                 >
                     <div className="mx-auto max-w-7xl">
                         <Outlet />
                     </div>
 
-                    {/* Scroll to Top Button */}
-                    {showScrollTop && (
-                        <button
-                            onClick={scrollToTop}
-                            className="fixed bottom-8 right-8 bg-[#1a5f3f] text-white p-3 rounded-full shadow-lg hover:bg-[#154e33] transition-all flex items-center justify-center z-50 animate-in fade-in slide-in-from-bottom-2"
-                            aria-label="Scroll to top"
-                        >
-                            <ArrowUp className="w-6 h-6" />
-                        </button>
-                    )}
+                    {/* Scroll to Top Component (handles routing scroll + button for this ref) */}
+                    <ScrollToTop scrollContainerRef={scrollRef} />
                 </div>
             </main>
         </div>

@@ -5,7 +5,7 @@ import { Link } from 'react-router-dom';
 const mockBulletins = bulletins.filter(b => b.status === "Approved");
 
 export function BulletinFeed() {
-  const bulletins = mockBulletins.slice(0, 6).map((b) => ({
+  const bulletins = mockBulletins.slice(0, 7).map((b) => ({
     ...b,
     excerpt: b.preview,
     author: b.author.name,
