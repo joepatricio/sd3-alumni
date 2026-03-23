@@ -144,7 +144,7 @@ export const comments = [
 export const getDashboardContentStats = () => {
     const pendingEvents = events.filter(e => e.status === "Pending").length;
     const pendingBulletins = bulletins.filter(b => b.status === "Pending").length;
-    
+
     const now = new Date();
     // Reset time for today to count events happening today as upcoming
     now.setHours(0, 0, 0, 0);
@@ -163,14 +163,158 @@ export const getDashboardContentStats = () => {
 
 export const bulletins = [
     {
-        "id": "1",
-        "title": "Community Outreach",
+        "id": "9",
+        "title": "Mentorship Program 3",
         "author": {
-            "name": "Mark Santos",
+            "name": "Sofia Cruz",
+            "image": "https://images.unsplash.com/photo-1502685104226-ee32379fefbe?w=1080",
+            "role": "Coordinator"
+        },
+        "date": "2026-06-30T00:00:00.000Z",
+        "readTime": "4 min read",
+        get preview() {
+            return generatePreview(this.content);
+        },
+        "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+        "heroImage": "https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=1080",
+        "isUserSubmitted": false,
+        "status": "Approved"
+    },
+    {
+        "id": "5",
+        "title": "Scholarship Program Launch 1",
+        "author": {
+            "name": "Juan Reyes",
             "image": "https://images.unsplash.com/photo-1502685104226-ee32379fefbe?w=1080",
             "role": "Tech Entrepreneur"
         },
-        "date": "June 08, 2026",
+        "date": "2026-06-23T00:00:00.000Z",
+        "readTime": "2 min read",
+        get preview() {
+            return generatePreview(this.content);
+        },
+        "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+        "heroImage": "https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=1080",
+        "isUserSubmitted": false,
+        "status": "Approved"
+    },
+    {
+        "id": "14",
+        "title": "Campus Updates 1",
+        "author": {
+            "name": "Mark Aquino",
+            "image": "https://images.unsplash.com/photo-1502685104226-ee32379fefbe?w=1080",
+            "role": "Alumna"
+        },
+        "date": "2026-06-20T00:00:00.000Z",
+        "readTime": "4 min read",
+        get preview() {
+            return generatePreview(this.content);
+        },
+        "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+        "heroImage": "https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=1080",
+        "isUserSubmitted": false,
+        "status": "Approved"
+    },
+    {
+        "id": "47",
+        "title": "Homecoming Highlights 5",
+        "author": {
+            "name": "Chris Torres",
+            "image": "https://images.unsplash.com/photo-1502685104226-ee32379fefbe?w=1080",
+            "role": "Alumna"
+        },
+        "date": "2026-06-16T00:00:00.000Z",
+        "readTime": "6 min read",
+        get preview() {
+            return generatePreview(this.content);
+        },
+        "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+        "heroImage": "https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=1080",
+        "isUserSubmitted": true,
+        "status": "Pending"
+    },
+    {
+        "id": "31",
+        "title": "Career Development Initiative 3",
+        "author": {
+            "name": "Juan Ramos",
+            "image": "https://images.unsplash.com/photo-1502685104226-ee32379fefbe?w=1080",
+            "role": "Tech Entrepreneur"
+        },
+        "date": "2026-06-12T00:00:00.000Z",
+        "readTime": "6 min read",
+        get preview() {
+            return generatePreview(this.content);
+        },
+        "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+        "heroImage": "https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=1080",
+        "isUserSubmitted": true,
+        "status": "Pending"
+    },
+    {
+        "id": "13",
+        "title": "Scholarship Program Launch 4",
+        "author": {
+            "name": "Maria Garcia",
+            "image": "https://images.unsplash.com/photo-1502685104226-ee32379fefbe?w=1080",
+            "role": "Coordinator"
+        },
+        "date": "2026-06-09T00:00:00.000Z",
+        "readTime": "6 min read",
+        get preview() {
+            return generatePreview(this.content);
+        },
+        "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+        "heroImage": "https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=1080",
+        "isUserSubmitted": false,
+        "status": "Pending"
+    },
+    {
+        "id": "6",
+        "title": "Mentorship Program 2",
+        "author": {
+            "name": "Bea Mendoza",
+            "image": "https://images.unsplash.com/photo-1502685104226-ee32379fefbe?w=1080",
+            "role": "Official"
+        },
+        "date": "2026-06-06T00:00:00.000Z",
+        "readTime": "6 min read",
+        get preview() {
+            return generatePreview(this.content);
+        },
+        "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+        "heroImage": "https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=1080",
+        "isUserSubmitted": true,
+        "status": "Pending"
+    },
+    {
+        "id": "19",
+        "title": "Campus Updates 3",
+        "author": {
+            "name": "Bea Castro",
+            "image": "https://images.unsplash.com/photo-1502685104226-ee32379fefbe?w=1080",
+            "role": "Coordinator"
+        },
+        "date": "2026-06-03T00:00:00.000Z",
+        "readTime": "5 min read",
+        get preview() {
+            return generatePreview(this.content);
+        },
+        "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+        "heroImage": "https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=1080",
+        "isUserSubmitted": true,
+        "status": "Approved"
+    },
+    {
+        "id": "20",
+        "title": "Career Development Initiative",
+        "author": {
+            "name": "Maria Bautista",
+            "image": "https://images.unsplash.com/photo-1502685104226-ee32379fefbe?w=1080",
+            "role": "Alumna"
+        },
+        "date": "2026-06-02T00:00:00.000Z",
         "readTime": "5 min read",
         get preview() {
             return generatePreview(this.content);
@@ -181,14 +325,32 @@ export const bulletins = [
         "status": "Pending"
     },
     {
-        "id": "2",
-        "title": "Mentorship Program",
+        "id": "46",
+        "title": "Alumni Startup Success 9",
         "author": {
-            "name": "Maria Flores",
+            "name": "Jose Castro",
             "image": "https://images.unsplash.com/photo-1502685104226-ee32379fefbe?w=1080",
-            "role": "Coordinator"
+            "role": "Tech Entrepreneur"
         },
-        "date": "May 07, 2026",
+        "date": "2026-05-31T00:00:00.000Z",
+        "readTime": "3 min read",
+        get preview() {
+            return generatePreview(this.content);
+        },
+        "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+        "heroImage": "https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=1080",
+        "isUserSubmitted": false,
+        "status": "Approved"
+    },
+    {
+        "id": "23",
+        "title": "Community Outreach",
+        "author": {
+            "name": "Jose Ramos",
+            "image": "https://images.unsplash.com/photo-1502685104226-ee32379fefbe?w=1080",
+            "role": "Tech Entrepreneur"
+        },
+        "date": "2026-05-26T00:00:00.000Z",
         "readTime": "4 min read",
         get preview() {
             return generatePreview(this.content);
@@ -196,17 +358,35 @@ export const bulletins = [
         "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
         "heroImage": "https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=1080",
         "isUserSubmitted": false,
-        "status": "Pending"
+        "status": "Approved"
     },
     {
-        "id": "3",
-        "title": "Mentorship Program 1",
+        "id": "35",
+        "title": "Alumni Startup Success 6",
         "author": {
-            "name": "John Castro",
+            "name": "Paolo Torres",
             "image": "https://images.unsplash.com/photo-1502685104226-ee32379fefbe?w=1080",
             "role": "Alumna"
         },
-        "date": "February 12, 2026",
+        "date": "2026-05-21T00:00:00.000Z",
+        "readTime": "4 min read",
+        get preview() {
+            return generatePreview(this.content);
+        },
+        "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+        "heroImage": "https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=1080",
+        "isUserSubmitted": true,
+        "status": "Pending"
+    },
+    {
+        "id": "30",
+        "title": "Alumni Startup Success 4",
+        "author": {
+            "name": "Paolo Santos",
+            "image": "https://images.unsplash.com/photo-1502685104226-ee32379fefbe?w=1080",
+            "role": "Alumna"
+        },
+        "date": "2026-05-18T00:00:00.000Z",
         "readTime": "3 min read",
         get preview() {
             return generatePreview(this.content);
@@ -217,15 +397,87 @@ export const bulletins = [
         "status": "Pending"
     },
     {
-        "id": "4",
-        "title": "Scholarship Program Launch",
+        "id": "8",
+        "title": "Alumni Startup Success 1",
         "author": {
-            "name": "Anne Flores",
+            "name": "Bea Garcia",
+            "image": "https://images.unsplash.com/photo-1502685104226-ee32379fefbe?w=1080",
+            "role": "Coordinator"
+        },
+        "date": "2026-05-09T00:00:00.000Z",
+        "readTime": "5 min read",
+        get preview() {
+            return generatePreview(this.content);
+        },
+        "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+        "heroImage": "https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=1080",
+        "isUserSubmitted": true,
+        "status": "Approved"
+    },
+    {
+        "id": "16",
+        "title": "Scholarship Program Launch 5",
+        "author": {
+            "name": "John Cruz",
+            "image": "https://images.unsplash.com/photo-1502685104226-ee32379fefbe?w=1080",
+            "role": "Alumna"
+        },
+        "date": "2026-05-07T00:00:00.000Z",
+        "readTime": "4 min read",
+        get preview() {
+            return generatePreview(this.content);
+        },
+        "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+        "heroImage": "https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=1080",
+        "isUserSubmitted": false,
+        "status": "Approved"
+    },
+    {
+        "id": "42",
+        "title": "Alumni Startup Success 8",
+        "author": {
+            "name": "Miguel Flores",
+            "image": "https://images.unsplash.com/photo-1502685104226-ee32379fefbe?w=1080",
+            "role": "Coordinator"
+        },
+        "date": "2026-05-05T00:00:00.000Z",
+        "readTime": "2 min read",
+        get preview() {
+            return generatePreview(this.content);
+        },
+        "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+        "heroImage": "https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=1080",
+        "isUserSubmitted": true,
+        "status": "Approved"
+    },
+    {
+        "id": "26",
+        "title": "Career Development Initiative 2",
+        "author": {
+            "name": "Jose Bautista",
             "image": "https://images.unsplash.com/photo-1502685104226-ee32379fefbe?w=1080",
             "role": "Official"
         },
-        "date": "June 05, 2026",
-        "readTime": "6 min read",
+        "date": "2026-04-29T00:00:00.000Z",
+        "readTime": "3 min read",
+        get preview() {
+            return generatePreview(this.content);
+        },
+        "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+        "heroImage": "https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=1080",
+        "isUserSubmitted": true,
+        "status": "Approved"
+    },
+    {
+        "id": "25",
+        "title": "Career Development Initiative 1",
+        "author": {
+            "name": "Juan Torres",
+            "image": "https://images.unsplash.com/photo-1502685104226-ee32379fefbe?w=1080",
+            "role": "Official"
+        },
+        "date": "2026-04-25T00:00:00.000Z",
+        "readTime": "2 min read",
         get preview() {
             return generatePreview(this.content);
         },
@@ -235,14 +487,50 @@ export const bulletins = [
         "status": "Pending"
     },
     {
-        "id": "5",
-        "title": "Community Outreach 1",
+        "id": "43",
+        "title": "Mentorship Program 7",
         "author": {
-            "name": "Paolo Reyes",
+            "name": "Angela Aquino",
+            "image": "https://images.unsplash.com/photo-1502685104226-ee32379fefbe?w=1080",
+            "role": "Alumna"
+        },
+        "date": "2026-04-24T00:00:00.000Z",
+        "readTime": "5 min read",
+        get preview() {
+            return generatePreview(this.content);
+        },
+        "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+        "heroImage": "https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=1080",
+        "isUserSubmitted": false,
+        "status": "Pending"
+    },
+    {
+        "id": "45",
+        "title": "Career Development Initiative 4",
+        "author": {
+            "name": "Bea Mendoza",
             "image": "https://images.unsplash.com/photo-1502685104226-ee32379fefbe?w=1080",
             "role": "Tech Entrepreneur"
         },
-        "date": "April 22, 2026",
+        "date": "2026-04-24T00:00:00.000Z",
+        "readTime": "3 min read",
+        get preview() {
+            return generatePreview(this.content);
+        },
+        "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+        "heroImage": "https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=1080",
+        "isUserSubmitted": true,
+        "status": "Approved"
+    },
+    {
+        "id": "18",
+        "title": "Homecoming Highlights 2",
+        "author": {
+            "name": "John Reyes",
+            "image": "https://images.unsplash.com/photo-1502685104226-ee32379fefbe?w=1080",
+            "role": "Tech Entrepreneur"
+        },
+        "date": "2026-04-16T00:00:00.000Z",
         "readTime": "6 min read",
         get preview() {
             return generatePreview(this.content);
@@ -253,15 +541,105 @@ export const bulletins = [
         "status": "Approved"
     },
     {
-        "id": "6",
-        "title": "Mentorship Program 2",
+        "id": "3",
+        "title": "Alumni Startup Success",
         "author": {
-            "name": "Chris Castro",
+            "name": "Rica Aquino",
             "image": "https://images.unsplash.com/photo-1502685104226-ee32379fefbe?w=1080",
             "role": "Tech Entrepreneur"
         },
-        "date": "January 13, 2026",
+        "date": "2026-04-15T00:00:00.000Z",
+        "readTime": "2 min read",
+        get preview() {
+            return generatePreview(this.content);
+        },
+        "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+        "heroImage": "https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=1080",
+        "isUserSubmitted": false,
+        "status": "Pending"
+    },
+    {
+        "id": "28",
+        "title": "Scholarship Program Launch 6",
+        "author": {
+            "name": "Chris Cruz",
+            "image": "https://images.unsplash.com/photo-1502685104226-ee32379fefbe?w=1080",
+            "role": "Official"
+        },
+        "date": "2026-04-13T00:00:00.000Z",
+        "readTime": "2 min read",
+        get preview() {
+            return generatePreview(this.content);
+        },
+        "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+        "heroImage": "https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=1080",
+        "isUserSubmitted": false,
+        "status": "Pending"
+    },
+    {
+        "id": "27",
+        "title": "Alumni Startup Success 3",
+        "author": {
+            "name": "John Flores",
+            "image": "https://images.unsplash.com/photo-1502685104226-ee32379fefbe?w=1080",
+            "role": "Coordinator"
+        },
+        "date": "2026-04-12T00:00:00.000Z",
         "readTime": "6 min read",
+        get preview() {
+            return generatePreview(this.content);
+        },
+        "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+        "heroImage": "https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=1080",
+        "isUserSubmitted": true,
+        "status": "Approved"
+    },
+    {
+        "id": "36",
+        "title": "Homecoming Highlights 3",
+        "author": {
+            "name": "Sofia Bautista",
+            "image": "https://images.unsplash.com/photo-1502685104226-ee32379fefbe?w=1080",
+            "role": "Tech Entrepreneur"
+        },
+        "date": "2026-04-11T00:00:00.000Z",
+        "readTime": "3 min read",
+        get preview() {
+            return generatePreview(this.content);
+        },
+        "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+        "heroImage": "https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=1080",
+        "isUserSubmitted": false,
+        "status": "Pending"
+    },
+    {
+        "id": "37",
+        "title": "Alumni Startup Success 7",
+        "author": {
+            "name": "Sofia Castro",
+            "image": "https://images.unsplash.com/photo-1502685104226-ee32379fefbe?w=1080",
+            "role": "Alumna"
+        },
+        "date": "2026-04-07T00:00:00.000Z",
+        "readTime": "4 min read",
+        get preview() {
+            return generatePreview(this.content);
+        },
+        "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+        "heroImage": "https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=1080",
+        "isUserSubmitted": true,
+        "status": "Pending"
+    },
+    {
+        "id": "11",
+        "title": "Campus Updates",
+        "author": {
+            "name": "Rica Mendoza",
+            "image": "https://images.unsplash.com/photo-1502685104226-ee32379fefbe?w=1080",
+            "role": "Tech Entrepreneur"
+        },
+        "date": "2026-04-05T00:00:00.000Z",
+        "readTime": "5 min read",
         get preview() {
             return generatePreview(this.content);
         },
@@ -274,12 +652,12 @@ export const bulletins = [
         "id": "7",
         "title": "Homecoming Highlights",
         "author": {
-            "name": "Miguel Aquino",
+            "name": "Anne Aquino",
             "image": "https://images.unsplash.com/photo-1502685104226-ee32379fefbe?w=1080",
             "role": "Alumna"
         },
-        "date": "January 29, 2026",
-        "readTime": "3 min read",
+        "date": "2026-04-01T00:00:00.000Z",
+        "readTime": "2 min read",
         get preview() {
             return generatePreview(this.content);
         },
@@ -289,14 +667,14 @@ export const bulletins = [
         "status": "Pending"
     },
     {
-        "id": "8",
-        "title": "Campus Updates",
+        "id": "38",
+        "title": "Campus Updates 6",
         "author": {
-            "name": "Angela Garcia",
+            "name": "Bea Bautista",
             "image": "https://images.unsplash.com/photo-1502685104226-ee32379fefbe?w=1080",
-            "role": "Official"
+            "role": "Alumna"
         },
-        "date": "May 26, 2026",
+        "date": "2026-03-31T00:00:00.000Z",
         "readTime": "4 min read",
         get preview() {
             return generatePreview(this.content);
@@ -307,14 +685,14 @@ export const bulletins = [
         "status": "Pending"
     },
     {
-        "id": "9",
-        "title": "Scholarship Program Launch 1",
+        "id": "21",
+        "title": "Alumni Startup Success 2",
         "author": {
-            "name": "Paolo Bautista",
+            "name": "Paolo Flores",
             "image": "https://images.unsplash.com/photo-1502685104226-ee32379fefbe?w=1080",
-            "role": "Coordinator"
+            "role": "Official"
         },
-        "date": "February 27, 2026",
+        "date": "2026-03-26T00:00:00.000Z",
         "readTime": "3 min read",
         get preview() {
             return generatePreview(this.content);
@@ -322,17 +700,71 @@ export const bulletins = [
         "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
         "heroImage": "https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=1080",
         "isUserSubmitted": true,
-        "status": "Approved"
+        "status": "Pending"
     },
     {
-        "id": "10",
-        "title": "Scholarship Program Launch 2",
+        "id": "39",
+        "title": "Campus Updates 7",
         "author": {
-            "name": "Rica Castro",
+            "name": "Miguel Bautista",
             "image": "https://images.unsplash.com/photo-1502685104226-ee32379fefbe?w=1080",
             "role": "Tech Entrepreneur"
         },
-        "date": "March 16, 2026",
+        "date": "2026-03-24T00:00:00.000Z",
+        "readTime": "3 min read",
+        get preview() {
+            return generatePreview(this.content);
+        },
+        "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+        "heroImage": "https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=1080",
+        "isUserSubmitted": false,
+        "status": "Pending"
+    },
+    {
+        "id": "1",
+        "title": "Mentorship Program",
+        "author": {
+            "name": "Andrea Flores",
+            "image": "https://images.unsplash.com/photo-1502685104226-ee32379fefbe?w=1080",
+            "role": "Coordinator"
+        },
+        "date": "2026-03-12T00:00:00.000Z",
+        "readTime": "2 min read",
+        get preview() {
+            return generatePreview(this.content);
+        },
+        "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+        "heroImage": "https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=1080",
+        "isUserSubmitted": false,
+        "status": "Pending"
+    },
+    {
+        "id": "44",
+        "title": "Community Outreach 1",
+        "author": {
+            "name": "Paolo Aquino",
+            "image": "https://images.unsplash.com/photo-1502685104226-ee32379fefbe?w=1080",
+            "role": "Tech Entrepreneur"
+        },
+        "date": "2026-03-12T00:00:00.000Z",
+        "readTime": "3 min read",
+        get preview() {
+            return generatePreview(this.content);
+        },
+        "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+        "heroImage": "https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=1080",
+        "isUserSubmitted": false,
+        "status": "Pending"
+    },
+    {
+        "id": "22",
+        "title": "Mentorship Program 4",
+        "author": {
+            "name": "Paolo Aquino",
+            "image": "https://images.unsplash.com/photo-1502685104226-ee32379fefbe?w=1080",
+            "role": "Official"
+        },
+        "date": "2026-03-10T00:00:00.000Z",
         "readTime": "5 min read",
         get preview() {
             return generatePreview(this.content);
@@ -340,25 +772,7 @@ export const bulletins = [
         "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
         "heroImage": "https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=1080",
         "isUserSubmitted": true,
-        "status": "Approved"
-    },
-    {
-        "id": "11",
-        "title": "Campus Updates 1",
-        "author": {
-            "name": "John Aquino",
-            "image": "https://images.unsplash.com/photo-1502685104226-ee32379fefbe?w=1080",
-            "role": "Tech Entrepreneur"
-        },
-        "date": "February 15, 2026",
-        "readTime": "3 min read",
-        get preview() {
-            return generatePreview(this.content);
-        },
-        "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-        "heroImage": "https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=1080",
-        "isUserSubmitted": true,
-        "status": "Approved"
+        "status": "Pending"
     },
     {
         "id": "12",
@@ -368,296 +782,8 @@ export const bulletins = [
             "image": "https://images.unsplash.com/photo-1502685104226-ee32379fefbe?w=1080",
             "role": "Tech Entrepreneur"
         },
-        "date": "January 01, 2026",
-        "readTime": "6 min read",
-        get preview() {
-            return generatePreview(this.content);
-        },
-        "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-        "heroImage": "https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=1080",
-        "isUserSubmitted": false,
-        "status": "Pending"
-    },
-    {
-        "id": "13",
-        "title": "Alumni Startup Success",
-        "author": {
-            "name": "Angela Castro",
-            "image": "https://images.unsplash.com/photo-1502685104226-ee32379fefbe?w=1080",
-            "role": "Official"
-        },
-        "date": "May 25, 2026",
+        "date": "2026-03-09T00:00:00.000Z",
         "readTime": "2 min read",
-        get preview() {
-            return generatePreview(this.content);
-        },
-        "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-        "heroImage": "https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=1080",
-        "isUserSubmitted": false,
-        "status": "Pending"
-    },
-    {
-        "id": "14",
-        "title": "Alumni Startup Success 1",
-        "author": {
-            "name": "Miguel Torres",
-            "image": "https://images.unsplash.com/photo-1502685104226-ee32379fefbe?w=1080",
-            "role": "Alumna"
-        },
-        "date": "February 21, 2026",
-        "readTime": "3 min read",
-        get preview() {
-            return generatePreview(this.content);
-        },
-        "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-        "heroImage": "https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=1080",
-        "isUserSubmitted": false,
-        "status": "Pending"
-    },
-    {
-        "id": "15",
-        "title": "Alumni Startup Success 2",
-        "author": {
-            "name": "Jose Cruz",
-            "image": "https://images.unsplash.com/photo-1502685104226-ee32379fefbe?w=1080",
-            "role": "Alumna"
-        },
-        "date": "May 29, 2026",
-        "readTime": "4 min read",
-        get preview() {
-            return generatePreview(this.content);
-        },
-        "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-        "heroImage": "https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=1080",
-        "isUserSubmitted": true,
-        "status": "Pending"
-    },
-    {
-        "id": "16",
-        "title": "Community Outreach 2",
-        "author": {
-            "name": "Chris Bautista",
-            "image": "https://images.unsplash.com/photo-1502685104226-ee32379fefbe?w=1080",
-            "role": "Official"
-        },
-        "date": "January 25, 2026",
-        "readTime": "5 min read",
-        get preview() {
-            return generatePreview(this.content);
-        },
-        "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-        "heroImage": "https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=1080",
-        "isUserSubmitted": true,
-        "status": "Pending"
-    },
-    {
-        "id": "17",
-        "title": "Scholarship Program Launch 4",
-        "author": {
-            "name": "Miguel Flores",
-            "image": "https://images.unsplash.com/photo-1502685104226-ee32379fefbe?w=1080",
-            "role": "Tech Entrepreneur"
-        },
-        "date": "March 24, 2026",
-        "readTime": "3 min read",
-        get preview() {
-            return generatePreview(this.content);
-        },
-        "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-        "heroImage": "https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=1080",
-        "isUserSubmitted": false,
-        "status": "Approved"
-    },
-    {
-        "id": "18",
-        "title": "Mentorship Program 3",
-        "author": {
-            "name": "Jose Torres",
-            "image": "https://images.unsplash.com/photo-1502685104226-ee32379fefbe?w=1080",
-            "role": "Tech Entrepreneur"
-        },
-        "date": "March 04, 2026",
-        "readTime": "4 min read",
-        get preview() {
-            return generatePreview(this.content);
-        },
-        "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-        "heroImage": "https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=1080",
-        "isUserSubmitted": true,
-        "status": "Approved"
-    },
-    {
-        "id": "19",
-        "title": "Campus Updates 2",
-        "author": {
-            "name": "Mark Cruz",
-            "image": "https://images.unsplash.com/photo-1502685104226-ee32379fefbe?w=1080",
-            "role": "Official"
-        },
-        "date": "January 23, 2026",
-        "readTime": "6 min read",
-        get preview() {
-            return generatePreview(this.content);
-        },
-        "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-        "heroImage": "https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=1080",
-        "isUserSubmitted": false,
-        "status": "Pending"
-    },
-    {
-        "id": "20",
-        "title": "Mentorship Program 4",
-        "author": {
-            "name": "Bea Garcia",
-            "image": "https://images.unsplash.com/photo-1502685104226-ee32379fefbe?w=1080",
-            "role": "Official"
-        },
-        "date": "May 12, 2026",
-        "readTime": "4 min read",
-        get preview() {
-            return generatePreview(this.content);
-        },
-        "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-        "heroImage": "https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=1080",
-        "isUserSubmitted": false,
-        "status": "Approved"
-    },
-    {
-        "id": "21",
-        "title": "Mentorship Program 5",
-        "author": {
-            "name": "Jose Ramos",
-            "image": "https://images.unsplash.com/photo-1502685104226-ee32379fefbe?w=1080",
-            "role": "Official"
-        },
-        "date": "April 27, 2026",
-        "readTime": "4 min read",
-        get preview() {
-            return generatePreview(this.content);
-        },
-        "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-        "heroImage": "https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=1080",
-        "isUserSubmitted": true,
-        "status": "Approved"
-    },
-    {
-        "id": "22",
-        "title": "Community Outreach 3",
-        "author": {
-            "name": "Jose Torres",
-            "image": "https://images.unsplash.com/photo-1502685104226-ee32379fefbe?w=1080",
-            "role": "Tech Entrepreneur"
-        },
-        "date": "April 04, 2026",
-        "readTime": "6 min read",
-        get preview() {
-            return generatePreview(this.content);
-        },
-        "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-        "heroImage": "https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=1080",
-        "isUserSubmitted": true,
-        "status": "Pending"
-    },
-    {
-        "id": "23",
-        "title": "Scholarship Program Launch 5",
-        "author": {
-            "name": "Maria Reyes",
-            "image": "https://images.unsplash.com/photo-1502685104226-ee32379fefbe?w=1080",
-            "role": "Alumna"
-        },
-        "date": "June 03, 2026",
-        "readTime": "3 min read",
-        get preview() {
-            return generatePreview(this.content);
-        },
-        "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-        "heroImage": "https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=1080",
-        "isUserSubmitted": true,
-        "status": "Pending"
-    },
-    {
-        "id": "24",
-        "title": "Career Development Initiative",
-        "author": {
-            "name": "Miguel Garcia",
-            "image": "https://images.unsplash.com/photo-1502685104226-ee32379fefbe?w=1080",
-            "role": "Official"
-        },
-        "date": "April 12, 2026",
-        "readTime": "3 min read",
-        get preview() {
-            return generatePreview(this.content);
-        },
-        "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-        "heroImage": "https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=1080",
-        "isUserSubmitted": false,
-        "status": "Approved"
-    },
-    {
-        "id": "25",
-        "title": "Alumni Startup Success 3",
-        "author": {
-            "name": "Maria Ramos",
-            "image": "https://images.unsplash.com/photo-1502685104226-ee32379fefbe?w=1080",
-            "role": "Coordinator"
-        },
-        "date": "April 13, 2026",
-        "readTime": "6 min read",
-        get preview() {
-            return generatePreview(this.content);
-        },
-        "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-        "heroImage": "https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=1080",
-        "isUserSubmitted": true,
-        "status": "Pending"
-    },
-    {
-        "id": "26",
-        "title": "Career Development Initiative 1",
-        "author": {
-            "name": "Sofia Ramos",
-            "image": "https://images.unsplash.com/photo-1502685104226-ee32379fefbe?w=1080",
-            "role": "Tech Entrepreneur"
-        },
-        "date": "June 03, 2026",
-        "readTime": "6 min read",
-        get preview() {
-            return generatePreview(this.content);
-        },
-        "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-        "heroImage": "https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=1080",
-        "isUserSubmitted": false,
-        "status": "Pending"
-    },
-    {
-        "id": "27",
-        "title": "Community Outreach 4",
-        "author": {
-            "name": "Maria Cruz",
-            "image": "https://images.unsplash.com/photo-1502685104226-ee32379fefbe?w=1080",
-            "role": "Tech Entrepreneur"
-        },
-        "date": "April 30, 2026",
-        "readTime": "3 min read",
-        get preview() {
-            return generatePreview(this.content);
-        },
-        "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-        "heroImage": "https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=1080",
-        "isUserSubmitted": false,
-        "status": "Approved"
-    },
-    {
-        "id": "28",
-        "title": "Scholarship Program Launch 6",
-        "author": {
-            "name": "Daniel Bautista",
-            "image": "https://images.unsplash.com/photo-1502685104226-ee32379fefbe?w=1080",
-            "role": "Coordinator"
-        },
-        "date": "April 19, 2026",
-        "readTime": "3 min read",
         get preview() {
             return generatePreview(this.content);
         },
@@ -668,338 +794,32 @@ export const bulletins = [
     },
     {
         "id": "29",
-        "title": "Scholarship Program Launch 7",
-        "author": {
-            "name": "Sofia Ramos",
-            "image": "https://images.unsplash.com/photo-1502685104226-ee32379fefbe?w=1080",
-            "role": "Coordinator"
-        },
-        "date": "April 07, 2026",
-        "readTime": "2 min read",
-        get preview() {
-            return generatePreview(this.content);
-        },
-        "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-        "heroImage": "https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=1080",
-        "isUserSubmitted": false,
-        "status": "Approved"
-    },
-    {
-        "id": "30",
-        "title": "Campus Updates 3",
-        "author": {
-            "name": "Miguel Reyes",
-            "image": "https://images.unsplash.com/photo-1502685104226-ee32379fefbe?w=1080",
-            "role": "Tech Entrepreneur"
-        },
-        "date": "January 23, 2026",
-        "readTime": "3 min read",
-        get preview() {
-            return generatePreview(this.content);
-        },
-        "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-        "heroImage": "https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=1080",
-        "isUserSubmitted": false,
-        "status": "Approved"
-    },
-    {
-        "id": "31",
-        "title": "Alumni Startup Success 4",
-        "author": {
-            "name": "Miguel Castro",
-            "image": "https://images.unsplash.com/photo-1502685104226-ee32379fefbe?w=1080",
-            "role": "Coordinator"
-        },
-        "date": "June 07, 2026",
-        "readTime": "5 min read",
-        get preview() {
-            return generatePreview(this.content);
-        },
-        "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-        "heroImage": "https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=1080",
-        "isUserSubmitted": false,
-        "status": "Approved"
-    },
-    {
-        "id": "32",
-        "title": "Career Development Initiative 2",
-        "author": {
-            "name": "Daniel Bautista",
-            "image": "https://images.unsplash.com/photo-1502685104226-ee32379fefbe?w=1080",
-            "role": "Official"
-        },
-        "date": "June 21, 2026",
-        "readTime": "4 min read",
-        get preview() {
-            return generatePreview(this.content);
-        },
-        "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-        "heroImage": "https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=1080",
-        "isUserSubmitted": false,
-        "status": "Approved"
-    },
-    {
-        "id": "33",
-        "title": "Career Development Initiative 3",
-        "author": {
-            "name": "Miguel Flores",
-            "image": "https://images.unsplash.com/photo-1502685104226-ee32379fefbe?w=1080",
-            "role": "Tech Entrepreneur"
-        },
-        "date": "March 14, 2026",
-        "readTime": "3 min read",
-        get preview() {
-            return generatePreview(this.content);
-        },
-        "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-        "heroImage": "https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=1080",
-        "isUserSubmitted": true,
-        "status": "Pending"
-    },
-    {
-        "id": "34",
-        "title": "Homecoming Highlights 1",
-        "author": {
-            "name": "Miguel Castro",
-            "image": "https://images.unsplash.com/photo-1502685104226-ee32379fefbe?w=1080",
-            "role": "Alumna"
-        },
-        "date": "April 19, 2026",
-        "readTime": "4 min read",
-        get preview() {
-            return generatePreview(this.content);
-        },
-        "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-        "heroImage": "https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=1080",
-        "isUserSubmitted": false,
-        "status": "Pending"
-    },
-    {
-        "id": "35",
-        "title": "Campus Updates 4",
-        "author": {
-            "name": "Andrea Flores",
-            "image": "https://images.unsplash.com/photo-1502685104226-ee32379fefbe?w=1080",
-            "role": "Tech Entrepreneur"
-        },
-        "date": "June 25, 2026",
-        "readTime": "5 min read",
-        get preview() {
-            return generatePreview(this.content);
-        },
-        "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-        "heroImage": "https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=1080",
-        "isUserSubmitted": true,
-        "status": "Approved"
-    },
-    {
-        "id": "36",
-        "title": "Alumni Startup Success 5",
-        "author": {
-            "name": "Andrea Castro",
-            "image": "https://images.unsplash.com/photo-1502685104226-ee32379fefbe?w=1080",
-            "role": "Coordinator"
-        },
-        "date": "February 07, 2026",
-        "readTime": "5 min read",
-        get preview() {
-            return generatePreview(this.content);
-        },
-        "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-        "heroImage": "https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=1080",
-        "isUserSubmitted": true,
-        "status": "Pending"
-    },
-    {
-        "id": "37",
-        "title": "Community Outreach 5",
-        "author": {
-            "name": "Sofia Torres",
-            "image": "https://images.unsplash.com/photo-1502685104226-ee32379fefbe?w=1080",
-            "role": "Tech Entrepreneur"
-        },
-        "date": "April 10, 2026",
-        "readTime": "4 min read",
-        get preview() {
-            return generatePreview(this.content);
-        },
-        "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-        "heroImage": "https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=1080",
-        "isUserSubmitted": false,
-        "status": "Approved"
-    },
-    {
-        "id": "38",
-        "title": "Homecoming Highlights 2",
-        "author": {
-            "name": "Sofia Aquino",
-            "image": "https://images.unsplash.com/photo-1502685104226-ee32379fefbe?w=1080",
-            "role": "Alumna"
-        },
-        "date": "February 05, 2026",
-        "readTime": "4 min read",
-        get preview() {
-            return generatePreview(this.content);
-        },
-        "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-        "heroImage": "https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=1080",
-        "isUserSubmitted": true,
-        "status": "Approved"
-    },
-    {
-        "id": "39",
-        "title": "Community Outreach 6",
-        "author": {
-            "name": "Andrea Bautista",
-            "image": "https://images.unsplash.com/photo-1502685104226-ee32379fefbe?w=1080",
-            "role": "Official"
-        },
-        "date": "January 28, 2026",
-        "readTime": "2 min read",
-        get preview() {
-            return generatePreview(this.content);
-        },
-        "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-        "heroImage": "https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=1080",
-        "isUserSubmitted": false,
-        "status": "Pending"
-    },
-    {
-        "id": "40",
-        "title": "Homecoming Highlights 3",
-        "author": {
-            "name": "Rica Bautista",
-            "image": "https://images.unsplash.com/photo-1502685104226-ee32379fefbe?w=1080",
-            "role": "Official"
-        },
-        "date": "March 21, 2026",
-        "readTime": "6 min read",
-        get preview() {
-            return generatePreview(this.content);
-        },
-        "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-        "heroImage": "https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=1080",
-        "isUserSubmitted": true,
-        "status": "Approved"
-    },
-    {
-        "id": "41",
-        "title": "Homecoming Highlights 4",
-        "author": {
-            "name": "Daniel Garcia",
-            "image": "https://images.unsplash.com/photo-1502685104226-ee32379fefbe?w=1080",
-            "role": "Alumna"
-        },
-        "date": "May 22, 2026",
-        "readTime": "5 min read",
-        get preview() {
-            return generatePreview(this.content);
-        },
-        "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-        "heroImage": "https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=1080",
-        "isUserSubmitted": false,
-        "status": "Pending"
-    },
-    {
-        "id": "42",
-        "title": "Community Outreach 7",
-        "author": {
-            "name": "John Torres",
-            "image": "https://images.unsplash.com/photo-1502685104226-ee32379fefbe?w=1080",
-            "role": "Alumna"
-        },
-        "date": "April 07, 2026",
-        "readTime": "2 min read",
-        get preview() {
-            return generatePreview(this.content);
-        },
-        "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-        "heroImage": "https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=1080",
-        "isUserSubmitted": true,
-        "status": "Approved"
-    },
-    {
-        "id": "43",
-        "title": "Community Outreach 8",
-        "author": {
-            "name": "Bea Reyes",
-            "image": "https://images.unsplash.com/photo-1502685104226-ee32379fefbe?w=1080",
-            "role": "Coordinator"
-        },
-        "date": "February 27, 2026",
-        "readTime": "3 min read",
-        get preview() {
-            return generatePreview(this.content);
-        },
-        "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-        "heroImage": "https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=1080",
-        "isUserSubmitted": true,
-        "status": "Approved"
-    },
-    {
-        "id": "44",
         "title": "Mentorship Program 6",
         "author": {
-            "name": "Mark Ramos",
+            "name": "Chris Reyes",
+            "image": "https://images.unsplash.com/photo-1502685104226-ee32379fefbe?w=1080",
+            "role": "Official"
+        },
+        "date": "2026-03-03T00:00:00.000Z",
+        "readTime": "2 min read",
+        get preview() {
+            return generatePreview(this.content);
+        },
+        "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+        "heroImage": "https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=1080",
+        "isUserSubmitted": true,
+        "status": "Pending"
+    },
+    {
+        "id": "49",
+        "title": "Career Development Initiative 6",
+        "author": {
+            "name": "Mark Flores",
             "image": "https://images.unsplash.com/photo-1502685104226-ee32379fefbe?w=1080",
             "role": "Coordinator"
         },
-        "date": "June 26, 2026",
-        "readTime": "3 min read",
-        get preview() {
-            return generatePreview(this.content);
-        },
-        "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-        "heroImage": "https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=1080",
-        "isUserSubmitted": true,
-        "status": "Approved"
-    },
-    {
-        "id": "45",
-        "title": "Scholarship Program Launch 8",
-        "author": {
-            "name": "Angela Cruz",
-            "image": "https://images.unsplash.com/photo-1502685104226-ee32379fefbe?w=1080",
-            "role": "Tech Entrepreneur"
-        },
-        "date": "June 10, 2026",
+        "date": "2026-02-27T00:00:00.000Z",
         "readTime": "4 min read",
-        get preview() {
-            return generatePreview(this.content);
-        },
-        "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-        "heroImage": "https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=1080",
-        "isUserSubmitted": true,
-        "status": "Approved"
-    },
-    {
-        "id": "46",
-        "title": "Homecoming Highlights 5",
-        "author": {
-            "name": "Jose Ramos",
-            "image": "https://images.unsplash.com/photo-1502685104226-ee32379fefbe?w=1080",
-            "role": "Tech Entrepreneur"
-        },
-        "date": "March 21, 2026",
-        "readTime": "6 min read",
-        get preview() {
-            return generatePreview(this.content);
-        },
-        "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-        "heroImage": "https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=1080",
-        "isUserSubmitted": true,
-        "status": "Approved"
-    },
-    {
-        "id": "47",
-        "title": "Scholarship Program Launch 9",
-        "author": {
-            "name": "Paolo Reyes",
-            "image": "https://images.unsplash.com/photo-1502685104226-ee32379fefbe?w=1080",
-            "role": "Alumna"
-        },
-        "date": "February 11, 2026",
-        "readTime": "3 min read",
         get preview() {
             return generatePreview(this.content);
         },
@@ -1010,14 +830,32 @@ export const bulletins = [
     },
     {
         "id": "48",
-        "title": "Homecoming Highlights 6",
+        "title": "Career Development Initiative 5",
         "author": {
-            "name": "Carla Bautista",
+            "name": "Angela Garcia",
             "image": "https://images.unsplash.com/photo-1502685104226-ee32379fefbe?w=1080",
-            "role": "Tech Entrepreneur"
+            "role": "Alumna"
         },
-        "date": "April 21, 2026",
-        "readTime": "3 min read",
+        "date": "2026-02-26T00:00:00.000Z",
+        "readTime": "6 min read",
+        get preview() {
+            return generatePreview(this.content);
+        },
+        "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+        "heroImage": "https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=1080",
+        "isUserSubmitted": false,
+        "status": "Approved"
+    },
+    {
+        "id": "40",
+        "title": "Homecoming Highlights 4",
+        "author": {
+            "name": "Anne Ramos",
+            "image": "https://images.unsplash.com/photo-1502685104226-ee32379fefbe?w=1080",
+            "role": "Coordinator"
+        },
+        "date": "2026-02-19T00:00:00.000Z",
+        "readTime": "4 min read",
         get preview() {
             return generatePreview(this.content);
         },
@@ -1027,15 +865,15 @@ export const bulletins = [
         "status": "Approved"
     },
     {
-        "id": "49",
-        "title": "Scholarship Program Launch 10",
+        "id": "24",
+        "title": "Mentorship Program 5",
         "author": {
-            "name": "Rica Ramos",
+            "name": "Chris Castro",
             "image": "https://images.unsplash.com/photo-1502685104226-ee32379fefbe?w=1080",
-            "role": "Official"
+            "role": "Tech Entrepreneur"
         },
-        "date": "May 17, 2026",
-        "readTime": "3 min read",
+        "date": "2026-02-15T00:00:00.000Z",
+        "readTime": "4 min read",
         get preview() {
             return generatePreview(this.content);
         },
@@ -1046,13 +884,103 @@ export const bulletins = [
     },
     {
         "id": "50",
+        "title": "Scholarship Program Launch 8",
+        "author": {
+            "name": "Chris Bautista",
+            "image": "https://images.unsplash.com/photo-1502685104226-ee32379fefbe?w=1080",
+            "role": "Tech Entrepreneur"
+        },
+        "date": "2026-02-11T00:00:00.000Z",
+        "readTime": "5 min read",
+        get preview() {
+            return generatePreview(this.content);
+        },
+        "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+        "heroImage": "https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=1080",
+        "isUserSubmitted": false,
+        "status": "Pending"
+    },
+    {
+        "id": "33",
         "title": "Campus Updates 5",
         "author": {
-            "name": "Jose Aquino",
+            "name": "Anne Torres",
+            "image": "https://images.unsplash.com/photo-1502685104226-ee32379fefbe?w=1080",
+            "role": "Alumna"
+        },
+        "date": "2026-02-05T00:00:00.000Z",
+        "readTime": "6 min read",
+        get preview() {
+            return generatePreview(this.content);
+        },
+        "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+        "heroImage": "https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=1080",
+        "isUserSubmitted": true,
+        "status": "Approved"
+    },
+    {
+        "id": "17",
+        "title": "Homecoming Highlights 1",
+        "author": {
+            "name": "Rica Torres",
+            "image": "https://images.unsplash.com/photo-1502685104226-ee32379fefbe?w=1080",
+            "role": "Official"
+        },
+        "date": "2026-01-28T00:00:00.000Z",
+        "readTime": "6 min read",
+        get preview() {
+            return generatePreview(this.content);
+        },
+        "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+        "heroImage": "https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=1080",
+        "isUserSubmitted": true,
+        "status": "Pending"
+    },
+    {
+        "id": "10",
+        "title": "Scholarship Program Launch 2",
+        "author": {
+            "name": "Miguel Ramos",
+            "image": "https://images.unsplash.com/photo-1502685104226-ee32379fefbe?w=1080",
+            "role": "Tech Entrepreneur"
+        },
+        "date": "2026-01-26T00:00:00.000Z",
+        "readTime": "2 min read",
+        get preview() {
+            return generatePreview(this.content);
+        },
+        "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+        "heroImage": "https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=1080",
+        "isUserSubmitted": false,
+        "status": "Approved"
+    },
+    {
+        "id": "2",
+        "title": "Mentorship Program 1",
+        "author": {
+            "name": "Miguel Mendoza",
+            "image": "https://images.unsplash.com/photo-1502685104226-ee32379fefbe?w=1080",
+            "role": "Tech Entrepreneur"
+        },
+        "date": "2026-01-23T00:00:00.000Z",
+        "readTime": "4 min read",
+        get preview() {
+            return generatePreview(this.content);
+        },
+        "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+        "heroImage": "https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=1080",
+        "isUserSubmitted": false,
+        "status": "Approved"
+    },
+    {
+        "id": "15",
+        "title": "Campus Updates 2",
+        "author": {
+            "name": "Jose Torres",
             "image": "https://images.unsplash.com/photo-1502685104226-ee32379fefbe?w=1080",
             "role": "Coordinator"
         },
-        "date": "January 16, 2026",
+        "date": "2026-01-22T00:00:00.000Z",
         "readTime": "4 min read",
         get preview() {
             return generatePreview(this.content);
@@ -1061,15 +989,87 @@ export const bulletins = [
         "heroImage": "https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=1080",
         "isUserSubmitted": true,
         "status": "Pending"
+    },
+    {
+        "id": "32",
+        "title": "Campus Updates 4",
+        "author": {
+            "name": "Daniel Garcia",
+            "image": "https://images.unsplash.com/photo-1502685104226-ee32379fefbe?w=1080",
+            "role": "Coordinator"
+        },
+        "date": "2026-01-21T00:00:00.000Z",
+        "readTime": "5 min read",
+        get preview() {
+            return generatePreview(this.content);
+        },
+        "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+        "heroImage": "https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=1080",
+        "isUserSubmitted": false,
+        "status": "Pending"
+    },
+    {
+        "id": "34",
+        "title": "Alumni Startup Success 5",
+        "author": {
+            "name": "Juan Flores",
+            "image": "https://images.unsplash.com/photo-1502685104226-ee32379fefbe?w=1080",
+            "role": "Tech Entrepreneur"
+        },
+        "date": "2026-01-18T00:00:00.000Z",
+        "readTime": "2 min read",
+        get preview() {
+            return generatePreview(this.content);
+        },
+        "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+        "heroImage": "https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=1080",
+        "isUserSubmitted": false,
+        "status": "Approved"
+    },
+    {
+        "id": "41",
+        "title": "Scholarship Program Launch 7",
+        "author": {
+            "name": "Daniel Torres",
+            "image": "https://images.unsplash.com/photo-1502685104226-ee32379fefbe?w=1080",
+            "role": "Official"
+        },
+        "date": "2026-01-11T00:00:00.000Z",
+        "readTime": "5 min read",
+        get preview() {
+            return generatePreview(this.content);
+        },
+        "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+        "heroImage": "https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=1080",
+        "isUserSubmitted": false,
+        "status": "Pending"
+    },
+    {
+        "id": "4",
+        "title": "Scholarship Program Launch",
+        "author": {
+            "name": "Paolo Mendoza",
+            "image": "https://images.unsplash.com/photo-1502685104226-ee32379fefbe?w=1080",
+            "role": "Coordinator"
+        },
+        "date": "2026-01-07T00:00:00.000Z",
+        "readTime": "3 min read",
+        get preview() {
+            return generatePreview(this.content);
+        },
+        "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+        "heroImage": "https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=1080",
+        "isUserSubmitted": false,
+        "status": "Approved"
     }
 ];
 
 export const events = [
     {
         "id": "1",
-        "title": "Reunion Event 1",
+        "title": "Virtual Event 1",
         "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-        "date": "February 25, 2026",
+        "date": "2026-01-04T00:00:00.000Z",
         get time() {
             return generateTime(this);
         },
@@ -1083,11 +1083,56 @@ export const events = [
             "barangay": "Sample Barangay",
             "landmark": "Sample Landmark",
             "street": "Sample Street",
-            "lat": 10.274845,
-            "lng": 123.887681
+            "lat": 10.337934,
+            "lng": 123.92783
         },
-        "category": "Reunion",
-        "image": "https://images.unsplash.com/photo-1528605248644-14dd04022da1?w=1080",
+        "category": "Virtual",
+        "image": "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=1080",
+        "startTimeHour": "10",
+        "startTimeMinute": "00",
+        "startTimeAmPm": "AM",
+        "endTimeHour": "11",
+        "endTimeMinute": "00",
+        "endTimeAmPm": "AM",
+        "address": "Cebu City, Philippines",
+        "organizer": {
+            "name": "Virtual Committee",
+            "contactName": "Jose Reyes",
+            "email": "virtual1@example.com",
+            "phone": "(032) 123-4567",
+            "website": "www.example.com",
+            "image": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100"
+        },
+        "responses": {
+            "going": 428,
+            "invited": 609
+        },
+        "status": "Pending",
+        "modality": "Zoom"
+    },
+    {
+        "id": "2",
+        "title": "Conference Event 2",
+        "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+        "date": "2026-06-11T00:00:00.000Z",
+        get time() {
+            return generateTime(this);
+        },
+        "location": {
+            "region": "Central Visayas",
+            "regionCode": "070000000",
+            "province": "Cebu",
+            "provinceCode": "072200000",
+            "cityMunicipality": "City of Cebu",
+            "cityCode": "072217000",
+            "barangay": "Sample Barangay",
+            "landmark": "Sample Landmark",
+            "street": "Sample Street",
+            "lat": 10.258074,
+            "lng": 123.926995
+        },
+        "category": "Conference",
+        "image": "https://images.unsplash.com/photo-1511578314322-379afb476865?w=1080",
         "startTimeHour": "11",
         "startTimeMinute": "00",
         "startTimeAmPm": "AM",
@@ -1096,68 +1141,24 @@ export const events = [
         "endTimeAmPm": "AM",
         "address": "Cebu City, Philippines",
         "organizer": {
-            "name": "Reunion Committee",
-            "contactName": "Angela Santos",
-            "email": "reunion1@example.com",
+            "name": "Conference Committee",
+            "contactName": "John Mendoza",
+            "email": "conference2@example.com",
             "phone": "(032) 123-4567",
             "website": "www.example.com",
             "image": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100"
         },
         "responses": {
-            "going": 50,
-            "invited": 201
-        },
-        "status": "Approved"
-    },
-    {
-        "id": "2",
-        "title": "Sports Event 2",
-        "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-        "date": "June 04, 2026",
-        get time() {
-            return generateTime(this);
-        },
-        "location": {
-            "region": "Central Visayas",
-            "regionCode": "070000000",
-            "province": "Cebu",
-            "provinceCode": "072200000",
-            "cityMunicipality": "City of Cebu",
-            "cityCode": "072217000",
-            "barangay": "Sample Barangay",
-            "landmark": "Sample Landmark",
-            "street": "Sample Street",
-            "lat": 10.324017,
-            "lng": 123.899418
-        },
-        "category": "Sports",
-        "image": "https://images.unsplash.com/photo-1517649763962-0c623066013b?w=1080",
-        "startTimeHour": "4",
-        "startTimeMinute": "00",
-        "startTimeAmPm": "PM",
-        "endTimeHour": "5",
-        "endTimeMinute": "00",
-        "endTimeAmPm": "PM",
-        "address": "Cebu City, Philippines",
-        "organizer": {
-            "name": "Sports Committee",
-            "contactName": "Mark Flores",
-            "email": "sports2@example.com",
-            "phone": "(032) 123-4567",
-            "website": "www.example.com",
-            "image": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100"
-        },
-        "responses": {
-            "going": 21,
-            "invited": 130
+            "going": 226,
+            "invited": 498
         },
         "status": "Approved"
     },
     {
         "id": "3",
-        "title": "Conference Event 3",
+        "title": "Networking Event 3",
         "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-        "date": "April 04, 2026",
+        "date": "2026-02-03T00:00:00.000Z",
         get time() {
             return generateTime(this);
         },
@@ -1171,37 +1172,37 @@ export const events = [
             "barangay": "Sample Barangay",
             "landmark": "Sample Landmark",
             "street": "Sample Street",
-            "lat": 10.34303,
-            "lng": 123.943751
+            "lat": 10.308461,
+            "lng": 123.930352
         },
-        "category": "Conference",
-        "image": "https://images.unsplash.com/photo-1511578314322-379afb476865?w=1080",
-        "startTimeHour": "12",
+        "category": "Networking",
+        "image": "https://images.unsplash.com/photo-1556761175-5973dc0f32e7?w=1080",
+        "startTimeHour": "2",
         "startTimeMinute": "00",
         "startTimeAmPm": "PM",
-        "endTimeHour": "11",
+        "endTimeHour": "3",
         "endTimeMinute": "00",
         "endTimeAmPm": "PM",
         "address": "Cebu City, Philippines",
         "organizer": {
-            "name": "Conference Committee",
-            "contactName": "Paolo Ramos",
-            "email": "conference3@example.com",
+            "name": "Networking Committee",
+            "contactName": "Andrea Flores",
+            "email": "networking3@example.com",
             "phone": "(032) 123-4567",
             "website": "www.example.com",
             "image": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100"
         },
         "responses": {
-            "going": 132,
-            "invited": 852
+            "going": 248,
+            "invited": 577
         },
-        "status": "Approved"
+        "status": "Pending"
     },
     {
         "id": "4",
-        "title": "Sports Event 4",
+        "title": "Conference Event 4",
         "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-        "date": "April 23, 2026",
+        "date": "2026-04-25T00:00:00.000Z",
         get time() {
             return generateTime(this);
         },
@@ -1215,37 +1216,37 @@ export const events = [
             "barangay": "Sample Barangay",
             "landmark": "Sample Landmark",
             "street": "Sample Street",
-            "lat": 10.297635,
-            "lng": 123.922574
+            "lat": 10.297745,
+            "lng": 123.926921
         },
-        "category": "Sports",
-        "image": "https://images.unsplash.com/photo-1517649763962-0c623066013b?w=1080",
-        "startTimeHour": "8",
+        "category": "Conference",
+        "image": "https://images.unsplash.com/photo-1511578314322-379afb476865?w=1080",
+        "startTimeHour": "10",
         "startTimeMinute": "00",
         "startTimeAmPm": "AM",
-        "endTimeHour": "10",
+        "endTimeHour": "11",
         "endTimeMinute": "00",
         "endTimeAmPm": "AM",
         "address": "Cebu City, Philippines",
         "organizer": {
-            "name": "Sports Committee",
-            "contactName": "Andrea Flores",
-            "email": "sports4@example.com",
+            "name": "Conference Committee",
+            "contactName": "Miguel Cruz",
+            "email": "conference4@example.com",
             "phone": "(032) 123-4567",
             "website": "www.example.com",
             "image": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100"
         },
         "responses": {
-            "going": 252,
-            "invited": 651
+            "going": 443,
+            "invited": 222
         },
-        "status": "Approved"
+        "status": "Pending"
     },
     {
         "id": "5",
         "title": "Sports Event 5",
         "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-        "date": "March 21, 2026",
+        "date": "2026-01-23T00:00:00.000Z",
         get time() {
             return generateTime(this);
         },
@@ -1259,11 +1260,231 @@ export const events = [
             "barangay": "Sample Barangay",
             "landmark": "Sample Landmark",
             "street": "Sample Street",
-            "lat": 10.259695,
-            "lng": 123.851987
+            "lat": 10.344862,
+            "lng": 123.87033
         },
         "category": "Sports",
         "image": "https://images.unsplash.com/photo-1517649763962-0c623066013b?w=1080",
+        "startTimeHour": "5",
+        "startTimeMinute": "00",
+        "startTimeAmPm": "PM",
+        "endTimeHour": "8",
+        "endTimeMinute": "00",
+        "endTimeAmPm": "PM",
+        "address": "Cebu City, Philippines",
+        "organizer": {
+            "name": "Sports Committee",
+            "contactName": "Paolo Castro",
+            "email": "sports5@example.com",
+            "phone": "(032) 123-4567",
+            "website": "www.example.com",
+            "image": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100"
+        },
+        "responses": {
+            "going": 24,
+            "invited": 776
+        },
+        "status": "Pending"
+    },
+    {
+        "id": "6",
+        "title": "Networking Event 6",
+        "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+        "date": "2026-05-21T00:00:00.000Z",
+        get time() {
+            return generateTime(this);
+        },
+        "location": {
+            "region": "Central Visayas",
+            "regionCode": "070000000",
+            "province": "Cebu",
+            "provinceCode": "072200000",
+            "cityMunicipality": "City of Cebu",
+            "cityCode": "072217000",
+            "barangay": "Sample Barangay",
+            "landmark": "Sample Landmark",
+            "street": "Sample Street",
+            "lat": 10.309817,
+            "lng": 123.934732
+        },
+        "category": "Networking",
+        "image": "https://images.unsplash.com/photo-1556761175-5973dc0f32e7?w=1080",
+        "startTimeHour": "5",
+        "startTimeMinute": "00",
+        "startTimeAmPm": "PM",
+        "endTimeHour": "7",
+        "endTimeMinute": "00",
+        "endTimeAmPm": "PM",
+        "address": "Cebu City, Philippines",
+        "organizer": {
+            "name": "Networking Committee",
+            "contactName": "Daniel Cruz",
+            "email": "networking6@example.com",
+            "phone": "(032) 123-4567",
+            "website": "www.example.com",
+            "image": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100"
+        },
+        "responses": {
+            "going": 395,
+            "invited": 368
+        },
+        "status": "Approved"
+    },
+    {
+        "id": "7",
+        "title": "Sports Event 7",
+        "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+        "date": "2026-01-16T00:00:00.000Z",
+        get time() {
+            return generateTime(this);
+        },
+        "location": {
+            "region": "Central Visayas",
+            "regionCode": "070000000",
+            "province": "Cebu",
+            "provinceCode": "072200000",
+            "cityMunicipality": "City of Cebu",
+            "cityCode": "072217000",
+            "barangay": "Sample Barangay",
+            "landmark": "Sample Landmark",
+            "street": "Sample Street",
+            "lat": 10.265315,
+            "lng": 123.949908
+        },
+        "category": "Sports",
+        "image": "https://images.unsplash.com/photo-1517649763962-0c623066013b?w=1080",
+        "startTimeHour": "5",
+        "startTimeMinute": "00",
+        "startTimeAmPm": "PM",
+        "endTimeHour": "8",
+        "endTimeMinute": "00",
+        "endTimeAmPm": "PM",
+        "address": "Cebu City, Philippines",
+        "organizer": {
+            "name": "Sports Committee",
+            "contactName": "Miguel Mendoza",
+            "email": "sports7@example.com",
+            "phone": "(032) 123-4567",
+            "website": "www.example.com",
+            "image": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100"
+        },
+        "responses": {
+            "going": 263,
+            "invited": 824
+        },
+        "status": "Pending"
+    },
+    {
+        "id": "8",
+        "title": "Reunion Event 8",
+        "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+        "date": "2026-05-30T00:00:00.000Z",
+        get time() {
+            return generateTime(this);
+        },
+        "location": {
+            "region": "Central Visayas",
+            "regionCode": "070000000",
+            "province": "Cebu",
+            "provinceCode": "072200000",
+            "cityMunicipality": "City of Cebu",
+            "cityCode": "072217000",
+            "barangay": "Sample Barangay",
+            "landmark": "Sample Landmark",
+            "street": "Sample Street",
+            "lat": 10.285363,
+            "lng": 123.894578
+        },
+        "category": "Reunion",
+        "image": "https://images.unsplash.com/photo-1528605248644-14dd04022da1?w=1080",
+        "startTimeHour": "1",
+        "startTimeMinute": "00",
+        "startTimeAmPm": "PM",
+        "endTimeHour": "4",
+        "endTimeMinute": "00",
+        "endTimeAmPm": "PM",
+        "address": "Cebu City, Philippines",
+        "organizer": {
+            "name": "Reunion Committee",
+            "contactName": "Anne Ramos",
+            "email": "reunion8@example.com",
+            "phone": "(032) 123-4567",
+            "website": "www.example.com",
+            "image": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100"
+        },
+        "responses": {
+            "going": 91,
+            "invited": 130
+        },
+        "status": "Approved"
+    },
+    {
+        "id": "9",
+        "title": "Conference Event 9",
+        "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+        "date": "2026-05-14T00:00:00.000Z",
+        get time() {
+            return generateTime(this);
+        },
+        "location": {
+            "region": "Central Visayas",
+            "regionCode": "070000000",
+            "province": "Cebu",
+            "provinceCode": "072200000",
+            "cityMunicipality": "City of Cebu",
+            "cityCode": "072217000",
+            "barangay": "Sample Barangay",
+            "landmark": "Sample Landmark",
+            "street": "Sample Street",
+            "lat": 10.280887,
+            "lng": 123.862492
+        },
+        "category": "Conference",
+        "image": "https://images.unsplash.com/photo-1511578314322-379afb476865?w=1080",
+        "startTimeHour": "7",
+        "startTimeMinute": "00",
+        "startTimeAmPm": "AM",
+        "endTimeHour": "11",
+        "endTimeMinute": "00",
+        "endTimeAmPm": "AM",
+        "address": "Cebu City, Philippines",
+        "organizer": {
+            "name": "Conference Committee",
+            "contactName": "Angela Castro",
+            "email": "conference9@example.com",
+            "phone": "(032) 123-4567",
+            "website": "www.example.com",
+            "image": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100"
+        },
+        "responses": {
+            "going": 117,
+            "invited": 311
+        },
+        "status": "Pending"
+    },
+    {
+        "id": "10",
+        "title": "Workshop Event 10",
+        "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+        "date": "2026-04-10T00:00:00.000Z",
+        get time() {
+            return generateTime(this);
+        },
+        "location": {
+            "region": "Central Visayas",
+            "regionCode": "070000000",
+            "province": "Cebu",
+            "provinceCode": "072200000",
+            "cityMunicipality": "City of Cebu",
+            "cityCode": "072217000",
+            "barangay": "Sample Barangay",
+            "landmark": "Sample Landmark",
+            "street": "Sample Street",
+            "lat": 10.265492,
+            "lng": 123.867484
+        },
+        "category": "Workshop",
+        "image": "https://images.unsplash.com/photo-1552664730-d307ca884978?w=1080",
         "startTimeHour": "2",
         "startTimeMinute": "00",
         "startTimeAmPm": "PM",
@@ -1272,24 +1493,24 @@ export const events = [
         "endTimeAmPm": "PM",
         "address": "Cebu City, Philippines",
         "organizer": {
-            "name": "Sports Committee",
-            "contactName": "Maria Ramos",
-            "email": "sports5@example.com",
+            "name": "Workshop Committee",
+            "contactName": "Daniel Castro",
+            "email": "workshop10@example.com",
             "phone": "(032) 123-4567",
             "website": "www.example.com",
             "image": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100"
         },
         "responses": {
-            "going": 217,
-            "invited": 556
+            "going": 165,
+            "invited": 196
         },
-        "status": "Approved"
+        "status": "Pending"
     },
     {
-        "id": "6",
-        "title": "Networking Event 6",
+        "id": "11",
+        "title": "Reunion Event 11",
         "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-        "date": "April 17, 2026",
+        "date": "2026-01-02T00:00:00.000Z",
         get time() {
             return generateTime(this);
         },
@@ -1303,8 +1524,96 @@ export const events = [
             "barangay": "Sample Barangay",
             "landmark": "Sample Landmark",
             "street": "Sample Street",
-            "lat": 10.342436,
-            "lng": 123.893065
+            "lat": 10.318671,
+            "lng": 123.948921
+        },
+        "category": "Reunion",
+        "image": "https://images.unsplash.com/photo-1528605248644-14dd04022da1?w=1080",
+        "startTimeHour": "8",
+        "startTimeMinute": "00",
+        "startTimeAmPm": "AM",
+        "endTimeHour": "10",
+        "endTimeMinute": "00",
+        "endTimeAmPm": "AM",
+        "address": "Cebu City, Philippines",
+        "organizer": {
+            "name": "Reunion Committee",
+            "contactName": "Paolo Ramos",
+            "email": "reunion11@example.com",
+            "phone": "(032) 123-4567",
+            "website": "www.example.com",
+            "image": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100"
+        },
+        "responses": {
+            "going": 162,
+            "invited": 151
+        },
+        "status": "Approved"
+    },
+    {
+        "id": "12",
+        "title": "Reunion Event 12",
+        "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+        "date": "2026-06-14T00:00:00.000Z",
+        get time() {
+            return generateTime(this);
+        },
+        "location": {
+            "region": "Central Visayas",
+            "regionCode": "070000000",
+            "province": "Cebu",
+            "provinceCode": "072200000",
+            "cityMunicipality": "City of Cebu",
+            "cityCode": "072217000",
+            "barangay": "Sample Barangay",
+            "landmark": "Sample Landmark",
+            "street": "Sample Street",
+            "lat": 10.289082,
+            "lng": 123.88621
+        },
+        "category": "Reunion",
+        "image": "https://images.unsplash.com/photo-1528605248644-14dd04022da1?w=1080",
+        "startTimeHour": "1",
+        "startTimeMinute": "00",
+        "startTimeAmPm": "PM",
+        "endTimeHour": "5",
+        "endTimeMinute": "00",
+        "endTimeAmPm": "PM",
+        "address": "Cebu City, Philippines",
+        "organizer": {
+            "name": "Reunion Committee",
+            "contactName": "Rica Bautista",
+            "email": "reunion12@example.com",
+            "phone": "(032) 123-4567",
+            "website": "www.example.com",
+            "image": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100"
+        },
+        "responses": {
+            "going": 57,
+            "invited": 823
+        },
+        "status": "Approved"
+    },
+    {
+        "id": "13",
+        "title": "Networking Event 13",
+        "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+        "date": "2026-06-30T00:00:00.000Z",
+        get time() {
+            return generateTime(this);
+        },
+        "location": {
+            "region": "Central Visayas",
+            "regionCode": "070000000",
+            "province": "Cebu",
+            "provinceCode": "072200000",
+            "cityMunicipality": "City of Cebu",
+            "cityCode": "072217000",
+            "barangay": "Sample Barangay",
+            "landmark": "Sample Landmark",
+            "street": "Sample Street",
+            "lat": 10.327692,
+            "lng": 123.852201
         },
         "category": "Networking",
         "image": "https://images.unsplash.com/photo-1556761175-5973dc0f32e7?w=1080",
@@ -1317,23 +1626,23 @@ export const events = [
         "address": "Cebu City, Philippines",
         "organizer": {
             "name": "Networking Committee",
-            "contactName": "Maria Torres",
-            "email": "networking6@example.com",
+            "contactName": "Chris Cruz",
+            "email": "networking13@example.com",
             "phone": "(032) 123-4567",
             "website": "www.example.com",
             "image": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100"
         },
         "responses": {
-            "going": 333,
-            "invited": 974
+            "going": 98,
+            "invited": 413
         },
-        "status": "Pending"
+        "status": "Approved"
     },
     {
-        "id": "7",
-        "title": "Conference Event 7",
+        "id": "14",
+        "title": "Sports Event 14",
         "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-        "date": "May 30, 2026",
+        "date": "2026-06-30T00:00:00.000Z",
         get time() {
             return generateTime(this);
         },
@@ -1347,11 +1656,941 @@ export const events = [
             "barangay": "Sample Barangay",
             "landmark": "Sample Landmark",
             "street": "Sample Street",
-            "lat": 10.30489,
-            "lng": 123.8609
+            "lat": 10.265054,
+            "lng": 123.926712
+        },
+        "category": "Sports",
+        "image": "https://images.unsplash.com/photo-1517649763962-0c623066013b?w=1080",
+        "startTimeHour": "4",
+        "startTimeMinute": "00",
+        "startTimeAmPm": "PM",
+        "endTimeHour": "5",
+        "endTimeMinute": "00",
+        "endTimeAmPm": "PM",
+        "address": "Cebu City, Philippines",
+        "organizer": {
+            "name": "Sports Committee",
+            "contactName": "Bea Aquino",
+            "email": "sports14@example.com",
+            "phone": "(032) 123-4567",
+            "website": "www.example.com",
+            "image": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100"
+        },
+        "responses": {
+            "going": 377,
+            "invited": 711
+        },
+        "status": "Approved"
+    },
+    {
+        "id": "15",
+        "title": "Networking Event 15",
+        "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+        "date": "2026-04-26T00:00:00.000Z",
+        get time() {
+            return generateTime(this);
+        },
+        "location": {
+            "region": "Central Visayas",
+            "regionCode": "070000000",
+            "province": "Cebu",
+            "provinceCode": "072200000",
+            "cityMunicipality": "City of Cebu",
+            "cityCode": "072217000",
+            "barangay": "Sample Barangay",
+            "landmark": "Sample Landmark",
+            "street": "Sample Street",
+            "lat": 10.280102,
+            "lng": 123.924803
+        },
+        "category": "Networking",
+        "image": "https://images.unsplash.com/photo-1556761175-5973dc0f32e7?w=1080",
+        "startTimeHour": "9",
+        "startTimeMinute": "00",
+        "startTimeAmPm": "AM",
+        "endTimeHour": "10",
+        "endTimeMinute": "00",
+        "endTimeAmPm": "AM",
+        "address": "Cebu City, Philippines",
+        "organizer": {
+            "name": "Networking Committee",
+            "contactName": "Andrea Castro",
+            "email": "networking15@example.com",
+            "phone": "(032) 123-4567",
+            "website": "www.example.com",
+            "image": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100"
+        },
+        "responses": {
+            "going": 411,
+            "invited": 554
+        },
+        "status": "Approved"
+    },
+    {
+        "id": "16",
+        "title": "Workshop Event 16",
+        "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+        "date": "2026-03-05T00:00:00.000Z",
+        get time() {
+            return generateTime(this);
+        },
+        "location": {
+            "region": "Central Visayas",
+            "regionCode": "070000000",
+            "province": "Cebu",
+            "provinceCode": "072200000",
+            "cityMunicipality": "City of Cebu",
+            "cityCode": "072217000",
+            "barangay": "Sample Barangay",
+            "landmark": "Sample Landmark",
+            "street": "Sample Street",
+            "lat": 10.271963,
+            "lng": 123.919962
+        },
+        "category": "Workshop",
+        "image": "https://images.unsplash.com/photo-1552664730-d307ca884978?w=1080",
+        "startTimeHour": "9",
+        "startTimeMinute": "00",
+        "startTimeAmPm": "AM",
+        "endTimeHour": "10",
+        "endTimeMinute": "00",
+        "endTimeAmPm": "AM",
+        "address": "Cebu City, Philippines",
+        "organizer": {
+            "name": "Workshop Committee",
+            "contactName": "Maria Santos",
+            "email": "workshop16@example.com",
+            "phone": "(032) 123-4567",
+            "website": "www.example.com",
+            "image": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100"
+        },
+        "responses": {
+            "going": 292,
+            "invited": 138
+        },
+        "status": "Approved"
+    },
+    {
+        "id": "17",
+        "title": "Workshop Event 17",
+        "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+        "date": "2026-05-06T00:00:00.000Z",
+        get time() {
+            return generateTime(this);
+        },
+        "location": {
+            "region": "Central Visayas",
+            "regionCode": "070000000",
+            "province": "Cebu",
+            "provinceCode": "072200000",
+            "cityMunicipality": "City of Cebu",
+            "cityCode": "072217000",
+            "barangay": "Sample Barangay",
+            "landmark": "Sample Landmark",
+            "street": "Sample Street",
+            "lat": 10.258988,
+            "lng": 123.919493
+        },
+        "category": "Workshop",
+        "image": "https://images.unsplash.com/photo-1552664730-d307ca884978?w=1080",
+        "startTimeHour": "9",
+        "startTimeMinute": "00",
+        "startTimeAmPm": "AM",
+        "endTimeHour": "11",
+        "endTimeMinute": "00",
+        "endTimeAmPm": "AM",
+        "address": "Cebu City, Philippines",
+        "organizer": {
+            "name": "Workshop Committee",
+            "contactName": "Maria Cruz",
+            "email": "workshop17@example.com",
+            "phone": "(032) 123-4567",
+            "website": "www.example.com",
+            "image": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100"
+        },
+        "responses": {
+            "going": 23,
+            "invited": 797
+        },
+        "status": "Approved"
+    },
+    {
+        "id": "18",
+        "title": "Workshop Event 18",
+        "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+        "date": "2026-01-12T00:00:00.000Z",
+        get time() {
+            return generateTime(this);
+        },
+        "location": {
+            "region": "Central Visayas",
+            "regionCode": "070000000",
+            "province": "Cebu",
+            "provinceCode": "072200000",
+            "cityMunicipality": "City of Cebu",
+            "cityCode": "072217000",
+            "barangay": "Sample Barangay",
+            "landmark": "Sample Landmark",
+            "street": "Sample Street",
+            "lat": 10.304771,
+            "lng": 123.854254
+        },
+        "category": "Workshop",
+        "image": "https://images.unsplash.com/photo-1552664730-d307ca884978?w=1080",
+        "startTimeHour": "6",
+        "startTimeMinute": "00",
+        "startTimeAmPm": "PM",
+        "endTimeHour": "9",
+        "endTimeMinute": "00",
+        "endTimeAmPm": "PM",
+        "address": "Cebu City, Philippines",
+        "organizer": {
+            "name": "Workshop Committee",
+            "contactName": "Bea Torres",
+            "email": "workshop18@example.com",
+            "phone": "(032) 123-4567",
+            "website": "www.example.com",
+            "image": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100"
+        },
+        "responses": {
+            "going": 62,
+            "invited": 564
+        },
+        "status": "Pending"
+    },
+    {
+        "id": "19",
+        "title": "Workshop Event 19",
+        "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+        "date": "2026-02-05T00:00:00.000Z",
+        get time() {
+            return generateTime(this);
+        },
+        "location": {
+            "region": "Central Visayas",
+            "regionCode": "070000000",
+            "province": "Cebu",
+            "provinceCode": "072200000",
+            "cityMunicipality": "City of Cebu",
+            "cityCode": "072217000",
+            "barangay": "Sample Barangay",
+            "landmark": "Sample Landmark",
+            "street": "Sample Street",
+            "lat": 10.313049,
+            "lng": 123.896048
+        },
+        "category": "Workshop",
+        "image": "https://images.unsplash.com/photo-1552664730-d307ca884978?w=1080",
+        "startTimeHour": "6",
+        "startTimeMinute": "00",
+        "startTimeAmPm": "PM",
+        "endTimeHour": "9",
+        "endTimeMinute": "00",
+        "endTimeAmPm": "PM",
+        "address": "Cebu City, Philippines",
+        "organizer": {
+            "name": "Workshop Committee",
+            "contactName": "Carla Torres",
+            "email": "workshop19@example.com",
+            "phone": "(032) 123-4567",
+            "website": "www.example.com",
+            "image": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100"
+        },
+        "responses": {
+            "going": 72,
+            "invited": 602
+        },
+        "status": "Approved"
+    },
+    {
+        "id": "20",
+        "title": "Networking Event 20",
+        "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+        "date": "2026-04-09T00:00:00.000Z",
+        get time() {
+            return generateTime(this);
+        },
+        "location": {
+            "region": "Central Visayas",
+            "regionCode": "070000000",
+            "province": "Cebu",
+            "provinceCode": "072200000",
+            "cityMunicipality": "City of Cebu",
+            "cityCode": "072217000",
+            "barangay": "Sample Barangay",
+            "landmark": "Sample Landmark",
+            "street": "Sample Street",
+            "lat": 10.265959,
+            "lng": 123.898656
+        },
+        "category": "Networking",
+        "image": "https://images.unsplash.com/photo-1556761175-5973dc0f32e7?w=1080",
+        "startTimeHour": "7",
+        "startTimeMinute": "00",
+        "startTimeAmPm": "AM",
+        "endTimeHour": "11",
+        "endTimeMinute": "00",
+        "endTimeAmPm": "AM",
+        "address": "Cebu City, Philippines",
+        "organizer": {
+            "name": "Networking Committee",
+            "contactName": "Carla Mendoza",
+            "email": "networking20@example.com",
+            "phone": "(032) 123-4567",
+            "website": "www.example.com",
+            "image": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100"
+        },
+        "responses": {
+            "going": 190,
+            "invited": 628
+        },
+        "status": "Pending"
+    },
+    {
+        "id": "21",
+        "title": "Networking Event 21",
+        "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+        "date": "2026-05-14T00:00:00.000Z",
+        get time() {
+            return generateTime(this);
+        },
+        "location": {
+            "region": "Central Visayas",
+            "regionCode": "070000000",
+            "province": "Cebu",
+            "provinceCode": "072200000",
+            "cityMunicipality": "City of Cebu",
+            "cityCode": "072217000",
+            "barangay": "Sample Barangay",
+            "landmark": "Sample Landmark",
+            "street": "Sample Street",
+            "lat": 10.348468,
+            "lng": 123.932069
+        },
+        "category": "Networking",
+        "image": "https://images.unsplash.com/photo-1556761175-5973dc0f32e7?w=1080",
+        "startTimeHour": "9",
+        "startTimeMinute": "00",
+        "startTimeAmPm": "AM",
+        "endTimeHour": "11",
+        "endTimeMinute": "00",
+        "endTimeAmPm": "AM",
+        "address": "Cebu City, Philippines",
+        "organizer": {
+            "name": "Networking Committee",
+            "contactName": "Angela Reyes",
+            "email": "networking21@example.com",
+            "phone": "(032) 123-4567",
+            "website": "www.example.com",
+            "image": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100"
+        },
+        "responses": {
+            "going": 93,
+            "invited": 728
+        },
+        "status": "Approved"
+    },
+    {
+        "id": "22",
+        "title": "Virtual Event 22",
+        "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+        "date": "2026-06-21T00:00:00.000Z",
+        get time() {
+            return generateTime(this);
+        },
+        "location": {
+            "region": "Central Visayas",
+            "regionCode": "070000000",
+            "province": "Cebu",
+            "provinceCode": "072200000",
+            "cityMunicipality": "City of Cebu",
+            "cityCode": "072217000",
+            "barangay": "Sample Barangay",
+            "landmark": "Sample Landmark",
+            "street": "Sample Street",
+            "lat": 10.338289,
+            "lng": 123.912625
+        },
+        "category": "Virtual",
+        "image": "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=1080",
+        "startTimeHour": "10",
+        "startTimeMinute": "00",
+        "startTimeAmPm": "AM",
+        "endTimeHour": "11",
+        "endTimeMinute": "00",
+        "endTimeAmPm": "AM",
+        "address": "Cebu City, Philippines",
+        "organizer": {
+            "name": "Virtual Committee",
+            "contactName": "Andrea Santos",
+            "email": "virtual22@example.com",
+            "phone": "(032) 123-4567",
+            "website": "www.example.com",
+            "image": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100"
+        },
+        "responses": {
+            "going": 290,
+            "invited": 709
+        },
+        "status": "Pending",
+        "modality": "Zoom"
+    },
+    {
+        "id": "23",
+        "title": "Sports Event 23",
+        "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+        "date": "2026-01-01T00:00:00.000Z",
+        get time() {
+            return generateTime(this);
+        },
+        "location": {
+            "region": "Central Visayas",
+            "regionCode": "070000000",
+            "province": "Cebu",
+            "provinceCode": "072200000",
+            "cityMunicipality": "City of Cebu",
+            "cityCode": "072217000",
+            "barangay": "Sample Barangay",
+            "landmark": "Sample Landmark",
+            "street": "Sample Street",
+            "lat": 10.256973,
+            "lng": 123.889216
+        },
+        "category": "Sports",
+        "image": "https://images.unsplash.com/photo-1517649763962-0c623066013b?w=1080",
+        "startTimeHour": "5",
+        "startTimeMinute": "00",
+        "startTimeAmPm": "PM",
+        "endTimeHour": "6",
+        "endTimeMinute": "00",
+        "endTimeAmPm": "PM",
+        "address": "Cebu City, Philippines",
+        "organizer": {
+            "name": "Sports Committee",
+            "contactName": "Rica Reyes",
+            "email": "sports23@example.com",
+            "phone": "(032) 123-4567",
+            "website": "www.example.com",
+            "image": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100"
+        },
+        "responses": {
+            "going": 356,
+            "invited": 518
+        },
+        "status": "Approved"
+    },
+    {
+        "id": "24",
+        "title": "Workshop Event 24",
+        "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+        "date": "2026-06-03T00:00:00.000Z",
+        get time() {
+            return generateTime(this);
+        },
+        "location": {
+            "region": "Central Visayas",
+            "regionCode": "070000000",
+            "province": "Cebu",
+            "provinceCode": "072200000",
+            "cityMunicipality": "City of Cebu",
+            "cityCode": "072217000",
+            "barangay": "Sample Barangay",
+            "landmark": "Sample Landmark",
+            "street": "Sample Street",
+            "lat": 10.294248,
+            "lng": 123.920367
+        },
+        "category": "Workshop",
+        "image": "https://images.unsplash.com/photo-1552664730-d307ca884978?w=1080",
+        "startTimeHour": "4",
+        "startTimeMinute": "00",
+        "startTimeAmPm": "PM",
+        "endTimeHour": "5",
+        "endTimeMinute": "00",
+        "endTimeAmPm": "PM",
+        "address": "Cebu City, Philippines",
+        "organizer": {
+            "name": "Workshop Committee",
+            "contactName": "Angela Santos",
+            "email": "workshop24@example.com",
+            "phone": "(032) 123-4567",
+            "website": "www.example.com",
+            "image": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100"
+        },
+        "responses": {
+            "going": 183,
+            "invited": 884
+        },
+        "status": "Approved"
+    },
+    {
+        "id": "25",
+        "title": "Virtual Event 25",
+        "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+        "date": "2026-06-01T00:00:00.000Z",
+        get time() {
+            return generateTime(this);
+        },
+        "location": {
+            "region": "Central Visayas",
+            "regionCode": "070000000",
+            "province": "Cebu",
+            "provinceCode": "072200000",
+            "cityMunicipality": "City of Cebu",
+            "cityCode": "072217000",
+            "barangay": "Sample Barangay",
+            "landmark": "Sample Landmark",
+            "street": "Sample Street",
+            "lat": 10.310542,
+            "lng": 123.936931
+        },
+        "category": "Virtual",
+        "image": "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=1080",
+        "startTimeHour": "6",
+        "startTimeMinute": "00",
+        "startTimeAmPm": "PM",
+        "endTimeHour": "7",
+        "endTimeMinute": "00",
+        "endTimeAmPm": "PM",
+        "address": "Cebu City, Philippines",
+        "organizer": {
+            "name": "Virtual Committee",
+            "contactName": "Anne Torres",
+            "email": "virtual25@example.com",
+            "phone": "(032) 123-4567",
+            "website": "www.example.com",
+            "image": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100"
+        },
+        "responses": {
+            "going": 60,
+            "invited": 120
+        },
+        "status": "Pending",
+        "modality": "Google Meet"
+    },
+    {
+        "id": "26",
+        "title": "Workshop Event 26",
+        "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+        "date": "2026-04-29T00:00:00.000Z",
+        get time() {
+            return generateTime(this);
+        },
+        "location": {
+            "region": "Central Visayas",
+            "regionCode": "070000000",
+            "province": "Cebu",
+            "provinceCode": "072200000",
+            "cityMunicipality": "City of Cebu",
+            "cityCode": "072217000",
+            "barangay": "Sample Barangay",
+            "landmark": "Sample Landmark",
+            "street": "Sample Street",
+            "lat": 10.281472,
+            "lng": 123.873433
+        },
+        "category": "Workshop",
+        "image": "https://images.unsplash.com/photo-1552664730-d307ca884978?w=1080",
+        "startTimeHour": "2",
+        "startTimeMinute": "00",
+        "startTimeAmPm": "PM",
+        "endTimeHour": "3",
+        "endTimeMinute": "00",
+        "endTimeAmPm": "PM",
+        "address": "Cebu City, Philippines",
+        "organizer": {
+            "name": "Workshop Committee",
+            "contactName": "Jose Torres",
+            "email": "workshop26@example.com",
+            "phone": "(032) 123-4567",
+            "website": "www.example.com",
+            "image": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100"
+        },
+        "responses": {
+            "going": 18,
+            "invited": 323
+        },
+        "status": "Approved"
+    },
+    {
+        "id": "27",
+        "title": "Virtual Event 27",
+        "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+        "date": "2026-01-18T00:00:00.000Z",
+        get time() {
+            return generateTime(this);
+        },
+        "location": {
+            "region": "Central Visayas",
+            "regionCode": "070000000",
+            "province": "Cebu",
+            "provinceCode": "072200000",
+            "cityMunicipality": "City of Cebu",
+            "cityCode": "072217000",
+            "barangay": "Sample Barangay",
+            "landmark": "Sample Landmark",
+            "street": "Sample Street",
+            "lat": 10.295594,
+            "lng": 123.945429
+        },
+        "category": "Virtual",
+        "image": "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=1080",
+        "startTimeHour": "10",
+        "startTimeMinute": "00",
+        "startTimeAmPm": "AM",
+        "endTimeHour": "11",
+        "endTimeMinute": "00",
+        "endTimeAmPm": "AM",
+        "address": "Cebu City, Philippines",
+        "organizer": {
+            "name": "Virtual Committee",
+            "contactName": "John Ramos",
+            "email": "virtual27@example.com",
+            "phone": "(032) 123-4567",
+            "website": "www.example.com",
+            "image": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100"
+        },
+        "responses": {
+            "going": 468,
+            "invited": 940
+        },
+        "status": "Approved",
+        "modality": "Microsoft Teams"
+    },
+    {
+        "id": "28",
+        "title": "Virtual Event 28",
+        "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+        "date": "2026-03-24T00:00:00.000Z",
+        get time() {
+            return generateTime(this);
+        },
+        "location": {
+            "region": "Central Visayas",
+            "regionCode": "070000000",
+            "province": "Cebu",
+            "provinceCode": "072200000",
+            "cityMunicipality": "City of Cebu",
+            "cityCode": "072217000",
+            "barangay": "Sample Barangay",
+            "landmark": "Sample Landmark",
+            "street": "Sample Street",
+            "lat": 10.265227,
+            "lng": 123.884822
+        },
+        "category": "Virtual",
+        "image": "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=1080",
+        "startTimeHour": "10",
+        "startTimeMinute": "00",
+        "startTimeAmPm": "AM",
+        "endTimeHour": "11",
+        "endTimeMinute": "00",
+        "endTimeAmPm": "AM",
+        "address": "Cebu City, Philippines",
+        "organizer": {
+            "name": "Virtual Committee",
+            "contactName": "Paolo Aquino",
+            "email": "virtual28@example.com",
+            "phone": "(032) 123-4567",
+            "website": "www.example.com",
+            "image": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100"
+        },
+        "responses": {
+            "going": 132,
+            "invited": 535
+        },
+        "status": "Approved",
+        "modality": "Zoom"
+    },
+    {
+        "id": "29",
+        "title": "Reunion Event 29",
+        "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+        "date": "2026-05-25T00:00:00.000Z",
+        get time() {
+            return generateTime(this);
+        },
+        "location": {
+            "region": "Central Visayas",
+            "regionCode": "070000000",
+            "province": "Cebu",
+            "provinceCode": "072200000",
+            "cityMunicipality": "City of Cebu",
+            "cityCode": "072217000",
+            "barangay": "Sample Barangay",
+            "landmark": "Sample Landmark",
+            "street": "Sample Street",
+            "lat": 10.343394,
+            "lng": 123.892289
+        },
+        "category": "Reunion",
+        "image": "https://images.unsplash.com/photo-1528605248644-14dd04022da1?w=1080",
+        "startTimeHour": "8",
+        "startTimeMinute": "00",
+        "startTimeAmPm": "AM",
+        "endTimeHour": "9",
+        "endTimeMinute": "00",
+        "endTimeAmPm": "AM",
+        "address": "Cebu City, Philippines",
+        "organizer": {
+            "name": "Reunion Committee",
+            "contactName": "Sofia Aquino",
+            "email": "reunion29@example.com",
+            "phone": "(032) 123-4567",
+            "website": "www.example.com",
+            "image": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100"
+        },
+        "responses": {
+            "going": 109,
+            "invited": 667
+        },
+        "status": "Pending"
+    },
+    {
+        "id": "30",
+        "title": "Reunion Event 30",
+        "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+        "date": "2026-06-30T00:00:00.000Z",
+        get time() {
+            return generateTime(this);
+        },
+        "location": {
+            "region": "Central Visayas",
+            "regionCode": "070000000",
+            "province": "Cebu",
+            "provinceCode": "072200000",
+            "cityMunicipality": "City of Cebu",
+            "cityCode": "072217000",
+            "barangay": "Sample Barangay",
+            "landmark": "Sample Landmark",
+            "street": "Sample Street",
+            "lat": 10.323412,
+            "lng": 123.862733
+        },
+        "category": "Reunion",
+        "image": "https://images.unsplash.com/photo-1528605248644-14dd04022da1?w=1080",
+        "startTimeHour": "2",
+        "startTimeMinute": "00",
+        "startTimeAmPm": "PM",
+        "endTimeHour": "4",
+        "endTimeMinute": "00",
+        "endTimeAmPm": "PM",
+        "address": "Cebu City, Philippines",
+        "organizer": {
+            "name": "Reunion Committee",
+            "contactName": "Andrea Flores",
+            "email": "reunion30@example.com",
+            "phone": "(032) 123-4567",
+            "website": "www.example.com",
+            "image": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100"
+        },
+        "responses": {
+            "going": 414,
+            "invited": 400
+        },
+        "status": "Pending"
+    },
+    {
+        "id": "31",
+        "title": "Virtual Event 31",
+        "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+        "date": "2026-01-29T00:00:00.000Z",
+        get time() {
+            return generateTime(this);
+        },
+        "location": {
+            "region": "Central Visayas",
+            "regionCode": "070000000",
+            "province": "Cebu",
+            "provinceCode": "072200000",
+            "cityMunicipality": "City of Cebu",
+            "cityCode": "072217000",
+            "barangay": "Sample Barangay",
+            "landmark": "Sample Landmark",
+            "street": "Sample Street",
+            "lat": 10.338929,
+            "lng": 123.898123
+        },
+        "category": "Virtual",
+        "image": "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=1080",
+        "startTimeHour": "1",
+        "startTimeMinute": "00",
+        "startTimeAmPm": "PM",
+        "endTimeHour": "4",
+        "endTimeMinute": "00",
+        "endTimeAmPm": "PM",
+        "address": "Cebu City, Philippines",
+        "organizer": {
+            "name": "Virtual Committee",
+            "contactName": "Daniel Flores",
+            "email": "virtual31@example.com",
+            "phone": "(032) 123-4567",
+            "website": "www.example.com",
+            "image": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100"
+        },
+        "responses": {
+            "going": 117,
+            "invited": 467
+        },
+        "status": "Approved",
+        "modality": "Google Meet"
+    },
+    {
+        "id": "32",
+        "title": "Virtual Event 32",
+        "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+        "date": "2026-01-16T00:00:00.000Z",
+        get time() {
+            return generateTime(this);
+        },
+        "location": {
+            "region": "Central Visayas",
+            "regionCode": "070000000",
+            "province": "Cebu",
+            "provinceCode": "072200000",
+            "cityMunicipality": "City of Cebu",
+            "cityCode": "072217000",
+            "barangay": "Sample Barangay",
+            "landmark": "Sample Landmark",
+            "street": "Sample Street",
+            "lat": 10.337383,
+            "lng": 123.906707
+        },
+        "category": "Virtual",
+        "image": "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=1080",
+        "startTimeHour": "10",
+        "startTimeMinute": "00",
+        "startTimeAmPm": "AM",
+        "endTimeHour": "11",
+        "endTimeMinute": "00",
+        "endTimeAmPm": "AM",
+        "address": "Cebu City, Philippines",
+        "organizer": {
+            "name": "Virtual Committee",
+            "contactName": "Anne Torres",
+            "email": "virtual32@example.com",
+            "phone": "(032) 123-4567",
+            "website": "www.example.com",
+            "image": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100"
+        },
+        "responses": {
+            "going": 121,
+            "invited": 574
+        },
+        "status": "Pending",
+        "modality": "Google Meet"
+    },
+    {
+        "id": "33",
+        "title": "Networking Event 33",
+        "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+        "date": "2026-01-08T00:00:00.000Z",
+        get time() {
+            return generateTime(this);
+        },
+        "location": {
+            "region": "Central Visayas",
+            "regionCode": "070000000",
+            "province": "Cebu",
+            "provinceCode": "072200000",
+            "cityMunicipality": "City of Cebu",
+            "cityCode": "072217000",
+            "barangay": "Sample Barangay",
+            "landmark": "Sample Landmark",
+            "street": "Sample Street",
+            "lat": 10.335339,
+            "lng": 123.8804
+        },
+        "category": "Networking",
+        "image": "https://images.unsplash.com/photo-1556761175-5973dc0f32e7?w=1080",
+        "startTimeHour": "5",
+        "startTimeMinute": "00",
+        "startTimeAmPm": "PM",
+        "endTimeHour": "7",
+        "endTimeMinute": "00",
+        "endTimeAmPm": "PM",
+        "address": "Cebu City, Philippines",
+        "organizer": {
+            "name": "Networking Committee",
+            "contactName": "Andrea Castro",
+            "email": "networking33@example.com",
+            "phone": "(032) 123-4567",
+            "website": "www.example.com",
+            "image": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100"
+        },
+        "responses": {
+            "going": 196,
+            "invited": 992
+        },
+        "status": "Approved"
+    },
+    {
+        "id": "34",
+        "title": "Conference Event 34",
+        "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+        "date": "2026-02-03T00:00:00.000Z",
+        get time() {
+            return generateTime(this);
+        },
+        "location": {
+            "region": "Central Visayas",
+            "regionCode": "070000000",
+            "province": "Cebu",
+            "provinceCode": "072200000",
+            "cityMunicipality": "City of Cebu",
+            "cityCode": "072217000",
+            "barangay": "Sample Barangay",
+            "landmark": "Sample Landmark",
+            "street": "Sample Street",
+            "lat": 10.297415,
+            "lng": 123.913776
         },
         "category": "Conference",
         "image": "https://images.unsplash.com/photo-1511578314322-379afb476865?w=1080",
+        "startTimeHour": "10",
+        "startTimeMinute": "00",
+        "startTimeAmPm": "AM",
+        "endTimeHour": "11",
+        "endTimeMinute": "00",
+        "endTimeAmPm": "AM",
+        "address": "Cebu City, Philippines",
+        "organizer": {
+            "name": "Conference Committee",
+            "contactName": "Bea Ramos",
+            "email": "conference34@example.com",
+            "phone": "(032) 123-4567",
+            "website": "www.example.com",
+            "image": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100"
+        },
+        "responses": {
+            "going": 176,
+            "invited": 870
+        },
+        "status": "Pending"
+    },
+    {
+        "id": "35",
+        "title": "Networking Event 35",
+        "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+        "date": "2026-04-20T00:00:00.000Z",
+        get time() {
+            return generateTime(this);
+        },
+        "location": {
+            "region": "Central Visayas",
+            "regionCode": "070000000",
+            "province": "Cebu",
+            "provinceCode": "072200000",
+            "cityMunicipality": "City of Cebu",
+            "cityCode": "072217000",
+            "barangay": "Sample Barangay",
+            "landmark": "Sample Landmark",
+            "street": "Sample Street",
+            "lat": 10.335446,
+            "lng": 123.916989
+        },
+        "category": "Networking",
+        "image": "https://images.unsplash.com/photo-1556761175-5973dc0f32e7?w=1080",
         "startTimeHour": "1",
         "startTimeMinute": "00",
         "startTimeAmPm": "PM",
@@ -1360,24 +2599,24 @@ export const events = [
         "endTimeAmPm": "PM",
         "address": "Cebu City, Philippines",
         "organizer": {
-            "name": "Conference Committee",
-            "contactName": "Andrea Bautista",
-            "email": "conference7@example.com",
+            "name": "Networking Committee",
+            "contactName": "Anne Mendoza",
+            "email": "networking35@example.com",
             "phone": "(032) 123-4567",
             "website": "www.example.com",
             "image": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100"
         },
         "responses": {
-            "going": 232,
-            "invited": 614
+            "going": 372,
+            "invited": 970
         },
         "status": "Pending"
     },
     {
-        "id": "8",
-        "title": "Reunion Event 8",
+        "id": "36",
+        "title": "Reunion Event 36",
         "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-        "date": "January 09, 2026",
+        "date": "2026-01-13T00:00:00.000Z",
         get time() {
             return generateTime(this);
         },
@@ -1391,320 +2630,12 @@ export const events = [
             "barangay": "Sample Barangay",
             "landmark": "Sample Landmark",
             "street": "Sample Street",
-            "lat": 10.341784,
-            "lng": 123.888595
+            "lat": 10.33115,
+            "lng": 123.867926
         },
         "category": "Reunion",
         "image": "https://images.unsplash.com/photo-1528605248644-14dd04022da1?w=1080",
-        "startTimeHour": "8",
-        "startTimeMinute": "00",
-        "startTimeAmPm": "AM",
-        "endTimeHour": "10",
-        "endTimeMinute": "00",
-        "endTimeAmPm": "AM",
-        "address": "Cebu City, Philippines",
-        "organizer": {
-            "name": "Reunion Committee",
-            "contactName": "Rica Garcia",
-            "email": "reunion8@example.com",
-            "phone": "(032) 123-4567",
-            "website": "www.example.com",
-            "image": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100"
-        },
-        "responses": {
-            "going": 172,
-            "invited": 930
-        },
-        "status": "Approved"
-    },
-    {
-        "id": "9",
-        "title": "Workshop Event 9",
-        "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-        "date": "March 28, 2026",
-        get time() {
-            return generateTime(this);
-        },
-        "location": {
-            "region": "Central Visayas",
-            "regionCode": "070000000",
-            "province": "Cebu",
-            "provinceCode": "072200000",
-            "cityMunicipality": "City of Cebu",
-            "cityCode": "072217000",
-            "barangay": "Sample Barangay",
-            "landmark": "Sample Landmark",
-            "street": "Sample Street",
-            "lat": 10.295607,
-            "lng": 123.947026
-        },
-        "category": "Workshop",
-        "image": "https://images.unsplash.com/photo-1552664730-d307ca884978?w=1080",
-        "startTimeHour": "12",
-        "startTimeMinute": "00",
-        "startTimeAmPm": "PM",
-        "endTimeHour": "11",
-        "endTimeMinute": "00",
-        "endTimeAmPm": "PM",
-        "address": "Cebu City, Philippines",
-        "organizer": {
-            "name": "Workshop Committee",
-            "contactName": "Rica Mendoza",
-            "email": "workshop9@example.com",
-            "phone": "(032) 123-4567",
-            "website": "www.example.com",
-            "image": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100"
-        },
-        "responses": {
-            "going": 175,
-            "invited": 104
-        },
-        "status": "Approved"
-    },
-    {
-        "id": "10",
-        "title": "Sports Event 10",
-        "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-        "date": "June 05, 2026",
-        get time() {
-            return generateTime(this);
-        },
-        "location": {
-            "region": "Central Visayas",
-            "regionCode": "070000000",
-            "province": "Cebu",
-            "provinceCode": "072200000",
-            "cityMunicipality": "City of Cebu",
-            "cityCode": "072217000",
-            "barangay": "Sample Barangay",
-            "landmark": "Sample Landmark",
-            "street": "Sample Street",
-            "lat": 10.297548,
-            "lng": 123.860766
-        },
-        "category": "Sports",
-        "image": "https://images.unsplash.com/photo-1517649763962-0c623066013b?w=1080",
         "startTimeHour": "2",
-        "startTimeMinute": "00",
-        "startTimeAmPm": "PM",
-        "endTimeHour": "4",
-        "endTimeMinute": "00",
-        "endTimeAmPm": "PM",
-        "address": "Cebu City, Philippines",
-        "organizer": {
-            "name": "Sports Committee",
-            "contactName": "Chris Ramos",
-            "email": "sports10@example.com",
-            "phone": "(032) 123-4567",
-            "website": "www.example.com",
-            "image": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100"
-        },
-        "responses": {
-            "going": 93,
-            "invited": 355
-        },
-        "status": "Approved"
-    },
-    {
-        "id": "11",
-        "title": "Sports Event 11",
-        "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-        "date": "April 28, 2026",
-        get time() {
-            return generateTime(this);
-        },
-        "location": {
-            "region": "Central Visayas",
-            "regionCode": "070000000",
-            "province": "Cebu",
-            "provinceCode": "072200000",
-            "cityMunicipality": "City of Cebu",
-            "cityCode": "072217000",
-            "barangay": "Sample Barangay",
-            "landmark": "Sample Landmark",
-            "street": "Sample Street",
-            "lat": 10.290186,
-            "lng": 123.882798
-        },
-        "category": "Sports",
-        "image": "https://images.unsplash.com/photo-1517649763962-0c623066013b?w=1080",
-        "startTimeHour": "8",
-        "startTimeMinute": "00",
-        "startTimeAmPm": "AM",
-        "endTimeHour": "11",
-        "endTimeMinute": "00",
-        "endTimeAmPm": "AM",
-        "address": "Cebu City, Philippines",
-        "organizer": {
-            "name": "Sports Committee",
-            "contactName": "John Santos",
-            "email": "sports11@example.com",
-            "phone": "(032) 123-4567",
-            "website": "www.example.com",
-            "image": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100"
-        },
-        "responses": {
-            "going": 30,
-            "invited": 105
-        },
-        "status": "Pending"
-    },
-    {
-        "id": "12",
-        "title": "Networking Event 12",
-        "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-        "date": "April 02, 2026",
-        get time() {
-            return generateTime(this);
-        },
-        "location": {
-            "region": "Central Visayas",
-            "regionCode": "070000000",
-            "province": "Cebu",
-            "provinceCode": "072200000",
-            "cityMunicipality": "City of Cebu",
-            "cityCode": "072217000",
-            "barangay": "Sample Barangay",
-            "landmark": "Sample Landmark",
-            "street": "Sample Street",
-            "lat": 10.292539,
-            "lng": 123.861531
-        },
-        "category": "Networking",
-        "image": "https://images.unsplash.com/photo-1556761175-5973dc0f32e7?w=1080",
-        "startTimeHour": "12",
-        "startTimeMinute": "00",
-        "startTimeAmPm": "PM",
-        "endTimeHour": "11",
-        "endTimeMinute": "00",
-        "endTimeAmPm": "PM",
-        "address": "Cebu City, Philippines",
-        "organizer": {
-            "name": "Networking Committee",
-            "contactName": "Anne Flores",
-            "email": "networking12@example.com",
-            "phone": "(032) 123-4567",
-            "website": "www.example.com",
-            "image": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100"
-        },
-        "responses": {
-            "going": 457,
-            "invited": 945
-        },
-        "status": "Pending"
-    },
-    {
-        "id": "13",
-        "title": "Sports Event 13",
-        "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-        "date": "April 14, 2026",
-        get time() {
-            return generateTime(this);
-        },
-        "location": {
-            "region": "Central Visayas",
-            "regionCode": "070000000",
-            "province": "Cebu",
-            "provinceCode": "072200000",
-            "cityMunicipality": "City of Cebu",
-            "cityCode": "072217000",
-            "barangay": "Sample Barangay",
-            "landmark": "Sample Landmark",
-            "street": "Sample Street",
-            "lat": 10.333354,
-            "lng": 123.851561
-        },
-        "category": "Sports",
-        "image": "https://images.unsplash.com/photo-1517649763962-0c623066013b?w=1080",
-        "startTimeHour": "12",
-        "startTimeMinute": "00",
-        "startTimeAmPm": "PM",
-        "endTimeHour": "11",
-        "endTimeMinute": "00",
-        "endTimeAmPm": "PM",
-        "address": "Cebu City, Philippines",
-        "organizer": {
-            "name": "Sports Committee",
-            "contactName": "Juan Mendoza",
-            "email": "sports13@example.com",
-            "phone": "(032) 123-4567",
-            "website": "www.example.com",
-            "image": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100"
-        },
-        "responses": {
-            "going": 496,
-            "invited": 879
-        },
-        "status": "Approved"
-    },
-    {
-        "id": "14",
-        "title": "Workshop Event 14",
-        "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-        "date": "June 13, 2026",
-        get time() {
-            return generateTime(this);
-        },
-        "location": {
-            "region": "Central Visayas",
-            "regionCode": "070000000",
-            "province": "Cebu",
-            "provinceCode": "072200000",
-            "cityMunicipality": "City of Cebu",
-            "cityCode": "072217000",
-            "barangay": "Sample Barangay",
-            "landmark": "Sample Landmark",
-            "street": "Sample Street",
-            "lat": 10.318047,
-            "lng": 123.917272
-        },
-        "category": "Workshop",
-        "image": "https://images.unsplash.com/photo-1552664730-d307ca884978?w=1080",
-        "startTimeHour": "12",
-        "startTimeMinute": "00",
-        "startTimeAmPm": "PM",
-        "endTimeHour": "11",
-        "endTimeMinute": "00",
-        "endTimeAmPm": "PM",
-        "address": "Cebu City, Philippines",
-        "organizer": {
-            "name": "Workshop Committee",
-            "contactName": "Maria Bautista",
-            "email": "workshop14@example.com",
-            "phone": "(032) 123-4567",
-            "website": "www.example.com",
-            "image": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100"
-        },
-        "responses": {
-            "going": 345,
-            "invited": 309
-        },
-        "status": "Approved"
-    },
-    {
-        "id": "15",
-        "title": "Conference Event 15",
-        "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-        "date": "June 11, 2026",
-        get time() {
-            return generateTime(this);
-        },
-        "location": {
-            "region": "Central Visayas",
-            "regionCode": "070000000",
-            "province": "Cebu",
-            "provinceCode": "072200000",
-            "cityMunicipality": "City of Cebu",
-            "cityCode": "072217000",
-            "barangay": "Sample Barangay",
-            "landmark": "Sample Landmark",
-            "street": "Sample Street",
-            "lat": 10.316011,
-            "lng": 123.866191
-        },
-        "category": "Conference",
-        "image": "https://images.unsplash.com/photo-1511578314322-379afb476865?w=1080",
-        "startTimeHour": "4",
         "startTimeMinute": "00",
         "startTimeAmPm": "PM",
         "endTimeHour": "5",
@@ -1712,24 +2643,24 @@ export const events = [
         "endTimeAmPm": "PM",
         "address": "Cebu City, Philippines",
         "organizer": {
-            "name": "Conference Committee",
-            "contactName": "John Torres",
-            "email": "conference15@example.com",
+            "name": "Reunion Committee",
+            "contactName": "Paolo Flores",
+            "email": "reunion36@example.com",
             "phone": "(032) 123-4567",
             "website": "www.example.com",
             "image": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100"
         },
         "responses": {
-            "going": 107,
-            "invited": 882
+            "going": 239,
+            "invited": 306
         },
         "status": "Approved"
     },
     {
-        "id": "16",
-        "title": "Networking Event 16",
+        "id": "37",
+        "title": "Networking Event 37",
         "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-        "date": "April 17, 2026",
+        "date": "2026-03-15T00:00:00.000Z",
         get time() {
             return generateTime(this);
         },
@@ -1743,37 +2674,37 @@ export const events = [
             "barangay": "Sample Barangay",
             "landmark": "Sample Landmark",
             "street": "Sample Street",
-            "lat": 10.277789,
-            "lng": 123.857852
+            "lat": 10.349838,
+            "lng": 123.870603
         },
         "category": "Networking",
         "image": "https://images.unsplash.com/photo-1556761175-5973dc0f32e7?w=1080",
-        "startTimeHour": "2",
+        "startTimeHour": "6",
         "startTimeMinute": "00",
         "startTimeAmPm": "PM",
-        "endTimeHour": "4",
+        "endTimeHour": "7",
         "endTimeMinute": "00",
         "endTimeAmPm": "PM",
         "address": "Cebu City, Philippines",
         "organizer": {
             "name": "Networking Committee",
-            "contactName": "Angela Aquino",
-            "email": "networking16@example.com",
+            "contactName": "Bea Torres",
+            "email": "networking37@example.com",
             "phone": "(032) 123-4567",
             "website": "www.example.com",
             "image": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100"
         },
         "responses": {
-            "going": 97,
-            "invited": 578
+            "going": 104,
+            "invited": 675
         },
         "status": "Pending"
     },
     {
-        "id": "17",
-        "title": "Conference Event 17",
+        "id": "38",
+        "title": "Virtual Event 38",
         "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-        "date": "April 14, 2026",
+        "date": "2026-04-05T00:00:00.000Z",
         get time() {
             return generateTime(this);
         },
@@ -1787,12 +2718,101 @@ export const events = [
             "barangay": "Sample Barangay",
             "landmark": "Sample Landmark",
             "street": "Sample Street",
-            "lat": 10.299711,
-            "lng": 123.912904
+            "lat": 10.265455,
+            "lng": 123.921455
+        },
+        "category": "Virtual",
+        "image": "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=1080",
+        "startTimeHour": "12",
+        "startTimeMinute": "00",
+        "startTimeAmPm": "PM",
+        "endTimeHour": "11",
+        "endTimeMinute": "00",
+        "endTimeAmPm": "PM",
+        "address": "Cebu City, Philippines",
+        "organizer": {
+            "name": "Virtual Committee",
+            "contactName": "Chris Flores",
+            "email": "virtual38@example.com",
+            "phone": "(032) 123-4567",
+            "website": "www.example.com",
+            "image": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100"
+        },
+        "responses": {
+            "going": 472,
+            "invited": 245
+        },
+        "status": "Pending",
+        "modality": "Microsoft Teams"
+    },
+    {
+        "id": "39",
+        "title": "Workshop Event 39",
+        "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+        "date": "2026-02-12T00:00:00.000Z",
+        get time() {
+            return generateTime(this);
+        },
+        "location": {
+            "region": "Central Visayas",
+            "regionCode": "070000000",
+            "province": "Cebu",
+            "provinceCode": "072200000",
+            "cityMunicipality": "City of Cebu",
+            "cityCode": "072217000",
+            "barangay": "Sample Barangay",
+            "landmark": "Sample Landmark",
+            "street": "Sample Street",
+            "lat": 10.295767,
+            "lng": 123.931991
+        },
+        "category": "Workshop",
+        "image": "https://images.unsplash.com/photo-1552664730-d307ca884978?w=1080",
+        "startTimeHour": "10",
+        "startTimeMinute": "00",
+        "startTimeAmPm": "AM",
+        "endTimeHour": "11",
+        "endTimeMinute": "00",
+        "endTimeAmPm": "AM",
+        "address": "Cebu City, Philippines",
+        "organizer": {
+            "name": "Workshop Committee",
+            "contactName": "Juan Santos",
+            "email": "workshop39@example.com",
+            "phone": "(032) 123-4567",
+            "website": "www.example.com",
+            "image": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100"
+        },
+        "responses": {
+            "going": 163,
+            "invited": 163
+        },
+        "status": "Approved"
+    },
+    {
+        "id": "40",
+        "title": "Conference Event 40",
+        "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+        "date": "2026-04-06T00:00:00.000Z",
+        get time() {
+            return generateTime(this);
+        },
+        "location": {
+            "region": "Central Visayas",
+            "regionCode": "070000000",
+            "province": "Cebu",
+            "provinceCode": "072200000",
+            "cityMunicipality": "City of Cebu",
+            "cityCode": "072217000",
+            "barangay": "Sample Barangay",
+            "landmark": "Sample Landmark",
+            "street": "Sample Street",
+            "lat": 10.276269,
+            "lng": 123.941169
         },
         "category": "Conference",
         "image": "https://images.unsplash.com/photo-1511578314322-379afb476865?w=1080",
-        "startTimeHour": "7",
+        "startTimeHour": "9",
         "startTimeMinute": "00",
         "startTimeAmPm": "AM",
         "endTimeHour": "11",
@@ -1801,23 +2821,23 @@ export const events = [
         "address": "Cebu City, Philippines",
         "organizer": {
             "name": "Conference Committee",
-            "contactName": "Daniel Aquino",
-            "email": "conference17@example.com",
+            "contactName": "Anne Torres",
+            "email": "conference40@example.com",
             "phone": "(032) 123-4567",
             "website": "www.example.com",
             "image": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100"
         },
         "responses": {
-            "going": 122,
-            "invited": 203
+            "going": 92,
+            "invited": 306
         },
         "status": "Approved"
     },
     {
-        "id": "18",
-        "title": "Sports Event 18",
+        "id": "41",
+        "title": "Workshop Event 41",
         "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-        "date": "May 20, 2026",
+        "date": "2026-01-03T00:00:00.000Z",
         get time() {
             return generateTime(this);
         },
@@ -1831,11 +2851,188 @@ export const events = [
             "barangay": "Sample Barangay",
             "landmark": "Sample Landmark",
             "street": "Sample Street",
-            "lat": 10.264402,
-            "lng": 123.850221
+            "lat": 10.284072,
+            "lng": 123.923197
+        },
+        "category": "Workshop",
+        "image": "https://images.unsplash.com/photo-1552664730-d307ca884978?w=1080",
+        "startTimeHour": "1",
+        "startTimeMinute": "00",
+        "startTimeAmPm": "PM",
+        "endTimeHour": "2",
+        "endTimeMinute": "00",
+        "endTimeAmPm": "PM",
+        "address": "Cebu City, Philippines",
+        "organizer": {
+            "name": "Workshop Committee",
+            "contactName": "Sofia Torres",
+            "email": "workshop41@example.com",
+            "phone": "(032) 123-4567",
+            "website": "www.example.com",
+            "image": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100"
+        },
+        "responses": {
+            "going": 52,
+            "invited": 385
+        },
+        "status": "Pending"
+    },
+    {
+        "id": "42",
+        "title": "Sports Event 42",
+        "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+        "date": "2026-05-01T00:00:00.000Z",
+        get time() {
+            return generateTime(this);
+        },
+        "location": {
+            "region": "Central Visayas",
+            "regionCode": "070000000",
+            "province": "Cebu",
+            "provinceCode": "072200000",
+            "cityMunicipality": "City of Cebu",
+            "cityCode": "072217000",
+            "barangay": "Sample Barangay",
+            "landmark": "Sample Landmark",
+            "street": "Sample Street",
+            "lat": 10.346976,
+            "lng": 123.909217
         },
         "category": "Sports",
         "image": "https://images.unsplash.com/photo-1517649763962-0c623066013b?w=1080",
+        "startTimeHour": "1",
+        "startTimeMinute": "00",
+        "startTimeAmPm": "PM",
+        "endTimeHour": "4",
+        "endTimeMinute": "00",
+        "endTimeAmPm": "PM",
+        "address": "Cebu City, Philippines",
+        "organizer": {
+            "name": "Sports Committee",
+            "contactName": "Daniel Flores",
+            "email": "sports42@example.com",
+            "phone": "(032) 123-4567",
+            "website": "www.example.com",
+            "image": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100"
+        },
+        "responses": {
+            "going": 472,
+            "invited": 993
+        },
+        "status": "Approved"
+    },
+    {
+        "id": "43",
+        "title": "Conference Event 43",
+        "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+        "date": "2026-04-13T00:00:00.000Z",
+        get time() {
+            return generateTime(this);
+        },
+        "location": {
+            "region": "Central Visayas",
+            "regionCode": "070000000",
+            "province": "Cebu",
+            "provinceCode": "072200000",
+            "cityMunicipality": "City of Cebu",
+            "cityCode": "072217000",
+            "barangay": "Sample Barangay",
+            "landmark": "Sample Landmark",
+            "street": "Sample Street",
+            "lat": 10.274758,
+            "lng": 123.885716
+        },
+        "category": "Conference",
+        "image": "https://images.unsplash.com/photo-1511578314322-379afb476865?w=1080",
+        "startTimeHour": "2",
+        "startTimeMinute": "00",
+        "startTimeAmPm": "PM",
+        "endTimeHour": "6",
+        "endTimeMinute": "00",
+        "endTimeAmPm": "PM",
+        "address": "Cebu City, Philippines",
+        "organizer": {
+            "name": "Conference Committee",
+            "contactName": "Daniel Garcia",
+            "email": "conference43@example.com",
+            "phone": "(032) 123-4567",
+            "website": "www.example.com",
+            "image": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100"
+        },
+        "responses": {
+            "going": 292,
+            "invited": 791
+        },
+        "status": "Pending"
+    },
+    {
+        "id": "44",
+        "title": "Virtual Event 44",
+        "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+        "date": "2026-01-16T00:00:00.000Z",
+        get time() {
+            return generateTime(this);
+        },
+        "location": {
+            "region": "Central Visayas",
+            "regionCode": "070000000",
+            "province": "Cebu",
+            "provinceCode": "072200000",
+            "cityMunicipality": "City of Cebu",
+            "cityCode": "072217000",
+            "barangay": "Sample Barangay",
+            "landmark": "Sample Landmark",
+            "street": "Sample Street",
+            "lat": 10.309018,
+            "lng": 123.93549
+        },
+        "category": "Virtual",
+        "image": "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=1080",
+        "startTimeHour": "6",
+        "startTimeMinute": "00",
+        "startTimeAmPm": "PM",
+        "endTimeHour": "9",
+        "endTimeMinute": "00",
+        "endTimeAmPm": "PM",
+        "address": "Cebu City, Philippines",
+        "organizer": {
+            "name": "Virtual Committee",
+            "contactName": "Sofia Cruz",
+            "email": "virtual44@example.com",
+            "phone": "(032) 123-4567",
+            "website": "www.example.com",
+            "image": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100"
+        },
+        "responses": {
+            "going": 341,
+            "invited": 590
+        },
+        "status": "Approved",
+        "modality": "Zoom"
+    },
+    {
+        "id": "45",
+        "title": "Conference Event 45",
+        "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+        "date": "2026-02-11T00:00:00.000Z",
+        get time() {
+            return generateTime(this);
+        },
+        "location": {
+            "region": "Central Visayas",
+            "regionCode": "070000000",
+            "province": "Cebu",
+            "provinceCode": "072200000",
+            "cityMunicipality": "City of Cebu",
+            "cityCode": "072217000",
+            "barangay": "Sample Barangay",
+            "landmark": "Sample Landmark",
+            "street": "Sample Street",
+            "lat": 10.274725,
+            "lng": 123.898147
+        },
+        "category": "Conference",
+        "image": "https://images.unsplash.com/photo-1511578314322-379afb476865?w=1080",
         "startTimeHour": "5",
         "startTimeMinute": "00",
         "startTimeAmPm": "PM",
@@ -1844,376 +3041,68 @@ export const events = [
         "endTimeAmPm": "PM",
         "address": "Cebu City, Philippines",
         "organizer": {
+            "name": "Conference Committee",
+            "contactName": "Angela Mendoza",
+            "email": "conference45@example.com",
+            "phone": "(032) 123-4567",
+            "website": "www.example.com",
+            "image": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100"
+        },
+        "responses": {
+            "going": 35,
+            "invited": 759
+        },
+        "status": "Approved"
+    },
+    {
+        "id": "46",
+        "title": "Sports Event 46",
+        "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+        "date": "2026-03-01T00:00:00.000Z",
+        get time() {
+            return generateTime(this);
+        },
+        "location": {
+            "region": "Central Visayas",
+            "regionCode": "070000000",
+            "province": "Cebu",
+            "provinceCode": "072200000",
+            "cityMunicipality": "City of Cebu",
+            "cityCode": "072217000",
+            "barangay": "Sample Barangay",
+            "landmark": "Sample Landmark",
+            "street": "Sample Street",
+            "lat": 10.336541,
+            "lng": 123.943415
+        },
+        "category": "Sports",
+        "image": "https://images.unsplash.com/photo-1517649763962-0c623066013b?w=1080",
+        "startTimeHour": "10",
+        "startTimeMinute": "00",
+        "startTimeAmPm": "AM",
+        "endTimeHour": "11",
+        "endTimeMinute": "00",
+        "endTimeAmPm": "AM",
+        "address": "Cebu City, Philippines",
+        "organizer": {
             "name": "Sports Committee",
-            "contactName": "Daniel Reyes",
-            "email": "sports18@example.com",
-            "phone": "(032) 123-4567",
-            "website": "www.example.com",
-            "image": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100"
-        },
-        "responses": {
-            "going": 450,
-            "invited": 715
-        },
-        "status": "Approved"
-    },
-    {
-        "id": "19",
-        "title": "Workshop Event 19",
-        "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-        "date": "May 20, 2026",
-        get time() {
-            return generateTime(this);
-        },
-        "location": {
-            "region": "Central Visayas",
-            "regionCode": "070000000",
-            "province": "Cebu",
-            "provinceCode": "072200000",
-            "cityMunicipality": "City of Cebu",
-            "cityCode": "072217000",
-            "barangay": "Sample Barangay",
-            "landmark": "Sample Landmark",
-            "street": "Sample Street",
-            "lat": 10.277065,
-            "lng": 123.948894
-        },
-        "category": "Workshop",
-        "image": "https://images.unsplash.com/photo-1552664730-d307ca884978?w=1080",
-        "startTimeHour": "8",
-        "startTimeMinute": "00",
-        "startTimeAmPm": "AM",
-        "endTimeHour": "10",
-        "endTimeMinute": "00",
-        "endTimeAmPm": "AM",
-        "address": "Cebu City, Philippines",
-        "organizer": {
-            "name": "Workshop Committee",
-            "contactName": "John Aquino",
-            "email": "workshop19@example.com",
-            "phone": "(032) 123-4567",
-            "website": "www.example.com",
-            "image": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100"
-        },
-        "responses": {
-            "going": 238,
-            "invited": 355
-        },
-        "status": "Pending"
-    },
-    {
-        "id": "20",
-        "title": "Conference Event 20",
-        "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-        "date": "January 20, 2026",
-        get time() {
-            return generateTime(this);
-        },
-        "location": {
-            "region": "Central Visayas",
-            "regionCode": "070000000",
-            "province": "Cebu",
-            "provinceCode": "072200000",
-            "cityMunicipality": "City of Cebu",
-            "cityCode": "072217000",
-            "barangay": "Sample Barangay",
-            "landmark": "Sample Landmark",
-            "street": "Sample Street",
-            "lat": 10.286036,
-            "lng": 123.85114
-        },
-        "category": "Conference",
-        "image": "https://images.unsplash.com/photo-1511578314322-379afb476865?w=1080",
-        "startTimeHour": "5",
-        "startTimeMinute": "00",
-        "startTimeAmPm": "PM",
-        "endTimeHour": "9",
-        "endTimeMinute": "00",
-        "endTimeAmPm": "PM",
-        "address": "Cebu City, Philippines",
-        "organizer": {
-            "name": "Conference Committee",
-            "contactName": "Bea Aquino",
-            "email": "conference20@example.com",
-            "phone": "(032) 123-4567",
-            "website": "www.example.com",
-            "image": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100"
-        },
-        "responses": {
-            "going": 418,
-            "invited": 947
-        },
-        "status": "Pending"
-    },
-    {
-        "id": "21",
-        "title": "Workshop Event 21",
-        "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-        "date": "March 30, 2026",
-        get time() {
-            return generateTime(this);
-        },
-        "location": {
-            "region": "Central Visayas",
-            "regionCode": "070000000",
-            "province": "Cebu",
-            "provinceCode": "072200000",
-            "cityMunicipality": "City of Cebu",
-            "cityCode": "072217000",
-            "barangay": "Sample Barangay",
-            "landmark": "Sample Landmark",
-            "street": "Sample Street",
-            "lat": 10.324854,
-            "lng": 123.92463
-        },
-        "category": "Workshop",
-        "image": "https://images.unsplash.com/photo-1552664730-d307ca884978?w=1080",
-        "startTimeHour": "12",
-        "startTimeMinute": "00",
-        "startTimeAmPm": "PM",
-        "endTimeHour": "11",
-        "endTimeMinute": "00",
-        "endTimeAmPm": "PM",
-        "address": "Cebu City, Philippines",
-        "organizer": {
-            "name": "Workshop Committee",
-            "contactName": "Carla Mendoza",
-            "email": "workshop21@example.com",
-            "phone": "(032) 123-4567",
-            "website": "www.example.com",
-            "image": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100"
-        },
-        "responses": {
-            "going": 439,
-            "invited": 801
-        },
-        "status": "Approved"
-    },
-    {
-        "id": "22",
-        "title": "Reunion Event 22",
-        "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-        "date": "April 06, 2026",
-        get time() {
-            return generateTime(this);
-        },
-        "location": {
-            "region": "Central Visayas",
-            "regionCode": "070000000",
-            "province": "Cebu",
-            "provinceCode": "072200000",
-            "cityMunicipality": "City of Cebu",
-            "cityCode": "072217000",
-            "barangay": "Sample Barangay",
-            "landmark": "Sample Landmark",
-            "street": "Sample Street",
-            "lat": 10.346743,
-            "lng": 123.91091
-        },
-        "category": "Reunion",
-        "image": "https://images.unsplash.com/photo-1528605248644-14dd04022da1?w=1080",
-        "startTimeHour": "5",
-        "startTimeMinute": "00",
-        "startTimeAmPm": "PM",
-        "endTimeHour": "6",
-        "endTimeMinute": "00",
-        "endTimeAmPm": "PM",
-        "address": "Cebu City, Philippines",
-        "organizer": {
-            "name": "Reunion Committee",
-            "contactName": "Chris Mendoza",
-            "email": "reunion22@example.com",
-            "phone": "(032) 123-4567",
-            "website": "www.example.com",
-            "image": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100"
-        },
-        "responses": {
-            "going": 53,
-            "invited": 738
-        },
-        "status": "Pending"
-    },
-    {
-        "id": "23",
-        "title": "Workshop Event 23",
-        "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-        "date": "June 14, 2026",
-        get time() {
-            return generateTime(this);
-        },
-        "location": {
-            "region": "Central Visayas",
-            "regionCode": "070000000",
-            "province": "Cebu",
-            "provinceCode": "072200000",
-            "cityMunicipality": "City of Cebu",
-            "cityCode": "072217000",
-            "barangay": "Sample Barangay",
-            "landmark": "Sample Landmark",
-            "street": "Sample Street",
-            "lat": 10.307596,
-            "lng": 123.914944
-        },
-        "category": "Workshop",
-        "image": "https://images.unsplash.com/photo-1552664730-d307ca884978?w=1080",
-        "startTimeHour": "6",
-        "startTimeMinute": "00",
-        "startTimeAmPm": "PM",
-        "endTimeHour": "10",
-        "endTimeMinute": "00",
-        "endTimeAmPm": "PM",
-        "address": "Cebu City, Philippines",
-        "organizer": {
-            "name": "Workshop Committee",
-            "contactName": "Rica Torres",
-            "email": "workshop23@example.com",
-            "phone": "(032) 123-4567",
-            "website": "www.example.com",
-            "image": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100"
-        },
-        "responses": {
-            "going": 240,
-            "invited": 548
-        },
-        "status": "Pending"
-    },
-    {
-        "id": "24",
-        "title": "Reunion Event 24",
-        "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-        "date": "April 04, 2026",
-        get time() {
-            return generateTime(this);
-        },
-        "location": {
-            "region": "Central Visayas",
-            "regionCode": "070000000",
-            "province": "Cebu",
-            "provinceCode": "072200000",
-            "cityMunicipality": "City of Cebu",
-            "cityCode": "072217000",
-            "barangay": "Sample Barangay",
-            "landmark": "Sample Landmark",
-            "street": "Sample Street",
-            "lat": 10.308099,
-            "lng": 123.905011
-        },
-        "category": "Reunion",
-        "image": "https://images.unsplash.com/photo-1528605248644-14dd04022da1?w=1080",
-        "startTimeHour": "1",
-        "startTimeMinute": "00",
-        "startTimeAmPm": "PM",
-        "endTimeHour": "5",
-        "endTimeMinute": "00",
-        "endTimeAmPm": "PM",
-        "address": "Cebu City, Philippines",
-        "organizer": {
-            "name": "Reunion Committee",
-            "contactName": "Bea Ramos",
-            "email": "reunion24@example.com",
-            "phone": "(032) 123-4567",
-            "website": "www.example.com",
-            "image": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100"
-        },
-        "responses": {
-            "going": 233,
-            "invited": 967
-        },
-        "status": "Pending"
-    },
-    {
-        "id": "25",
-        "title": "Conference Event 25",
-        "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-        "date": "April 30, 2026",
-        get time() {
-            return generateTime(this);
-        },
-        "location": {
-            "region": "Central Visayas",
-            "regionCode": "070000000",
-            "province": "Cebu",
-            "provinceCode": "072200000",
-            "cityMunicipality": "City of Cebu",
-            "cityCode": "072217000",
-            "barangay": "Sample Barangay",
-            "landmark": "Sample Landmark",
-            "street": "Sample Street",
-            "lat": 10.266005,
-            "lng": 123.93859
-        },
-        "category": "Conference",
-        "image": "https://images.unsplash.com/photo-1511578314322-379afb476865?w=1080",
-        "startTimeHour": "5",
-        "startTimeMinute": "00",
-        "startTimeAmPm": "PM",
-        "endTimeHour": "6",
-        "endTimeMinute": "00",
-        "endTimeAmPm": "PM",
-        "address": "Cebu City, Philippines",
-        "organizer": {
-            "name": "Conference Committee",
             "contactName": "Paolo Santos",
-            "email": "conference25@example.com",
+            "email": "sports46@example.com",
             "phone": "(032) 123-4567",
             "website": "www.example.com",
             "image": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100"
         },
         "responses": {
-            "going": 53,
-            "invited": 813
-        },
-        "status": "Approved"
-    },
-    {
-        "id": "26",
-        "title": "Reunion Event 26",
-        "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-        "date": "June 27, 2026",
-        get time() {
-            return generateTime(this);
-        },
-        "location": {
-            "region": "Central Visayas",
-            "regionCode": "070000000",
-            "province": "Cebu",
-            "provinceCode": "072200000",
-            "cityMunicipality": "City of Cebu",
-            "cityCode": "072217000",
-            "barangay": "Sample Barangay",
-            "landmark": "Sample Landmark",
-            "street": "Sample Street",
-            "lat": 10.275503,
-            "lng": 123.911556
-        },
-        "category": "Reunion",
-        "image": "https://images.unsplash.com/photo-1528605248644-14dd04022da1?w=1080",
-        "startTimeHour": "8",
-        "startTimeMinute": "00",
-        "startTimeAmPm": "AM",
-        "endTimeHour": "11",
-        "endTimeMinute": "00",
-        "endTimeAmPm": "AM",
-        "address": "Cebu City, Philippines",
-        "organizer": {
-            "name": "Reunion Committee",
-            "contactName": "Bea Mendoza",
-            "email": "reunion26@example.com",
-            "phone": "(032) 123-4567",
-            "website": "www.example.com",
-            "image": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100"
-        },
-        "responses": {
-            "going": 319,
-            "invited": 500
+            "going": 334,
+            "invited": 504
         },
         "status": "Pending"
     },
     {
-        "id": "27",
-        "title": "Networking Event 27",
+        "id": "47",
+        "title": "Workshop Event 47",
         "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-        "date": "March 10, 2026",
+        "date": "2026-01-30T00:00:00.000Z",
         get time() {
             return generateTime(this);
         },
@@ -2227,11 +3116,11 @@ export const events = [
             "barangay": "Sample Barangay",
             "landmark": "Sample Landmark",
             "street": "Sample Street",
-            "lat": 10.273156,
-            "lng": 123.910751
+            "lat": 10.335221,
+            "lng": 123.854507
         },
-        "category": "Networking",
-        "image": "https://images.unsplash.com/photo-1556761175-5973dc0f32e7?w=1080",
+        "category": "Workshop",
+        "image": "https://images.unsplash.com/photo-1552664730-d307ca884978?w=1080",
         "startTimeHour": "11",
         "startTimeMinute": "00",
         "startTimeAmPm": "AM",
@@ -2240,904 +3129,24 @@ export const events = [
         "endTimeAmPm": "AM",
         "address": "Cebu City, Philippines",
         "organizer": {
-            "name": "Networking Committee",
-            "contactName": "Maria Reyes",
-            "email": "networking27@example.com",
-            "phone": "(032) 123-4567",
-            "website": "www.example.com",
-            "image": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100"
-        },
-        "responses": {
-            "going": 423,
-            "invited": 636
-        },
-        "status": "Pending"
-    },
-    {
-        "id": "28",
-        "title": "Conference Event 28",
-        "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-        "date": "February 27, 2026",
-        get time() {
-            return generateTime(this);
-        },
-        "location": {
-            "region": "Central Visayas",
-            "regionCode": "070000000",
-            "province": "Cebu",
-            "provinceCode": "072200000",
-            "cityMunicipality": "City of Cebu",
-            "cityCode": "072217000",
-            "barangay": "Sample Barangay",
-            "landmark": "Sample Landmark",
-            "street": "Sample Street",
-            "lat": 10.27282,
-            "lng": 123.888464
-        },
-        "category": "Conference",
-        "image": "https://images.unsplash.com/photo-1511578314322-379afb476865?w=1080",
-        "startTimeHour": "8",
-        "startTimeMinute": "00",
-        "startTimeAmPm": "AM",
-        "endTimeHour": "10",
-        "endTimeMinute": "00",
-        "endTimeAmPm": "AM",
-        "address": "Cebu City, Philippines",
-        "organizer": {
-            "name": "Conference Committee",
-            "contactName": "Daniel Mendoza",
-            "email": "conference28@example.com",
-            "phone": "(032) 123-4567",
-            "website": "www.example.com",
-            "image": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100"
-        },
-        "responses": {
-            "going": 75,
-            "invited": 383
-        },
-        "status": "Approved"
-    },
-    {
-        "id": "29",
-        "title": "Reunion Event 29",
-        "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-        "date": "March 31, 2026",
-        get time() {
-            return generateTime(this);
-        },
-        "location": {
-            "region": "Central Visayas",
-            "regionCode": "070000000",
-            "province": "Cebu",
-            "provinceCode": "072200000",
-            "cityMunicipality": "City of Cebu",
-            "cityCode": "072217000",
-            "barangay": "Sample Barangay",
-            "landmark": "Sample Landmark",
-            "street": "Sample Street",
-            "lat": 10.271986,
-            "lng": 123.881287
-        },
-        "category": "Reunion",
-        "image": "https://images.unsplash.com/photo-1528605248644-14dd04022da1?w=1080",
-        "startTimeHour": "1",
-        "startTimeMinute": "00",
-        "startTimeAmPm": "PM",
-        "endTimeHour": "3",
-        "endTimeMinute": "00",
-        "endTimeAmPm": "PM",
-        "address": "Cebu City, Philippines",
-        "organizer": {
-            "name": "Reunion Committee",
-            "contactName": "John Cruz",
-            "email": "reunion29@example.com",
-            "phone": "(032) 123-4567",
-            "website": "www.example.com",
-            "image": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100"
-        },
-        "responses": {
-            "going": 182,
-            "invited": 347
-        },
-        "status": "Approved"
-    },
-    {
-        "id": "30",
-        "title": "Workshop Event 30",
-        "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-        "date": "April 12, 2026",
-        get time() {
-            return generateTime(this);
-        },
-        "location": {
-            "region": "Central Visayas",
-            "regionCode": "070000000",
-            "province": "Cebu",
-            "provinceCode": "072200000",
-            "cityMunicipality": "City of Cebu",
-            "cityCode": "072217000",
-            "barangay": "Sample Barangay",
-            "landmark": "Sample Landmark",
-            "street": "Sample Street",
-            "lat": 10.281563,
-            "lng": 123.866644
-        },
-        "category": "Workshop",
-        "image": "https://images.unsplash.com/photo-1552664730-d307ca884978?w=1080",
-        "startTimeHour": "3",
-        "startTimeMinute": "00",
-        "startTimeAmPm": "PM",
-        "endTimeHour": "4",
-        "endTimeMinute": "00",
-        "endTimeAmPm": "PM",
-        "address": "Cebu City, Philippines",
-        "organizer": {
             "name": "Workshop Committee",
-            "contactName": "Chris Cruz",
-            "email": "workshop30@example.com",
+            "contactName": "Jose Flores",
+            "email": "workshop47@example.com",
             "phone": "(032) 123-4567",
             "website": "www.example.com",
             "image": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100"
         },
         "responses": {
-            "going": 321,
-            "invited": 440
-        },
-        "status": "Pending"
-    },
-    {
-        "id": "31",
-        "title": "Networking Event 31",
-        "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-        "date": "June 24, 2026",
-        get time() {
-            return generateTime(this);
-        },
-        "location": {
-            "region": "Central Visayas",
-            "regionCode": "070000000",
-            "province": "Cebu",
-            "provinceCode": "072200000",
-            "cityMunicipality": "City of Cebu",
-            "cityCode": "072217000",
-            "barangay": "Sample Barangay",
-            "landmark": "Sample Landmark",
-            "street": "Sample Street",
-            "lat": 10.339763,
-            "lng": 123.916328
-        },
-        "category": "Networking",
-        "image": "https://images.unsplash.com/photo-1556761175-5973dc0f32e7?w=1080",
-        "startTimeHour": "12",
-        "startTimeMinute": "00",
-        "startTimeAmPm": "PM",
-        "endTimeHour": "11",
-        "endTimeMinute": "00",
-        "endTimeAmPm": "PM",
-        "address": "Cebu City, Philippines",
-        "organizer": {
-            "name": "Networking Committee",
-            "contactName": "Jose Mendoza",
-            "email": "networking31@example.com",
-            "phone": "(032) 123-4567",
-            "website": "www.example.com",
-            "image": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100"
-        },
-        "responses": {
-            "going": 314,
-            "invited": 414
+            "going": 55,
+            "invited": 844
         },
         "status": "Approved"
-    },
-    {
-        "id": "32",
-        "title": "Conference Event 32",
-        "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-        "date": "April 26, 2026",
-        get time() {
-            return generateTime(this);
-        },
-        "location": {
-            "region": "Central Visayas",
-            "regionCode": "070000000",
-            "province": "Cebu",
-            "provinceCode": "072200000",
-            "cityMunicipality": "City of Cebu",
-            "cityCode": "072217000",
-            "barangay": "Sample Barangay",
-            "landmark": "Sample Landmark",
-            "street": "Sample Street",
-            "lat": 10.31298,
-            "lng": 123.881399
-        },
-        "category": "Conference",
-        "image": "https://images.unsplash.com/photo-1511578314322-379afb476865?w=1080",
-        "startTimeHour": "3",
-        "startTimeMinute": "00",
-        "startTimeAmPm": "PM",
-        "endTimeHour": "7",
-        "endTimeMinute": "00",
-        "endTimeAmPm": "PM",
-        "address": "Cebu City, Philippines",
-        "organizer": {
-            "name": "Conference Committee",
-            "contactName": "Maria Santos",
-            "email": "conference32@example.com",
-            "phone": "(032) 123-4567",
-            "website": "www.example.com",
-            "image": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100"
-        },
-        "responses": {
-            "going": 233,
-            "invited": 454
-        },
-        "status": "Pending"
-    },
-    {
-        "id": "33",
-        "title": "Networking Event 33",
-        "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-        "date": "June 29, 2026",
-        get time() {
-            return generateTime(this);
-        },
-        "location": {
-            "region": "Central Visayas",
-            "regionCode": "070000000",
-            "province": "Cebu",
-            "provinceCode": "072200000",
-            "cityMunicipality": "City of Cebu",
-            "cityCode": "072217000",
-            "barangay": "Sample Barangay",
-            "landmark": "Sample Landmark",
-            "street": "Sample Street",
-            "lat": 10.289291,
-            "lng": 123.915051
-        },
-        "category": "Networking",
-        "image": "https://images.unsplash.com/photo-1556761175-5973dc0f32e7?w=1080",
-        "startTimeHour": "12",
-        "startTimeMinute": "00",
-        "startTimeAmPm": "PM",
-        "endTimeHour": "11",
-        "endTimeMinute": "00",
-        "endTimeAmPm": "PM",
-        "address": "Cebu City, Philippines",
-        "organizer": {
-            "name": "Networking Committee",
-            "contactName": "Paolo Ramos",
-            "email": "networking33@example.com",
-            "phone": "(032) 123-4567",
-            "website": "www.example.com",
-            "image": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100"
-        },
-        "responses": {
-            "going": 431,
-            "invited": 537
-        },
-        "status": "Pending"
-    },
-    {
-        "id": "34",
-        "title": "Sports Event 34",
-        "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-        "date": "February 07, 2026",
-        get time() {
-            return generateTime(this);
-        },
-        "location": {
-            "region": "Central Visayas",
-            "regionCode": "070000000",
-            "province": "Cebu",
-            "provinceCode": "072200000",
-            "cityMunicipality": "City of Cebu",
-            "cityCode": "072217000",
-            "barangay": "Sample Barangay",
-            "landmark": "Sample Landmark",
-            "street": "Sample Street",
-            "lat": 10.253864,
-            "lng": 123.892902
-        },
-        "category": "Sports",
-        "image": "https://images.unsplash.com/photo-1517649763962-0c623066013b?w=1080",
-        "startTimeHour": "4",
-        "startTimeMinute": "00",
-        "startTimeAmPm": "PM",
-        "endTimeHour": "8",
-        "endTimeMinute": "00",
-        "endTimeAmPm": "PM",
-        "address": "Cebu City, Philippines",
-        "organizer": {
-            "name": "Sports Committee",
-            "contactName": "Rica Aquino",
-            "email": "sports34@example.com",
-            "phone": "(032) 123-4567",
-            "website": "www.example.com",
-            "image": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100"
-        },
-        "responses": {
-            "going": 258,
-            "invited": 548
-        },
-        "status": "Approved"
-    },
-    {
-        "id": "35",
-        "title": "Conference Event 35",
-        "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-        "date": "March 12, 2026",
-        get time() {
-            return generateTime(this);
-        },
-        "location": {
-            "region": "Central Visayas",
-            "regionCode": "070000000",
-            "province": "Cebu",
-            "provinceCode": "072200000",
-            "cityMunicipality": "City of Cebu",
-            "cityCode": "072217000",
-            "barangay": "Sample Barangay",
-            "landmark": "Sample Landmark",
-            "street": "Sample Street",
-            "lat": 10.252864,
-            "lng": 123.860446
-        },
-        "category": "Conference",
-        "image": "https://images.unsplash.com/photo-1511578314322-379afb476865?w=1080",
-        "startTimeHour": "10",
-        "startTimeMinute": "00",
-        "startTimeAmPm": "AM",
-        "endTimeHour": "11",
-        "endTimeMinute": "00",
-        "endTimeAmPm": "AM",
-        "address": "Cebu City, Philippines",
-        "organizer": {
-            "name": "Conference Committee",
-            "contactName": "Angela Cruz",
-            "email": "conference35@example.com",
-            "phone": "(032) 123-4567",
-            "website": "www.example.com",
-            "image": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100"
-        },
-        "responses": {
-            "going": 237,
-            "invited": 720
-        },
-        "status": "Pending"
-    },
-    {
-        "id": "36",
-        "title": "Sports Event 36",
-        "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-        "date": "April 24, 2026",
-        get time() {
-            return generateTime(this);
-        },
-        "location": {
-            "region": "Central Visayas",
-            "regionCode": "070000000",
-            "province": "Cebu",
-            "provinceCode": "072200000",
-            "cityMunicipality": "City of Cebu",
-            "cityCode": "072217000",
-            "barangay": "Sample Barangay",
-            "landmark": "Sample Landmark",
-            "street": "Sample Street",
-            "lat": 10.27449,
-            "lng": 123.869139
-        },
-        "category": "Sports",
-        "image": "https://images.unsplash.com/photo-1517649763962-0c623066013b?w=1080",
-        "startTimeHour": "6",
-        "startTimeMinute": "00",
-        "startTimeAmPm": "PM",
-        "endTimeHour": "8",
-        "endTimeMinute": "00",
-        "endTimeAmPm": "PM",
-        "address": "Cebu City, Philippines",
-        "organizer": {
-            "name": "Sports Committee",
-            "contactName": "Juan Bautista",
-            "email": "sports36@example.com",
-            "phone": "(032) 123-4567",
-            "website": "www.example.com",
-            "image": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100"
-        },
-        "responses": {
-            "going": 451,
-            "invited": 509
-        },
-        "status": "Pending"
-    },
-    {
-        "id": "37",
-        "title": "Sports Event 37",
-        "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-        "date": "March 03, 2026",
-        get time() {
-            return generateTime(this);
-        },
-        "location": {
-            "region": "Central Visayas",
-            "regionCode": "070000000",
-            "province": "Cebu",
-            "provinceCode": "072200000",
-            "cityMunicipality": "City of Cebu",
-            "cityCode": "072217000",
-            "barangay": "Sample Barangay",
-            "landmark": "Sample Landmark",
-            "street": "Sample Street",
-            "lat": 10.327293,
-            "lng": 123.922586
-        },
-        "category": "Sports",
-        "image": "https://images.unsplash.com/photo-1517649763962-0c623066013b?w=1080",
-        "startTimeHour": "3",
-        "startTimeMinute": "00",
-        "startTimeAmPm": "PM",
-        "endTimeHour": "4",
-        "endTimeMinute": "00",
-        "endTimeAmPm": "PM",
-        "address": "Cebu City, Philippines",
-        "organizer": {
-            "name": "Sports Committee",
-            "contactName": "Carla Torres",
-            "email": "sports37@example.com",
-            "phone": "(032) 123-4567",
-            "website": "www.example.com",
-            "image": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100"
-        },
-        "responses": {
-            "going": 213,
-            "invited": 208
-        },
-        "status": "Approved"
-    },
-    {
-        "id": "38",
-        "title": "Sports Event 38",
-        "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-        "date": "January 09, 2026",
-        get time() {
-            return generateTime(this);
-        },
-        "location": {
-            "region": "Central Visayas",
-            "regionCode": "070000000",
-            "province": "Cebu",
-            "provinceCode": "072200000",
-            "cityMunicipality": "City of Cebu",
-            "cityCode": "072217000",
-            "barangay": "Sample Barangay",
-            "landmark": "Sample Landmark",
-            "street": "Sample Street",
-            "lat": 10.305787,
-            "lng": 123.927091
-        },
-        "category": "Sports",
-        "image": "https://images.unsplash.com/photo-1517649763962-0c623066013b?w=1080",
-        "startTimeHour": "10",
-        "startTimeMinute": "00",
-        "startTimeAmPm": "AM",
-        "endTimeHour": "11",
-        "endTimeMinute": "00",
-        "endTimeAmPm": "AM",
-        "address": "Cebu City, Philippines",
-        "organizer": {
-            "name": "Sports Committee",
-            "contactName": "Chris Garcia",
-            "email": "sports38@example.com",
-            "phone": "(032) 123-4567",
-            "website": "www.example.com",
-            "image": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100"
-        },
-        "responses": {
-            "going": 257,
-            "invited": 544
-        },
-        "status": "Pending"
-    },
-    {
-        "id": "39",
-        "title": "Sports Event 39",
-        "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-        "date": "May 24, 2026",
-        get time() {
-            return generateTime(this);
-        },
-        "location": {
-            "region": "Central Visayas",
-            "regionCode": "070000000",
-            "province": "Cebu",
-            "provinceCode": "072200000",
-            "cityMunicipality": "City of Cebu",
-            "cityCode": "072217000",
-            "barangay": "Sample Barangay",
-            "landmark": "Sample Landmark",
-            "street": "Sample Street",
-            "lat": 10.33066,
-            "lng": 123.876372
-        },
-        "category": "Sports",
-        "image": "https://images.unsplash.com/photo-1517649763962-0c623066013b?w=1080",
-        "startTimeHour": "3",
-        "startTimeMinute": "00",
-        "startTimeAmPm": "PM",
-        "endTimeHour": "5",
-        "endTimeMinute": "00",
-        "endTimeAmPm": "PM",
-        "address": "Cebu City, Philippines",
-        "organizer": {
-            "name": "Sports Committee",
-            "contactName": "Sofia Cruz",
-            "email": "sports39@example.com",
-            "phone": "(032) 123-4567",
-            "website": "www.example.com",
-            "image": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100"
-        },
-        "responses": {
-            "going": 202,
-            "invited": 773
-        },
-        "status": "Approved"
-    },
-    {
-        "id": "40",
-        "title": "Reunion Event 40",
-        "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-        "date": "February 19, 2026",
-        get time() {
-            return generateTime(this);
-        },
-        "location": {
-            "region": "Central Visayas",
-            "regionCode": "070000000",
-            "province": "Cebu",
-            "provinceCode": "072200000",
-            "cityMunicipality": "City of Cebu",
-            "cityCode": "072217000",
-            "barangay": "Sample Barangay",
-            "landmark": "Sample Landmark",
-            "street": "Sample Street",
-            "lat": 10.274438,
-            "lng": 123.946964
-        },
-        "category": "Reunion",
-        "image": "https://images.unsplash.com/photo-1528605248644-14dd04022da1?w=1080",
-        "startTimeHour": "6",
-        "startTimeMinute": "00",
-        "startTimeAmPm": "PM",
-        "endTimeHour": "10",
-        "endTimeMinute": "00",
-        "endTimeAmPm": "PM",
-        "address": "Cebu City, Philippines",
-        "organizer": {
-            "name": "Reunion Committee",
-            "contactName": "Maria Flores",
-            "email": "reunion40@example.com",
-            "phone": "(032) 123-4567",
-            "website": "www.example.com",
-            "image": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100"
-        },
-        "responses": {
-            "going": 390,
-            "invited": 156
-        },
-        "status": "Pending"
-    },
-    {
-        "id": "41",
-        "title": "Conference Event 41",
-        "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-        "date": "May 19, 2026",
-        get time() {
-            return generateTime(this);
-        },
-        "location": {
-            "region": "Central Visayas",
-            "regionCode": "070000000",
-            "province": "Cebu",
-            "provinceCode": "072200000",
-            "cityMunicipality": "City of Cebu",
-            "cityCode": "072217000",
-            "barangay": "Sample Barangay",
-            "landmark": "Sample Landmark",
-            "street": "Sample Street",
-            "lat": 10.287009,
-            "lng": 123.949598
-        },
-        "category": "Conference",
-        "image": "https://images.unsplash.com/photo-1511578314322-379afb476865?w=1080",
-        "startTimeHour": "9",
-        "startTimeMinute": "00",
-        "startTimeAmPm": "AM",
-        "endTimeHour": "10",
-        "endTimeMinute": "00",
-        "endTimeAmPm": "AM",
-        "address": "Cebu City, Philippines",
-        "organizer": {
-            "name": "Conference Committee",
-            "contactName": "Angela Santos",
-            "email": "conference41@example.com",
-            "phone": "(032) 123-4567",
-            "website": "www.example.com",
-            "image": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100"
-        },
-        "responses": {
-            "going": 23,
-            "invited": 776
-        },
-        "status": "Pending"
-    },
-    {
-        "id": "42",
-        "title": "Networking Event 42",
-        "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-        "date": "March 12, 2026",
-        get time() {
-            return generateTime(this);
-        },
-        "location": {
-            "region": "Central Visayas",
-            "regionCode": "070000000",
-            "province": "Cebu",
-            "provinceCode": "072200000",
-            "cityMunicipality": "City of Cebu",
-            "cityCode": "072217000",
-            "barangay": "Sample Barangay",
-            "landmark": "Sample Landmark",
-            "street": "Sample Street",
-            "lat": 10.256216,
-            "lng": 123.893648
-        },
-        "category": "Networking",
-        "image": "https://images.unsplash.com/photo-1556761175-5973dc0f32e7?w=1080",
-        "startTimeHour": "8",
-        "startTimeMinute": "00",
-        "startTimeAmPm": "AM",
-        "endTimeHour": "10",
-        "endTimeMinute": "00",
-        "endTimeAmPm": "AM",
-        "address": "Cebu City, Philippines",
-        "organizer": {
-            "name": "Networking Committee",
-            "contactName": "Mark Bautista",
-            "email": "networking42@example.com",
-            "phone": "(032) 123-4567",
-            "website": "www.example.com",
-            "image": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100"
-        },
-        "responses": {
-            "going": 69,
-            "invited": 176
-        },
-        "status": "Approved"
-    },
-    {
-        "id": "43",
-        "title": "Networking Event 43",
-        "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-        "date": "March 09, 2026",
-        get time() {
-            return generateTime(this);
-        },
-        "location": {
-            "region": "Central Visayas",
-            "regionCode": "070000000",
-            "province": "Cebu",
-            "provinceCode": "072200000",
-            "cityMunicipality": "City of Cebu",
-            "cityCode": "072217000",
-            "barangay": "Sample Barangay",
-            "landmark": "Sample Landmark",
-            "street": "Sample Street",
-            "lat": 10.25373,
-            "lng": 123.908232
-        },
-        "category": "Networking",
-        "image": "https://images.unsplash.com/photo-1556761175-5973dc0f32e7?w=1080",
-        "startTimeHour": "8",
-        "startTimeMinute": "00",
-        "startTimeAmPm": "AM",
-        "endTimeHour": "9",
-        "endTimeMinute": "00",
-        "endTimeAmPm": "AM",
-        "address": "Cebu City, Philippines",
-        "organizer": {
-            "name": "Networking Committee",
-            "contactName": "Bea Flores",
-            "email": "networking43@example.com",
-            "phone": "(032) 123-4567",
-            "website": "www.example.com",
-            "image": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100"
-        },
-        "responses": {
-            "going": 240,
-            "invited": 813
-        },
-        "status": "Approved"
-    },
-    {
-        "id": "44",
-        "title": "Sports Event 44",
-        "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-        "date": "March 25, 2026",
-        get time() {
-            return generateTime(this);
-        },
-        "location": {
-            "region": "Central Visayas",
-            "regionCode": "070000000",
-            "province": "Cebu",
-            "provinceCode": "072200000",
-            "cityMunicipality": "City of Cebu",
-            "cityCode": "072217000",
-            "barangay": "Sample Barangay",
-            "landmark": "Sample Landmark",
-            "street": "Sample Street",
-            "lat": 10.346256,
-            "lng": 123.873381
-        },
-        "category": "Sports",
-        "image": "https://images.unsplash.com/photo-1517649763962-0c623066013b?w=1080",
-        "startTimeHour": "6",
-        "startTimeMinute": "00",
-        "startTimeAmPm": "PM",
-        "endTimeHour": "7",
-        "endTimeMinute": "00",
-        "endTimeAmPm": "PM",
-        "address": "Cebu City, Philippines",
-        "organizer": {
-            "name": "Sports Committee",
-            "contactName": "John Reyes",
-            "email": "sports44@example.com",
-            "phone": "(032) 123-4567",
-            "website": "www.example.com",
-            "image": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100"
-        },
-        "responses": {
-            "going": 54,
-            "invited": 940
-        },
-        "status": "Approved"
-    },
-    {
-        "id": "45",
-        "title": "Sports Event 45",
-        "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-        "date": "February 06, 2026",
-        get time() {
-            return generateTime(this);
-        },
-        "location": {
-            "region": "Central Visayas",
-            "regionCode": "070000000",
-            "province": "Cebu",
-            "provinceCode": "072200000",
-            "cityMunicipality": "City of Cebu",
-            "cityCode": "072217000",
-            "barangay": "Sample Barangay",
-            "landmark": "Sample Landmark",
-            "street": "Sample Street",
-            "lat": 10.297309,
-            "lng": 123.88686
-        },
-        "category": "Sports",
-        "image": "https://images.unsplash.com/photo-1517649763962-0c623066013b?w=1080",
-        "startTimeHour": "3",
-        "startTimeMinute": "00",
-        "startTimeAmPm": "PM",
-        "endTimeHour": "6",
-        "endTimeMinute": "00",
-        "endTimeAmPm": "PM",
-        "address": "Cebu City, Philippines",
-        "organizer": {
-            "name": "Sports Committee",
-            "contactName": "Jose Reyes",
-            "email": "sports45@example.com",
-            "phone": "(032) 123-4567",
-            "website": "www.example.com",
-            "image": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100"
-        },
-        "responses": {
-            "going": 321,
-            "invited": 608
-        },
-        "status": "Approved"
-    },
-    {
-        "id": "46",
-        "title": "Sports Event 46",
-        "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-        "date": "May 30, 2026",
-        get time() {
-            return generateTime(this);
-        },
-        "location": {
-            "region": "Central Visayas",
-            "regionCode": "070000000",
-            "province": "Cebu",
-            "provinceCode": "072200000",
-            "cityMunicipality": "City of Cebu",
-            "cityCode": "072217000",
-            "barangay": "Sample Barangay",
-            "landmark": "Sample Landmark",
-            "street": "Sample Street",
-            "lat": 10.305692,
-            "lng": 123.874073
-        },
-        "category": "Sports",
-        "image": "https://images.unsplash.com/photo-1517649763962-0c623066013b?w=1080",
-        "startTimeHour": "7",
-        "startTimeMinute": "00",
-        "startTimeAmPm": "AM",
-        "endTimeHour": "10",
-        "endTimeMinute": "00",
-        "endTimeAmPm": "AM",
-        "address": "Cebu City, Philippines",
-        "organizer": {
-            "name": "Sports Committee",
-            "contactName": "Sofia Santos",
-            "email": "sports46@example.com",
-            "phone": "(032) 123-4567",
-            "website": "www.example.com",
-            "image": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100"
-        },
-        "responses": {
-            "going": 258,
-            "invited": 896
-        },
-        "status": "Approved"
-    },
-    {
-        "id": "47",
-        "title": "Reunion Event 47",
-        "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-        "date": "April 27, 2026",
-        get time() {
-            return generateTime(this);
-        },
-        "location": {
-            "region": "Central Visayas",
-            "regionCode": "070000000",
-            "province": "Cebu",
-            "provinceCode": "072200000",
-            "cityMunicipality": "City of Cebu",
-            "cityCode": "072217000",
-            "barangay": "Sample Barangay",
-            "landmark": "Sample Landmark",
-            "street": "Sample Street",
-            "lat": 10.261064,
-            "lng": 123.86343
-        },
-        "category": "Reunion",
-        "image": "https://images.unsplash.com/photo-1528605248644-14dd04022da1?w=1080",
-        "startTimeHour": "8",
-        "startTimeMinute": "00",
-        "startTimeAmPm": "AM",
-        "endTimeHour": "9",
-        "endTimeMinute": "00",
-        "endTimeAmPm": "AM",
-        "address": "Cebu City, Philippines",
-        "organizer": {
-            "name": "Reunion Committee",
-            "contactName": "Chris Cruz",
-            "email": "reunion47@example.com",
-            "phone": "(032) 123-4567",
-            "website": "www.example.com",
-            "image": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100"
-        },
-        "responses": {
-            "going": 390,
-            "invited": 335
-        },
-        "status": "Pending"
     },
     {
         "id": "48",
-        "title": "Workshop Event 48",
+        "title": "Virtual Event 48",
         "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-        "date": "January 23, 2026",
+        "date": "2026-02-22T00:00:00.000Z",
         get time() {
             return generateTime(this);
         },
@@ -3151,11 +3160,56 @@ export const events = [
             "barangay": "Sample Barangay",
             "landmark": "Sample Landmark",
             "street": "Sample Street",
-            "lat": 10.280908,
-            "lng": 123.943787
+            "lat": 10.297636,
+            "lng": 123.882512
         },
-        "category": "Workshop",
-        "image": "https://images.unsplash.com/photo-1552664730-d307ca884978?w=1080",
+        "category": "Virtual",
+        "image": "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=1080",
+        "startTimeHour": "6",
+        "startTimeMinute": "00",
+        "startTimeAmPm": "PM",
+        "endTimeHour": "9",
+        "endTimeMinute": "00",
+        "endTimeAmPm": "PM",
+        "address": "Cebu City, Philippines",
+        "organizer": {
+            "name": "Virtual Committee",
+            "contactName": "Andrea Reyes",
+            "email": "virtual48@example.com",
+            "phone": "(032) 123-4567",
+            "website": "www.example.com",
+            "image": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100"
+        },
+        "responses": {
+            "going": 280,
+            "invited": 244
+        },
+        "status": "Pending",
+        "modality": "Google Meet"
+    },
+    {
+        "id": "49",
+        "title": "Virtual Event 49",
+        "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+        "date": "2026-06-20T00:00:00.000Z",
+        get time() {
+            return generateTime(this);
+        },
+        "location": {
+            "region": "Central Visayas",
+            "regionCode": "070000000",
+            "province": "Cebu",
+            "provinceCode": "072200000",
+            "cityMunicipality": "City of Cebu",
+            "cityCode": "072217000",
+            "barangay": "Sample Barangay",
+            "landmark": "Sample Landmark",
+            "street": "Sample Street",
+            "lat": 10.257913,
+            "lng": 123.927976
+        },
+        "category": "Virtual",
+        "image": "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=1080",
         "startTimeHour": "3",
         "startTimeMinute": "00",
         "startTimeAmPm": "PM",
@@ -3164,68 +3218,25 @@ export const events = [
         "endTimeAmPm": "PM",
         "address": "Cebu City, Philippines",
         "organizer": {
-            "name": "Workshop Committee",
-            "contactName": "Sofia Ramos",
-            "email": "workshop48@example.com",
+            "name": "Virtual Committee",
+            "contactName": "Sofia Aquino",
+            "email": "virtual49@example.com",
             "phone": "(032) 123-4567",
             "website": "www.example.com",
             "image": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100"
         },
         "responses": {
-            "going": 448,
-            "invited": 550
+            "going": 328,
+            "invited": 699
         },
-        "status": "Approved"
-    },
-    {
-        "id": "49",
-        "title": "Reunion Event 49",
-        "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-        "date": "June 29, 2026",
-        get time() {
-            return generateTime(this);
-        },
-        "location": {
-            "region": "Central Visayas",
-            "regionCode": "070000000",
-            "province": "Cebu",
-            "provinceCode": "072200000",
-            "cityMunicipality": "City of Cebu",
-            "cityCode": "072217000",
-            "barangay": "Sample Barangay",
-            "landmark": "Sample Landmark",
-            "street": "Sample Street",
-            "lat": 10.327616,
-            "lng": 123.936626
-        },
-        "category": "Reunion",
-        "image": "https://images.unsplash.com/photo-1528605248644-14dd04022da1?w=1080",
-        "startTimeHour": "2",
-        "startTimeMinute": "00",
-        "startTimeAmPm": "PM",
-        "endTimeHour": "5",
-        "endTimeMinute": "00",
-        "endTimeAmPm": "PM",
-        "address": "Cebu City, Philippines",
-        "organizer": {
-            "name": "Reunion Committee",
-            "contactName": "Sofia Garcia",
-            "email": "reunion49@example.com",
-            "phone": "(032) 123-4567",
-            "website": "www.example.com",
-            "image": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100"
-        },
-        "responses": {
-            "going": 336,
-            "invited": 661
-        },
-        "status": "Pending"
+        "status": "Approved",
+        "modality": "Zoom"
     },
     {
         "id": "50",
-        "title": "Networking Event 50",
+        "title": "Reunion Event 50",
         "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-        "date": "January 20, 2026",
+        "date": "2026-06-23T00:00:00.000Z",
         get time() {
             return generateTime(this);
         },
@@ -3239,12 +3250,12 @@ export const events = [
             "barangay": "Sample Barangay",
             "landmark": "Sample Landmark",
             "street": "Sample Street",
-            "lat": 10.326731,
-            "lng": 123.876826
+            "lat": 10.331823,
+            "lng": 123.912506
         },
-        "category": "Networking",
-        "image": "https://images.unsplash.com/photo-1556761175-5973dc0f32e7?w=1080",
-        "startTimeHour": "8",
+        "category": "Reunion",
+        "image": "https://images.unsplash.com/photo-1528605248644-14dd04022da1?w=1080",
+        "startTimeHour": "11",
         "startTimeMinute": "00",
         "startTimeAmPm": "AM",
         "endTimeHour": "11",
@@ -3252,17 +3263,17 @@ export const events = [
         "endTimeAmPm": "AM",
         "address": "Cebu City, Philippines",
         "organizer": {
-            "name": "Networking Committee",
-            "contactName": "Daniel Flores",
-            "email": "networking50@example.com",
+            "name": "Reunion Committee",
+            "contactName": "Juan Bautista",
+            "email": "reunion50@example.com",
             "phone": "(032) 123-4567",
             "website": "www.example.com",
             "image": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100"
         },
         "responses": {
-            "going": 203,
-            "invited": 667
+            "going": 447,
+            "invited": 989
         },
-        "status": "Approved"
+        "status": "Pending"
     }
 ];

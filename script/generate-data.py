@@ -35,7 +35,8 @@ EVENT_CATEGORIES = {
     "Workshop": "https://images.unsplash.com/photo-1552664730-d307ca884978?w=1080",
     "Conference": "https://images.unsplash.com/photo-1511578314322-379afb476865?w=1080",
     "Networking": "https://images.unsplash.com/photo-1556761175-5973dc0f32e7?w=1080",
-    "Sports": "https://images.unsplash.com/photo-1517649763962-0c623066013b?w=1080"
+    "Sports": "https://images.unsplash.com/photo-1517649763962-0c623066013b?w=1080",
+    "Virtual": "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=1080"
 }
 
 # ---------------- HELPERS ----------------
@@ -45,7 +46,8 @@ def random_name():
 def random_date():
     start = datetime(2026, 1, 1)
     end = datetime(2026, 6, 30)
-    return (start + timedelta(days=random.randint(0, (end - start).days))).strftime("%B %d, %Y")
+    dt = start + timedelta(days=random.randint(0, (end - start).days))
+    return dt.strftime("%Y-%m-%dT%H:%M:%S.000Z")
 
 def random_time():
     hour = random.randint(7, 18)
@@ -154,6 +156,9 @@ def generate_events(n):
             "status": random_status()
         }
 
+        if category == "Virtual":
+            event["modality"] = random.choice(["Zoom", "Google Meet", "Microsoft Teams"])
+
         events.append(event)
 
     return events
@@ -188,6 +193,10 @@ def main():
 
     bulletins = generate_bulletins(args.count)
     events = generate_events(args.count)
+
+    # Sort by date descending
+    # events.sort(key=lambda x: x["date"], reverse=True)
+    bulletins.sort(key=lambda x: x["date"], reverse=True)
 
     content = ""
     content += "export const generatePreview = (content: string) => {\n"

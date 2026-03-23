@@ -92,7 +92,9 @@ const formSchema = z.object({
     description: z.string().min(10, {
         message: 'Description must be at least 10 characters.',
     }),
-    image: z.any().optional(),
+    image: z.any().refine((val) => val !== undefined && val !== null, {
+        message: 'An event image is required.',
+    }),
 }).superRefine((data, ctx) => {
     if (data.category === 'Virtual') {
         if (!data.modality || data.modality.trim() === '') {
