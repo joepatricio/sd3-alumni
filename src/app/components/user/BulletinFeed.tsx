@@ -70,7 +70,7 @@ export function BulletinFeed() {
               <div className="flex items-center gap-4 mb-4">
                 <span className="text-sm text-gray-500 flex items-center gap-1">
                   <Calendar className="w-4 h-4" />
-                  {bulletins[0].date}
+                  {new Date(bulletins[0].date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
                 </span>
                 <span className="text-sm text-gray-500 flex items-center gap-1">
                   <Clock className="w-4 h-4" />
@@ -115,7 +115,7 @@ export function BulletinFeed() {
                 <div className="flex items-center gap-4 mb-3">
                   <span className="text-xs text-gray-500 flex items-center gap-1">
                     <Calendar className="w-3 h-3" />
-                    {bulletin.date}
+                    {new Date(bulletin.date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
                   </span>
                   <span className="text-xs text-gray-500 flex items-center gap-1">
                     <Clock className="w-3 h-3" />

@@ -65,17 +65,23 @@
 
   ## TODO before client approval
 
-  * USER: Pagination for Events and Bulletins. Filters for Event (ref. https://alumcommunity.mit.edu/events/)
-  * USER: Mock UI for Event, Donation
+  * USER: Empty state for Events image.
+  * ADMIN: Add Keywords column. Bulletins can have multiple keywords (backward implementation to User screens)
   * USER: Guest / User logic (e.g. switch UI elements for guest vs user)
-    * Switch to Guest/User/Admin modes in Topbar
-    * Notifications
+    * Switch to Guest/User modes in Topbar
     * Anonymous vs linked donations
     * RSVP only for logged-in users
+  
+  * Implement basic search for Alumni Directory
+  * Admin Alumni Directory
+  * Microinteractions (e.g. hover effects, button clicks, alumni directory, etc.), lazy loading for some INP-slow components (mostly just CreateEventModal)
+  
   * UX stuff (Mobile testing, happy pathing, toasts everywhere)
+  * Project files (e.g. project charter, gantt chart, dev logs, technical docs, etc.)
   * Refactor code for better readability and maintainability. Should be done last to avoid breaking stuff and make it easier to prototype
 
   ## TODO after client approval
+  * Keywords for Bulletin using NLP.
   * Performance optimizations to the website (CPU Throttle happy pathing, lazy loading, SSR, TTFB, LCP, etc.)
   * Redesign Profile pages to be API-friendly
   * Rich-text formatting support for Bulletin and Events? :(
@@ -85,3 +91,4 @@
   * Implement CDN for images. Unsure whether cloud or self-hosted.
   * Event RSVP system
   * Donation system
+  * Mote tech docs... e.g. database schema
