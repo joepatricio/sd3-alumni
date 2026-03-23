@@ -1,20 +1,67 @@
-import { Calendar, MapPin, Clock } from 'lucide-react';
+import { useState, useMemo } from 'react';
+import { Calendar, MapPin, Clock, Camera } from 'lucide-react';
 import { Plus } from 'lucide-react';
 import { CreateEventModal } from '@/app/components/user/CreateEventModal';
+import { Button } from '@/app/components/ui/button';
 
 import { events } from '@/assets/mockData';
 import { Link } from 'react-router-dom';
+import { getCategoryColor } from '@/app/utils/categoryColors';
+
+const EVENTS_PER_PAGE = 6;
 
 export function Events() {
-    // Filter events not older than 5 years
-    const currentDate = new Date();
-    const fiveYearsAgo = new Date();
-    fiveYearsAgo.setFullYear(currentDate.getFullYear() - 5);
+    const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+    const [timeRange, setTimeRange] = useState<string>('Upcoming');
+    const [visibleCount, setVisibleCount] = useState(EVENTS_PER_PAGE);
 
-    const filteredEvents = events.filter((event) => {
-        const eventDate = new Date(event.date);
-        return eventDate >= fiveYearsAgo && event.status === "Approved";
-    });
+    const categories = useMemo(() => {
+        return Array.from(new Set(events.map(event => event.category)));
+    }, []);
+
+    const toggleCategory = (cat: string) => {
+        setSelectedCategories(prev =>
+            prev.includes(cat) ? prev.filter(c => c !== cat) : [...prev, cat]
+        );
+        setVisibleCount(EVENTS_PER_PAGE);
+    };
+
+    const clearFilters = () => {
+        setSelectedCategories([]);
+        setTimeRange('Upcoming');
+        setVisibleCount(EVENTS_PER_PAGE);
+    };
+
+    const filteredEvents = useMemo(() => {
+        let sorted = events
+            .filter(event => event.status === "Approved")
+            .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+        if (selectedCategories.length > 0) {
+            sorted = sorted.filter(event => selectedCategories.includes(event.category));
+        }
+
+        const now = new Date();
+        now.setHours(0, 0, 0, 0); // Normalize to start of day
+
+        sorted = sorted.filter(event => {
+            const eventDate = new Date(event.date);
+            eventDate.setHours(0, 0, 0, 0);
+
+            const diffTime = eventDate.getTime() - now.getTime();
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+            if (timeRange === 'Upcoming') return diffDays >= 0;
+            if (timeRange === '7 days') return diffDays >= 0 && diffDays <= 7;
+            if (timeRange === '30 days') return diffDays >= 0 && diffDays <= 30;
+            else return diffDays < 0;
+        });
+
+        if (timeRange === 'Past') return sorted.reverse();
+        else return sorted;
+    }, [selectedCategories, timeRange]);
+
+    const paginatedEvents = filteredEvents.slice(0, visibleCount);
 
     const formatLocation = (loc: any) => {
         if (typeof loc === 'string') return loc;
@@ -50,9 +97,48 @@ export function Events() {
                     </div>
                 </div>
 
+                <div className="mb-8 bg-white p-4 rounded-lg shadow-sm border border-gray-100 flex flex-row items-center overflow-x-auto gap-4 hide-scrollbar">
+                    {/* Category Filter */}
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                        {categories.map(cat => (
+                            <Button
+                                key={cat}
+                                variant={selectedCategories.includes(cat) ? "default" : "outline"}
+                                className={selectedCategories.includes(cat) ? getCategoryColor(cat) : ""}
+                                onClick={() => toggleCategory(cat)}
+                            >
+                                {cat}
+                            </Button>
+                        ))}
+                    </div>
+
+                    <div className="h-8 w-px bg-gray-200 hidden md:block mx-1 flex-shrink-0"></div>
+
+                    {/* Time Range Filter */}
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                        {['Upcoming', '7 days', '30 days', 'Past'].map(range => (
+                            <Button
+                                key={range}
+                                variant={timeRange === range ? "default" : "outline"}
+                                className={timeRange === range ? "bg-[#1a5f3f] hover:bg-[#1a5f3f] text-white" : ""}
+                                onClick={() => { setTimeRange(range); setVisibleCount(EVENTS_PER_PAGE); }}
+                            >
+                                {range}
+                            </Button>
+                        ))}
+                    </div>
+
+                    {/* Clear Filters */}
+                    <div className="flex items-center ml-auto flex-shrink-0">
+                        <Button variant="ghost" className="text-gray-600 hover:text-gray-900 whitespace-nowrap" onClick={clearFilters}>
+                            Clear Filters
+                        </Button>
+                    </div>
+                </div>
+
                 {/* Events List */}
                 <div className="space-y-6 mb-6">
-                    {filteredEvents.map((event) => (
+                    {paginatedEvents.map((event) => (
                         <Link
                             key={event.id}
                             to={`/events/${event.id}`}
@@ -66,7 +152,7 @@ export function Events() {
                                         alt={event.title}
                                         className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
                                     />
-                                    <span className="absolute top-4 left-4 bg-[#1a5f3f] text-white px-3 py-1 rounded-full text-sm font-semibold">
+                                    <span className={`absolute top-4 left-4 px-3 py-1 rounded-full text-sm font-semibold ${getCategoryColor(event.category)}`}>
                                         {event.category}
                                     </span>
                                 </div>
@@ -86,17 +172,21 @@ export function Events() {
                                         <div className="flex flex-wrap gap-4 text-sm text-gray-600">
                                             <div className="flex items-center gap-2">
                                                 <Calendar className="w-4 h-4 text-[#1a5f3f]" />
-                                                <span>{event.date}</span>
+                                                <span>{new Date(event.date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</span>
                                             </div>
                                             <div className="flex items-center gap-2">
                                                 <Clock className="w-4 h-4 text-[#1a5f3f]" />
                                                 <span>{event.time}</span>
                                             </div>
                                             <div className="flex items-center gap-2">
-                                                <MapPin className="w-4 h-4 text-[#1a5f3f]" />
+                                                {event.category === 'Virtual' ? (
+                                                    <Camera className="w-4 h-4 text-[#1a5f3f]" />
+                                                ) : (
+                                                    <MapPin className="w-4 h-4 text-[#1a5f3f]" />
+                                                )}
                                                 <span>
                                                     {event.category === 'Virtual'
-                                                        ? `Virtual (${event.modality || 'Online'})`
+                                                        ? `Virtual (${(event as any).modality || 'Online'})`
                                                         : formatLocation(event.location)}
                                                 </span>
                                             </div>
@@ -115,6 +205,19 @@ export function Events() {
                         </Link>
                     ))}
                 </div>
+
+                {/* Pagination */}
+                {visibleCount < filteredEvents.length && (
+                    <div className="flex justify-center items-center gap-4 mt-8 mb-12">
+                        <Button
+                            variant="outline"
+                            onClick={() => setVisibleCount(prev => prev + EVENTS_PER_PAGE)}
+                            className="px-8"
+                        >
+                            Load More
+                        </Button>
+                    </div>
+                )}
 
                 {/* Empty State */}
                 {filteredEvents.length === 0 && (

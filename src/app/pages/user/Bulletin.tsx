@@ -2,30 +2,49 @@
 
 
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import {
     Plus,
     List,
     LayoutGrid,
     FileText,
-    Clock,
+    Clock
 } from 'lucide-react';
 import { CreateBulletinModal } from '@/app/components/user/CreateBulletinModal';
+import { Button } from '@/app/components/ui/button';
 
 import { bulletins } from '@assets/mockData';
 
 type ViewMode = 'headline' | 'article';
+const ARTICLE_ITEMS_PER_PAGE = 5;
+const HEADLINE_ITEMS_PER_PAGE = 10;
 
 export function Bulletin() {
     const [viewMode, setViewMode] = useState<ViewMode>('headline');
     const [showUserSubmitted, setShowUserSubmitted] = useState(false);
     const [dateFrom, setDateFrom] = useState('');
     const [dateTo, setDateTo] = useState('');
+    const [visibleCount, setVisibleCount] = useState(HEADLINE_ITEMS_PER_PAGE);
 
-    const filteredItems = showUserSubmitted
-        ? bulletins.filter((item) => !item.isUserSubmitted && item.status === "Approved")
-        : bulletins.filter(item => item.status === "Approved");
+    const filteredItems = useMemo(() => {
+        let filtered = showUserSubmitted
+            ? bulletins.filter((item) => !item.isUserSubmitted && item.status === "Approved")
+            : bulletins.filter(item => item.status === "Approved");
+
+        if (dateFrom) {
+            filtered = filtered.filter(item => new Date(item.date) >= new Date(dateFrom));
+        }
+        if (dateTo) {
+            filtered = filtered.filter(item => new Date(item.date) <= new Date(dateTo));
+        }
+
+        return filtered;
+    }, [showUserSubmitted, dateFrom, dateTo]);
+
+    const ITEMS_PER_PAGE = viewMode === 'article' ? ARTICLE_ITEMS_PER_PAGE : HEADLINE_ITEMS_PER_PAGE;
+
+    const paginatedItems = filteredItems.slice(0, visibleCount);
 
     return (
         <div className="min-h-screen bg-gray-50">
@@ -66,7 +85,7 @@ export function Bulletin() {
                                 </h3>
                                 <div className="space-y-2">
                                     <button
-                                        onClick={() => setViewMode('article')}
+                                        onClick={() => { setViewMode('article'); setVisibleCount(ARTICLE_ITEMS_PER_PAGE); }}
                                         className={`w-full flex items-center gap-3 px-4 py-2 rounded-lg transition-colors ${viewMode === 'article'
                                             ? 'bg-[#1a5f3f] text-white'
                                             : 'bg-gray-50 text-gray-700 hover:bg-gray-100'
@@ -76,7 +95,7 @@ export function Bulletin() {
                                         <span className="text-sm font-medium">Article view</span>
                                     </button>
                                     <button
-                                        onClick={() => setViewMode('headline')}
+                                        onClick={() => { setViewMode('headline'); setVisibleCount(HEADLINE_ITEMS_PER_PAGE); }}
                                         className={`w-full flex items-center gap-3 px-4 py-2 rounded-lg transition-colors ${viewMode === 'headline'
                                             ? 'bg-[#1a5f3f] text-white'
                                             : 'bg-gray-50 text-gray-700 hover:bg-gray-100'
@@ -97,7 +116,7 @@ export function Bulletin() {
                                     <input
                                         type="checkbox"
                                         checked={showUserSubmitted}
-                                        onChange={(e) => setShowUserSubmitted(e.target.checked)}
+                                        onChange={(e) => { setShowUserSubmitted(e.target.checked); setVisibleCount(ITEMS_PER_PAGE); }}
                                         className="w-4 h-4 text-[#1a5f3f] border-gray-300 rounded focus:ring-[#1a5f3f]"
                                     />
                                     <span className="text-sm text-gray-700">
@@ -119,7 +138,7 @@ export function Bulletin() {
                                         <input
                                             type="date"
                                             value={dateFrom}
-                                            onChange={(e) => setDateFrom(e.target.value)}
+                                            onChange={(e) => { setDateFrom(e.target.value); setVisibleCount(ITEMS_PER_PAGE); }}
                                             className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1a5f3f]"
                                         />
                                     </div>
@@ -130,7 +149,7 @@ export function Bulletin() {
                                         <input
                                             type="date"
                                             value={dateTo}
-                                            onChange={(e) => setDateTo(e.target.value)}
+                                            onChange={(e) => { setDateTo(e.target.value); setVisibleCount(ITEMS_PER_PAGE); }}
                                             className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1a5f3f]"
                                         />
                                     </div>
@@ -142,7 +161,7 @@ export function Bulletin() {
                     {/* Main Content */}
                     <div className="lg:col-span-3">
                         <div className="space-y-6">
-                            {filteredItems.map((item) => (
+                            {paginatedItems.map((item) => (
                                 <div
                                     key={item.id}
                                     className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow"
@@ -177,7 +196,7 @@ export function Bulletin() {
                                                     <span className="text-gray-400">•</span>
                                                     <div className="flex items-center gap-1 text-sm text-gray-500">
                                                         <Clock className="w-4 h-4" />
-                                                        <span>{item.date}</span>
+                                                        <span>{new Date(item.date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</span>
                                                     </div>
                                                 </div>
                                                 <Link
@@ -223,7 +242,7 @@ export function Bulletin() {
                                                         {item.author.name}
                                                     </Link>
                                                     <span>•</span>
-                                                    <span>{item.date}</span>
+                                                    <span>{new Date(item.date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</span>
                                                 </div>
                                                 <p className="text-gray-700 line-clamp-2">
                                                     {item.preview}
@@ -234,6 +253,19 @@ export function Bulletin() {
                                 </div>
                             ))}
                         </div>
+
+                        {/* Pagination */}
+                        {visibleCount < filteredItems.length && (
+                            <div className="flex justify-center items-center gap-4 mt-8 mb-4">
+                                <Button
+                                    variant="outline"
+                                    onClick={() => setVisibleCount(prev => prev + ITEMS_PER_PAGE)}
+                                    className="px-8"
+                                >
+                                    Load More
+                                </Button>
+                            </div>
+                        )}
 
                         {filteredItems.length === 0 && (
                             <div className="bg-white rounded-lg shadow-md p-12 text-center">

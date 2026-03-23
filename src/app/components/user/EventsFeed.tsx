@@ -1,6 +1,7 @@
-import { Calendar, MapPin, Users } from 'lucide-react';
+import { Calendar, MapPin, Users, Camera } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { events } from '@assets/mockData';
+import { getCategoryColor } from '@/app/utils/categoryColors';
 
 const mockEvents = events.filter(e => e.status === "Approved");
 
@@ -67,7 +68,7 @@ export function EventsFeed() {
                   alt={event.title}
                   className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
                 />
-                <span className="absolute top-4 right-4 bg-[#1a5f3f] text-white px-3 py-1 rounded-full text-sm font-semibold">
+                <span className={`absolute top-4 right-4 px-3 py-1 rounded-full text-sm font-semibold ${getCategoryColor(event.category)}`}>
                   {event.category}
                 </span>
               </div>
@@ -76,10 +77,14 @@ export function EventsFeed() {
                 <div className="space-y-2 text-gray-600">
                   <div className="flex items-center gap-2">
                     <Calendar className="w-4 h-4" />
-                    <span className="text-sm">{event.date}</span>
+                    <span className="text-sm">{new Date(event.date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <MapPin className="w-4 h-4" />
+                    {event.category === 'Virtual' ? (
+                      <Camera className="w-4 h-4" />
+                    ) : (
+                      <MapPin className="w-4 h-4" />
+                    )}
                     <span className="text-sm">{event.location}</span>
                   </div>
                   <div className="flex items-center gap-2">
