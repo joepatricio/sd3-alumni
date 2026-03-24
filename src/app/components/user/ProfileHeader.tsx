@@ -1,4 +1,6 @@
-import { Mail, Phone, MapPin, Briefcase, Edit } from 'lucide-react';
+import { Mail, Phone, MapPin, Briefcase, Edit, LogOut, User } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { useAuth } from '@utils/auth';
 
 interface ProfileHeaderProps {
     userData: {
@@ -13,15 +15,18 @@ interface ProfileHeaderProps {
         bio: string;
         profileImage: string;
     };
-    isOwner?: boolean;
+    isProfilePage?: boolean;
     onEdit?: () => void;
 }
 
+// Use isLoggedIn instead of isOwner
 export function ProfileHeader({
     userData,
-    isOwner,
+    isProfilePage,
     onEdit,
 }: ProfileHeaderProps) {
+    const { isLoggedIn, setIsLoggedIn } = useAuth();
+
     return (
         <div className="bg-white rounded-lg shadow-md overflow-hidden mb-6">
             {/* Cover Image */}
@@ -48,14 +53,42 @@ export function ProfileHeader({
 
                     {/* Action Buttons */}
                     <div className="flex gap-3 mt-4 md:mt-0 md:pb-2">
-                        {isOwner && onEdit && (
-                            <button
-                                onClick={onEdit}
-                                className="flex items-center gap-2 px-4 py-2 bg-[#1a5f3f] text-white rounded-lg hover:bg-[#2d7a4f] transition-colors font-semibold"
-                            >
-                                <Edit className="w-4 h-4" />
-                                Edit Profile
-                            </button>
+                        {onEdit && (
+                            <>
+                                {!isProfilePage ? (
+                                    <Link
+                                        to={"/profile"}
+                                        className="flex items-center gap-2 px-4 py-2 bg-[#1a5f3f] text-white rounded-lg hover:bg-[#2d7a4f] transition-colors font-semibold"
+                                    >
+                                        <User className="w-4 h-4" />
+                                        Back to Profile
+                                    </Link>
+                                ) : (
+                                    <>
+                                        {isLoggedIn && (
+                                            <>
+                                                <button
+                                                    onClick={onEdit}
+                                                    className="flex items-center gap-2 px-4 py-2 bg-[#1a5f3f] text-white rounded-lg hover:bg-[#2d7a4f] transition-colors font-semibold"
+                                                >
+                                                    <Edit className="w-4 h-4" />
+                                                    Edit Profile
+                                                </button>
+                                                {/* Sign Out Button */}
+                                                <Link
+                                                    to="/login"
+                                                    onClick={() => setIsLoggedIn(false)}
+                                                    className="flex items-center gap-2 px-4 py-2 border border-red-200 text-red-600 hover:bg-red-50 rounded-lg transition-colors font-medium ml-auto"
+                                                >
+                                                    <LogOut className="w-4 h-4" />
+                                                    Sign Out
+                                                </Link>
+                                            </>
+                                        )
+                                        }
+                                    </>
+                                )}
+                            </>
                         )}
                     </div>
                 </div>
@@ -85,6 +118,6 @@ export function ProfileHeader({
                     </div>
                 </div>
             </div>
-        </div>
+        </div >
     );
 }

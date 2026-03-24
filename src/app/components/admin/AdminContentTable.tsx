@@ -81,7 +81,7 @@ export function AdminContentTable({
     const handleExportCSV = () => {
         const headers = ['Title', 'Author', 'Date', 'Type', 'Status'];
         const csvContent = filteredContent.map(c =>
-            `"${c.title.replace(/"/g, '""')}","${c.author}","${c.date}","${c.type}","${c.status}"`
+            `"${c.title.replace(/"/g, '""')}","${c.author}","${new Date(c.date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}","${c.type}","${c.status}"`
         );
 
         const csvString = [headers.join(','), ...csvContent].join('\n');
@@ -180,7 +180,7 @@ export function AdminContentTable({
                                         <div className="text-xs text-gray-500 line-clamp-1 max-w-sm">{item.description}</div>
                                     </td>
                                     <td className="px-6 py-4">{item.author}</td>
-                                    <td className="px-6 py-4">{item.date}</td>
+                                    <td className="px-6 py-4">{new Date(item.date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</td>
                                     {activeTab === "All" && (
                                         <td className="px-6 py-4">
                                             <Badge className={

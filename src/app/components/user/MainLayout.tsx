@@ -11,7 +11,6 @@ interface LayoutProps {
 
 export function MainLayout({ children }: LayoutProps) {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
-    const [isLoggedIn, setIsLoggedIn] = useState(false);
 
     return (
         <div className="min-h-screen bg-gray-50 flex flex-col gap-10">
@@ -19,12 +18,10 @@ export function MainLayout({ children }: LayoutProps) {
                 <TopBar
                     isMenuOpen={isMenuOpen}
                     setIsMenuOpen={setIsMenuOpen}
-                    isLoggedIn={isLoggedIn}
-                    setIsLoggedIn={setIsLoggedIn}
                 />
                 <MegaMenu isOpen={isMenuOpen} onClose={() => setIsMenuOpen(false)} />
                 <Navbar />
-                {children ? children : <Outlet context={{ isLoggedIn }} />}
+                {children ? children : <Outlet />}
             </main>
             <Footer />
         </div>

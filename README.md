@@ -64,24 +64,22 @@
   * Other stuff like Events, Bulletin, and Connections will not be fully implemented until DB development.
 
   ## TODO before client approval
-
-  * USER: Empty state for Events image.
-  * ADMIN: Add Keywords column. Bulletins can have multiple keywords (backward implementation to User screens)
-  * USER: Guest / User logic (e.g. switch UI elements for guest vs user)
-    * Switch to Guest/User modes in Topbar
-    * Anonymous vs linked donations
-    * RSVP only for logged-in users
   
-  * Implement basic search for Alumni Directory
+  * Implement basic search for Alumni Directory (search by name only)
   * Admin Alumni Directory
+  * Redesign /profile
+  * Past events should have a banner showing that they're past events. RSVP should be disabled for past events.
+
   * Microinteractions (e.g. hover effects, button clicks, alumni directory, etc.), lazy loading for some INP-slow components (mostly just CreateEventModal)
-  
   * UX stuff (Mobile testing, happy pathing, toasts everywhere)
+    * Notification for registration
+
   * Project files (e.g. project charter, gantt chart, dev logs, technical docs, etc.)
   * Refactor code for better readability and maintainability. Should be done last to avoid breaking stuff and make it easier to prototype
 
   ## TODO after client approval
   * Keywords for Bulletin using NLP.
+  * ADMIN: Add Keywords column. Bulletins can have multiple keywords (backward implementation to User screens)
   * Performance optimizations to the website (CPU Throttle happy pathing, lazy loading, SSR, TTFB, LCP, etc.)
   * Redesign Profile pages to be API-friendly
   * Rich-text formatting support for Bulletin and Events? :(

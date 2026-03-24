@@ -17,11 +17,13 @@ import { Badge } from '@components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@components/ui/avatar';
 import { NotFound } from '@pages/NotFound';
 import { events } from '@assets/mockData';
+import { useAuth } from '@utils/auth';
 
 export function EventDetail() {
     const { id } = useParams<{ id: string }>();
     const [rsvpStatus, setRsvpStatus] = useState<'going' | 'not_going' | null>(null);
     const isAdmin = !!localStorage.getItem('adminToken');
+    const { isLoggedIn } = useAuth();
 
     // Mock data for the event being edited
     // In a real app, this would be fetched based on the ID
@@ -62,7 +64,7 @@ export function EventDetail() {
                 </div>
             )}
             {/* Header / Nav */}
-            <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 flex justify-between items-center">
+            <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 flex justify-between items-center">
                 <Link
                     to="/events"
                     className="inline-flex items-center gap-2 text-gray-600 hover:text-[#1a5f3f] transition-colors"
@@ -72,16 +74,18 @@ export function EventDetail() {
                 </Link>
 
                 <div className="flex gap-2">
-                    <CreateEventModal
-                        trigger={
-                            <Button variant="outline" className="gap-2 text-[#1a5f3f] border-[#1a5f3f] hover:bg-[#1a5f3f] hover:text-white transition-colors">
-                                <Edit className="w-4 h-4" />
-                                Edit Event
-                            </Button>
-                        }
-                        initialData={eventData as any}
-                        isAdmin={isAdmin}
-                    />
+                    {isLoggedIn && (
+                        <CreateEventModal
+                            trigger={
+                                <Button variant="outline" className="gap-2 text-[#1a5f3f] border-[#1a5f3f] hover:bg-[#1a5f3f] hover:text-white transition-colors">
+                                    <Edit className="w-4 h-4" />
+                                    Edit Event
+                                </Button>
+                            }
+                            initialData={eventData as any}
+                            isAdmin={isAdmin}
+                        />
+                    )}
                 </div>
             </div>
 
@@ -173,61 +177,79 @@ export function EventDetail() {
                     <div className="space-y-8 sticky top-24 self-start">
                         {/* RSVP Card */}
                         <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-                            <div className="text-center mb-6">
-                                <h3 className="text-lg font-bold text-gray-900 mb-2">Are you going?</h3>
-                                <p className="text-gray-500 text-sm">Let us know if you'll be there!</p>
-                            </div>
-
-                            <div className="grid grid-cols-2 gap-3 mb-6">
-                                <Button
-                                    variant={rsvpStatus === 'going' ? 'default' : 'outline'}
-                                    className={`w-full gap-2 ${rsvpStatus === 'going' ? 'bg-[#1a5f3f] hover:bg-[#154e33]' : 'hover:text-[#1a5f3f] hover:border-[#1a5f3f]'}`}
-                                    onClick={() => handleRsvp('going')}
-                                >
-                                    <CheckCircle2 className="w-4 h-4" />
-                                    Going
-                                </Button>
-                                <Button
-                                    variant={rsvpStatus === 'not_going' ? 'default' : 'outline'}
-                                    className={`w-full gap-2 ${rsvpStatus === 'not_going' ? 'bg-gray-600 hover:bg-gray-700' : 'hover:text-gray-700 hover:border-gray-400'}`}
-                                    onClick={() => handleRsvp('not_going')}
-                                >
-                                    <XCircle className="w-4 h-4" />
-                                    Not Going
-                                </Button>
-                            </div>
-
-                            <div className="border-t border-gray-100 pt-6">
-                                <div className="flex items-center justify-between mb-2">
-                                    <span className="text-gray-600 font-medium">Responses</span>
-                                    <span className="text-[#1a5f3f] font-bold">{eventData.responses.going + (rsvpStatus === 'going' ? 1 : 0)} Going</span>
-                                </div>
-                            </div>
-
-                            <div className="mt-6 pt-6 border-t border-gray-100">
-                                <div className="flex -space-x-2 overflow-hidden mb-3 justify-center">
-                                    {[
-                                        "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=64&h=64",
-                                        "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&q=80&w=64&h=64",
-                                        "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=64&h=64",
-                                        "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=64&h=64",
-                                        "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=64&h=64"
-                                    ].map((url, i) => (
-                                        <img
-                                            key={i}
-                                            className="inline-block h-8 w-8 rounded-full ring-2 ring-white object-cover"
-                                            src={url}
-                                            alt=""
-                                        />
-                                    ))}
-                                    <div className="flex items-center justify-center h-8 w-8 rounded-full ring-2 ring-white bg-gray-100 text-xs text-gray-500 font-medium">
-                                        +{(eventData.responses.going - 5)}
+                            {isLoggedIn ? (
+                                <>
+                                    <div className="text-center mb-6">
+                                        <h3 className="text-lg font-bold text-gray-900 mb-2">Are you going?</h3>
+                                        <p className="text-gray-500 text-sm">Let us know if you'll be there!</p>
                                     </div>
+
+                                    <div className="grid grid-cols-2 gap-3 mb-6">
+                                        <Button
+                                            variant={rsvpStatus === 'going' ? 'default' : 'outline'}
+                                            className={`w-full gap-2 ${rsvpStatus === 'going' ? 'bg-[#1a5f3f] hover:bg-[#154e33]' : 'hover:text-[#1a5f3f] hover:border-[#1a5f3f]'}`}
+                                            onClick={() => handleRsvp('going')}
+                                        >
+                                            <CheckCircle2 className="w-4 h-4" />
+                                            Going
+                                        </Button>
+                                        <Button
+                                            variant={rsvpStatus === 'not_going' ? 'default' : 'outline'}
+                                            className={`w-full gap-2 ${rsvpStatus === 'not_going' ? 'bg-gray-600 hover:bg-gray-700' : 'hover:text-gray-700 hover:border-gray-400'}`}
+                                            onClick={() => handleRsvp('not_going')}
+                                        >
+                                            <XCircle className="w-4 h-4" />
+                                            Not Going
+                                        </Button>
+                                    </div>
+                                </>
+                            ) : (
+                                <div className="text-center py-4">
+                                    <h3 className="text-lg font-bold text-gray-900 mb-2">RSVP to this Event</h3>
+                                    <p className="text-gray-500 text-sm mb-6">Log in to let alumni know you'll be attending.</p>
+                                    <Link to="/login" state={{ from: `/events/${eventData.id}` }} className="inline-block w-full">
+                                        <Button className="w-full bg-[#1a5f3f] hover:bg-[#154e33]">
+                                            Log In to RSVP
+                                        </Button>
+                                    </Link>
                                 </div>
-                                <p className="text-center text-sm text-gray-500">
-                                    See who else is going from your class
-                                </p>
-                            </div>
+                            )}
+
+                            {isLoggedIn && (
+                                <>
+                                    <div className="border-t border-gray-100 pt-6">
+                                        <div className="flex items-center justify-between mb-2">
+                                            <span className="text-gray-600 font-medium">Responses</span>
+                                            <span className="text-[#1a5f3f] font-bold">{eventData.responses.going + (rsvpStatus === 'going' ? 1 : 0)} Going</span>
+                                        </div>
+                                    </div>
+
+                                    <div className="mt-6 pt-6 border-t border-gray-100">
+                                        <div className="flex -space-x-2 overflow-hidden mb-3 justify-center">
+                                            {[
+                                                "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=64&h=64",
+                                                "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&q=80&w=64&h=64",
+                                                "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=64&h=64",
+                                                "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=64&h=64",
+                                                "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=64&h=64"
+                                            ].map((url, i) => (
+                                                <img
+                                                    key={i}
+                                                    src={url}
+                                                    alt=""
+                                                    className="inline-block h-8 w-8 rounded-full ring-2 ring-white object-cover"
+                                                />
+                                            ))}
+                                            <div className="flex items-center justify-center h-8 w-8 rounded-full ring-2 ring-white bg-gray-100 text-xs text-gray-500 font-medium">
+                                                +{(eventData.responses.going - 5)}
+                                            </div>
+                                        </div>
+                                        <p className="text-center text-sm text-gray-500">
+                                            See who else is going from your class
+                                        </p>
+                                    </div>
+                                </>
+                            )}
                         </div>
 
                         {/* Organizer Info */}

@@ -1,9 +1,11 @@
-import { Calendar, MapPin, Users, Camera } from 'lucide-react';
+import { Calendar, MapPin, Users, Video } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { events } from '@assets/mockData';
-import { getCategoryColor } from '@/app/utils/categoryColors';
+import { getCategoryColor } from '@utils/categoryColors';
+import { filterUpcomingEvents } from '@utils/eventFilters';
+import { LazyImage } from '@components/user/LazyImage';
 
-const mockEvents = events.filter(e => e.status === "Approved");
+const mockEvents = filterUpcomingEvents(events.filter(e => e.status === "Approved"));
 
 export function EventsFeed() {
   const formatLocation = (event: any) => {
@@ -63,7 +65,7 @@ export function EventsFeed() {
               className="bg-white rounded-lg overflow-hidden shadow-md hover:shadow-xl transition-shadow"
             >
               <div className="relative h-48 overflow-hidden">
-                <img
+                <LazyImage
                   src={event.image}
                   alt={event.title}
                   className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
@@ -81,7 +83,7 @@ export function EventsFeed() {
                   </div>
                   <div className="flex items-center gap-2">
                     {event.category === 'Virtual' ? (
-                      <Camera className="w-4 h-4" />
+                      <Video className="w-4 h-4" />
                     ) : (
                       <MapPin className="w-4 h-4" />
                     )}

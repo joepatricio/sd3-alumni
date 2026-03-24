@@ -1,12 +1,10 @@
 import { MoreVertical, UserMinus } from 'lucide-react';
-import { useOutletContext, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { ProfileHeader } from '@components/user/ProfileHeader';
-import { QuickActions } from '@components/user/QuickActions';
 import { userData, connectionsData } from '@assets/mockData';
 
 export function Connections() {
     const navigate = useNavigate();
-    const { isLoggedIn } = useOutletContext<{ isLoggedIn: boolean }>();
 
     return (
         <div className="min-h-screen bg-gray-50">
@@ -14,11 +12,9 @@ export function Connections() {
                 {/* Profile Header */}
                 <ProfileHeader
                     userData={userData}
-                    isOwner={false}
+                    isProfilePage={false}
                     onEdit={() => navigate('/profile/edit')}
                 />
-
-                <QuickActions isLoggedIn={isLoggedIn} />
 
                 <div className="bg-white rounded-lg shadow-md overflow-hidden p-6">
                     <div className="flex items-center justify-between mb-6">

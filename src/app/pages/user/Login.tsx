@@ -1,10 +1,11 @@
-import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Mail, Lock, Eye, EyeOff, User, Loader2 } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { toast } from 'sonner';
+import { useAuth } from '@utils/auth';
 
 import { Button } from '@/app/components/ui/button';
 import { Input } from '@/app/components/ui/input';
@@ -31,6 +32,15 @@ const loginSchema = z.object({
 export function Login() {
     const [showPassword, setShowPassword] = useState(false);
     const navigate = useNavigate();
+    const location = useLocation();
+    const { isLoggedIn, setIsLoggedIn } = useAuth();
+
+    useEffect(() => {
+        if (isLoggedIn) {
+            const from = location.state?.from || '/profile';
+            navigate(from, { replace: true });
+        }
+    }, [isLoggedIn, navigate]);
 
     const form = useForm<z.infer<typeof loginSchema>>({
         resolver: zodResolver(loginSchema) as any,
@@ -48,10 +58,12 @@ export function Login() {
         // Simulate network delay
         setTimeout(() => {
             // Simulate successful login
+            setIsLoggedIn(true);
             toast.success("Welcome back!", {
                 description: "You have successfully signed in.",
             });
-            navigate('/profile');
+            const from = location.state?.from || '/profile';
+            navigate(from, { replace: true });
         }, 1000);
     };
 

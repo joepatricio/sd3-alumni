@@ -5,14 +5,12 @@ import {
     Users,
     Heart,
 } from 'lucide-react';
-import { useNavigate, useOutletContext } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { ProfileHeader } from '@components/user/ProfileHeader';
-import { QuickActions } from '@components/user/QuickActions';
 import { userData } from '@assets/mockData';
 
 export function Profile() {
     const navigate = useNavigate();
-    const { isLoggedIn } = useOutletContext<{ isLoggedIn: boolean }>();
 
     const IconMap: Record<string, any> = {
         Users,
@@ -27,12 +25,9 @@ export function Profile() {
                 {/* Profile Header */}
                 <ProfileHeader
                     userData={userData}
-                    isOwner={isLoggedIn}
+                    isProfilePage={true}
                     onEdit={() => navigate('/profile/edit')}
                 />
-
-                {/* Quick Actions Bar */}
-                <QuickActions isLoggedIn={isLoggedIn} />
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     {/* Left Column */}
@@ -69,6 +64,7 @@ export function Profile() {
                                         className="flex items-start gap-3 pb-4 border-b border-gray-200 last:border-0"
                                     >
                                         <div className="w-10 h-10 bg-[#1a5f3f] rounded-full flex items-center justify-center flex-shrink-0">
+                                            {/* TODO: Add icons for each activity type */}
                                             {activity.type === 'event' && (
                                                 <Calendar className="w-5 h-5 text-white" />
                                             )}

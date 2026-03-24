@@ -2,7 +2,6 @@ import {
     Mail,
     Phone,
     MapPin,
-    Youtube,
     Video,
 } from "lucide-react";
 
@@ -18,43 +17,41 @@ export function About() {
                         Featured Videos
                     </h2>
                     <div className="grid md:grid-cols-2 gap-6">
-                        <a
-                            href="https://drive.google.com/file/d/1_WNzsMEypDZOgdiL59Py2ZZcAvLaCbOt/view?usp=sharing"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="group block bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all border border-gray-100"
-                        >
-                            <div className="bg-gray-100 aspect-video flex items-center justify-center group-hover:bg-gray-200 transition-colors">
-                                <Video className="w-12 h-12 text-[#1a5f3f] opacity-50 group-hover:opacity-100 group-hover:scale-110 transition-all" />
+                        <div className="bg-white rounded-xl overflow-hidden shadow-sm border border-gray-100 flex flex-col">
+                            <div className="w-full aspect-video bg-gray-100 relative">
+                                <iframe
+                                    src="https://drive.google.com/file/d/1_WNzsMEypDZOgdiL59Py2ZZcAvLaCbOt/preview"
+                                    className="absolute top-0 left-0 w-full h-full border-0"
+                                    allow="autoplay"
+                                    loading="lazy"
+                                ></iframe>
                             </div>
                             <div className="p-4">
-                                <h3 className="font-semibold text-gray-900 group-hover:text-[#1a5f3f] transition-colors">
+                                <h3 className="font-semibold text-gray-900 transition-colors">
                                     Grand Alumni Homecoming (2019)
                                 </h3>
-                                <p className="text-sm text-gray-500 mt-1">
-                                    Watch video
-                                </p>
-                            </div>
-                        </a>
 
-                        <a
-                            href="https://www.youtube.com/watch?v=Mqa-H5HpQEE"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="group block bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all border border-gray-100"
-                        >
-                            <div className="bg-gray-100 aspect-video flex items-center justify-center group-hover:bg-gray-200 transition-colors">
-                                <Youtube className="w-12 h-12 text-red-600 opacity-80 group-hover:opacity-100 group-hover:scale-110 transition-all" />
+                            </div>
+                        </div>
+
+                        <div className="bg-white rounded-xl overflow-hidden shadow-sm border border-gray-100 flex flex-col">
+                            <div className="w-full aspect-video bg-gray-100 relative">
+                                <iframe
+                                    src="https://www.youtube.com/embed/Mqa-H5HpQEE"
+                                    title="Diamond Jubilee Celebration (2023)"
+                                    className="absolute top-0 left-0 w-full h-full border-0"
+                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                    allowFullScreen
+                                    loading="lazy"
+                                ></iframe>
                             </div>
                             <div className="p-4">
-                                <h3 className="font-semibold text-gray-900 group-hover:text-[#1a5f3f] transition-colors">
+                                <h3 className="font-semibold text-gray-900 transition-colors">
                                     Diamond Jubilee Celebration (2023)
                                 </h3>
-                                <p className="text-sm text-gray-500 mt-1">
-                                    Watch on YouTube
-                                </p>
+
                             </div>
-                        </a>
+                        </div>
                     </div>
                 </section>
 

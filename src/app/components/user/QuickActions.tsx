@@ -1,11 +1,7 @@
 import { Link } from 'react-router-dom';
-import { Users, Heart, LogOut, Eye } from 'lucide-react';
+import { Users, Heart, Eye } from 'lucide-react';
 
-interface QuickActionsProps {
-    isLoggedIn: boolean;
-}
-
-export function QuickActions({ isLoggedIn }: QuickActionsProps) {
+export function QuickActions() {
     return (
         <div className="bg-white rounded-lg shadow-md p-4 mb-6 flex flex-wrap items-center gap-4">
 
@@ -40,16 +36,6 @@ export function QuickActions({ isLoggedIn }: QuickActionsProps) {
                 <Heart className="w-4 h-4" />
                 Make a Donation
             </Link>
-
-            {isLoggedIn && (
-                <Link
-                    to="/"
-                    className="flex items-center gap-2 px-4 py-2 border border-red-200 text-red-600 hover:bg-red-50 rounded-lg transition-colors font-medium ml-auto"
-                >
-                    <LogOut className="w-4 h-4" />
-                    Sign Out
-                </Link>
-            )}
         </div>
     );
 }

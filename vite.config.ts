@@ -10,6 +10,7 @@ export default defineConfig({
     // Tailwind is not being actively used – do not remove them
     react(),
     tailwindcss(),
+    // Mock middleware that makes changes in admin dashboard persistent
     {
       name: 'update-mock-data',
       configureServer(server) {
@@ -36,14 +37,14 @@ export default defineConfig({
                     if (lines[i].includes('{')) braceDepth++;
                     if (lines[i].includes('}')) braceDepth--;
                     if (!inTargetObject && braceDepth > 0) {
-                      const idLineMatch = lines[i].match(/id:\s*(['"]?)([^'"\s,]+)\1,/);
+                      const idLineMatch = lines[i].match(/["']?id["']?:\s*(['"]?)([^'"\s,]+)\1,/);
                       if (idLineMatch && String(idLineMatch[2]) === String(id)) {
                         inTargetObject = true;
                       }
                     }
                     if (inTargetObject) {
-                      if (lines[i].match(/status:\s*["'][^"']+["']/)) {
-                        lines[i] = lines[i].replace(/(status:\s*)["'][^"']+["']/, `$1"${status}"`);
+                      if (lines[i].match(/["']?status["']?:\s*["'][^"']+["']/)) {
+                        lines[i] = lines[i].replace(/(["']?status["']?:\s*)["'][^"']+["']/, `$1"${status}"`);
                         break;
                       }
                     }
@@ -74,6 +75,7 @@ export default defineConfig({
       '@components': path.resolve(__dirname, './src/app/components'),
       '@assets': path.resolve(__dirname, './src/assets'),
       '@pages': path.resolve(__dirname, './src/app/pages'),
+      '@utils': path.resolve(__dirname, './src/app/utils'),
     },
   },
   server: {

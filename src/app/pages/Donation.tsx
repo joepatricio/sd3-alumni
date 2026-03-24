@@ -1,11 +1,13 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Heart, Globe, GraduationCap, Users, Lock, Mail, Phone, ArrowLeft } from 'lucide-react';
+import { Heart, Globe, GraduationCap, Users, Lock, Mail, Phone, ArrowLeft, User } from 'lucide-react';
 import { SiFacebook, SiX, SiInstagram, SiLinkedin } from 'react-icons/si';
 import { toast } from 'sonner';
 import alumniLogo from "@/assets/alumni-logo.jpg";
+import { useAuth } from '@utils/auth';
 
 export function Donation() {
+    const { isLoggedIn, setIsLoggedIn } = useAuth();
     const [donationType, setDonationType] = useState<'one-time' | 'monthly'>('one-time');
     const [selectedAmount, setSelectedAmount] = useState<number | null>(1000);
     const [customAmount, setCustomAmount] = useState('');
@@ -85,10 +87,10 @@ export function Donation() {
                 <div className="max-w-6xl mx-auto px-4 md:px-8">
                     <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
                         {/* Left Column: Impact & Information */}
-                        <div className="lg:col-span-7 space-y-12">
-                            <div className="prose prose-lg text-gray-600">
-                                <h2 className="text-3xl font-bold text-[#1a5f3f] mb-6">Why Donate?</h2>
-                                <p className="mb-6">
+                        <div className="lg:col-span-7 space-y-12 pt-2">
+                            <div className="text-lg text-gray-600">
+                                <h2 className="text-3xl font-bold text-[#1a5f3f] mb-6 mt-0">Why Donate?</h2>
+                                <p className="mb-6 leading-relaxed">
                                     Every contribution creates a ripple effect. Whether it's funding a scholarship for a deserving student,
                                     supporting alumni networking events, or maintaining our beloved campus, your gift makes a tangible difference.
                                 </p>
@@ -113,12 +115,44 @@ export function Donation() {
                         </div>
 
                         {/* Right Column: Donation Form */}
-                        <div className="lg:col-span-5">
-                            <div className="bg-white rounded-2xl shadow-xl overflow-hidden sticky top-8 border border-gray-100">
-                                <div className="bg-[#1a5f3f] p-6 text-center">
-                                    <h3 className="text-2xl font-bold text-white">Make a Gift</h3>
-                                    <p className="text-white text-sm opacity-90">Secure donation via Credit Card or PayPal</p>
-                                </div>
+                        {/* Should be vertically centered instead of flush */}
+                        <div className="lg:col-span-5 self-center">
+                            <div className="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
+
+                                {!isLoggedIn ? (
+                                    <div className="bg-[#1a5f3f] p-6 flex items-center justify-between text-white gap-4">
+                                        <div className="text-left">
+                                            <h3 className="text-lg font-bold leading-tight mb-1">Anonymous Donation</h3>
+                                            <p className="text-white/80 text-xs">Log in to link this to your alumni profile</p>
+                                        </div>
+                                        <Link to="/login" state={{ from: '/donate' }} className="whitespace-nowrap bg-white text-[#1a5f3f] px-5 py-2.5 rounded-lg font-semibold hover:bg-gray-100 transition-colors text-sm shadow-sm ring-1 ring-black/5">
+                                            Log In
+                                        </Link>
+                                    </div>
+                                ) : (
+                                    <div className="bg-[#1a5f3f] p-6 text-white flex items-center justify-between gap-4">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center shrink-0">
+                                                <User className="w-5 h-5 text-white" />
+                                            </div>
+                                            <div className="text-left">
+                                                <h3 className="font-bold text-lg leading-tight mb-1">Logged in as Alumni</h3>
+                                                <p className="text-white/80 text-xs">Donation linked to your account</p>
+                                            </div>
+                                        </div>
+                                        <button
+                                            onClick={() => {
+                                                localStorage.setItem('userIsLoggedIn', 'false');
+                                                setIsLoggedIn(false);
+                                                toast.success("You are now making an anonymous donation.");
+                                                window.dispatchEvent(new Event('storage'));
+                                            }}
+                                            className="whitespace-nowrap bg-white/10 hover:bg-white/20 px-4 py-2.5 rounded-lg text-xs font-semibold text-white transition-colors border border-white/20"
+                                        >
+                                            Log Out
+                                        </button>
+                                    </div>
+                                )}
 
                                 <div className="p-6 md:p-8">
                                     {/* Donation Type Toggle */}

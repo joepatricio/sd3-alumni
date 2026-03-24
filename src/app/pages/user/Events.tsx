@@ -1,12 +1,12 @@
 import { useState, useMemo } from 'react';
-import { Calendar, MapPin, Clock, Camera } from 'lucide-react';
+import { Calendar, MapPin, Clock, Video } from 'lucide-react';
 import { Plus } from 'lucide-react';
-import { CreateEventModal } from '@/app/components/user/CreateEventModal';
-import { Button } from '@/app/components/ui/button';
-
-import { events } from '@/assets/mockData';
+import { CreateEventModal } from '@components/user/CreateEventModal';
+import { Button } from '@components/ui/button';
+import { events } from '@assets/mockData';
 import { Link } from 'react-router-dom';
-import { getCategoryColor } from '@/app/utils/categoryColors';
+import { getCategoryColor } from '@utils/categoryColors';
+import { isEventUpcoming } from '@utils/eventFilters';
 
 const EVENTS_PER_PAGE = 6;
 
@@ -41,20 +41,20 @@ export function Events() {
             sorted = sorted.filter(event => selectedCategories.includes(event.category));
         }
 
-        const now = new Date();
-        now.setHours(0, 0, 0, 0); // Normalize to start of day
-
         sorted = sorted.filter(event => {
+            if (timeRange === 'Upcoming') return isEventUpcoming(event.date);
+
+            const now = new Date();
+            now.setHours(0, 0, 0, 0); // Normalize to start of day
             const eventDate = new Date(event.date);
             eventDate.setHours(0, 0, 0, 0);
 
             const diffTime = eventDate.getTime() - now.getTime();
             const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
-            if (timeRange === 'Upcoming') return diffDays >= 0;
             if (timeRange === '7 days') return diffDays >= 0 && diffDays <= 7;
             if (timeRange === '30 days') return diffDays >= 0 && diffDays <= 30;
-            else return diffDays < 0;
+            else return diffDays < 0; // Past
         });
 
         if (timeRange === 'Past') return sorted.reverse();
@@ -180,7 +180,7 @@ export function Events() {
                                             </div>
                                             <div className="flex items-center gap-2">
                                                 {event.category === 'Virtual' ? (
-                                                    <Camera className="w-4 h-4 text-[#1a5f3f]" />
+                                                    <Video className="w-4 h-4 text-[#1a5f3f]" />
                                                 ) : (
                                                     <MapPin className="w-4 h-4 text-[#1a5f3f]" />
                                                 )}

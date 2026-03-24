@@ -37,6 +37,7 @@ export const userData = {
         year: '2018',
         degree: 'Master of Science in Computer Science',
     },
+    // TODO: 
     stats: [
         { iconName: 'Users', label: 'Connections', value: '248' },
         { iconName: 'Calendar', label: 'Events Attended', value: '12' },
@@ -232,7 +233,7 @@ export const bulletins = [
         "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
         "heroImage": "https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=1080",
         "isUserSubmitted": true,
-        "status": "Pending"
+        "status": "Approved"
     },
     {
         "id": "31",
@@ -250,7 +251,7 @@ export const bulletins = [
         "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
         "heroImage": "https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=1080",
         "isUserSubmitted": true,
-        "status": "Pending"
+        "status": "Approved"
     },
     {
         "id": "13",
@@ -268,7 +269,7 @@ export const bulletins = [
         "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
         "heroImage": "https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=1080",
         "isUserSubmitted": false,
-        "status": "Pending"
+        "status": "Approved"
     },
     {
         "id": "6",
@@ -286,7 +287,7 @@ export const bulletins = [
         "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
         "heroImage": "https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=1080",
         "isUserSubmitted": true,
-        "status": "Pending"
+        "status": "Approved"
     },
     {
         "id": "19",
@@ -322,7 +323,7 @@ export const bulletins = [
         "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
         "heroImage": "https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=1080",
         "isUserSubmitted": false,
-        "status": "Pending"
+        "status": "Approved"
     },
     {
         "id": "46",
@@ -376,7 +377,7 @@ export const bulletins = [
         "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
         "heroImage": "https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=1080",
         "isUserSubmitted": true,
-        "status": "Pending"
+        "status": "Approved"
     },
     {
         "id": "30",
@@ -394,7 +395,7 @@ export const bulletins = [
         "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
         "heroImage": "https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=1080",
         "isUserSubmitted": false,
-        "status": "Pending"
+        "status": "Approved"
     },
     {
         "id": "8",
@@ -484,7 +485,7 @@ export const bulletins = [
         "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
         "heroImage": "https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=1080",
         "isUserSubmitted": true,
-        "status": "Pending"
+        "status": "Approved"
     },
     {
         "id": "43",
@@ -502,7 +503,7 @@ export const bulletins = [
         "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
         "heroImage": "https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=1080",
         "isUserSubmitted": false,
-        "status": "Pending"
+        "status": "Approved"
     },
     {
         "id": "45",
@@ -556,7 +557,7 @@ export const bulletins = [
         "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
         "heroImage": "https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=1080",
         "isUserSubmitted": false,
-        "status": "Pending"
+        "status": "Approved"
     },
     {
         "id": "28",
@@ -574,7 +575,7 @@ export const bulletins = [
         "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
         "heroImage": "https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=1080",
         "isUserSubmitted": false,
-        "status": "Pending"
+        "status": "Approved"
     },
     {
         "id": "27",
@@ -610,7 +611,7 @@ export const bulletins = [
         "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
         "heroImage": "https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=1080",
         "isUserSubmitted": false,
-        "status": "Pending"
+        "status": "Approved"
     },
     {
         "id": "37",
@@ -628,7 +629,7 @@ export const bulletins = [
         "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
         "heroImage": "https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=1080",
         "isUserSubmitted": true,
-        "status": "Pending"
+        "status": "Approved"
     },
     {
         "id": "11",
@@ -646,7 +647,7 @@ export const bulletins = [
         "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
         "heroImage": "https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=1080",
         "isUserSubmitted": false,
-        "status": "Pending"
+        "status": "Approved"
     },
     {
         "id": "7",
@@ -664,7 +665,7 @@ export const bulletins = [
         "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
         "heroImage": "https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=1080",
         "isUserSubmitted": true,
-        "status": "Pending"
+        "status": "Approved"
     },
     {
         "id": "38",
@@ -682,7 +683,7 @@ export const bulletins = [
         "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
         "heroImage": "https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=1080",
         "isUserSubmitted": true,
-        "status": "Pending"
+        "status": "Approved"
     },
     {
         "id": "21",
@@ -700,7 +701,7 @@ export const bulletins = [
         "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
         "heroImage": "https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=1080",
         "isUserSubmitted": true,
-        "status": "Pending"
+        "status": "Approved"
     },
     {
         "id": "39",
@@ -718,7 +719,7 @@ export const bulletins = [
         "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
         "heroImage": "https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=1080",
         "isUserSubmitted": false,
-        "status": "Pending"
+        "status": "Approved"
     },
     {
         "id": "1",
@@ -736,7 +737,7 @@ export const bulletins = [
         "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
         "heroImage": "https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=1080",
         "isUserSubmitted": false,
-        "status": "Pending"
+        "status": "Approved"
     },
     {
         "id": "44",
@@ -754,7 +755,7 @@ export const bulletins = [
         "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
         "heroImage": "https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=1080",
         "isUserSubmitted": false,
-        "status": "Pending"
+        "status": "Approved"
     },
     {
         "id": "22",
@@ -772,7 +773,7 @@ export const bulletins = [
         "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
         "heroImage": "https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=1080",
         "isUserSubmitted": true,
-        "status": "Pending"
+        "status": "Approved"
     },
     {
         "id": "12",
@@ -790,7 +791,7 @@ export const bulletins = [
         "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
         "heroImage": "https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=1080",
         "isUserSubmitted": false,
-        "status": "Pending"
+        "status": "Approved"
     },
     {
         "id": "29",
@@ -808,7 +809,7 @@ export const bulletins = [
         "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
         "heroImage": "https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=1080",
         "isUserSubmitted": true,
-        "status": "Pending"
+        "status": "Approved"
     },
     {
         "id": "49",
@@ -880,7 +881,7 @@ export const bulletins = [
         "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
         "heroImage": "https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=1080",
         "isUserSubmitted": true,
-        "status": "Pending"
+        "status": "Approved"
     },
     {
         "id": "50",
@@ -898,7 +899,7 @@ export const bulletins = [
         "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
         "heroImage": "https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=1080",
         "isUserSubmitted": false,
-        "status": "Pending"
+        "status": "Approved"
     },
     {
         "id": "33",
@@ -934,7 +935,7 @@ export const bulletins = [
         "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
         "heroImage": "https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=1080",
         "isUserSubmitted": true,
-        "status": "Pending"
+        "status": "Approved"
     },
     {
         "id": "10",
@@ -988,7 +989,7 @@ export const bulletins = [
         "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
         "heroImage": "https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=1080",
         "isUserSubmitted": true,
-        "status": "Pending"
+        "status": "Approved"
     },
     {
         "id": "32",
@@ -1006,7 +1007,7 @@ export const bulletins = [
         "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
         "heroImage": "https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=1080",
         "isUserSubmitted": false,
-        "status": "Pending"
+        "status": "Approved"
     },
     {
         "id": "34",
@@ -1042,7 +1043,7 @@ export const bulletins = [
         "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
         "heroImage": "https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=1080",
         "isUserSubmitted": false,
-        "status": "Pending"
+        "status": "Approved"
     },
     {
         "id": "4",
@@ -1107,7 +1108,7 @@ export const events = [
             "going": 428,
             "invited": 609
         },
-        "status": "Pending",
+        "status": "Approved",
         "modality": "Zoom"
     },
     {
@@ -1196,7 +1197,7 @@ export const events = [
             "going": 248,
             "invited": 577
         },
-        "status": "Pending"
+        "status": "Approved"
     },
     {
         "id": "4",
@@ -1240,7 +1241,7 @@ export const events = [
             "going": 443,
             "invited": 222
         },
-        "status": "Pending"
+        "status": "Approved"
     },
     {
         "id": "5",
@@ -1284,7 +1285,7 @@ export const events = [
             "going": 24,
             "invited": 776
         },
-        "status": "Pending"
+        "status": "Approved"
     },
     {
         "id": "6",
@@ -1372,7 +1373,7 @@ export const events = [
             "going": 263,
             "invited": 824
         },
-        "status": "Pending"
+        "status": "Approved"
     },
     {
         "id": "8",
@@ -1460,7 +1461,7 @@ export const events = [
             "going": 117,
             "invited": 311
         },
-        "status": "Pending"
+        "status": "Approved"
     },
     {
         "id": "10",
@@ -1504,7 +1505,7 @@ export const events = [
             "going": 165,
             "invited": 196
         },
-        "status": "Pending"
+        "status": "Approved"
     },
     {
         "id": "11",
@@ -1856,7 +1857,7 @@ export const events = [
             "going": 62,
             "invited": 564
         },
-        "status": "Pending"
+        "status": "Approved"
     },
     {
         "id": "19",
@@ -1944,7 +1945,7 @@ export const events = [
             "going": 190,
             "invited": 628
         },
-        "status": "Pending"
+        "status": "Approved"
     },
     {
         "id": "21",
@@ -2032,7 +2033,7 @@ export const events = [
             "going": 290,
             "invited": 709
         },
-        "status": "Pending",
+        "status": "Approved",
         "modality": "Zoom"
     },
     {
@@ -2165,7 +2166,7 @@ export const events = [
             "going": 60,
             "invited": 120
         },
-        "status": "Pending",
+        "status": "Approved",
         "modality": "Google Meet"
     },
     {
@@ -2344,7 +2345,7 @@ export const events = [
             "going": 109,
             "invited": 667
         },
-        "status": "Pending"
+        "status": "Approved"
     },
     {
         "id": "30",
@@ -2388,7 +2389,7 @@ export const events = [
             "going": 414,
             "invited": 400
         },
-        "status": "Pending"
+        "status": "Approved"
     },
     {
         "id": "31",
@@ -2477,7 +2478,7 @@ export const events = [
             "going": 121,
             "invited": 574
         },
-        "status": "Pending",
+        "status": "Approved",
         "modality": "Google Meet"
     },
     {
@@ -2566,7 +2567,7 @@ export const events = [
             "going": 176,
             "invited": 870
         },
-        "status": "Pending"
+        "status": "Approved"
     },
     {
         "id": "35",
@@ -2610,7 +2611,7 @@ export const events = [
             "going": 372,
             "invited": 970
         },
-        "status": "Pending"
+        "status": "Approved"
     },
     {
         "id": "36",
@@ -2698,7 +2699,7 @@ export const events = [
             "going": 104,
             "invited": 675
         },
-        "status": "Pending"
+        "status": "Approved"
     },
     {
         "id": "38",
@@ -2742,7 +2743,7 @@ export const events = [
             "going": 472,
             "invited": 245
         },
-        "status": "Pending",
+        "status": "Approved",
         "modality": "Microsoft Teams"
     },
     {
@@ -2875,7 +2876,7 @@ export const events = [
             "going": 52,
             "invited": 385
         },
-        "status": "Pending"
+        "status": "Approved"
     },
     {
         "id": "42",
@@ -2963,7 +2964,7 @@ export const events = [
             "going": 292,
             "invited": 791
         },
-        "status": "Pending"
+        "status": "Approved"
     },
     {
         "id": "44",
@@ -3096,7 +3097,7 @@ export const events = [
             "going": 334,
             "invited": 504
         },
-        "status": "Pending"
+        "status": "Approved"
     },
     {
         "id": "47",
@@ -3184,7 +3185,7 @@ export const events = [
             "going": 280,
             "invited": 244
         },
-        "status": "Pending",
+        "status": "Approved",
         "modality": "Google Meet"
     },
     {
@@ -3274,6 +3275,6 @@ export const events = [
             "going": 447,
             "invited": 989
         },
-        "status": "Pending"
+        "status": "Approved"
     }
 ];

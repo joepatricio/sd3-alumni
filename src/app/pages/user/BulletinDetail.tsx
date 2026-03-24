@@ -13,10 +13,15 @@ import { CreateBulletinModal } from '@components/user/CreateBulletinModal';
 import { Button } from '@components/ui/button';
 import { NotFound } from '@pages/NotFound';
 import { bulletins, comments } from '@assets/mockData';
+import { LazyImage } from '@components/user/LazyImage';
+import { useAuth } from '@utils/auth';
 
 export function BulletinDetail() {
     const { id } = useParams();
+    const { isLoggedIn } = useAuth();
     const [comment, setComment] = useState('');
+    const [localComments, setLocalComments] = useState(comments);
+    const [likedComments, setLikedComments] = useState<string[]>([]);
     const isAdmin = !!localStorage.getItem('adminToken');
 
     const bulletin = bulletins.find((b) => b.id === id);
@@ -26,11 +31,31 @@ export function BulletinDetail() {
         return <NotFound />;
     }
 
-    const handleSubmitComment = (e: React.SubmitEvent) => {
+    const handleSubmitComment = (e: React.FormEvent) => {
         e.preventDefault();
-        console.log('Comment submitted:', comment);
+        if (!comment.trim()) return;
+        const newDoc = {
+            id: Date.now().toString(),
+            bulletinId: bulletin.id,
+            author: {
+                name: "You",
+                image: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&q=80&w=64&h=64"
+            },
+            content: comment,
+            date: "Just now",
+            likes: 0
+        };
+        setLocalComments([newDoc, ...localComments]);
         setComment('');
-        // In production, submit to backend
+    };
+
+    const handleToggleLike = (commentId: string) => {
+        if (!isLoggedIn) return;
+        setLikedComments(prev =>
+            prev.includes(commentId)
+                ? prev.filter(vid => vid !== commentId)
+                : [...prev, commentId]
+        );
     };
 
     return (
@@ -43,7 +68,7 @@ export function BulletinDetail() {
                 </div>
             )}
             {/* Back Button and Edit Button */}
-            <div className="max-w-4xl mx-auto px-4 md:px-8 pt-4 flex justify-between items-center">
+            <div className="max-w-4xl mx-auto px-4 md:px-8 pt-6 flex justify-between items-center">
                 <Link
                     to="/bulletin"
                     className="inline-flex items-center gap-2 text-gray-600 hover:text-[#1a5f3f] transition-colors"
@@ -52,16 +77,18 @@ export function BulletinDetail() {
                     <span className='font-medium'>Back to Bulletin</span>
                 </Link>
 
-                <CreateBulletinModal
-                    trigger={
-                        <Button variant="outline" className="gap-2 text-[#1a5f3f] border-[#1a5f3f] hover:bg-[#1a5f3f] hover:text-white transition-colors">
-                            <Edit className="w-4 h-4" />
-                            Edit Bulletin
-                        </Button>
-                    }
-                    initialData={bulletin}
-                    isAdmin={isAdmin}
-                />
+                {isLoggedIn && (
+                    <CreateBulletinModal
+                        trigger={
+                            <Button variant="outline" className="gap-2 text-[#1a5f3f] border-[#1a5f3f] hover:bg-[#1a5f3f] hover:text-white transition-colors">
+                                <Edit className="w-4 h-4" />
+                                Edit Bulletin
+                            </Button>
+                        }
+                        initialData={bulletin}
+                        isAdmin={isAdmin}
+                    />
+                )}
             </div>
 
             {/* Article */}
@@ -70,7 +97,7 @@ export function BulletinDetail() {
                     {/* Hero Image */}
                     {bulletin.heroImage && (
                         <div className="w-full h-96 overflow-hidden">
-                            <img
+                            <LazyImage
                                 src={bulletin.heroImage}
                                 alt={bulletin.title}
                                 className="w-full h-full object-cover"
@@ -103,7 +130,7 @@ export function BulletinDetail() {
                             <div className="flex items-center gap-4 ml-auto text-sm text-gray-500">
                                 <div className="flex items-center gap-1">
                                     <Clock className="w-4 h-4" />
-                                    <span>{bulletin.date}</span>
+                                    <span>{new Date(bulletin.date).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</span>
                                 </div>
                                 <span>•</span>
                                 <span>{bulletin.readTime}</span>
@@ -129,71 +156,91 @@ export function BulletinDetail() {
                     </h2>
 
                     {/* Comment Form */}
-                    <form onSubmit={handleSubmitComment} className="mb-8">
-                        <div className="flex gap-3">
-                            <div className="flex-shrink-0">
-                                <div className="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center">
-                                    <User className="w-6 h-6 text-gray-600" />
+                    {isLoggedIn ? (
+                        <form onSubmit={handleSubmitComment} className="mb-8">
+                            <div className="flex gap-3">
+                                <div className="flex-shrink-0">
+                                    <div className="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center">
+                                        <User className="w-6 h-6 text-gray-600" />
+                                    </div>
+                                </div>
+                                <div className="flex-1">
+                                    <textarea
+                                        value={comment}
+                                        onChange={(e) => setComment(e.target.value)}
+                                        placeholder="Add a comment..."
+                                        rows={3}
+                                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1a5f3f] resize-none"
+                                        required
+                                    />
+                                    <div className="flex justify-end mt-2">
+                                        <button
+                                            type="submit"
+                                            className="flex items-center gap-2 bg-[#1a5f3f] text-white px-6 py-2 rounded-lg hover:bg-[#2d7a4f] transition-colors font-semibold"
+                                        >
+                                            <Send className="w-4 h-4" />
+                                            Post Comment
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
-                            <div className="flex-1">
-                                <textarea
-                                    value={comment}
-                                    onChange={(e) => setComment(e.target.value)}
-                                    placeholder="Add a comment..."
-                                    rows={3}
-                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1a5f3f] resize-none"
-                                    required
-                                />
-                                <div className="flex justify-end mt-2">
-                                    <button
-                                        type="submit"
-                                        className="flex items-center gap-2 bg-[#1a5f3f] text-white px-6 py-2 rounded-lg hover:bg-[#2d7a4f] transition-colors font-semibold"
-                                    >
-                                        <Send className="w-4 h-4" />
-                                        Post Comment
-                                    </button>
-                                </div>
-                            </div>
+                        </form>
+                    ) : (
+                        <div className="text-center py-8 px-4 bg-gray-50 rounded-lg border border-gray-100 mb-8">
+                            <MessageCircle className="w-10 h-10 text-[#1a5f3f]/50 mx-auto mb-3" />
+                            <h3 className="text-lg font-bold text-gray-900 mb-2">Join the Discussion</h3>
+                            <p className="text-gray-500 text-sm mb-4">Log in to share your thoughts, ask questions, and interact with other alumni.</p>
+                            <Link to="/login" state={{ from: `/bulletin/${bulletin.id}` }} className="inline-block">
+                                <Button className="bg-[#1a5f3f] hover:bg-[#154e33]">
+                                    Log In to Comment
+                                </Button>
+                            </Link>
                         </div>
-                    </form>
+                    )}
 
                     {/* Comments List */}
                     <div className="space-y-6">
-                        {comments.map((commentItem) => (
-                            <div key={commentItem.id} className="flex gap-3">
-                                <Link
-                                    to="/profile"
-                                    className="flex-shrink-0 hover:opacity-80 transition-opacity"
-                                >
-                                    <img
-                                        src={commentItem.author.image}
-                                        alt={commentItem.author.name}
-                                        className="w-10 h-10 rounded-full object-cover"
-                                    />
-                                </Link>
-                                <div className="flex-1">
-                                    <div className="bg-gray-50 rounded-lg p-4">
-                                        <div className="flex items-center gap-2 mb-2">
-                                            <Link
-                                                to="/profile"
-                                                className="font-semibold text-gray-900 hover:text-[#1a5f3f] transition-colors"
-                                            >
-                                                {commentItem.author.name}
-                                            </Link>
-                                            <span className="text-sm text-gray-500">
-                                                {commentItem.date}
-                                            </span>
+                        {localComments.map((commentItem) => {
+                            const isLiked = likedComments.includes(commentItem.id);
+                            return (
+                                <div key={commentItem.id} className="flex gap-3">
+                                    <Link
+                                        to="/profile"
+                                        className="flex-shrink-0 hover:opacity-80 transition-opacity"
+                                    >
+                                        <img
+                                            src={commentItem.author.image}
+                                            alt={commentItem.author.name}
+                                            className="w-10 h-10 rounded-full object-cover"
+                                        />
+                                    </Link>
+                                    <div className="flex-1">
+                                        <div className="bg-gray-50 rounded-lg p-4">
+                                            <div className="flex items-center gap-2 mb-2">
+                                                <Link
+                                                    to="/profile"
+                                                    className="font-semibold text-gray-900 hover:text-[#1a5f3f] transition-colors"
+                                                >
+                                                    {commentItem.author.name}
+                                                </Link>
+                                                <span className="text-sm text-gray-500">
+                                                    {commentItem.date}
+                                                </span>
+                                            </div>
+                                            <p className="text-gray-700">{commentItem.content}</p>
                                         </div>
-                                        <p className="text-gray-700">{commentItem.content}</p>
+                                        <button
+                                            onClick={() => handleToggleLike(commentItem.id)}
+                                            className={`flex items-center gap-1 mt-2 text-sm transition-colors ${isLiked ? 'text-[#1a5f3f] font-semibold' : 'text-gray-600 hover:text-[#1a5f3f]'
+                                                } ${!isLoggedIn ? 'cursor-default opacity-80' : ''}`}
+                                        >
+                                            <ThumbsUp className={`w-4 h-4 ${isLiked ? 'fill-[#1a5f3f]' : ''}`} />
+                                            <span>{commentItem.likes + (isLiked ? 1 : 0)}</span>
+                                        </button>
                                     </div>
-                                    <button className="flex items-center gap-1 mt-2 text-sm text-gray-600 hover:text-[#1a5f3f] transition-colors">
-                                        <ThumbsUp className="w-4 h-4" />
-                                        <span>{commentItem.likes}</span>
-                                    </button>
                                 </div>
-                            </div>
-                        ))}
+                            );
+                        })}
                     </div>
                 </div>
             </div>

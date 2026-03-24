@@ -1,7 +1,7 @@
-// Create dialogue boxes for the Create Bulletin and the Create Events bulletin. Refer to the respective webpage for the required and optional fields. Additionally, create a popup to confirm that the entry has been "successfully created." For now, the create function does not need to actually create an entry in their corresponding feeds.
-
-
-
+// Create dialogue boxes for the Create Bulletin and the Create Events bulletin. 
+// Refer to the respective webpage for the required and optional fields. 
+// Additionally, create a popup to confirm that the entry has been "successfully created." 
+// or now, the create function does not need to actually create an entry in their corresponding feeds.
 import { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import {
@@ -13,7 +13,7 @@ import {
 } from 'lucide-react';
 import { CreateBulletinModal } from '@/app/components/user/CreateBulletinModal';
 import { Button } from '@/app/components/ui/button';
-
+import { LazyImage } from '@/app/components/user/LazyImage';
 import { bulletins } from '@assets/mockData';
 
 type ViewMode = 'headline' | 'article';
@@ -21,7 +21,7 @@ const ARTICLE_ITEMS_PER_PAGE = 5;
 const HEADLINE_ITEMS_PER_PAGE = 10;
 
 export function Bulletin() {
-    const [viewMode, setViewMode] = useState<ViewMode>('headline');
+    const [viewMode, setViewMode] = useState<ViewMode>('article');
     const [showUserSubmitted, setShowUserSubmitted] = useState(false);
     const [dateFrom, setDateFrom] = useState('');
     const [dateTo, setDateTo] = useState('');
@@ -171,7 +171,7 @@ export function Bulletin() {
                                         <>
                                             {item.heroImage && (
                                                 <div className="w-full h-64 overflow-hidden">
-                                                    <img
+                                                    <LazyImage
                                                         src={item.heroImage}
                                                         alt={item.title}
                                                         className="w-full h-full object-cover"
