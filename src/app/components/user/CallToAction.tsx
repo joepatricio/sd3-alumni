@@ -14,7 +14,7 @@ export function CallToAction() {
       description:
         "Find and reconnect with classmates and fellow Josenians worldwide.",
       link: "/directory",
-      color: "bg-[#1a5f3f]",
+      color: "bg-[#d97706]",
     },
     {
       icon: Calendar,
@@ -22,7 +22,7 @@ export function CallToAction() {
       description:
         "Join alumni gatherings, networking sessions, and special celebrations.",
       link: "/events",
-      color: "bg-[#2d7a4f]",
+      color: "bg-[#b45309]",
     },
     {
       icon: Newspaper,

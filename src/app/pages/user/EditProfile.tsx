@@ -78,7 +78,7 @@ export function EditProfile() {
                                 <button
                                     type="submit"
                                     disabled={form.formState.isSubmitting}
-                                    className="flex items-center gap-2 px-4 py-2 bg-[#1a5f3f] text-white rounded-lg hover:bg-[#2d7a4f] transition-colors font-semibold disabled:opacity-50"
+                                    className="flex items-center gap-2 px-4 py-2 bg-[#d97706] text-white rounded-lg hover:bg-[#b45309] transition-colors font-semibold disabled:opacity-50"
                                 >
                                     <Save className="w-4 h-4" />
                                     Accept Changes
@@ -88,7 +88,7 @@ export function EditProfile() {
 
                         {/* Personal Information */}
                         <div className="space-y-4">
-                            <h3 className="text-lg font-semibold text-[#1a5f3f] border-b pb-2">Personal Information</h3>
+                            <h3 className="text-lg font-semibold text-[#d97706] border-b pb-2">Personal Information</h3>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <FormField
                                     control={form.control}
@@ -97,7 +97,7 @@ export function EditProfile() {
                                         <FormItem>
                                             <FormLabel>Full Name <span className="text-red-500">*</span></FormLabel>
                                             <FormControl>
-                                                <Input placeholder="Full Name" {...field} className="selection:bg-blue-500 selection:text-white focus-visible:ring-[#1a5f3f]" />
+                                                <Input placeholder="Full Name" {...field} className="selection:bg-blue-500 selection:text-white focus-visible:ring-[#d97706]" />
                                             </FormControl>
                                             <FormMessage />
                                         </FormItem>
@@ -110,7 +110,7 @@ export function EditProfile() {
                                         <FormItem>
                                             <FormLabel>Email Address <span className="text-red-500">*</span></FormLabel>
                                             <FormControl>
-                                                <Input placeholder="Email Address" type="email" {...field} className="selection:bg-blue-500 selection:text-white focus-visible:ring-[#1a5f3f]" />
+                                                <Input placeholder="Email Address" type="email" {...field} className="selection:bg-blue-500 selection:text-white focus-visible:ring-[#d97706]" />
                                             </FormControl>
                                             <FormMessage />
                                         </FormItem>
@@ -123,7 +123,7 @@ export function EditProfile() {
                                         <FormItem>
                                             <FormLabel>Phone Number</FormLabel>
                                             <FormControl>
-                                                <Input placeholder="Phone Number" {...field} className="selection:bg-blue-500 selection:text-white focus-visible:ring-[#1a5f3f]" />
+                                                <Input placeholder="Phone Number" {...field} className="selection:bg-blue-500 selection:text-white focus-visible:ring-[#d97706]" />
                                             </FormControl>
                                             <FormMessage />
                                         </FormItem>
@@ -136,7 +136,7 @@ export function EditProfile() {
                                         <FormItem>
                                             <FormLabel>Location</FormLabel>
                                             <FormControl>
-                                                <Input placeholder="Location" {...field} className="selection:bg-blue-500 selection:text-white focus-visible:ring-[#1a5f3f]" />
+                                                <Input placeholder="Location" {...field} className="selection:bg-blue-500 selection:text-white focus-visible:ring-[#d97706]" />
                                             </FormControl>
                                             <FormMessage />
                                         </FormItem>
@@ -149,7 +149,7 @@ export function EditProfile() {
                                         <FormItem>
                                             <FormLabel>Current Job</FormLabel>
                                             <FormControl>
-                                                <Input placeholder="Current Job" {...field} className="selection:bg-blue-500 selection:text-white focus-visible:ring-[#1a5f3f]" />
+                                                <Input placeholder="Current Job" {...field} className="selection:bg-blue-500 selection:text-white focus-visible:ring-[#d97706]" />
                                             </FormControl>
                                             <FormMessage />
                                         </FormItem>
@@ -162,7 +162,7 @@ export function EditProfile() {
                                         <FormItem>
                                             <FormLabel>Company</FormLabel>
                                             <FormControl>
-                                                <Input placeholder="Company" {...field} className="selection:bg-blue-500 selection:text-white focus-visible:ring-[#1a5f3f]" />
+                                                <Input placeholder="Company" {...field} className="selection:bg-blue-500 selection:text-white focus-visible:ring-[#d97706]" />
                                             </FormControl>
                                             <FormMessage />
                                         </FormItem>
@@ -176,7 +176,7 @@ export function EditProfile() {
                                             <FormItem>
                                                 <FormLabel>Bio</FormLabel>
                                                 <FormControl>
-                                                    <Textarea placeholder="Bio" rows={4} {...field} className="selection:bg-blue-500 selection:text-white resize-none focus-visible:ring-[#1a5f3f]" />
+                                                    <Textarea placeholder="Bio" rows={4} {...field} className="selection:bg-blue-500 selection:text-white resize-none focus-visible:ring-[#d97706]" />
                                                 </FormControl>
                                                 <FormMessage />
                                             </FormItem>
@@ -197,7 +197,7 @@ export function EditProfile() {
                             <button
                                 type="submit"
                                 disabled={form.formState.isSubmitting}
-                                className="px-6 py-2 bg-[#1a5f3f] text-white rounded-lg hover:bg-[#2d7a4f] transition-colors font-semibold disabled:opacity-50"
+                                className="px-6 py-2 bg-[#d97706] text-white rounded-lg hover:bg-[#b45309] transition-colors font-semibold disabled:opacity-50"
                             >
                                 Accept Changes
                             </button>

@@ -229,7 +229,7 @@ export function CreateEventModal({ trigger, initialData, isAdmin }: CreateEventM
                     lng: 123.8944
                 };
             } else if (parsedLocation && !parsedLocation.lat) {
-                 parsedLocation = { ...parsedLocation, lat: 10.2954, lng: 123.8944 };
+                parsedLocation = { ...parsedLocation, lat: 10.2954, lng: 123.8944 };
             }
 
             form.reset({
@@ -590,11 +590,11 @@ export function CreateEventModal({ trigger, initialData, isAdmin }: CreateEventM
         setTimeout(() => {
             const isEditMode = !!initialData;
             const isPending = !isAdmin && isEditMode;
-            const message = initialData 
-                ? (isPending ? 'Event update submitted for review!' : 'Event successfully updated!') 
+            const message = initialData
+                ? (isPending ? 'Event update submitted for review!' : 'Event successfully updated!')
                 : 'Event successfully created!';
-            const description = initialData 
-                ? (isPending ? 'Your changes require admin approval before they are live.' : 'Your changes have been saved.') 
+            const description = initialData
+                ? (isPending ? 'Your changes require admin approval before they are live.' : 'Your changes have been saved.')
                 : 'Your event has been scheduled.';
 
             toast.success(message, {
@@ -883,7 +883,7 @@ export function CreateEventModal({ trigger, initialData, isAdmin }: CreateEventM
                                         </Button>
 
                                         <Button
-                                            className="cursor-pointer text-[#1a5f3f] border-[#1a5f3f]"
+                                            className="cursor-pointer text-[#d97706] border-[#d97706]"
                                             type="button"
                                             variant="outline"
                                             onClick={reverseGeocode}
@@ -1097,7 +1097,7 @@ export function CreateEventModal({ trigger, initialData, isAdmin }: CreateEventM
                         </div>
 
                         <DialogFooter>
-                            <Button className="bg-[#1a5f3f]  hover:bg-[#2d7a4f]" type="submit" disabled={form.formState.isSubmitting}>
+                            <Button className="bg-[#d97706]  hover:bg-[#b45309]" type="submit" disabled={form.formState.isSubmitting}>
                                 {form.formState.isSubmitting && (
                                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                                 )}

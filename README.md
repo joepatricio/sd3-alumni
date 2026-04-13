@@ -68,7 +68,8 @@
   * Implement basic search for Alumni Directory (search by name only)
   * Admin Alumni Directory
   * Redesign /profile
-  * Past events should have a banner showing that they're past events. RSVP should be disabled for past events.
+  * RSVP should be disabled for past events. It should instead notify the user that the event has passed.
+  * Color scheme should be abstracted.
 
   * Microinteractions (e.g. hover effects, button clicks, alumni directory, etc.), lazy loading for some INP-slow components (mostly just CreateEventModal)
   * UX stuff (Mobile testing, happy pathing, toasts everywhere)
@@ -78,6 +79,7 @@
   * Refactor code for better readability and maintainability. Should be done last to avoid breaking stuff and make it easier to prototype
 
   ## TODO after client approval
+  * Possible migration to Video.js
   * Keywords for Bulletin using NLP.
   * ADMIN: Add Keywords column. Bulletins can have multiple keywords (backward implementation to User screens)
   * Performance optimizations to the website (CPU Throttle happy pathing, lazy loading, SSR, TTFB, LCP, etc.)

@@ -88,11 +88,11 @@ export function CreateBulletinModal({ trigger, initialData, isAdmin = false }: C
 
         setTimeout(() => {
             const isPending = !isAdmin && isEditMode;
-            const message = initialData 
-                ? (isPending ? 'Bulletin update submitted for review!' : 'Bulletin successfully updated!') 
+            const message = initialData
+                ? (isPending ? 'Bulletin update submitted for review!' : 'Bulletin successfully updated!')
                 : 'Bulletin successfully created!';
-            const description = initialData 
-                ? (isPending ? 'Your changes require admin approval before they are live.' : 'Your changes have been saved.') 
+            const description = initialData
+                ? (isPending ? 'Your changes require admin approval before they are live.' : 'Your changes have been saved.')
                 : 'Your bulletin has been submitted for review.';
 
             toast.success(message, {
@@ -185,7 +185,7 @@ export function CreateBulletinModal({ trigger, initialData, isAdmin = false }: C
 
                         {/* Footer */}
                         <DialogFooter>
-                            <Button className="bg-[#1a5f3f]  hover:bg-[#2d7a4f]" type="submit" disabled={form.formState.isSubmitting}>
+                            <Button className="bg-[#d97706]  hover:bg-[#b45309]" type="submit" disabled={form.formState.isSubmitting}>
                                 {form.formState.isSubmitting && (
                                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                                 )}

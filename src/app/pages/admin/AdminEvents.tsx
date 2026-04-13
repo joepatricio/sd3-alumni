@@ -20,7 +20,7 @@ export function AdminEvents() {
 
     const handleStatusChange = (id: string, newStatus: "Approved" | "Rejected" | "Pending") => {
         setEventsData(prev => prev.map(item => item.id === id ? { ...item, status: newStatus } : item));
-        
+
         // Mutate the original mock array so it persists for other components
         const eventIndex = events.findIndex(e => e.id === id);
         if (eventIndex !== -1) {
@@ -40,8 +40,8 @@ export function AdminEvents() {
             description="Review, approve, or reject user-submitted networking and community events."
             contentType="Event"
             mockData={eventsData}
-            primaryColorClass="bg-[#1a5f3f] hover:bg-[#154d33] text-white"
-            outlineColorClass="text-[#1a5f3f] border-[#1a5f3f] hover:bg-[#1a5f3f]/10"
+            primaryColorClass="bg-[#d97706] hover:bg-[#154d33] text-white"
+            outlineColorClass="text-[#d97706] border-[#d97706] hover:bg-[#d97706]/10"
             onStatusChange={handleStatusChange}
         />
     );

@@ -20,17 +20,17 @@ interface Donation {
 export function AdminDonations() {
     const ITEMS_PER_PAGE = 20;
     const stats = getDonationStats();
-    
+
     // Filter State
     const [activeTab, setActiveTab] = useState('All');
-    
+
     // Filter State
     const [searchDonor, setSearchDonor] = useState('');
     const [minAmount, setMinAmount] = useState('');
     const [maxAmount, setMaxAmount] = useState('');
     const [startDate, setStartDate] = useState('');
     const [endDate, setEndDate] = useState('');
-    
+
     // Explicit filter applied state
     const [appliedSearchDonor, setAppliedSearchDonor] = useState('');
     const [appliedMinAmount, setAppliedMinAmount] = useState('');
@@ -65,10 +65,10 @@ export function AdminDonations() {
 
     const handleExportCSV = () => {
         const headers = ['Date', 'Donor', 'Amount', 'Status'];
-        const csvContent = filteredDonations.map(d => 
+        const csvContent = filteredDonations.map(d =>
             `"${d.date}","${d.donor}","${d.amount}","${d.status}"`
         );
-        
+
         const csvString = [headers.join(','), ...csvContent].join('\n');
         const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
         const link = document.createElement('a');
@@ -89,13 +89,13 @@ export function AdminDonations() {
         setMaxAmount('');
         setStartDate('');
         setEndDate('');
-        
+
         setAppliedSearchDonor('');
         setAppliedMinAmount('');
         setAppliedMaxAmount('');
         setAppliedStartDate('');
         setAppliedEndDate('');
-        
+
         setCurrentPage(1);
     };
 
@@ -165,7 +165,7 @@ export function AdminDonations() {
 
     const totalPages = Math.ceil(filteredDonations.length / ITEMS_PER_PAGE);
     const paginatedDonations = filteredDonations.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
-    
+
     // Top 5 recent donations for the separate table
     // Creating a new array before sorting to avoid mutating the original mock data
     const recentDonations = useMemo(() => {
@@ -213,7 +213,7 @@ export function AdminDonations() {
                     </CardContent>
                 </Card>
             </div>
-            
+
             <Card className="border-none shadow-md">
                 <CardHeader>
                     <CardTitle className="text-lg">Recent Donations</CardTitle>
@@ -247,7 +247,7 @@ export function AdminDonations() {
                                             <td className="px-6 py-4">
                                                 <Badge className={
                                                     donation.status === 'Completed' ? 'bg-green-100 text-green-800' :
-                                                        donation.status === 'Processing' ? 'bg-yellow-100 text-yellow-800' : 
+                                                        donation.status === 'Processing' ? 'bg-yellow-100 text-yellow-800' :
                                                             donation.status === 'Failed' ? 'bg-red-100 text-red-800' : 'bg-gray-100 text-gray-800'
                                                 }>
                                                     {donation.status}
@@ -286,7 +286,7 @@ export function AdminDonations() {
                             <TabsTrigger value="Failed" className="min-w-[100px]">Failed</TabsTrigger>
                         </TabsList>
                     </Tabs>
-                    
+
                     <div className="p-4 bg-gray-50/50 border border-gray-100 rounded-lg flex flex-col gap-4">
                         <div className="text-sm font-medium text-gray-700">Filters</div>
                         <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
@@ -340,10 +340,10 @@ export function AdminDonations() {
                                     onKeyDown={(e) => { if (e.key === 'Enter') handleApplyFilters(); }}
                                 />
                             </div>
-                            
+
                             <div className="lg:col-span-2 flex items-center gap-2 justify-end lg:justify-start">
                                 <Button variant="outline" onClick={handleClearFilters}>Clear</Button>
-                                <Button className="bg-[#1a5f3f] hover:bg-[#154d33]" onClick={handleApplyFilters}>Submit</Button>
+                                <Button className="bg-[#d97706] hover:bg-[#154d33]" onClick={handleApplyFilters}>Submit</Button>
                             </div>
                         </div>
                     </div>
@@ -383,7 +383,7 @@ export function AdminDonations() {
                                             <td className="px-6 py-4">
                                                 <Badge className={
                                                     donation.status === 'Completed' ? 'bg-green-100 text-green-800' :
-                                                        donation.status === 'Processing' ? 'bg-yellow-100 text-yellow-800' : 
+                                                        donation.status === 'Processing' ? 'bg-yellow-100 text-yellow-800' :
                                                             donation.status === 'Failed' ? 'bg-red-100 text-red-800' : 'bg-gray-100 text-gray-800'
                                                 }>
                                                     {donation.status}

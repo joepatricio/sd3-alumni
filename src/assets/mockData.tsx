@@ -7,6 +7,20 @@ export const generateTime = (event: any) => {
     return event.id === '7' ? `${base} (PHT)` : base;
 };
 
+export const ACHIEVEMENTS = [
+    { id: 'year-1', title: '1-Year Club', description: 'Has been a member for 1 year', type: 'year', iconName: 'Star', tier: 1 },
+    { id: 'year-5', title: '5-Year Club', description: 'Has been a member for 5 years', type: 'year', iconName: 'Award', tier: 2 },
+    { id: 'year-10', title: '10-Year Club', description: 'Has been a member for 10 years', type: 'year', iconName: 'Trophy', tier: 3 },
+    { id: 'reads', title: 'READS Alumni', description: 'Part of the Recoletos Educational Assistance for Deserving Students', type: 'special', iconName: 'BookOpen', tier: 1 },
+    { id: 'phil-1', title: 'Philanthropist I', description: 'Donated up to ₱10,000', type: 'donations', iconName: 'Heart', tier: 1 },
+    { id: 'phil-2', title: 'Philanthropist II', description: 'Donated up to ₱50,000', type: 'donations', iconName: 'HeartPulse', tier: 2 },
+    { id: 'phil-3', title: 'Philanthropist III', description: 'Donated up to ₱100,000', type: 'donations', iconName: 'HandCoins', tier: 3 },
+    { id: 'event-1', title: 'Event Enthusiast I', description: 'Attended 5 events', type: 'events', iconName: 'Calendar', tier: 1 },
+    { id: 'event-2', title: 'Event Enthusiast II', description: 'Attended 15 events', type: 'events', iconName: 'CalendarDays', tier: 2 },
+    { id: 'msg-1', title: 'Contributor I', description: 'Written 10 comments', type: 'comments', iconName: 'MessageSquare', tier: 1 },
+    { id: 'msg-2', title: 'Contributor II', description: 'Written 50 comments', type: 'comments', iconName: 'MessageCircle', tier: 2 },
+];
+
 export const userData = {
     name: 'Maria Santos',
     email: 'maria.santos@example.com',
@@ -37,7 +51,14 @@ export const userData = {
         year: '2018',
         degree: 'Master of Science in Computer Science',
     },
-    // TODO: 
+    eventsAttended: ['1', '2', '3', '8'],
+    achievements: [
+        { id: 'year-10', dateGranted: '2025-03-15' },
+        { id: 'reads', dateGranted: '2015-05-20' },
+        { id: 'phil-2', dateGranted: '2026-01-10' },
+        { id: 'event-1', dateGranted: '2024-11-05' },
+        { id: 'msg-2', dateGranted: '2025-08-22' }
+    ],
     stats: [
         { iconName: 'Users', label: 'Connections', value: '248' },
         { iconName: 'Calendar', label: 'Events Attended', value: '12' },

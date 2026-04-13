@@ -30,10 +30,10 @@ const ScrollToTop = ({ children, scrollContainerRef }: ScrollToTopProps) => {
 
     useEffect(() => {
         const handleScroll = () => {
-            const scrollTop = scrollContainerRef?.current 
-                ? scrollContainerRef.current.scrollTop 
+            const scrollTop = scrollContainerRef?.current
+                ? scrollContainerRef.current.scrollTop
                 : window.scrollY;
-                
+
             if (scrollTop > 300) {
                 setShowScrollTop(true);
             } else {
@@ -43,7 +43,7 @@ const ScrollToTop = ({ children, scrollContainerRef }: ScrollToTopProps) => {
 
         const target = scrollContainerRef?.current || window;
         target.addEventListener('scroll', handleScroll);
-        
+
         // Initial check
         handleScroll();
 
@@ -56,7 +56,7 @@ const ScrollToTop = ({ children, scrollContainerRef }: ScrollToTopProps) => {
             {showScrollTop && (
                 <button
                     onClick={scrollToTop}
-                    className="fixed bottom-8 right-8 bg-[#1a5f3f] text-white p-3 rounded-full shadow-lg hover:bg-[#154e33] transition-all flex items-center justify-center z-50 animate-in fade-in slide-in-from-bottom-2"
+                    className="fixed bottom-8 right-8 bg-[#d97706] text-white p-3 rounded-full shadow-lg hover:bg-[#92400e] transition-all flex items-center justify-center z-50 animate-in fade-in slide-in-from-bottom-2"
                     aria-label="Scroll to top"
                 >
                     <ArrowUp className="w-6 h-6" />

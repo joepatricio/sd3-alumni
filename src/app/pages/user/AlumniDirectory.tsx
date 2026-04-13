@@ -97,7 +97,7 @@ export function AlumniDirectory() {
             {/* Hero Section */}
             <div className="text-black py-20">
                 <div className="max-w-6xl mx-auto px-4 md:px-8 text-center">
-                    <h1 className="text-5xl md:text-6xl font-bold mb-4 text-[#1a5f3f]">
+                    <h1 className="text-5xl md:text-6xl font-bold mb-4 text-[#d97706]">
                         Welcome to the home of
                     </h1>
                     <h2 className="text-4xl md:text-5xl font-bold mb-8 text-[#d4af37]">
@@ -124,7 +124,7 @@ export function AlumniDirectory() {
                             />
                             <button
                                 type="submit"
-                                className="absolute right-2 top-1/2 -translate-y-1/2 bg-[#1a5f3f] text-white px-6 py-2 rounded-lg hover:bg-[#2d7a4f] transition-colors font-semibold"
+                                className="absolute right-2 top-1/2 -translate-y-1/2 bg-[#d97706] text-white px-6 py-2 rounded-lg hover:bg-[#b45309] transition-colors font-semibold"
                             >
                                 Search
                             </button>
@@ -150,7 +150,7 @@ export function AlumniDirectory() {
                             className="w-full px-6 py-4 flex items-center justify-between hover:bg-gray-50 transition-colors"
                         >
                             <div className="flex items-center gap-3">
-                                <GraduationCap className="w-6 h-6 text-[#1a5f3f]" />
+                                <GraduationCap className="w-6 h-6 text-[#d97706]" />
                                 <h3 className="text-xl font-bold">College Alumni Directory</h3>
                             </div>
                             {expandedSection === 'college' ? (
@@ -171,7 +171,7 @@ export function AlumniDirectory() {
                                             <select
                                                 value={collegeYear}
                                                 onChange={(e) => setCollegeYear(e.target.value)}
-                                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1a5f3f]"
+                                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#d97706]"
                                             >
                                                 <option value="">All Years</option>
                                                 {years.map((year) => (
@@ -188,7 +188,7 @@ export function AlumniDirectory() {
                                             <select
                                                 value={collegeIndustry}
                                                 onChange={(e) => setCollegeIndustry(e.target.value)}
-                                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1a5f3f]"
+                                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#d97706]"
                                             >
                                                 <option value="">All Industries</option>
                                                 {industries.map((industry) => (
@@ -205,7 +205,7 @@ export function AlumniDirectory() {
                                             <select
                                                 value={collegeDegreeLevel}
                                                 onChange={(e) => setCollegeDegreeLevel(e.target.value)}
-                                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1a5f3f]"
+                                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#d97706]"
                                             >
                                                 <option value="">All Degree Levels</option>
                                                 {degreeLevels.map((degreeLevel) => (
@@ -218,7 +218,7 @@ export function AlumniDirectory() {
                                     </div>
                                     <button
                                         type="submit"
-                                        className="w-full bg-[#1a5f3f] text-white py-3 rounded-lg hover:bg-[#2d7a4f] transition-colors font-semibold"
+                                        className="w-full bg-[#d97706] text-white py-3 rounded-lg hover:bg-[#b45309] transition-colors font-semibold"
                                     >
                                         Search College Alumni
                                     </button>
@@ -234,7 +234,7 @@ export function AlumniDirectory() {
                             className="w-full px-6 py-4 flex items-center justify-between hover:bg-gray-50 transition-colors"
                         >
                             <div className="flex items-center gap-3">
-                                <GraduationCap className="w-6 h-6 text-[#1a5f3f]" />
+                                <GraduationCap className="w-6 h-6 text-[#d97706]" />
                                 <h3 className="text-xl font-bold">
                                     Senior High School Alumni Directory
                                 </h3>
@@ -257,7 +257,7 @@ export function AlumniDirectory() {
                                             <select
                                                 value={shsYear}
                                                 onChange={(e) => setShsYear(e.target.value)}
-                                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1a5f3f]"
+                                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#d97706]"
                                             >
                                                 <option value="">All Years</option>
                                                 {years.map((year) => (
@@ -274,7 +274,7 @@ export function AlumniDirectory() {
                                             <select
                                                 value={shsStrand}
                                                 onChange={(e) => setShsStrand(e.target.value)}
-                                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1a5f3f]"
+                                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#d97706]"
                                             >
                                                 <option value="">All Strands</option>
                                                 {strands.map((strand) => (
@@ -287,7 +287,7 @@ export function AlumniDirectory() {
                                     </div>
                                     <button
                                         type="submit"
-                                        className="w-full bg-[#1a5f3f] text-white py-3 rounded-lg hover:bg-[#2d7a4f] transition-colors font-semibold"
+                                        className="w-full bg-[#d97706] text-white py-3 rounded-lg hover:bg-[#b45309] transition-colors font-semibold"
                                     >
                                         Search SHS Alumni
                                     </button>
@@ -303,7 +303,7 @@ export function AlumniDirectory() {
                             className="w-full px-6 py-4 flex items-center justify-between hover:bg-gray-50 transition-colors"
                         >
                             <div className="flex items-center gap-3">
-                                <GraduationCap className="w-6 h-6 text-[#1a5f3f]" />
+                                <GraduationCap className="w-6 h-6 text-[#d97706]" />
                                 <h3 className="text-xl font-bold">
                                     Junior High School Alumni Directory
                                 </h3>
@@ -325,7 +325,7 @@ export function AlumniDirectory() {
                                         <select
                                             value={jhsYear}
                                             onChange={(e) => setJhsYear(e.target.value)}
-                                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1a5f3f]"
+                                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#d97706]"
                                         >
                                             <option value="">All Years</option>
                                             {years.map((year) => (
@@ -337,7 +337,7 @@ export function AlumniDirectory() {
                                     </div>
                                     <button
                                         type="submit"
-                                        className="w-full bg-[#1a5f3f] text-white py-3 rounded-lg hover:bg-[#2d7a4f] transition-colors font-semibold"
+                                        className="w-full bg-[#d97706] text-white py-3 rounded-lg hover:bg-[#b45309] transition-colors font-semibold"
                                     >
                                         Search JHS Alumni
                                     </button>
@@ -353,7 +353,7 @@ export function AlumniDirectory() {
                             className="w-full px-6 py-4 flex items-center justify-between hover:bg-gray-50 transition-colors"
                         >
                             <div className="flex items-center gap-3">
-                                <GraduationCap className="w-6 h-6 text-[#1a5f3f]" />
+                                <GraduationCap className="w-6 h-6 text-[#d97706]" />
                                 <h3 className="text-xl font-bold">
                                     Basic Education Alumni Directory
                                 </h3>
@@ -375,7 +375,7 @@ export function AlumniDirectory() {
                                         <select
                                             value={basicYear}
                                             onChange={(e) => setBasicYear(e.target.value)}
-                                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1a5f3f]"
+                                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#d97706]"
                                         >
                                             <option value="">All Years</option>
                                             {years.map((year) => (
@@ -387,7 +387,7 @@ export function AlumniDirectory() {
                                     </div>
                                     <button
                                         type="submit"
-                                        className="w-full bg-[#1a5f3f] text-white py-3 rounded-lg hover:bg-[#2d7a4f] transition-colors font-semibold"
+                                        className="w-full bg-[#d97706] text-white py-3 rounded-lg hover:bg-[#b45309] transition-colors font-semibold"
                                     >
                                         Search Basic Education Alumni
                                     </button>

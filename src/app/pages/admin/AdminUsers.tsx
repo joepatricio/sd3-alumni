@@ -82,10 +82,10 @@ export function AdminUsers() {
 
     const handleExportCSV = () => {
         const headers = ['Name', 'Email', 'Batch', 'Status', 'Granted Date', 'Expiry Date', 'Reason'];
-        const csvContent = filteredUsers.map(u => 
+        const csvContent = filteredUsers.map(u =>
             `"${u.name}","${u.email}","${u.batch}","${u.status}","${u.grantedDate || ''}","${u.expiryDate || ''}","${u.reason || ''}"`
         );
-        
+
         const csvString = [headers.join(','), ...csvContent].join('\n');
         const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
         const link = document.createElement('a');
@@ -269,7 +269,7 @@ export function AdminUsers() {
                                             <div className="flex justify-end gap-2">
                                                 {user.status === 'Regular' && activeTab !== 'All' && (
                                                     <>
-                                                        <Button variant="outline" size="sm" className="text-orange-600 border-orange-200 hover:bg-orange-50" onClick={() => openEditModal(user, 'Suspended')}>Suspend</Button>
+                                                        <Button variant="outline" size="sm" className="text-[#d97706] border-orange-200 hover:bg-orange-50" onClick={() => openEditModal(user, 'Suspended')}>Suspend</Button>
                                                         <Button variant="outline" size="sm" className="text-red-600 border-red-200 hover:bg-red-50" onClick={() => openEditModal(user, 'Banned')}>Ban</Button>
                                                     </>
                                                 )}
@@ -347,7 +347,7 @@ export function AdminUsers() {
                         </div>
                         <div className="flex gap-2">
                             <Button variant="outline" onClick={handleClearFilters}>Clear</Button>
-                            <Button className="bg-[#1a5f3f] hover:bg-[#154d33]" onClick={handleApplyFilters}>Submit</Button>
+                            <Button className="bg-[#d97706] hover:bg-[#154d33]" onClick={handleApplyFilters}>Submit</Button>
                         </div>
                     </div>
                 </div>

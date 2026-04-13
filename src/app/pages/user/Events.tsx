@@ -86,7 +86,7 @@ export function Events() {
                             <CreateEventModal
                                 trigger={
                                     <button
-                                        className="flex items-center justify-center gap-2 bg-[#1a5f3f] text-white px-6 py-3 rounded-lg hover:bg-[#2d7a4f] transition-colors font-semibold"
+                                        className="flex items-center justify-center gap-2 bg-[#d97706] text-white px-6 py-3 rounded-lg hover:bg-[#b45309] transition-colors font-semibold"
                                     >
                                         <Plus className="w-5 h-5" />
                                         Create Event
@@ -120,7 +120,7 @@ export function Events() {
                             <Button
                                 key={range}
                                 variant={timeRange === range ? "default" : "outline"}
-                                className={timeRange === range ? "bg-[#1a5f3f] hover:bg-[#1a5f3f] text-white" : ""}
+                                className={timeRange === range ? "bg-[#d97706] hover:bg-[#d97706] text-white" : ""}
                                 onClick={() => { setTimeRange(range); setVisibleCount(EVENTS_PER_PAGE); }}
                             >
                                 {range}
@@ -160,7 +160,7 @@ export function Events() {
                                 {/* Content */}
                                 <div className="flex-1 p-6 flex flex-col">
                                     <div className="flex-1 overflow-hidden">
-                                        <h2 className="text-2xl font-bold mb-3 text-gray-900 hover:text-[#1a5f3f] transition-colors line-clamp-2">
+                                        <h2 className="text-2xl font-bold mb-3 text-gray-900 hover:text-[#d97706] transition-colors line-clamp-2">
                                             {event.title}
                                         </h2>
 
@@ -171,18 +171,18 @@ export function Events() {
                                         {/* Event Meta Information */}
                                         <div className="flex flex-wrap gap-4 text-sm text-gray-600">
                                             <div className="flex items-center gap-2">
-                                                <Calendar className="w-4 h-4 text-[#1a5f3f]" />
+                                                <Calendar className="w-4 h-4 text-[#d97706]" />
                                                 <span>{new Date(event.date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</span>
                                             </div>
                                             <div className="flex items-center gap-2">
-                                                <Clock className="w-4 h-4 text-[#1a5f3f]" />
+                                                <Clock className="w-4 h-4 text-[#d97706]" />
                                                 <span>{event.time}</span>
                                             </div>
                                             <div className="flex items-center gap-2">
                                                 {event.category === 'Virtual' ? (
-                                                    <Video className="w-4 h-4 text-[#1a5f3f]" />
+                                                    <Video className="w-4 h-4 text-[#d97706]" />
                                                 ) : (
-                                                    <MapPin className="w-4 h-4 text-[#1a5f3f]" />
+                                                    <MapPin className="w-4 h-4 text-[#d97706]" />
                                                 )}
                                                 <span>
                                                     {event.category === 'Virtual'
@@ -195,7 +195,7 @@ export function Events() {
 
                                     {/* View Details Link */}
                                     <div className="pt-2 mt-auto">
-                                        <span className="text-[#1a5f3f] font-semibold hover:text-[#2d7a4f] inline-flex items-center gap-1">
+                                        <span className="text-[#d97706] font-semibold hover:text-[#b45309] inline-flex items-center gap-1">
                                             View Details
                                             <span aria-hidden="true">→</span>
                                         </span>

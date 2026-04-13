@@ -81,7 +81,7 @@ export function Register() {
     return (
         <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
             <div className="sm:mx-auto sm:w-full sm:max-w-md text-center">
-                <div className="inline-flex items-center justify-center w-16 h-16 bg-[#1a5f3f] rounded-full mb-4">
+                <div className="inline-flex items-center justify-center w-16 h-16 bg-[#d97706] rounded-full mb-4">
                     <User className="w-8 h-8 text-white" />
                 </div>
                 <h1 className="text-3xl font-bold mb-2">Create Account</h1>
@@ -230,17 +230,17 @@ export function Register() {
                                             <Checkbox
                                                 checked={field.value}
                                                 onCheckedChange={field.onChange}
-                                                className="data-[state=checked]:bg-[#1a5f3f] data-[state=checked]:border-[#1a5f3f]"
+                                                className="data-[state=checked]:bg-[#d97706] data-[state=checked]:border-[#d97706]"
                                             />
                                         </FormControl>
                                         <div className="space-y-1 leading-none">
                                             <FormLabel className="font-normal text-gray-600">
                                                 I agree to the{' '}
-                                                <Link to="/terms" className="text-[#1a5f3f] hover:text-[#2d7a4f] font-medium" target="_blank">
+                                                <Link to="/terms" className="text-[#d97706] hover:text-[#b45309] font-medium" target="_blank">
                                                     Terms of Service
                                                 </Link>{' '}
                                                 and{' '}
-                                                <Link to="/privacy" className="text-[#1a5f3f] hover:text-[#2d7a4f] font-medium" target="_blank">
+                                                <Link to="/privacy" className="text-[#d97706] hover:text-[#b45309] font-medium" target="_blank">
                                                     Privacy Policy
                                                 </Link>
                                             </FormLabel>
@@ -252,7 +252,7 @@ export function Register() {
 
                             <Button
                                 type="submit"
-                                className="w-full bg-[#1a5f3f] hover:bg-[#2d7a4f] text-white"
+                                className="w-full bg-[#d97706] hover:bg-[#b45309] text-white"
                                 disabled={form.formState.isSubmitting}
                             >
                                 {form.formState.isSubmitting && (
@@ -278,7 +278,7 @@ export function Register() {
                         <div className="mt-6 text-center">
                             <Link
                                 to="/login"
-                                className="font-medium text-[#1a5f3f] hover:text-[#2d7a4f]"
+                                className="font-medium text-[#d97706] hover:text-[#b45309]"
                             >
                                 Sign in instead
                             </Link>

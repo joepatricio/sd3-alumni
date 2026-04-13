@@ -23,7 +23,7 @@ export function Connections() {
                             <input
                                 type="text"
                                 placeholder="Search connections..."
-                                className="px-4 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#1a5f3f]"
+                                className="px-4 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#d97706]"
                             />
                         </div>
                     </div>

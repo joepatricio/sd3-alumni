@@ -30,7 +30,7 @@ export function ProfileHeader({
     return (
         <div className="bg-white rounded-lg shadow-md overflow-hidden mb-6">
             {/* Cover Image */}
-            <div className="h-32 bg-gradient-to-r from-[#1a5f3f] to-[#2d7a4f]"></div>
+            <div className="h-32 bg-gradient-to-r from-[#d97706] to-[#b45309]"></div>
 
             {/* Profile Info */}
             <div className="px-6 pb-6">
@@ -58,7 +58,7 @@ export function ProfileHeader({
                                 {!isProfilePage ? (
                                     <Link
                                         to={"/profile"}
-                                        className="flex items-center gap-2 px-4 py-2 bg-[#1a5f3f] text-white rounded-lg hover:bg-[#2d7a4f] transition-colors font-semibold"
+                                        className="flex items-center gap-2 px-4 py-2 bg-[#d97706] text-white rounded-lg hover:bg-[#b45309] transition-colors font-semibold"
                                     >
                                         <User className="w-4 h-4" />
                                         Back to Profile
@@ -69,7 +69,7 @@ export function ProfileHeader({
                                             <>
                                                 <button
                                                     onClick={onEdit}
-                                                    className="flex items-center gap-2 px-4 py-2 bg-[#1a5f3f] text-white rounded-lg hover:bg-[#2d7a4f] transition-colors font-semibold"
+                                                    className="flex items-center gap-2 px-4 py-2 bg-[#d97706] text-white rounded-lg hover:bg-[#b45309] transition-colors font-semibold"
                                                 >
                                                     <Edit className="w-4 h-4" />
                                                     Edit Profile
@@ -99,19 +99,19 @@ export function ProfileHeader({
                 {/* Contact Info */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm text-gray-600">
                     <div className="flex items-center gap-2">
-                        <Mail className="w-4 h-4 text-[#1a5f3f]" />
+                        <Mail className="w-4 h-4 text-[#d97706]" />
                         <span>{userData.email}</span>
                     </div>
                     <div className="flex items-center gap-2">
-                        <Phone className="w-4 h-4 text-[#1a5f3f]" />
+                        <Phone className="w-4 h-4 text-[#d97706]" />
                         <span>{userData.phone}</span>
                     </div>
                     <div className="flex items-center gap-2">
-                        <MapPin className="w-4 h-4 text-[#1a5f3f]" />
+                        <MapPin className="w-4 h-4 text-[#d97706]" />
                         <span>{userData.location}</span>
                     </div>
                     <div className="flex items-center gap-2">
-                        <Briefcase className="w-4 h-4 text-[#1a5f3f]" />
+                        <Briefcase className="w-4 h-4 text-[#d97706]" />
                         <span>
                             {userData.currentJob} at {userData.company}
                         </span>

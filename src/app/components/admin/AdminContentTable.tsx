@@ -23,7 +23,7 @@ interface AdminContentTableProps {
     description: string;
     contentType: 'Event' | 'Bulletin';
     mockData: ContentItem[];
-    primaryColorClass: string; // e.g., 'bg-[#1a5f3f] hover:bg-[#154d33]'
+    primaryColorClass: string; // e.g., 'bg-[#d97706] hover:bg-[#154d33]'
     outlineColorClass: string; // e.g., 'text-amber-600 border-amber-200 hover:bg-amber-50'
     onStatusChange?: (id: string, newStatus: "Approved" | "Rejected" | "Pending") => void;
 }

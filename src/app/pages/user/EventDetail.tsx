@@ -67,7 +67,7 @@ export function EventDetail() {
             <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 flex justify-between items-center">
                 <Link
                     to="/events"
-                    className="inline-flex items-center gap-2 text-gray-600 hover:text-[#1a5f3f] transition-colors"
+                    className="inline-flex items-center gap-2 text-gray-600 hover:text-[#d97706] transition-colors"
                 >
                     <ArrowLeft className="w-4 h-4" />
                     <span className="font-medium">Back to Events</span>
@@ -77,7 +77,7 @@ export function EventDetail() {
                     {isLoggedIn && (
                         <CreateEventModal
                             trigger={
-                                <Button variant="outline" className="gap-2 text-[#1a5f3f] border-[#1a5f3f] hover:bg-[#1a5f3f] hover:text-white transition-colors">
+                                <Button variant="outline" className="gap-2 text-[#d97706] border-[#d97706] hover:bg-[#d97706] hover:text-white transition-colors">
                                     <Edit className="w-4 h-4" />
                                     Edit Event
                                 </Button>
@@ -102,7 +102,7 @@ export function EventDetail() {
                                     className="w-full h-full object-cover"
                                 />
                                 <div className="absolute top-4 left-4">
-                                    <Badge className="bg-white/90 text-[#1a5f3f] hover:bg-white text-sm px-3 py-1 shadow-sm font-semibold backdrop-blur-sm border-none">
+                                    <Badge className="bg-white/90 text-[#d97706] hover:bg-white text-sm px-3 py-1 shadow-sm font-semibold backdrop-blur-sm border-none">
                                         {eventData.category}
                                     </Badge>
                                 </div>
@@ -113,15 +113,15 @@ export function EventDetail() {
 
                                 <div className="flex flex-wrap gap-4 sm:gap-6 text-gray-600 mb-6">
                                     <div className="flex items-center gap-2">
-                                        <Calendar className="w-5 h-5 text-[#1a5f3f]" />
+                                        <Calendar className="w-5 h-5 text-[#d97706]" />
                                         <span>{new Date(eventData.date).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</span>
                                     </div>
                                     <div className="flex items-center gap-2">
-                                        <Clock className="w-5 h-5 text-[#1a5f3f]" />
+                                        <Clock className="w-5 h-5 text-[#d97706]" />
                                         <span>{displayTime}</span>
                                     </div>
                                     <div className="flex items-center gap-2">
-                                        <MapPin className="w-5 h-5 text-[#1a5f3f]" />
+                                        <MapPin className="w-5 h-5 text-[#d97706]" />
                                         <span>{formatLocation(eventData)}</span>
                                     </div>
                                 </div>
@@ -139,7 +139,7 @@ export function EventDetail() {
                             <div className="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-100">
                                 <div className="p-4 border-b border-gray-100 bg-gray-50/50">
                                     <h3 className="font-semibold text-gray-900 flex items-center gap-2">
-                                        <MapPin className="w-4 h-4 text-[#1a5f3f]" />
+                                        <MapPin className="w-4 h-4 text-[#d97706]" />
                                         Location
                                     </h3>
                                 </div>
@@ -164,7 +164,7 @@ export function EventDetail() {
                                         href={`https://www.openstreetmap.org/?mlat=${mapLat}&mlon=${mapLng}#map=16/${mapLat}/${mapLng}`}
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        className="block mt-3 text-xs text-[#1a5f3f] font-medium hover:underline"
+                                        className="block mt-3 text-xs text-[#d97706] font-medium hover:underline"
                                     >
                                         View larger map
                                     </a>
@@ -187,7 +187,7 @@ export function EventDetail() {
                                     <div className="grid grid-cols-2 gap-3 mb-6">
                                         <Button
                                             variant={rsvpStatus === 'going' ? 'default' : 'outline'}
-                                            className={`w-full gap-2 ${rsvpStatus === 'going' ? 'bg-[#1a5f3f] hover:bg-[#154e33]' : 'hover:text-[#1a5f3f] hover:border-[#1a5f3f]'}`}
+                                            className={`w-full gap-2 ${rsvpStatus === 'going' ? 'bg-[#d97706] hover:bg-[#92400e]' : 'hover:text-[#d97706] hover:border-[#d97706]'}`}
                                             onClick={() => handleRsvp('going')}
                                         >
                                             <CheckCircle2 className="w-4 h-4" />
@@ -208,7 +208,7 @@ export function EventDetail() {
                                     <h3 className="text-lg font-bold text-gray-900 mb-2">RSVP to this Event</h3>
                                     <p className="text-gray-500 text-sm mb-6">Log in to let alumni know you'll be attending.</p>
                                     <Link to="/login" state={{ from: `/events/${eventData.id}` }} className="inline-block w-full">
-                                        <Button className="w-full bg-[#1a5f3f] hover:bg-[#154e33]">
+                                        <Button className="w-full bg-[#d97706] hover:bg-[#92400e]">
                                             Log In to RSVP
                                         </Button>
                                     </Link>
@@ -220,7 +220,7 @@ export function EventDetail() {
                                     <div className="border-t border-gray-100 pt-6">
                                         <div className="flex items-center justify-between mb-2">
                                             <span className="text-gray-600 font-medium">Responses</span>
-                                            <span className="text-[#1a5f3f] font-bold">{eventData.responses.going + (rsvpStatus === 'going' ? 1 : 0)} Going</span>
+                                            <span className="text-[#d97706] font-bold">{eventData.responses.going + (rsvpStatus === 'going' ? 1 : 0)} Going</span>
                                         </div>
                                     </div>
 
@@ -260,7 +260,7 @@ export function EventDetail() {
                             <div className="flex items-center gap-4 mb-6">
                                 <Avatar className="w-16 h-16 border-2 border-gray-100 shadow-sm">
                                     <AvatarImage src={eventData.organizer.image} />
-                                    <AvatarFallback className="bg-[#1a5f3f] text-white text-xl font-semibold">
+                                    <AvatarFallback className="bg-[#d97706] text-white text-xl font-semibold">
                                         {eventData.organizer.name.charAt(0)}
                                     </AvatarFallback>
                                 </Avatar>
@@ -275,18 +275,18 @@ export function EventDetail() {
                             {/* Contact info */}
                             <div className="space-y-3 text-sm">
                                 <div className="flex items-center gap-3 text-gray-600">
-                                    <Mail className="w-4 h-4 text-[#1a5f3f]" />
+                                    <Mail className="w-4 h-4 text-[#d97706]" />
                                     <a
                                         href={`mailto:${eventData.organizer.email}`}
-                                        className="hover:text-[#1a5f3f] transition-colors"
+                                        className="hover:text-[#d97706] transition-colors"
                                     >
                                         {eventData.organizer.email}
                                     </a>
                                 </div>
 
                                 <div className="flex items-center gap-3 text-gray-600">
-                                    <Phone className="w-4 h-4 text-[#1a5f3f]" />
-                                    <span className="hover:text-[#1a5f3f] transition-colors">
+                                    <Phone className="w-4 h-4 text-[#d97706]" />
+                                    <span className="hover:text-[#d97706] transition-colors">
                                         {eventData.organizer.phone}
                                     </span>
                                 </div>

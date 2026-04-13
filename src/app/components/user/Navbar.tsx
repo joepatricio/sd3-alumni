@@ -19,7 +19,7 @@ export function Navbar() {
                 key={link.label}
                 to={link.href}
                 target={link.href.startsWith('http') ? '_blank' : '_self'}
-                className="text-gray-700 hover:text-[#1a5f3f] transition-colors font-medium"
+                className="text-gray-700 hover:text-[#d97706] transition-colors font-medium"
               >
                 {link.label}
               </Link>

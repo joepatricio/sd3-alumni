@@ -89,8 +89,8 @@ export function ForgotPassword() {
     return (
         <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
             <div className="sm:mx-auto sm:w-full sm:max-w-md text-center">
-                <div className="inline-flex items-center justify-center w-16 h-16 bg-[#1a5f3f]/10 rounded-full mb-4">
-                    <Mail className="w-8 h-8 text-[#1a5f3f]" />
+                <div className="inline-flex items-center justify-center w-16 h-16 bg-[#d97706]/10 rounded-full mb-4">
+                    <Mail className="w-8 h-8 text-[#d97706]" />
                 </div>
                 <h1 className="text-3xl font-bold mb-2">Forgot Password?</h1>
                 <p className="text-gray-600">
@@ -125,7 +125,7 @@ export function ForgotPassword() {
 
                             <Button
                                 type="submit"
-                                className="w-full bg-[#1a5f3f] hover:bg-[#2d7a4f] text-white"
+                                className="w-full bg-[#d97706] hover:bg-[#b45309] text-white"
                                 disabled={form.formState.isSubmitting}
                             >
                                 {form.formState.isSubmitting && (

@@ -6,10 +6,14 @@ This document outlines the core styling conventions, color palettes, and structu
 ## Color Palette
 
 ### Primary System
-- **USJR Green (`#1a5f3f`)**: The anchor of the platform. Used for primary call-to-action buttons, active navigation states, primary branding headers, and status badges (e.g., successful actions or important links).
-- **USJR Green Prominent Hover (`#154e33` to `#2d7a4f`)**: Applied universally to give deep affordance feedback.
+- **Engineering Ochre (`#d97706`)**: The anchor of the platform. Used for primary call-to-action buttons, active navigation states, primary branding headers, and status badges (e.g., successful actions or important links).
+- **Engineering Ochre Prominent Hover (`#b45309`)**: Applied universally to give deep affordance feedback.
+
+- **USJR Green (`#1a5f3f`)**: Kept for secondary elements honoring legacy university branding.
+- **USJR Green Prominent Hover (`#2d7a4f`)**: Applied when interacting with secondary components.
 - **Gold Accent (`#d4af37`)**: Reserved strictly for high-priority secondary/tertiary engagement, noticeably the `"Donate"` button. Its high contrast against Green makes it stand out without overpowering the theme.
 - **Gold Hover (`#c19b2a`)**: Feedback state for Gold accent items.
+
 
 ### Secondary & Neutrals
 - **Background Tones**: Elements sit on very bright, low-noise backgrounds (`#f9fafb` or `bg-gray-50`) and pure White (`#ffffff` or `bg-white`) inside cards. This ensures typography pops immediately off the page and content takes center stage.

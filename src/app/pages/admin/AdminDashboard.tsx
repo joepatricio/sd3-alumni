@@ -90,7 +90,7 @@ export function AdminDashboard() {
                 <Card className="col-span-1 lg:col-span-2 shadow-md border-none">
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2">
-                            <Activity className="w-5 h-5 text-[#1a5f3f]" />
+                            <Activity className="w-5 h-5 text-[#d97706]" />
                             Recent Activity
                         </CardTitle>
                     </CardHeader>

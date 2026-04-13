@@ -62,7 +62,7 @@ export function Bulletin() {
                         <CreateBulletinModal
                             trigger={
                                 <button
-                                    className="flex items-center justify-center gap-2 bg-[#1a5f3f] text-white px-6 py-3 rounded-lg hover:bg-[#2d7a4f] transition-colors font-semibold"
+                                    className="flex items-center justify-center gap-2 bg-[#d97706] text-white px-6 py-3 rounded-lg hover:bg-[#b45309] transition-colors font-semibold"
                                 >
                                     <Plus className="w-5 h-5" />
                                     Create Bulletin
@@ -87,7 +87,7 @@ export function Bulletin() {
                                     <button
                                         onClick={() => { setViewMode('article'); setVisibleCount(ARTICLE_ITEMS_PER_PAGE); }}
                                         className={`w-full flex items-center gap-3 px-4 py-2 rounded-lg transition-colors ${viewMode === 'article'
-                                            ? 'bg-[#1a5f3f] text-white'
+                                            ? 'bg-[#d97706] text-white'
                                             : 'bg-gray-50 text-gray-700 hover:bg-gray-100'
                                             }`}
                                     >
@@ -97,7 +97,7 @@ export function Bulletin() {
                                     <button
                                         onClick={() => { setViewMode('headline'); setVisibleCount(HEADLINE_ITEMS_PER_PAGE); }}
                                         className={`w-full flex items-center gap-3 px-4 py-2 rounded-lg transition-colors ${viewMode === 'headline'
-                                            ? 'bg-[#1a5f3f] text-white'
+                                            ? 'bg-[#d97706] text-white'
                                             : 'bg-gray-50 text-gray-700 hover:bg-gray-100'
                                             }`}
                                     >
@@ -117,7 +117,7 @@ export function Bulletin() {
                                         type="checkbox"
                                         checked={showUserSubmitted}
                                         onChange={(e) => { setShowUserSubmitted(e.target.checked); setVisibleCount(ITEMS_PER_PAGE); }}
-                                        className="w-4 h-4 text-[#1a5f3f] border-gray-300 rounded focus:ring-[#1a5f3f]"
+                                        className="w-4 h-4 text-[#d97706] border-gray-300 rounded focus:ring-[#d97706]"
                                     />
                                     <span className="text-sm text-gray-700">
                                         Official posts only
@@ -139,7 +139,7 @@ export function Bulletin() {
                                             type="date"
                                             value={dateFrom}
                                             onChange={(e) => { setDateFrom(e.target.value); setVisibleCount(ITEMS_PER_PAGE); }}
-                                            className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1a5f3f]"
+                                            className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#d97706]"
                                         />
                                     </div>
                                     <div>
@@ -150,7 +150,7 @@ export function Bulletin() {
                                             type="date"
                                             value={dateTo}
                                             onChange={(e) => { setDateTo(e.target.value); setVisibleCount(ITEMS_PER_PAGE); }}
-                                            className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1a5f3f]"
+                                            className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#d97706]"
                                         />
                                     </div>
                                 </div>
@@ -203,7 +203,7 @@ export function Bulletin() {
                                                     to={`/bulletin/${item.id}`}
                                                     className="block group"
                                                 >
-                                                    <h2 className="text-2xl font-bold mb-3 group-hover:text-[#1a5f3f] transition-colors">
+                                                    <h2 className="text-2xl font-bold mb-3 group-hover:text-[#d97706] transition-colors">
                                                         {item.title}
                                                     </h2>
                                                     <p className="text-gray-700 leading-relaxed">
@@ -230,14 +230,14 @@ export function Bulletin() {
                                                     to={`/bulletin/${item.id}`}
                                                     className="block group"
                                                 >
-                                                    <h2 className="text-xl font-bold mb-2 group-hover:text-[#1a5f3f] transition-colors">
+                                                    <h2 className="text-xl font-bold mb-2 group-hover:text-[#d97706] transition-colors">
                                                         {item.title}
                                                     </h2>
                                                 </Link>
                                                 <div className="flex items-center gap-2 mb-3 text-sm text-gray-600">
                                                     <Link
                                                         to="/profile"
-                                                        className="hover:text-[#1a5f3f] transition-colors"
+                                                        className="hover:text-[#d97706] transition-colors"
                                                     >
                                                         {item.author.name}
                                                     </Link>

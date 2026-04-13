@@ -51,7 +51,7 @@ export function Donation() {
                             'url(https://images.unsplash.com/photo-1532629345422-7515f3d16bb6?q=80&w=2070&auto=format&fit=crop)',
                     }}
                 >
-                    <div className="absolute inset-0 bg-gradient-to-r from-[#1a5f3f]/90 to-[#1a5f3f]/40"></div>
+                    <div className="absolute inset-0 bg-gradient-to-r from-[#d97706]/90 to-[#d97706]/40"></div>
                 </div>
 
                 <div className="absolute top-6 left-8 z-10 hidden md:block">
@@ -89,7 +89,7 @@ export function Donation() {
                         {/* Left Column: Impact & Information */}
                         <div className="lg:col-span-7 space-y-12 pt-2">
                             <div className="text-lg text-gray-600">
-                                <h2 className="text-3xl font-bold text-[#1a5f3f] mb-6 mt-0">Why Donate?</h2>
+                                <h2 className="text-3xl font-bold text-[#d97706] mb-6 mt-0">Why Donate?</h2>
                                 <p className="mb-6 leading-relaxed">
                                     Every contribution creates a ripple effect. Whether it's funding a scholarship for a deserving student,
                                     supporting alumni networking events, or maintaining our beloved campus, your gift makes a tangible difference.
@@ -104,8 +104,8 @@ export function Donation() {
                                     { icon: Heart, title: "Student Welfare", desc: "Provide resources for student holistic development." }
                                 ].map((item, idx) => (
                                     <div key={idx} className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
-                                        <div className="w-12 h-12 bg-[#1a5f3f]/10 rounded-full flex items-center justify-center mb-4">
-                                            <item.icon className="w-6 h-6 text-[#1a5f3f]" />
+                                        <div className="w-12 h-12 bg-[#d97706]/10 rounded-full flex items-center justify-center mb-4">
+                                            <item.icon className="w-6 h-6 text-[#d97706]" />
                                         </div>
                                         <h3 className="text-lg font-bold text-gray-900 mb-2">{item.title}</h3>
                                         <p className="text-sm text-gray-600">{item.desc}</p>
@@ -120,17 +120,17 @@ export function Donation() {
                             <div className="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
 
                                 {!isLoggedIn ? (
-                                    <div className="bg-[#1a5f3f] p-6 flex items-center justify-between text-white gap-4">
+                                    <div className="bg-[#d97706] p-6 flex items-center justify-between text-white gap-4">
                                         <div className="text-left">
                                             <h3 className="text-lg font-bold leading-tight mb-1">Anonymous Donation</h3>
                                             <p className="text-white/80 text-xs">Log in to link this to your alumni profile</p>
                                         </div>
-                                        <Link to="/login" state={{ from: '/donate' }} className="whitespace-nowrap bg-white text-[#1a5f3f] px-5 py-2.5 rounded-lg font-semibold hover:bg-gray-100 transition-colors text-sm shadow-sm ring-1 ring-black/5">
+                                        <Link to="/login" state={{ from: '/donate' }} className="whitespace-nowrap bg-white text-[#d97706] px-5 py-2.5 rounded-lg font-semibold hover:bg-gray-100 transition-colors text-sm shadow-sm ring-1 ring-black/5">
                                             Log In
                                         </Link>
                                     </div>
                                 ) : (
-                                    <div className="bg-[#1a5f3f] p-6 text-white flex items-center justify-between gap-4">
+                                    <div className="bg-[#d97706] p-6 text-white flex items-center justify-between gap-4">
                                         <div className="flex items-center gap-3">
                                             <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center shrink-0">
                                                 <User className="w-5 h-5 text-white" />
@@ -160,7 +160,7 @@ export function Donation() {
                                         <button
                                             onClick={() => setDonationType('one-time')}
                                             className={`flex-1 py-3 px-4 rounded-md text-sm font-semibold transition-all ${donationType === 'one-time'
-                                                ? 'bg-white text-[#1a5f3f] shadow-sm'
+                                                ? 'bg-white text-[#d97706] shadow-sm'
                                                 : 'text-gray-500 hover:text-gray-700'
                                                 }`}
                                         >
@@ -169,7 +169,7 @@ export function Donation() {
                                         <button
                                             onClick={() => setDonationType('monthly')}
                                             className={`flex-1 py-3 px-4 rounded-md text-sm font-semibold transition-all ${donationType === 'monthly'
-                                                ? 'bg-white text-[#1a5f3f] shadow-sm'
+                                                ? 'bg-white text-[#d97706] shadow-sm'
                                                 : 'text-gray-500 hover:text-gray-700'
                                                 }`}
                                         >
@@ -184,8 +184,8 @@ export function Donation() {
                                                 key={amount}
                                                 onClick={() => handleAmountSelect(amount)}
                                                 className={`py-3 px-2 rounded-lg border-2 text-sm font-semibold transition-all ${selectedAmount === amount
-                                                    ? 'border-[#d4af37] bg-[#d4af37]/5 text-[#1a5f3f]'
-                                                    : 'border-gray-200 hover:border-[#1a5f3f]/30 text-gray-600'
+                                                    ? 'border-[#d4af37] bg-[#d4af37]/5 text-[#d97706]'
+                                                    : 'border-gray-200 hover:border-[#d97706]/30 text-gray-600'
                                                     }`}
                                             >
                                                 ₱{amount.toLocaleString()}
@@ -205,7 +205,7 @@ export function Donation() {
                                                 placeholder="Enter amount"
                                                 value={customAmount}
                                                 onChange={handleCustomAmountChange}
-                                                className="w-full pl-8 pr-4 py-3 rounded-lg border-2 border-gray-200 focus:border-[#1a5f3f] focus:outline-none transition-colors"
+                                                className="w-full pl-8 pr-4 py-3 rounded-lg border-2 border-gray-200 focus:border-[#d97706] focus:outline-none transition-colors"
                                             />
                                         </div>
                                     </div>
@@ -247,16 +247,16 @@ export function Donation() {
                         </div>
 
                         <div className="flex gap-6">
-                            <a href="https://www.facebook.com/usjr.official" target="_blank" className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center hover:bg-[#1a5f3f] transition-colors">
+                            <a href="https://www.facebook.com/usjr.official" target="_blank" className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center hover:bg-[#d97706] transition-colors">
                                 <SiFacebook className="w-4 h-4 text-white" />
                             </a>
-                            <a href="https://x.com/USJR_official" target="_blank" className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center hover:bg-[#1a5f3f] transition-colors">
+                            <a href="https://x.com/USJR_official" target="_blank" className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center hover:bg-[#d97706] transition-colors">
                                 <SiX className="w-4 h-4 text-white" />
                             </a>
-                            <a href="https://www.instagram.com/usjr_official" target="_blank" className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center hover:bg-[#1a5f3f] transition-colors">
+                            <a href="https://www.instagram.com/usjr_official" target="_blank" className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center hover:bg-[#d97706] transition-colors">
                                 <SiInstagram className="w-4 h-4 text-white" />
                             </a>
-                            <a href="https://www.linkedin.com/school/usjrofficial/" target="_blank" className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center hover:bg-[#1a5f3f] transition-colors">
+                            <a href="https://www.linkedin.com/school/usjrofficial/" target="_blank" className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center hover:bg-[#d97706] transition-colors">
                                 <SiLinkedin className="w-4 h-4 text-white" />
                             </a>
                         </div>

@@ -41,7 +41,7 @@ export function BulletinFeed() {
           </div>
           <a
             href="https://www.facebook.com/usjr.official"
-            className="text-[#1a5f3f] hover:text-[#2d7a4f] font-semibold hidden sm:block"
+            className="text-[#d97706] hover:text-[#b45309] font-semibold hidden sm:block"
           >
             View All →
           </a>
@@ -62,7 +62,7 @@ export function BulletinFeed() {
                   <FileText className="w-12 h-12 opacity-50" />
                 </div>
               )}
-              <span className="absolute top-4 left-4 bg-[#1a5f3f] text-white px-3 py-1 rounded-full text-sm font-semibold">
+              <span className="absolute top-4 left-4 bg-[#d97706] text-white px-3 py-1 rounded-full text-sm font-semibold">
                 Featured
               </span>
             </div>
@@ -83,7 +83,7 @@ export function BulletinFeed() {
                 <div className="text-sm text-gray-500">
                   <p>By {bulletins[0].author}</p>
                 </div>
-                <Link to={`/bulletin/${bulletins[0].id}`} className="bg-[#1a5f3f] cursor-pointer text-white px-6 py-2 rounded-lg hover:bg-[#2d7a4f] transition-colors font-semibold">
+                <Link to={`/bulletin/${bulletins[0].id}`} className="bg-[#d97706] cursor-pointer text-white px-6 py-2 rounded-lg hover:bg-[#b45309] transition-colors font-semibold">
                   Read More
                 </Link>
               </div>
@@ -130,7 +130,7 @@ export function BulletinFeed() {
                 </p>
                 <div className="flex items-center justify-between text-sm text-gray-500">
                   <span>By {bulletin.author}</span>
-                  <Link to={`/bulletin/${bulletin.id}`} className="text-[#1a5f3f] cursor-pointer hover:text-[#2d7a4f] font-semibold">
+                  <Link to={`/bulletin/${bulletin.id}`} className="text-[#d97706] cursor-pointer hover:text-[#b45309] font-semibold">
                     Read →
                   </Link>
                 </div>
@@ -142,7 +142,7 @@ export function BulletinFeed() {
         <div className="text-center mt-8 sm:hidden">
           <a
             href="https://www.facebook.com/usjr.official"
-            className="text-[#1a5f3f] hover:text-[#2d7a4f] font-semibold"
+            className="text-[#d97706] hover:text-[#b45309] font-semibold"
           >
             View All Bulletins →
           </a>

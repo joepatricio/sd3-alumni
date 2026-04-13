@@ -10,7 +10,7 @@ export function Hero() {
             'url(https://images.unsplash.com/photo-1758270703262-2b40b6b66be6?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHx1bml2ZXJzaXR5JTIwYWx1bW5pJTIwY2VsZWJyYXRpb24lMjBncmFkdWF0aW9ufGVufDF8fHx8MTc3MDA5MTgzOHww&ixlib=rb-4.1.0&q=80&w=1080)',
         }}
       >
-        <div className="absolute inset-0 bg-gradient-to-r from-[#1a5f3f]/60 to-[#000000]/30"></div>
+        <div className="absolute inset-0 bg-gradient-to-r from-[#d97706]/60 to-[#000000]/30"></div>
       </div>
 
       <div className="relative max-w-7xl mx-auto px-4 md:px-8 h-full flex items-center">
@@ -30,7 +30,7 @@ export function Hero() {
             </Link>
             <Link
               to="/about"
-              className="bg-white text-[#1a5f3f] px-8 py-3 rounded-full hover:bg-gray-100 transition-colors font-semibold"
+              className="bg-white text-[#d97706] px-8 py-3 rounded-full hover:bg-gray-100 transition-colors font-semibold"
             >
               Learn More
             </Link>
