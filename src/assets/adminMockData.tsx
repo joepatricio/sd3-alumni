@@ -8,7 +8,7 @@ export const adminRecentActivity = [
     { id: '5', action: 'Registered', user: 'Jose Rizal', time: '1 day ago', type: 'user' },
 ];
 
-// Helper to generate a large amount of mock data for pagination
+// Depreciated, marked for removal
 const generateUsers = (count: number) => {
     const statuses = ['Pending', 'Official', 'Regular', 'Suspended', 'Banned'];
     const firstNames = ['Mark', 'Lisa', 'Maria', 'John', 'Pedro', 'Anna', 'Michael', 'Sarah', 'David', 'Jane', 'Kevin', 'Michelle', 'Chris', 'Amanda'];
@@ -47,27 +47,6 @@ const generateUsers = (count: number) => {
     });
 };
 
-const generateContent = (count: number) => {
-    const statuses = ['pending', 'approved', 'rejected'];
-    const types = ['Event', 'Bulletin'];
-    const authors = ['Anna Cruz', 'Michael Torres', 'Maria Santos', 'John Doe'];
-    const titles = ['Reunion Pre-party', 'Looking for developers', 'Annual Meeting', 'Charity Run', 'Tech Talk', 'Startup Pitch', 'Mentoring Session', 'Job Fair'];
-
-    return Array.from({ length: count }, (_, i) => {
-        const id = (i + 1).toString();
-        const type = types[i % types.length];
-        const title = `${titles[i % titles.length]} ${i + 1}`;
-        const description = `This is a randomly generated description for ${title} to showcase the content management features. More details available upon review.`;
-        const author = authors[i % authors.length];
-        const dateObj = new Date(2026, 1, 15 - (i % 30));
-        const date = dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-        const rawDate = dateObj.getTime();
-        const status = statuses[i % statuses.length];
-
-        return { id, type, title, description, author, date, rawDate, status };
-    });
-};
-
 const generateDonations = (count: number) => {
     const statuses = ['Processing', 'Completed', 'Failed'];
     const donors = ['Anonymous', 'Juan De Cruz', 'Maria Santos', 'Mark Spencer', 'Lisa Wong', 'Company XYZ'];
@@ -88,7 +67,6 @@ const generateDonations = (count: number) => {
     });
 };
 
-export const adminContentMock = generateContent(95);
 export const adminDonationsMock = generateDonations(95);
 export const adminUsersMock = generateUsers(95);
 

@@ -1,3 +1,4 @@
+# TODO: update content to reference author_id FK instead of hard-coded values
 import os
 import random
 import argparse
@@ -93,7 +94,7 @@ def generate_bulletins(n):
             "preview": lorem(1),
             "content": lorem(6),
             "heroImage": "https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=1080",
-            "isUserSubmitted": random.choice([True, False]),
+            "isOfficial": random.choice([True, False]),
             "status": random_status()
         }
 

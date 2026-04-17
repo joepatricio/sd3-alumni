@@ -15,7 +15,7 @@ export function TopBar({
   const { isLoggedIn, setIsLoggedIn } = useAuth();
 
   return (
-    <div className="bg-[#d97706] text-white py-3 px-4 md:px-8 sticky top-0 left-0 right-0 z-50 shadow-md">
+    <div className="bg-brand-primary text-white py-3 px-4 md:px-8 sticky top-0 left-0 right-0 z-50 shadow-md">
       <div className="max-w-6xl mx-auto flex justify-between items-center">
         <div className="flex items-center gap-4">
           {/* Hamburger Menu */}
@@ -40,7 +40,7 @@ export function TopBar({
                 className="h-8 w-8 object-contain rounded"
               />
               <span className="font-semibold hidden sm:inline">
-                USJR Alumni
+                USJ-R SEA Alumni
               </span>
             </div>
           </Link>
@@ -50,7 +50,7 @@ export function TopBar({
           {/* Login/Profile */}
           <button
             onClick={() => setIsLoggedIn(!isLoggedIn)}
-            className="flex items-center gap-2 hover:text-[#d4af37] transition-colors"
+            className="flex items-center gap-2 hover:text-brand-accent transition-colors"
           >
             <User className="w-4 h-4" />
             <span className="hidden sm:inline">

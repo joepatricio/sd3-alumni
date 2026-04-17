@@ -7,50 +7,37 @@ export const generateTime = (event: any) => {
     return event.id === '7' ? `${base} (PHT)` : base;
 };
 
+// Depreciated, marked for removal
+// User data migrated to userMockData.tsx
 export const ACHIEVEMENTS = [
     { id: 'year-1', title: '1-Year Club', description: 'Has been a member for 1 year', type: 'year', iconName: 'Star', tier: 1 },
     { id: 'year-5', title: '5-Year Club', description: 'Has been a member for 5 years', type: 'year', iconName: 'Award', tier: 2 },
     { id: 'year-10', title: '10-Year Club', description: 'Has been a member for 10 years', type: 'year', iconName: 'Trophy', tier: 3 },
     { id: 'reads', title: 'READS Alumni', description: 'Part of the Recoletos Educational Assistance for Deserving Students', type: 'special', iconName: 'BookOpen', tier: 1 },
-    { id: 'phil-1', title: 'Philanthropist I', description: 'Donated up to ₱10,000', type: 'donations', iconName: 'Heart', tier: 1 },
-    { id: 'phil-2', title: 'Philanthropist II', description: 'Donated up to ₱50,000', type: 'donations', iconName: 'HeartPulse', tier: 2 },
-    { id: 'phil-3', title: 'Philanthropist III', description: 'Donated up to ₱100,000', type: 'donations', iconName: 'HandCoins', tier: 3 },
+    { id: 'phil-1', title: 'Philanthropist I', description: 'Donated up to ₱5,000', type: 'donations', iconName: 'Heart', tier: 1 },
+    { id: 'phil-2', title: 'Philanthropist II', description: 'Donated up to ₱20,000', type: 'donations', iconName: 'HeartPulse', tier: 2 },
+    { id: 'phil-3', title: 'Philanthropist III', description: 'Donated up to ₱50,000', type: 'donations', iconName: 'HandCoins', tier: 3 },
     { id: 'event-1', title: 'Event Enthusiast I', description: 'Attended 5 events', type: 'events', iconName: 'Calendar', tier: 1 },
     { id: 'event-2', title: 'Event Enthusiast II', description: 'Attended 15 events', type: 'events', iconName: 'CalendarDays', tier: 2 },
     { id: 'msg-1', title: 'Contributor I', description: 'Written 10 comments', type: 'comments', iconName: 'MessageSquare', tier: 1 },
     { id: 'msg-2', title: 'Contributor II', description: 'Written 50 comments', type: 'comments', iconName: 'MessageCircle', tier: 2 },
 ];
 
-export const userData = {
+export const profileData = {
     name: 'Maria Santos',
+    firstName: '',
+    lastName: '',
     email: 'maria.santos@example.com',
     phone: '+63 917 123 4567',
     location: 'Cebu City, Philippines',
     graduationYear: '2015',
-    degree: 'Bachelor of Science in Computer Science',
-    school: 'University of San Jose-Recoletos',
+    degree: 'BS Computer Engineering',
     currentJob: 'Senior Software Engineer',
     company: 'Tech Solutions Inc.',
     bio: 'Passionate about technology and education. Proud Josenian alumna dedicated to giving back to the community through mentorship and volunteering.',
-    profileImage:
-        'https://images.unsplash.com/photo-1655249493799-9cee4fe983bb?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxwcm9mZXNzaW9uYWwlMjBwb3J0cmFpdCUyMGJ1c2luZXNzJTIwcGVyc29ufGVufDF8fHx8MTc3MDMzODgyMHww&ixlib=rb-4.1.0&q=80&w=1080',
-    primaryEducation: {
-        school: 'Cebu Central Elementary School',
-        year: '2005',
-    },
-    secondaryEducationJHS: {
-        school: 'Cebu City National Science High School',
-        year: '2009',
-    },
-    secondaryEducationSHS: {
-        school: 'University of San Jose-Recoletos',
-        year: '2011',
-    },
-    postGraduateEducation: {
-        school: 'University of the Philippines Cebu',
-        year: '2018',
-        degree: 'Master of Science in Computer Science',
-    },
+    profileImage: 'https://images.unsplash.com/photo-1655249493799-9cee4fe983bb?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxwcm9mZXNzaW9uYWwlMjBwb3J0cmFpdCUyMGJ1c2luZXNzJTIwcGVyc29ufGVufDF8fHx8MTc3MDMzODgyMHww&ixlib=rb-4.1.0&q=80&w=1080',
+    privacy: 'public',
+
     eventsAttended: ['1', '2', '3', '8'],
     achievements: [
         { id: 'year-10', dateGranted: '2025-03-15' },
@@ -64,26 +51,6 @@ export const userData = {
         { iconName: 'Calendar', label: 'Events Attended', value: '12' },
         { iconName: 'Award', label: 'Achievements', value: '5' },
         { iconName: 'Heart', label: 'Donated Amount', value: '₱36,000.00' },
-    ],
-    recentActivity: [
-        {
-            id: '1',
-            type: 'event',
-            title: 'Attended Annual Homecoming 2026',
-            date: 'March 15, 2026',
-        },
-        {
-            id: '2',
-            type: 'connection',
-            title: 'Connected with John Doe',
-            date: 'March 10, 2026',
-        },
-        {
-            id: '3',
-            type: 'volunteer',
-            title: 'Volunteered at Community Service Day',
-            date: 'February 28, 2026',
-        },
     ],
 };
 
@@ -199,7 +166,7 @@ export const bulletins = [
         },
         "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
         "heroImage": "https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=1080",
-        "isUserSubmitted": false,
+        "isOfficial": false,
         "status": "Approved"
     },
     {
@@ -217,7 +184,7 @@ export const bulletins = [
         },
         "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
         "heroImage": "https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=1080",
-        "isUserSubmitted": false,
+        "isOfficial": false,
         "status": "Approved"
     },
     {
@@ -235,7 +202,7 @@ export const bulletins = [
         },
         "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
         "heroImage": "https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=1080",
-        "isUserSubmitted": false,
+        "isOfficial": false,
         "status": "Approved"
     },
     {
@@ -253,7 +220,7 @@ export const bulletins = [
         },
         "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
         "heroImage": "https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=1080",
-        "isUserSubmitted": true,
+        "isOfficial": true,
         "status": "Approved"
     },
     {
@@ -271,7 +238,7 @@ export const bulletins = [
         },
         "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
         "heroImage": "https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=1080",
-        "isUserSubmitted": true,
+        "isOfficial": true,
         "status": "Approved"
     },
     {
@@ -289,7 +256,7 @@ export const bulletins = [
         },
         "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
         "heroImage": "https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=1080",
-        "isUserSubmitted": false,
+        "isOfficial": false,
         "status": "Approved"
     },
     {
@@ -307,7 +274,7 @@ export const bulletins = [
         },
         "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
         "heroImage": "https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=1080",
-        "isUserSubmitted": true,
+        "isOfficial": true,
         "status": "Approved"
     },
     {
@@ -325,7 +292,7 @@ export const bulletins = [
         },
         "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
         "heroImage": "https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=1080",
-        "isUserSubmitted": true,
+        "isOfficial": true,
         "status": "Approved"
     },
     {
@@ -343,7 +310,7 @@ export const bulletins = [
         },
         "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
         "heroImage": "https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=1080",
-        "isUserSubmitted": false,
+        "isOfficial": false,
         "status": "Approved"
     },
     {
@@ -361,7 +328,7 @@ export const bulletins = [
         },
         "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
         "heroImage": "https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=1080",
-        "isUserSubmitted": false,
+        "isOfficial": false,
         "status": "Approved"
     },
     {
@@ -379,7 +346,7 @@ export const bulletins = [
         },
         "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
         "heroImage": "https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=1080",
-        "isUserSubmitted": false,
+        "isOfficial": false,
         "status": "Approved"
     },
     {
@@ -397,7 +364,7 @@ export const bulletins = [
         },
         "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
         "heroImage": "https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=1080",
-        "isUserSubmitted": true,
+        "isOfficial": true,
         "status": "Approved"
     },
     {
@@ -415,7 +382,7 @@ export const bulletins = [
         },
         "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
         "heroImage": "https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=1080",
-        "isUserSubmitted": false,
+        "isOfficial": false,
         "status": "Approved"
     },
     {
@@ -433,7 +400,7 @@ export const bulletins = [
         },
         "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
         "heroImage": "https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=1080",
-        "isUserSubmitted": true,
+        "isOfficial": true,
         "status": "Approved"
     },
     {
@@ -451,7 +418,7 @@ export const bulletins = [
         },
         "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
         "heroImage": "https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=1080",
-        "isUserSubmitted": false,
+        "isOfficial": false,
         "status": "Approved"
     },
     {
@@ -469,7 +436,7 @@ export const bulletins = [
         },
         "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
         "heroImage": "https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=1080",
-        "isUserSubmitted": true,
+        "isOfficial": true,
         "status": "Approved"
     },
     {
@@ -487,7 +454,7 @@ export const bulletins = [
         },
         "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
         "heroImage": "https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=1080",
-        "isUserSubmitted": true,
+        "isOfficial": true,
         "status": "Approved"
     },
     {
@@ -505,7 +472,7 @@ export const bulletins = [
         },
         "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
         "heroImage": "https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=1080",
-        "isUserSubmitted": true,
+        "isOfficial": true,
         "status": "Approved"
     },
     {
@@ -523,7 +490,7 @@ export const bulletins = [
         },
         "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
         "heroImage": "https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=1080",
-        "isUserSubmitted": false,
+        "isOfficial": false,
         "status": "Approved"
     },
     {
@@ -541,7 +508,7 @@ export const bulletins = [
         },
         "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
         "heroImage": "https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=1080",
-        "isUserSubmitted": true,
+        "isOfficial": true,
         "status": "Approved"
     },
     {
@@ -559,7 +526,7 @@ export const bulletins = [
         },
         "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
         "heroImage": "https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=1080",
-        "isUserSubmitted": true,
+        "isOfficial": true,
         "status": "Approved"
     },
     {
@@ -577,7 +544,7 @@ export const bulletins = [
         },
         "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
         "heroImage": "https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=1080",
-        "isUserSubmitted": false,
+        "isOfficial": false,
         "status": "Approved"
     },
     {
@@ -595,7 +562,7 @@ export const bulletins = [
         },
         "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
         "heroImage": "https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=1080",
-        "isUserSubmitted": false,
+        "isOfficial": false,
         "status": "Approved"
     },
     {
@@ -613,7 +580,7 @@ export const bulletins = [
         },
         "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
         "heroImage": "https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=1080",
-        "isUserSubmitted": true,
+        "isOfficial": true,
         "status": "Approved"
     },
     {
@@ -631,7 +598,7 @@ export const bulletins = [
         },
         "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
         "heroImage": "https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=1080",
-        "isUserSubmitted": false,
+        "isOfficial": false,
         "status": "Approved"
     },
     {
@@ -649,7 +616,7 @@ export const bulletins = [
         },
         "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
         "heroImage": "https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=1080",
-        "isUserSubmitted": true,
+        "isOfficial": true,
         "status": "Approved"
     },
     {
@@ -667,7 +634,7 @@ export const bulletins = [
         },
         "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
         "heroImage": "https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=1080",
-        "isUserSubmitted": false,
+        "isOfficial": false,
         "status": "Approved"
     },
     {
@@ -685,7 +652,7 @@ export const bulletins = [
         },
         "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
         "heroImage": "https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=1080",
-        "isUserSubmitted": true,
+        "isOfficial": true,
         "status": "Approved"
     },
     {
@@ -703,7 +670,7 @@ export const bulletins = [
         },
         "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
         "heroImage": "https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=1080",
-        "isUserSubmitted": true,
+        "isOfficial": true,
         "status": "Approved"
     },
     {
@@ -721,7 +688,7 @@ export const bulletins = [
         },
         "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
         "heroImage": "https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=1080",
-        "isUserSubmitted": true,
+        "isOfficial": true,
         "status": "Approved"
     },
     {
@@ -739,7 +706,7 @@ export const bulletins = [
         },
         "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
         "heroImage": "https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=1080",
-        "isUserSubmitted": false,
+        "isOfficial": false,
         "status": "Approved"
     },
     {
@@ -757,7 +724,7 @@ export const bulletins = [
         },
         "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
         "heroImage": "https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=1080",
-        "isUserSubmitted": false,
+        "isOfficial": false,
         "status": "Approved"
     },
     {
@@ -775,7 +742,7 @@ export const bulletins = [
         },
         "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
         "heroImage": "https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=1080",
-        "isUserSubmitted": false,
+        "isOfficial": false,
         "status": "Approved"
     },
     {
@@ -793,7 +760,7 @@ export const bulletins = [
         },
         "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
         "heroImage": "https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=1080",
-        "isUserSubmitted": true,
+        "isOfficial": true,
         "status": "Approved"
     },
     {
@@ -811,7 +778,7 @@ export const bulletins = [
         },
         "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
         "heroImage": "https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=1080",
-        "isUserSubmitted": false,
+        "isOfficial": false,
         "status": "Approved"
     },
     {
@@ -829,7 +796,7 @@ export const bulletins = [
         },
         "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
         "heroImage": "https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=1080",
-        "isUserSubmitted": true,
+        "isOfficial": true,
         "status": "Approved"
     },
     {
@@ -847,7 +814,7 @@ export const bulletins = [
         },
         "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
         "heroImage": "https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=1080",
-        "isUserSubmitted": true,
+        "isOfficial": true,
         "status": "Approved"
     },
     {
@@ -865,7 +832,7 @@ export const bulletins = [
         },
         "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
         "heroImage": "https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=1080",
-        "isUserSubmitted": false,
+        "isOfficial": false,
         "status": "Approved"
     },
     {
@@ -883,7 +850,7 @@ export const bulletins = [
         },
         "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
         "heroImage": "https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=1080",
-        "isUserSubmitted": true,
+        "isOfficial": true,
         "status": "Approved"
     },
     {
@@ -901,7 +868,7 @@ export const bulletins = [
         },
         "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
         "heroImage": "https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=1080",
-        "isUserSubmitted": true,
+        "isOfficial": true,
         "status": "Approved"
     },
     {
@@ -919,7 +886,7 @@ export const bulletins = [
         },
         "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
         "heroImage": "https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=1080",
-        "isUserSubmitted": false,
+        "isOfficial": false,
         "status": "Approved"
     },
     {
@@ -937,7 +904,7 @@ export const bulletins = [
         },
         "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
         "heroImage": "https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=1080",
-        "isUserSubmitted": true,
+        "isOfficial": true,
         "status": "Approved"
     },
     {
@@ -955,7 +922,7 @@ export const bulletins = [
         },
         "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
         "heroImage": "https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=1080",
-        "isUserSubmitted": true,
+        "isOfficial": true,
         "status": "Approved"
     },
     {
@@ -973,7 +940,7 @@ export const bulletins = [
         },
         "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
         "heroImage": "https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=1080",
-        "isUserSubmitted": false,
+        "isOfficial": false,
         "status": "Approved"
     },
     {
@@ -991,7 +958,7 @@ export const bulletins = [
         },
         "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
         "heroImage": "https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=1080",
-        "isUserSubmitted": false,
+        "isOfficial": false,
         "status": "Approved"
     },
     {
@@ -1009,7 +976,7 @@ export const bulletins = [
         },
         "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
         "heroImage": "https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=1080",
-        "isUserSubmitted": true,
+        "isOfficial": true,
         "status": "Approved"
     },
     {
@@ -1027,7 +994,7 @@ export const bulletins = [
         },
         "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
         "heroImage": "https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=1080",
-        "isUserSubmitted": false,
+        "isOfficial": false,
         "status": "Approved"
     },
     {
@@ -1045,7 +1012,7 @@ export const bulletins = [
         },
         "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
         "heroImage": "https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=1080",
-        "isUserSubmitted": false,
+        "isOfficial": false,
         "status": "Approved"
     },
     {
@@ -1063,7 +1030,7 @@ export const bulletins = [
         },
         "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
         "heroImage": "https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=1080",
-        "isUserSubmitted": false,
+        "isOfficial": false,
         "status": "Approved"
     },
     {
@@ -1081,7 +1048,7 @@ export const bulletins = [
         },
         "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
         "heroImage": "https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=1080",
-        "isUserSubmitted": false,
+        "isOfficial": false,
         "status": "Approved"
     }
 ];

@@ -17,8 +17,8 @@ export default function App() {
             background: '#E4E2DC',
           },
           classNames: {
-            success: '!text-[#d97706]',
-            title: '!text-[#d97706]',
+            success: '!text-brand-primary',
+            title: '!text-brand-primary',
             description: '!text-black',
           },
           duration: 3000,

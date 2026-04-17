@@ -52,7 +52,7 @@ export function EventsFeed() {
           </div>
           <Link
             to="/events"
-            className="text-[#d97706] hover:text-[#b45309] font-semibold hidden sm:block"
+            className="text-brand-primary hover:text-brand-primary-hover font-semibold hidden sm:block"
           >
             View All →
           </Link>
@@ -96,7 +96,7 @@ export function EventsFeed() {
                 </div>
                 <Link
                   to={event.url}
-                  className="mt-4 block text-center w-full bg-[#d97706] cursor-pointer text-white py-2 rounded-lg hover:bg-[#b45309] transition-colors font-semibold"
+                  className="mt-4 block text-center w-full bg-brand-primary cursor-pointer text-white py-2 rounded-lg hover:bg-brand-primary-hover transition-colors font-semibold"
                 >
                   View Details
                 </Link>
@@ -108,7 +108,7 @@ export function EventsFeed() {
         <div className="text-center mt-8 sm:hidden">
           <Link
             to="/events"
-            className="text-[#d97706] cursor-pointer hover:text-[#b45309] font-semibold"
+            className="text-brand-primary cursor-pointer hover:text-brand-primary-hover font-semibold"
           >
             View All Events →
           </Link>

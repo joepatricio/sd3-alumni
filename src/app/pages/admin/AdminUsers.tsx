@@ -269,7 +269,7 @@ export function AdminUsers() {
                                             <div className="flex justify-end gap-2">
                                                 {user.status === 'Regular' && activeTab !== 'All' && (
                                                     <>
-                                                        <Button variant="outline" size="sm" className="text-[#d97706] border-orange-200 hover:bg-orange-50" onClick={() => openEditModal(user, 'Suspended')}>Suspend</Button>
+                                                        <Button variant="outline" size="sm" className="text-brand-primary border-orange-200 hover:bg-orange-50" onClick={() => openEditModal(user, 'Suspended')}>Suspend</Button>
                                                         <Button variant="outline" size="sm" className="text-red-600 border-red-200 hover:bg-red-50" onClick={() => openEditModal(user, 'Banned')}>Ban</Button>
                                                     </>
                                                 )}
@@ -347,7 +347,7 @@ export function AdminUsers() {
                         </div>
                         <div className="flex gap-2">
                             <Button variant="outline" onClick={handleClearFilters}>Clear</Button>
-                            <Button className="bg-[#d97706] hover:bg-[#154d33]" onClick={handleApplyFilters}>Submit</Button>
+                            <Button className="bg-brand-primary hover:bg-brand-primary-hover" onClick={handleApplyFilters}>Submit</Button>
                         </div>
                     </div>
                 </div>

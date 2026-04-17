@@ -31,7 +31,7 @@ export function QuickActions() {
 
             <Link
                 to="/donate"
-                className="flex items-center gap-2 px-4 py-2 bg-[#d4af37] hover:bg-[#c19b2a] text-white rounded-lg transition-colors font-medium"
+                className="flex items-center gap-2 px-4 py-2 bg-brand-accent hover:bg-brand-accent-hover text-white rounded-lg transition-colors font-medium"
             >
                 <Heart className="w-4 h-4" />
                 Make a Donation

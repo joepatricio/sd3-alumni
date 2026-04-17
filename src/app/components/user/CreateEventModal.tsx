@@ -883,7 +883,7 @@ export function CreateEventModal({ trigger, initialData, isAdmin }: CreateEventM
                                         </Button>
 
                                         <Button
-                                            className="cursor-pointer text-[#d97706] border-[#d97706]"
+                                            className="cursor-pointer text-brand-primary border-brand-primary"
                                             type="button"
                                             variant="outline"
                                             onClick={reverseGeocode}
@@ -1097,7 +1097,7 @@ export function CreateEventModal({ trigger, initialData, isAdmin }: CreateEventM
                         </div>
 
                         <DialogFooter>
-                            <Button className="bg-[#d97706]  hover:bg-[#b45309]" type="submit" disabled={form.formState.isSubmitting}>
+                            <Button className="bg-brand-primary  hover:bg-brand-primary-hover" type="submit" disabled={form.formState.isSubmitting}>
                                 {form.formState.isSubmitting && (
                                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                                 )}

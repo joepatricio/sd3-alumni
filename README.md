@@ -37,6 +37,7 @@
   * `@/app/components` contains the components.
   * `@/app/components/ui` contains third-party UI components.
   * `@/app/assets` contains the static files, including mock data.
+  * `@/styles/tailwind.css` contains the TailwindCSS configuration, including brand colors. Also see `Design.md` for more information.
 
   App.tsx is a good place to start when reading the code. Routes are defined in AppRoutes.tsx. From there, pick your favorite webpage and look for its corresponding files in `@/app/pages` and `@/app/components` to learn the code behind it. `@/app/components/ui` can be ignored for the most part, and they "just work."
   
@@ -67,9 +68,10 @@
   
   * Implement basic search for Alumni Directory (search by name only)
   * Admin Alumni Directory
-  * Redesign /profile
+  * Inconsistent logic in profile (connections, events count)
+  * Redesign profile. Again. Make profile a hybrid of Steam and Reddit. Reddit for left column, Steam for right column
   * RSVP should be disabled for past events. It should instead notify the user that the event has passed.
-  * Color scheme should be abstracted.
+  * Review the use of HTML buttons vs React Buttons
 
   * Microinteractions (e.g. hover effects, button clicks, alumni directory, etc.), lazy loading for some INP-slow components (mostly just CreateEventModal)
   * UX stuff (Mobile testing, happy pathing, toasts everywhere)

@@ -42,7 +42,7 @@ export function AdminLayout() {
     return (
         <div className="flex h-screen bg-gray-100 overflow-hidden font-sans">
             {/* Sidebar */}
-            <aside className="w-64 bg-[#d97706] text-white flex flex-col shadow-xl z-10 transition-all duration-300">
+            <aside className="w-64 bg-brand-primary text-white flex flex-col shadow-xl z-10 transition-all duration-300">
                 <div className="h-16 flex items-center flex justify-left gap-2 px-6 border-b border-white/20">
                     <img
                         src={alumniLogo}
@@ -97,7 +97,7 @@ export function AdminLayout() {
                 <header className="h-16 bg-white shadow-sm flex items-center justify-end px-8 z-0">
                     <div className="flex items-center gap-4">
                         <div className="flex items-center gap-3">
-                            <div className="w-9 h-9 rounded-full bg-gray-200 flex items-center justify-center text-[#d97706] font-bold">
+                            <div className="w-9 h-9 rounded-full bg-gray-200 flex items-center justify-center text-brand-primary font-bold">
                                 A
                             </div>
                             <span className="text-sm font-medium text-gray-700">Administrator</span>

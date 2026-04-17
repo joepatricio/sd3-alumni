@@ -30,8 +30,8 @@ export function AdminLogin() {
         <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
             <Card className="w-full max-w-md border-none shadow-xl animate-in zoom-in-95 duration-300">
                 <CardHeader className="space-y-2 text-center pb-8 border-b">
-                    <div className="mx-auto bg-[#d97706]/10 w-16 h-16 rounded-full flex items-center justify-center mb-4">
-                        <Lock className="h-8 w-8 text-[#d97706]" />
+                    <div className="mx-auto bg-brand-primary/10 w-16 h-16 rounded-full flex items-center justify-center mb-4">
+                        <Lock className="h-8 w-8 text-brand-primary" />
                     </div>
                     <CardTitle className="text-2xl font-bold tracking-tight">Admin Portal</CardTitle>
                     <CardDescription>
@@ -76,7 +76,7 @@ export function AdminLogin() {
                                 />
                             </div>
                         </div>
-                        <Button type="submit" className="w-full bg-[#d97706] hover:bg-[#154d33] text-white">
+                        <Button type="submit" className="w-full bg-brand-primary hover:bg-brand-primary-hover text-white">
                             Sign In
                         </Button>
                     </form>

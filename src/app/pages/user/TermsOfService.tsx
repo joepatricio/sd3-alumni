@@ -3,7 +3,7 @@ export function TermsOfService() {
         <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
             <div className="max-w-3xl mx-auto bg-white p-8 rounded-lg shadow-md">
                 <h1 className="text-3xl font-bold mb-6 text-gray-900">Terms of Service</h1>
-                <div className="prose prose-[#d97706] text-gray-600">
+                <div className="prose prose-brand-primary text-gray-600">
                     <p className="mb-4">Last Updated: March 2026</p>
                     <h2 className="text-xl font-semibold mt-6 mb-3 text-gray-800">1. Acceptance of Terms</h2>
                     <p className="mb-4">

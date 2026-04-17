@@ -72,7 +72,7 @@ export function Register() {
         // Simulate network delay
         setTimeout(() => {
             toast.success("Account created successfully!", {
-                description: "Welcome to the USJR Alumni community.",
+                description: "Welcome to the USJ-R SEA Alumni community.",
             });
             navigate('/login');
         }, 1500);
@@ -81,11 +81,11 @@ export function Register() {
     return (
         <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
             <div className="sm:mx-auto sm:w-full sm:max-w-md text-center">
-                <div className="inline-flex items-center justify-center w-16 h-16 bg-[#d97706] rounded-full mb-4">
+                <div className="inline-flex items-center justify-center w-16 h-16 bg-brand-primary rounded-full mb-4">
                     <User className="w-8 h-8 text-white" />
                 </div>
                 <h1 className="text-3xl font-bold mb-2">Create Account</h1>
-                <p className="text-gray-600">Join the USJR Alumni community</p>
+                <p className="text-gray-600">Join the USJ-R SEA Alumni community</p>
             </div>
 
             <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
@@ -230,17 +230,17 @@ export function Register() {
                                             <Checkbox
                                                 checked={field.value}
                                                 onCheckedChange={field.onChange}
-                                                className="data-[state=checked]:bg-[#d97706] data-[state=checked]:border-[#d97706]"
+                                                className="data-[state=checked]:bg-brand-primary data-[state=checked]:border-brand-primary"
                                             />
                                         </FormControl>
                                         <div className="space-y-1 leading-none">
                                             <FormLabel className="font-normal text-gray-600">
                                                 I agree to the{' '}
-                                                <Link to="/terms" className="text-[#d97706] hover:text-[#b45309] font-medium" target="_blank">
+                                                <Link to="/terms" className="text-brand-primary hover:text-brand-primary-hover font-medium" target="_blank">
                                                     Terms of Service
                                                 </Link>{' '}
                                                 and{' '}
-                                                <Link to="/privacy" className="text-[#d97706] hover:text-[#b45309] font-medium" target="_blank">
+                                                <Link to="/privacy" className="text-brand-primary hover:text-brand-primary-hover font-medium" target="_blank">
                                                     Privacy Policy
                                                 </Link>
                                             </FormLabel>
@@ -252,7 +252,7 @@ export function Register() {
 
                             <Button
                                 type="submit"
-                                className="w-full bg-[#d97706] hover:bg-[#b45309] text-white"
+                                className="w-full bg-brand-primary hover:bg-brand-primary-hover text-white"
                                 disabled={form.formState.isSubmitting}
                             >
                                 {form.formState.isSubmitting && (
@@ -278,7 +278,7 @@ export function Register() {
                         <div className="mt-6 text-center">
                             <Link
                                 to="/login"
-                                className="font-medium text-[#d97706] hover:text-[#b45309]"
+                                className="font-medium text-brand-primary hover:text-brand-primary-hover"
                             >
                                 Sign in instead
                             </Link>

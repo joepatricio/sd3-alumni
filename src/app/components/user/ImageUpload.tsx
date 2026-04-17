@@ -67,7 +67,7 @@ export function ImageUpload({ previewUrl, onFileSelect, onClear, placeholderText
             onDrop={handleDrop}
             className={cn(
                 "border-2 border-dashed rounded-lg p-6 flex flex-col items-center justify-center cursor-pointer transition-colors relative",
-                isDragging ? "border-[#d97706] bg-[#d97706]/10" : "border-gray-300 hover:border-[#d97706]"
+                isDragging ? "border-brand-primary bg-brand-primary/10" : "border-gray-300 hover:border-brand-primary"
             )}
         >
             <input
@@ -96,7 +96,7 @@ export function ImageUpload({ previewUrl, onFileSelect, onClear, placeholderText
                 </div>
             ) : (
                 <>
-                    <Upload className={cn("w-8 h-8 mb-2", isDragging ? "text-[#d97706]" : "text-gray-400")} />
+                    <Upload className={cn("w-8 h-8 mb-2", isDragging ? "text-brand-primary" : "text-gray-400")} />
                     <p className="text-sm text-gray-600 font-medium">{placeholderText}</p>
                     <p className="text-xs text-gray-400 mt-1">SVG, PNG, JPG (max. 5MB)</p>
                 </>

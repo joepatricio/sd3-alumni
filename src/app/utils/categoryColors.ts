@@ -10,10 +10,10 @@ export function getCategoryColor(category: string): string {
         case 'networking':
             return 'bg-pink-600 hover:bg-pink-700 text-white';
         case 'sports':
-            return 'bg-[#d97706] hover:bg-orange-700 text-white';
+            return 'bg-brand-primary hover:bg-orange-700 text-white';
         case 'virtual':
             return 'bg-teal-600 hover:bg-teal-700 text-white';
         default:
-            return 'bg-[#b45309] hover:bg-[#d97706] text-white'; // default orange
+            return 'bg-brand-primary-hover hover:bg-brand-primary text-white'; // default orange
     }
 }

@@ -1,0 +1,37 @@
+%% Diagram focuses on the user management data
+%% Implement in userMockData.tsx
+erDiagram
+    USER ||--|| USER_STATUS : lookup
+    USER ||--|{ RECORDS : creates
+    RECORDS ||--|| USER_STATUS: lookup
+    USER ||--|| USER_AUTH : authenticates
+    %% Other systems described in other diagrams
+    %% USER 1--1 PROFILE: maintains
+    %% USER 1--0+ CONTENT: creates
+    %% USER 1--0+ DONATIONS: makes
+
+    %% 4XX - User-related
+    USER_STATUS {
+        string status_id PK
+        string status_name "e.g. Regular, Official, Banned, etc."
+    }
+    USER {
+        string user_id PK
+        string status_id FK
+        string current_record_id FK
+    }
+    RECORDS {
+        string record_id PK "New record created every time user status changes"
+        string user_id FK
+        string admin_id FK
+        string status_id FK
+        date date_created "Defaults to timestamp of query, immutable"
+        string description "Describes the nature of status"
+        date date_expires "`NULL` for statuses with no expiry"
+    }
+    USER_AUTH {
+        string user_id PK,FK
+        string email "Used as login identifier"
+        string password_hash "Hashed password (never store plain text)"
+        datetime last_login
+    }

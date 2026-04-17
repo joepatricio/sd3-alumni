@@ -12,7 +12,7 @@ export function About() {
             <div className="max-w-6xl mx-auto px-4 md:px-8 py-8 space-y-16">
                 {/* Videos Section */}
                 <section>
-                    <h2 className="text-2xl font-bold text-[#d97706] mb-8 flex items-center gap-2">
+                    <h2 className="text-2xl font-bold text-brand-primary mb-8 flex items-center gap-2">
                         <Video className="w-6 h-6" />
                         Featured Videos
                     </h2>
@@ -90,7 +90,7 @@ export function About() {
                     {/* Vision & Mission Card */}
                     <div className="bg-white p-8 rounded-xl shadow-sm border border-gray-100 space-y-8">
                         <div>
-                            <h3 className="text-[#d97706] text-lg font-bold uppercase tracking-wider mb-3">
+                            <h3 className="text-brand-primary text-lg font-bold uppercase tracking-wider mb-3">
                                 Our Vision
                             </h3>
                             <p className="text-gray-700 italic">
@@ -101,7 +101,7 @@ export function About() {
                         </div>
                         <div className="w-full h-px bg-gray-100"></div>
                         <div>
-                            <h3 className="text-[#d97706] text-lg font-bold uppercase tracking-wider mb-3">
+                            <h3 className="text-brand-primary text-lg font-bold uppercase tracking-wider mb-3">
                                 Our Mission
                             </h3>
                             <p className="text-gray-700 italic">
@@ -117,7 +117,7 @@ export function About() {
                 <section id="contact" className="bg-white rounded-xl shadow-sm border border-gray-100 p-8 md:p-12">
                     <div className="flex flex-col md:flex-row gap-8 justify-between items-start md:items-center">
                         <div>
-                            <h2 className="text-2xl font-bold text-[#d97706] mb-2">
+                            <h2 className="text-2xl font-bold text-brand-primary mb-2">
                                 Get in Touch
                             </h2>
                             <p className="text-gray-600 mb-6">
@@ -127,11 +127,11 @@ export function About() {
 
                             <div className="space-y-4">
                                 <div className="flex items-center gap-3 text-gray-700">
-                                    <div className="w-10 h-10 rounded-full bg-[#d97706]/10 flex items-center justify-center flex-shrink-0">
-                                        <Users className="w-5 h-5 text-[#d97706]" />
+                                    <div className="w-10 h-10 rounded-full bg-brand-primary/10 flex items-center justify-center flex-shrink-0">
+                                        <Users className="w-5 h-5 text-brand-primary" />
                                     </div>
                                     <div>
-                                        <p className="font-semibold text-[#d97706]">
+                                        <p className="font-semibold text-brand-primary">
                                             Juvy Homecillo
                                         </p>
                                         <p className="text-sm text-gray-500">
@@ -141,27 +141,27 @@ export function About() {
                                 </div>
 
                                 <div className="flex items-center gap-3 text-gray-700">
-                                    <div className="w-10 h-10 rounded-full bg-[#d97706]/10 flex items-center justify-center flex-shrink-0">
-                                        <Mail className="w-5 h-5 text-[#d97706]" />
+                                    <div className="w-10 h-10 rounded-full bg-brand-primary/10 flex items-center justify-center flex-shrink-0">
+                                        <Mail className="w-5 h-5 text-brand-primary" />
                                     </div>
                                     <a
                                         href="mailto:external.relations@usjr.edu.ph"
-                                        className="hover:text-[#d97706] underline"
+                                        className="hover:text-brand-primary underline"
                                     >
                                         external.relations@usjr.edu.ph
                                     </a>
                                 </div>
 
                                 <div className="flex items-center gap-3 text-gray-700">
-                                    <div className="w-10 h-10 rounded-full bg-[#d97706]/10 flex items-center justify-center flex-shrink-0">
-                                        <Phone className="w-5 h-5 text-[#d97706]" />
+                                    <div className="w-10 h-10 rounded-full bg-brand-primary/10 flex items-center justify-center flex-shrink-0">
+                                        <Phone className="w-5 h-5 text-brand-primary" />
                                     </div>
                                     <span>(032) 253-7900</span>
                                 </div>
 
                                 <div className="flex items-center gap-3 text-gray-700">
-                                    <div className="w-10 h-10 rounded-full bg-[#d97706]/10 flex items-center justify-center flex-shrink-0">
-                                        <MapPin className="w-5 h-5 text-[#d97706]" />
+                                    <div className="w-10 h-10 rounded-full bg-brand-primary/10 flex items-center justify-center flex-shrink-0">
+                                        <MapPin className="w-5 h-5 text-brand-primary" />
                                     </div>
                                     <span>
                                         Magallanes Street, 6000, Cebu City,

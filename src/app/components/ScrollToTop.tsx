@@ -56,7 +56,7 @@ const ScrollToTop = ({ children, scrollContainerRef }: ScrollToTopProps) => {
             {showScrollTop && (
                 <button
                     onClick={scrollToTop}
-                    className="fixed bottom-8 right-8 bg-[#d97706] text-white p-3 rounded-full shadow-lg hover:bg-[#92400e] transition-all flex items-center justify-center z-50 animate-in fade-in slide-in-from-bottom-2"
+                    className="fixed bottom-8 right-8 bg-brand-primary text-white p-3 rounded-full shadow-lg hover:bg-brand-primary-hover transition-all flex items-center justify-center z-50 animate-in fade-in slide-in-from-bottom-2"
                     aria-label="Scroll to top"
                 >
                     <ArrowUp className="w-6 h-6" />

@@ -19,7 +19,7 @@ export function Navbar() {
                 key={link.label}
                 to={link.href}
                 target={link.href.startsWith('http') ? '_blank' : '_self'}
-                className="text-gray-700 hover:text-[#d97706] transition-colors font-medium"
+                className="text-gray-700 hover:text-brand-primary transition-colors font-medium"
               >
                 {link.label}
               </Link>
@@ -30,7 +30,7 @@ export function Navbar() {
           <div className="hidden lg:block ml-auto">
             <Link
               to="/donate"
-              className="bg-[#d4af37] text-white px-6 py-2 rounded-full hover:bg-[#c19b2a] transition-colors font-semibold"
+              className="bg-brand-accent text-white px-6 py-2 rounded-full hover:bg-brand-accent-hover transition-colors font-semibold"
             >
               Donate
             </Link>

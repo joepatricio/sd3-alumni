@@ -40,8 +40,8 @@ export function AdminEvents() {
             description="Review, approve, or reject user-submitted networking and community events."
             contentType="Event"
             mockData={eventsData}
-            primaryColorClass="bg-[#d97706] hover:bg-[#154d33] text-white"
-            outlineColorClass="text-[#d97706] border-[#d97706] hover:bg-[#d97706]/10"
+            primaryColorClass="bg-brand-primary hover:bg-brand-primary-hover text-white"
+            outlineColorClass="text-brand-primary border-brand-primary hover:bg-brand-primary/10"
             onStatusChange={handleStatusChange}
         />
     );

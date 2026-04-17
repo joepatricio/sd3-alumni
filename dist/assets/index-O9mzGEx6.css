@@ -834,7 +834,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
         --color-orange-50: oklch(98% .016 73.684);
         --color-orange-100: oklch(95.4% .038 75.164);
         --color-orange-200: oklch(90.1% .076 70.697);
-        --color-[#d97706]: oklch(64.6% .222 41.116);
+        --color-brand-primary: oklch(64.6% .222 41.116);
         --color-orange-700: oklch(55.3% .195 38.402);
         --color-orange-800: oklch(47% .157 37.304);
         --color-amber-50: oklch(98.7% .022 95.277);
@@ -2874,8 +2874,8 @@ svg.leaflet-image-layer.leaflet-interactive path {
         background-color: var(--color-orange-100)
     }
 
-    .bg-[#d97706] {
-        background-color: var(--color-[#d97706])
+    .bg-brand-primary {
+        background-color: var(--color-brand-primary)
     }
 
     .bg-pink-600 {
@@ -3482,8 +3482,8 @@ svg.leaflet-image-layer.leaflet-interactive path {
         color: var(--muted-foreground)
     }
 
-    .text-[#d97706] {
-        color: var(--color-[#d97706])
+    .text-brand-primary {
+        color: var(--color-brand-primary)
     }
 
     .text-orange-700 {

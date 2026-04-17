@@ -343,7 +343,7 @@ export function AdminDonations() {
 
                             <div className="lg:col-span-2 flex items-center gap-2 justify-end lg:justify-start">
                                 <Button variant="outline" onClick={handleClearFilters}>Clear</Button>
-                                <Button className="bg-[#d97706] hover:bg-[#154d33]" onClick={handleApplyFilters}>Submit</Button>
+                                <Button className="bg-brand-primary hover:bg-brand-primary-hover" onClick={handleApplyFilters}>Submit</Button>
                             </div>
                         </div>
                     </div>

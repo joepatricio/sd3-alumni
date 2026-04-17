@@ -14,7 +14,7 @@ export function CallToAction() {
       description:
         "Find and reconnect with classmates and fellow Josenians worldwide.",
       link: "/directory",
-      color: "bg-[#d97706]",
+      color: "bg-brand-primary",
     },
     {
       icon: Calendar,
@@ -22,7 +22,7 @@ export function CallToAction() {
       description:
         "Join alumni gatherings, networking sessions, and special celebrations.",
       link: "/events",
-      color: "bg-[#b45309]",
+      color: "bg-brand-primary-hover",
     },
     {
       icon: Newspaper,
@@ -30,15 +30,15 @@ export function CallToAction() {
       description:
         "Stay updated with news, achievements, and stories from fellow alumni.",
       link: "/bulletin",
-      color: "bg-[#4aa573]",
+      color: "bg-brand-accent",
     },
     {
       icon: Heart,
-      title: "Support USJR",
+      title: "Support USJ-R",
       description:
         "Make a difference by contributing to scholarships and campus development.",
       link: "/donate",
-      color: "bg-[#d4af37]",
+      color: "bg-brand-accent-hover",
     },
   ];
 
@@ -51,7 +51,7 @@ export function CallToAction() {
           </h2>
           <p className="text-gray-600 text-lg max-w-3xl mx-auto">
             Discover ways to stay connected, give back, and grow
-            with the USJR Alumni community.
+            with the USJ-R SEA Alumni community.
           </p>
         </div>
 

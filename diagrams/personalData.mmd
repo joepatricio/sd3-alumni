@@ -1,0 +1,87 @@
+%% Diagram focuses on the profile-related data
+%% Implement in userMockData.tsx
+erDiagram
+    USER ||--|| USER_STATUS : lookup
+    USER ||--|| PROFILE: contains
+    USER_STATISTICS ||--|| USER: contains
+    PROFILE ||--o{ USER_ACHIEVEMENT: contains
+    USER_RSVP ||--|| USER: contains
+    USER_CONNECTIONS ||--|| USER: contains
+    CONNECTION_STATUS ||--|| USER_CONNECTIONS: lookup
+    PROFILE_INDEXABLE ||--|| DEGREE: lookup
+    PROFILE ||--|| PROFILE_INDEXABLE: lookup
+    USER_ACHIEVEMENT ||--|| ACHIEVEMENTS: lookup
+    %% Other systems described in other diagrams
+    %% USER 1--1+ RECORDS: maintains
+    %% USER 1--0+ CONTENT: creates
+    %% USER 1--0+ DONATIONS: makes
+
+    %% 1XX - Degree-related
+    DEGREE {
+        string degree_id PK
+        string degree_name "e.g. BS Mechanical Engineering, BS Civil Engineering, etc."
+        string degree_abbr "e.g. BSME, BSCE, etc."
+    }
+    %% 2XX - USER_CONNECTIONS status
+    CONNECTION_STATUS {
+        shortint connection_code PK
+        string connection_name "e.g. Pending, Accepted, Blocked, etc."
+    }
+    %% 4XX - User-related
+    USER_STATUS {
+        string status_id PK
+        string status_name "e.g. Regular, Official, Banned, etc."
+    }
+    USER {
+        string user_id PK
+        string status_id FK
+        string current_record_id FK
+    }
+    USER_ACHIEVEMENT {
+        string user_id PK,FK
+        string achievement_id PK,FK
+        shortint achievement_tier PK,FK
+        datetime achieved_date "Defaults to timestamp of acquisition, immutable"
+    }
+    ACHIEVEMENTS {
+        string achievement_id PK
+        shortint achievement_tier PK
+        string achievement_title
+        string achievement_description
+        string achievement_icon
+    }
+    USER_CONNECTIONS {
+        string user_id PK,FK
+        string friend_id PK,FK
+        shortint connection_id
+        date date_updated
+    }
+    USER_RSVP {
+        string user_id PK,FK
+        string event_id PK,FK
+        boolean is_attending
+    }
+    USER_STATISTICS {
+        string user_id PK,FK
+        int USER_CONNECTIONS
+        int events_attended
+        int achievements
+        int donated_amount
+    }
+    PROFILE {
+        string user_id PK,FK
+        string user_name
+        varchar(319) email
+        varchar(15) phone
+        string location
+        string currentJob
+        string company
+        string profileImage
+    }
+    PROFILE_INDEXABLE {
+        string user_id PK,FK
+        string degree_id
+        smallint batch
+        string user_normalized_name
+        string user_normalized_company
+    }

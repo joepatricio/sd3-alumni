@@ -1,6 +1,6 @@
 import { useNavigate, Link } from 'react-router-dom';
 import { ProfileHeader } from '@components/user/ProfileHeader';
-import { userData, events } from '@assets/mockData';
+import { profileData, events } from '@assets/mockData';
 import { Calendar, MapPin, Clock } from 'lucide-react';
 import { LazyImage } from '@components/user/LazyImage';
 
@@ -8,7 +8,7 @@ export function UserEvents() {
     const navigate = useNavigate();
 
     // Get events attended by user
-    const userEvents = userData.eventsAttended?.map(id => events.find(e => e.id === id)).filter(Boolean) as typeof events;
+    const userEvents = profileData.eventsAttended?.map(id => events.find(e => e.id === id)).filter(Boolean) as typeof events;
 
     const now = new Date();
     // Reset time for today to count events happening today as upcoming
@@ -38,7 +38,7 @@ export function UserEvents() {
             <div className="max-w-6xl mx-auto px-4 md:px-8 py-12">
                 {/* Profile Header */}
                 <ProfileHeader
-                    userData={userData}
+                    profileData={profileData}
                     isProfilePage={false}
                     onEdit={() => navigate('/profile/edit')}
                 />
@@ -69,26 +69,26 @@ export function UserEvents() {
                                                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                                             />
                                             {isUpcoming && (
-                                                <div className="absolute top-4 right-4 bg-[#d97706] text-white text-xs font-bold px-3 py-1 rounded-full shadow-md">
+                                                <div className="absolute top-4 right-4 bg-brand-primary text-white text-xs font-bold px-3 py-1 rounded-full shadow-md">
                                                     Upcoming
                                                 </div>
                                             )}
                                         </div>
                                         <div className="p-5 flex flex-col flex-1">
-                                            <h3 className="font-bold text-lg mb-2 text-gray-900 group-hover:text-[#d97706] transition-colors line-clamp-2">
+                                            <h3 className="font-bold text-lg mb-2 text-gray-900 group-hover:text-brand-primary transition-colors line-clamp-2">
                                                 {event.title}
                                             </h3>
                                             <div className="space-y-2 text-sm text-gray-600 mt-auto">
                                                 <div className="flex items-center gap-2">
-                                                    <Calendar className="w-4 h-4 text-[#d97706] shrink-0" />
+                                                    <Calendar className="w-4 h-4 text-brand-primary shrink-0" />
                                                     <span>{new Date(event.date).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</span>
                                                 </div>
                                                 <div className="flex items-center gap-2">
-                                                    <Clock className="w-4 h-4 text-[#d97706] shrink-0" />
+                                                    <Clock className="w-4 h-4 text-brand-primary shrink-0" />
                                                     <span>{event.time}</span>
                                                 </div>
                                                 <div className="flex items-center gap-2">
-                                                    <MapPin className="w-4 h-4 text-[#d97706] shrink-0" />
+                                                    <MapPin className="w-4 h-4 text-brand-primary shrink-0" />
                                                     <span className="truncate">{event.address || 'Virtual / TBD'}</span>
                                                 </div>
                                             </div>

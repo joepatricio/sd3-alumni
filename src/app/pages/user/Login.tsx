@@ -70,11 +70,11 @@ export function Login() {
     return (
         <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
             <div className="sm:mx-auto sm:w-full sm:max-w-md text-center">
-                <div className="inline-flex items-center justify-center w-16 h-16 bg-[#d97706] rounded-full mb-4">
+                <div className="inline-flex items-center justify-center w-16 h-16 bg-brand-primary rounded-full mb-4">
                     <User className="w-8 h-8 text-white" />
                 </div>
                 <h1 className="text-3xl font-bold mb-2">Welcome Back</h1>
-                <p className="text-gray-600">Sign in to your USJR Alumni account</p>
+                <p className="text-gray-600">Sign in to your USJ-R SEA Alumni account</p>
             </div>
 
             <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
@@ -145,7 +145,7 @@ export function Login() {
                                                 <Checkbox
                                                     checked={field.value}
                                                     onCheckedChange={field.onChange}
-                                                    className="data-[state=checked]:bg-[#d97706] data-[state=checked]:border-[#d97706]"
+                                                    className="data-[state=checked]:bg-brand-primary data-[state=checked]:border-brand-primary"
                                                 />
                                             </FormControl>
                                             <FormLabel className="font-normal text-gray-600">
@@ -156,7 +156,7 @@ export function Login() {
                                 />
 
                                 <div className="text-sm">
-                                    <Link to="/forgot-password" className="font-medium text-[#d97706] hover:text-[#b45309]">
+                                    <Link to="/forgot-password" className="font-medium text-brand-primary hover:text-brand-primary-hover">
                                         Forgot password?
                                     </Link>
                                 </div>
@@ -164,7 +164,7 @@ export function Login() {
 
                             <Button
                                 type="submit"
-                                className="w-full bg-[#d97706] hover:bg-[#b45309] text-white"
+                                className="w-full bg-brand-primary hover:bg-brand-primary-hover text-white"
                                 disabled={form.formState.isSubmitting}
                             >
                                 {form.formState.isSubmitting && (
@@ -182,7 +182,7 @@ export function Login() {
                             </div>
                             <div className="relative flex justify-center text-sm">
                                 <span className="px-2 bg-white text-gray-500">
-                                    New to USJR Alumni?
+                                    New to USJ-R SEA Alumni?
                                 </span>
                             </div>
                         </div>
@@ -190,7 +190,7 @@ export function Login() {
                         <div className="mt-6 text-center">
                             <Link
                                 to="/register"
-                                className="font-medium text-[#d97706] hover:text-[#b45309]"
+                                className="font-medium text-brand-primary hover:text-brand-primary-hover"
                             >
                                 Create an account
                             </Link>

@@ -71,7 +71,7 @@ export function BulletinDetail() {
             <div className="max-w-4xl mx-auto px-4 md:px-8 pt-6 flex justify-between items-center">
                 <Link
                     to="/bulletin"
-                    className="inline-flex items-center gap-2 text-gray-600 hover:text-[#d97706] transition-colors"
+                    className="inline-flex items-center gap-2 text-gray-600 hover:text-brand-primary transition-colors"
                 >
                     <ArrowLeft className="w-4 h-4" />
                     <span className='font-medium'>Back to Bulletin</span>
@@ -80,7 +80,7 @@ export function BulletinDetail() {
                 {isLoggedIn && (
                     <CreateBulletinModal
                         trigger={
-                            <Button variant="outline" className="gap-2 text-[#d97706] border-[#d97706] hover:bg-[#d97706] hover:text-white transition-colors">
+                            <Button variant="outline" className="gap-2 text-brand-primary border-brand-primary hover:bg-brand-primary hover:text-white transition-colors">
                                 <Edit className="w-4 h-4" />
                                 Edit Bulletin
                             </Button>
@@ -151,7 +151,7 @@ export function BulletinDetail() {
                 {/* Comments Section */}
                 <div className="bg-white rounded-lg shadow-md p-8 mt-8">
                     <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
-                        <MessageCircle className="w-6 h-6 text-[#d97706]" />
+                        <MessageCircle className="w-6 h-6 text-brand-primary" />
                         Comments ({comments.length})
                     </h2>
 
@@ -170,13 +170,13 @@ export function BulletinDetail() {
                                         onChange={(e) => setComment(e.target.value)}
                                         placeholder="Add a comment..."
                                         rows={3}
-                                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#d97706] resize-none"
+                                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-primary resize-none"
                                         required
                                     />
                                     <div className="flex justify-end mt-2">
                                         <button
                                             type="submit"
-                                            className="flex items-center gap-2 bg-[#d97706] text-white px-6 py-2 rounded-lg hover:bg-[#b45309] transition-colors font-semibold"
+                                            className="flex items-center gap-2 bg-brand-primary text-white px-6 py-2 rounded-lg hover:bg-brand-primary-hover transition-colors font-semibold"
                                         >
                                             <Send className="w-4 h-4" />
                                             Post Comment
@@ -187,11 +187,11 @@ export function BulletinDetail() {
                         </form>
                     ) : (
                         <div className="text-center py-8 px-4 bg-gray-50 rounded-lg border border-gray-100 mb-8">
-                            <MessageCircle className="w-10 h-10 text-[#d97706]/50 mx-auto mb-3" />
+                            <MessageCircle className="w-10 h-10 text-brand-primary/50 mx-auto mb-3" />
                             <h3 className="text-lg font-bold text-gray-900 mb-2">Join the Discussion</h3>
                             <p className="text-gray-500 text-sm mb-4">Log in to share your thoughts, ask questions, and interact with other alumni.</p>
                             <Link to="/login" state={{ from: `/bulletin/${bulletin.id}` }} className="inline-block">
-                                <Button className="bg-[#d97706] hover:bg-[#92400e]">
+                                <Button className="bg-brand-primary hover:bg-brand-primary-hover">
                                     Log In to Comment
                                 </Button>
                             </Link>
@@ -219,7 +219,7 @@ export function BulletinDetail() {
                                             <div className="flex items-center gap-2 mb-2">
                                                 <Link
                                                     to="/profile"
-                                                    className="font-semibold text-gray-900 hover:text-[#d97706] transition-colors"
+                                                    className="font-semibold text-gray-900 hover:text-brand-primary transition-colors"
                                                 >
                                                     {commentItem.author.name}
                                                 </Link>
@@ -231,10 +231,10 @@ export function BulletinDetail() {
                                         </div>
                                         <button
                                             onClick={() => handleToggleLike(commentItem.id)}
-                                            className={`flex items-center gap-1 mt-2 text-sm transition-colors ${isLiked ? 'text-[#d97706] font-semibold' : 'text-gray-600 hover:text-[#d97706]'
+                                            className={`flex items-center gap-1 mt-2 text-sm transition-colors ${isLiked ? 'text-brand-primary font-semibold' : 'text-gray-600 hover:text-brand-primary'
                                                 } ${!isLoggedIn ? 'cursor-default opacity-80' : ''}`}
                                         >
-                                            <ThumbsUp className={`w-4 h-4 ${isLiked ? 'fill-[#d97706]' : ''}`} />
+                                            <ThumbsUp className={`w-4 h-4 ${isLiked ? 'fill-brand-primary' : ''}`} />
                                             <span>{commentItem.likes + (isLiked ? 1 : 0)}</span>
                                         </button>
                                     </div>

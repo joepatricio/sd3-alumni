@@ -1,7 +1,7 @@
 import { MoreVertical, UserMinus } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { ProfileHeader } from '@components/user/ProfileHeader';
-import { userData, connectionsData } from '@assets/mockData';
+import { profileData, connectionsData } from '@assets/mockData';
 
 export function Connections() {
     const navigate = useNavigate();
@@ -11,7 +11,7 @@ export function Connections() {
             <div className="max-w-6xl mx-auto px-4 md:px-8 py-12">
                 {/* Profile Header */}
                 <ProfileHeader
-                    userData={userData}
+                    profileData={profileData}
                     isProfilePage={false}
                     onEdit={() => navigate('/profile/edit')}
                 />
@@ -23,7 +23,7 @@ export function Connections() {
                             <input
                                 type="text"
                                 placeholder="Search connections..."
-                                className="px-4 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#d97706]"
+                                className="px-4 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary"
                             />
                         </div>
                     </div>

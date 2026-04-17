@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '@utils/auth';
 
 interface ProfileHeaderProps {
-    userData: {
+    profileData: {
         name: string;
         email: string;
         phone: string;
@@ -21,7 +21,7 @@ interface ProfileHeaderProps {
 
 // Use isLoggedIn instead of isOwner
 export function ProfileHeader({
-    userData,
+    profileData,
     isProfilePage,
     onEdit,
 }: ProfileHeaderProps) {
@@ -30,7 +30,7 @@ export function ProfileHeader({
     return (
         <div className="bg-white rounded-lg shadow-md overflow-hidden mb-6">
             {/* Cover Image */}
-            <div className="h-32 bg-gradient-to-r from-[#d97706] to-[#b45309]"></div>
+            <div className="h-32 bg-gradient-to-r from-brand-primary to-brand-primary-hover"></div>
 
             {/* Profile Info */}
             <div className="px-6 pb-6">
@@ -38,15 +38,15 @@ export function ProfileHeader({
                     {/* Profile Picture */}
                     <div className="flex items-end gap-4">
                         <img
-                            src={userData.profileImage}
-                            alt={userData.name}
+                            src={profileData.profileImage}
+                            alt={profileData.name}
                             className="w-32 h-32 rounded-full border-4 border-white object-cover"
                         />
                         {/* Profile Info */}
                         <div className="gap-3 mt-4 md:mt-0">
-                            <h1 className="text-2xl font-bold">{userData.name}</h1>
+                            <h1 className="text-2xl font-bold">{profileData.name}</h1>
                             <p className="text-gray-600">
-                                Class of {userData.graduationYear}
+                                Class of {profileData.graduationYear}
                             </p>
                         </div>
                     </div>
@@ -58,7 +58,7 @@ export function ProfileHeader({
                                 {!isProfilePage ? (
                                     <Link
                                         to={"/profile"}
-                                        className="flex items-center gap-2 px-4 py-2 bg-[#d97706] text-white rounded-lg hover:bg-[#b45309] transition-colors font-semibold"
+                                        className="flex items-center gap-2 px-4 py-2 bg-brand-primary text-white rounded-lg hover:bg-brand-primary-hover transition-colors font-semibold"
                                     >
                                         <User className="w-4 h-4" />
                                         Back to Profile
@@ -69,7 +69,7 @@ export function ProfileHeader({
                                             <>
                                                 <button
                                                     onClick={onEdit}
-                                                    className="flex items-center gap-2 px-4 py-2 bg-[#d97706] text-white rounded-lg hover:bg-[#b45309] transition-colors font-semibold"
+                                                    className="flex items-center gap-2 px-4 py-2 bg-brand-primary text-white rounded-lg hover:bg-brand-primary-hover transition-colors font-semibold"
                                                 >
                                                     <Edit className="w-4 h-4" />
                                                     Edit Profile
@@ -94,26 +94,26 @@ export function ProfileHeader({
                 </div>
 
                 {/* Bio */}
-                <p className="text-gray-700 mb-4">{userData.bio}</p>
+                <p className="text-gray-700 mb-4">{profileData.bio}</p>
 
                 {/* Contact Info */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm text-gray-600">
                     <div className="flex items-center gap-2">
-                        <Mail className="w-4 h-4 text-[#d97706]" />
-                        <span>{userData.email}</span>
+                        <Mail className="w-4 h-4 text-brand-primary" />
+                        <span>{profileData.email}</span>
                     </div>
                     <div className="flex items-center gap-2">
-                        <Phone className="w-4 h-4 text-[#d97706]" />
-                        <span>{userData.phone}</span>
+                        <Phone className="w-4 h-4 text-brand-primary" />
+                        <span>{profileData.phone}</span>
                     </div>
                     <div className="flex items-center gap-2">
-                        <MapPin className="w-4 h-4 text-[#d97706]" />
-                        <span>{userData.location}</span>
+                        <MapPin className="w-4 h-4 text-brand-primary" />
+                        <span>{profileData.location}</span>
                     </div>
                     <div className="flex items-center gap-2">
-                        <Briefcase className="w-4 h-4 text-[#d97706]" />
+                        <Briefcase className="w-4 h-4 text-brand-primary" />
                         <span>
-                            {userData.currentJob} at {userData.company}
+                            {profileData.currentJob} at {profileData.company}
                         </span>
                     </div>
                 </div>

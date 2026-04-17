@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { ProfileHeader } from '@components/user/ProfileHeader';
-import { userData, ACHIEVEMENTS } from '@assets/mockData';
+import { profileData, ACHIEVEMENTS } from '@assets/mockData';
 import {
     Star, Award, Trophy, BookOpen,
     Heart, HeartPulse, HandCoins,
@@ -26,7 +26,7 @@ export function Achievements() {
     const navigate = useNavigate();
 
     // Map user achievements to their full data
-    const userAchievementsFull = userData.achievements?.map(userAchv => {
+    const userAchievementsFull = profileData.achievements?.map(userAchv => {
         const achvData = ACHIEVEMENTS.find(a => a.id === userAchv.id);
         return achvData ? { ...userAchv, ...achvData } : null;
     }).filter(Boolean) as any[];
@@ -48,7 +48,7 @@ export function Achievements() {
             <div className="max-w-6xl mx-auto px-4 md:px-8 py-12">
                 {/* Profile Header */}
                 <ProfileHeader
-                    userData={userData}
+                    profileData={profileData}
                     isProfilePage={false}
                     onEdit={() => navigate('/profile/edit')}
                 />
@@ -72,11 +72,11 @@ export function Achievements() {
                                         key={achv.id}
                                         className="group bg-gradient-to-br from-white to-gray-50 border border-gray-100 rounded-xl p-6 hover:shadow-md transition-shadow duration-300 flex items-center gap-6"
                                     >
-                                        <div className="w-16 h-16 rounded-full bg-[#d97706]/10 flex items-center justify-center shrink-0 group-hover:bg-[#d97706]/20 transition-colors">
-                                            <Icon className="w-8 h-8 text-[#d97706]" />
+                                        <div className="w-16 h-16 rounded-full bg-brand-primary/10 flex items-center justify-center shrink-0 group-hover:bg-brand-primary/20 transition-colors">
+                                            <Icon className="w-8 h-8 text-brand-primary" />
                                         </div>
                                         <div className="flex flex-col flex-1">
-                                            <h3 className="font-bold text-lg text-gray-900 group-hover:text-[#d97706] transition-colors">
+                                            <h3 className="font-bold text-lg text-gray-900 group-hover:text-brand-primary transition-colors">
                                                 {achv.title}
                                             </h3>
                                             <p className="text-sm text-gray-600 mb-2">

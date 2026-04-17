@@ -1,0 +1,111 @@
+%% Diagram focuses on the admin dashboard data, includes donations and content
+%% Implement in adminMockData.tsx
+erDiagram
+    %% USER ||--|| USER_PROFILE : get user profile
+    USER ||--|| USER_STATUS : lookup
+    USER ||--o{ BULLETIN: creates
+    USER ||--o{ COMMENTS: creates
+    USER ||--o{ DONATIONS: creates
+    USER ||--o{ EVENTS: creates
+    ADMIN ||--o{ BULLETIN : reviews
+    ADMIN ||--o{ EVENTS : reviews
+    ADMIN ||--o{ USER : manages 
+    DONATIONS ||--|| DONATION_STATUS: lookup
+    BULLETIN ||--|| CONTENT_STATUS: lookup
+    EVENTS ||--|| CONTENT_STATUS: lookup
+    EVENTS ||--|| EVENT_CATEGORY: lookup
+    EVENTS ||--|| LOCATION: contains
+
+    ADMIN {
+        string admin_id PK
+        string password_hash "Hashed password (never store plain text)"
+        datetime last_login
+    }
+    %% 3XX - Content-related
+    CONTENT_STATUS {
+        string status_id PK
+        string status_name "e.g. Pending, Approved, Rejected"
+    }
+    %% 4XX - User-related
+    %% Content from banned users are automatically hidden from view
+    %% Suspended users still maintain content visibility
+    %% Suspended users cannot create or edit content, nor can they donate
+    %% Ditto for banned users
+    %% In all cases, their profile will show their status e.g. [SUSPENDED], [BANNED]
+    USER_STATUS {
+        string status_id PK
+        string status_name "e.g. Regular, Official, Banned, etc."
+    }
+    %% 5XX - Donation-related
+    DONATION_STATUS {
+        string status_id PK
+        string status_name "e.g. Processing, Completed, Failed"
+    }
+    USER {
+        string user_id PK
+        string user_status_id FK
+        string current_record_id FK
+    }
+    BULLETIN {
+        string id PK
+        string author_id FK
+        string content_status_id FK
+        datetime bulletin_date
+        datetime review_date "NULL if not reviewed"
+        string title
+        smallint read_time_minutes
+        text content
+        string bulletin_image
+    }
+    EVENTS {
+        string event_id PK
+        string admin_id FK
+        string organizer_id FK
+        string status_id FK
+        string location_id FK
+        string event_category_id FK
+        datetime event_date
+        datetime review_date "NULL if not reviewed"
+        string title
+        text description
+        time startTime
+        time endTime
+        string organizer
+        shortint responses
+        string modality
+        string event_image
+    }
+    %% 6XX - Event-related
+    EVENT_CATEGORY {
+        string event_category_id PK
+        string event_category_name "e.g. Virtual, Sports, etc."
+    }
+    LOCATION {
+        string location_id PK
+        string region_code
+        string province
+        string province_code
+        string city_municipality
+        string city_code
+        string barangay
+        string landmark
+        string street
+        float lat
+        float lng
+    }
+    COMMENTS {
+        string comment_id PK
+        string user_id FK
+        string bulletin_id FK
+        datetime comment_date
+        string comment
+        shortint likes
+    }
+    DONATIONS {
+        string donation_id PK
+        string user_id FK "NULL if anonymous"
+        string donation_status_id FK
+        datetime donation_date
+        float donation_amount
+        money donation_amount_php "Human-readable format"
+    }

@@ -185,7 +185,7 @@ export function CreateBulletinModal({ trigger, initialData, isAdmin = false }: C
 
                         {/* Footer */}
                         <DialogFooter>
-                            <Button className="bg-[#d97706]  hover:bg-[#b45309]" type="submit" disabled={form.formState.isSubmitting}>
+                            <Button className="bg-brand-primary  hover:bg-brand-primary-hover" type="submit" disabled={form.formState.isSubmitting}>
                                 {form.formState.isSubmitting && (
                                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                                 )}

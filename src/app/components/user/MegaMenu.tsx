@@ -30,7 +30,7 @@ export function MegaMenu({ isOpen, onClose }: MegaMenuProps) {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {/* Main Navigation */}
           <div>
-            <h3 className="text-[#d97706] font-bold text-lg mb-4 uppercase tracking-wide">
+            <h3 className="text-brand-primary font-bold text-lg mb-4 uppercase tracking-wide">
               Navigate
             </h3>
             <ul className="space-y-3">
@@ -39,7 +39,7 @@ export function MegaMenu({ isOpen, onClose }: MegaMenuProps) {
                   <Link
                     to={link.href}
                     onClick={onClose}
-                    className="text-gray-700 hover:text-[#d97706] transition-colors text-lg font-medium block"
+                    className="text-gray-700 hover:text-brand-primary transition-colors text-lg font-medium block"
                   >
                     {link.label}
                   </Link>
@@ -49,7 +49,7 @@ export function MegaMenu({ isOpen, onClose }: MegaMenuProps) {
                 <Link
                   to="/donate"
                   onClick={onClose}
-                  className="inline-block bg-[#d4af37] text-white px-6 py-2 rounded-full hover:bg-[#c19b2a] transition-colors font-semibold mt-2"
+                  className="inline-block bg-brand-accent text-white px-6 py-2 rounded-full hover:bg-brand-accent-hover transition-colors font-semibold mt-2"
                 >
                   Donate
                 </Link>
@@ -59,7 +59,7 @@ export function MegaMenu({ isOpen, onClose }: MegaMenuProps) {
 
           {/* Resources */}
           <div>
-            <h3 className="text-[#d97706] font-bold text-lg mb-4 uppercase tracking-wide">
+            <h3 className="text-brand-primary font-bold text-lg mb-4 uppercase tracking-wide">
               Follow Us
             </h3>
             <div className="grid grid-cols-2 gap-3 mb-8">
@@ -82,20 +82,20 @@ export function MegaMenu({ isOpen, onClose }: MegaMenuProps) {
           {/* Follow Us & Contact */}
           <div>
             <div className="bg-gray-50 p-4 rounded-lg">
-              <h4 className="text-[#d97706] font-bold mb-3 uppercase tracking-wide text-sm">
+              <h4 className="text-brand-primary font-bold mb-3 uppercase tracking-wide text-sm">
                 Contact
               </h4>
               <div className="space-y-2 text-sm text-gray-600">
                 <div className="flex items-start gap-2">
-                  <MapPin className="w-4 h-4 mt-0.5 flex-shrink-0 text-[#d97706]" />
+                  <MapPin className="w-4 h-4 mt-0.5 flex-shrink-0 text-brand-primary" />
                   <span>Magallanes Street, Cebu City 6000</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Phone className="w-4 h-4 flex-shrink-0 text-[#d97706]" />
+                  <Phone className="w-4 h-4 flex-shrink-0 text-brand-primary" />
                   <span>+63 (32) 253-7900</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Mail className="w-4 h-4 flex-shrink-0 text-[#d97706]" />
+                  <Mail className="w-4 h-4 flex-shrink-0 text-brand-primary" />
                   <span>alumni@usjr.edu.ph</span>
                 </div>
               </div>
@@ -104,9 +104,9 @@ export function MegaMenu({ isOpen, onClose }: MegaMenuProps) {
                 href="https://usjr.edu.ph/"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-2 mt-4 text-[#d97706] hover:text-[#d4af37] transition-colors font-medium text-sm"
+                className="flex items-center gap-2 mt-4 text-brand-primary hover:text-brand-accent transition-colors font-medium text-sm"
               >
-                Visit USJR Website
+                Visit USJ-R Website
                 <ExternalLink className="w-4 h-4" />
               </a>
             </div>
