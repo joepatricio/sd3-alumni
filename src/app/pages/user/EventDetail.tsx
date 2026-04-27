@@ -10,11 +10,13 @@ import {
     Phone,
     CheckCircle2,
     XCircle,
+    AlertCircle,
 } from 'lucide-react';
 import { CreateEventModal } from '@components/user/CreateEventModal';
 import { Button } from '@components/ui/button';
 import { Badge } from '@components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@components/ui/avatar';
+import { Alert, AlertDescription, AlertTitle } from '@components/ui/alert';
 import { NotFound } from '@pages/NotFound';
 import { events } from '@assets/mockData';
 import { useAuth } from '@utils/auth';
@@ -30,9 +32,10 @@ export function EventDetail() {
     const eventData = events.find((e) => e.id === id);
 
     if (!eventData || eventData.status === "Rejected") {
-        // return <Navigate to="/404" replace />;
         return <NotFound />;
     }
+
+    const isPastEvent = new Date(eventData.date) < new Date();
 
     // Calculate display time
     const displayTime = `${eventData.startTimeHour}:${eventData.startTimeMinute} ${eventData.startTimeAmPm} - ${eventData.endTimeHour}:${eventData.endTimeMinute} ${eventData.endTimeAmPm}`;
@@ -177,7 +180,15 @@ export function EventDetail() {
                     <div className="space-y-8 sticky top-24 self-start">
                         {/* RSVP Card */}
                         <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-                            {isLoggedIn ? (
+                            {isPastEvent ? (
+                                <Alert className="bg-amber-50 border-amber-200 text-amber-800">
+                                    <AlertCircle className="h-4 w-4 text-amber-600" />
+                                    <AlertTitle className="font-bold">Event Passed</AlertTitle>
+                                    <AlertDescription className="text-amber-700">
+                                        This event has already taken place. RSVP is no longer available.
+                                    </AlertDescription>
+                                </Alert>
+                            ) : isLoggedIn ? (
                                 <>
                                     <div className="text-center mb-6">
                                         <h3 className="text-lg font-bold text-gray-900 mb-2">Are you going?</h3>

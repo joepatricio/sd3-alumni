@@ -1,34 +1,20 @@
 // For now, directory and profile DB are isolated. Profile should refer to directory data in final product
 // Remove generateUsers in adminMockData to actually refer to data here.
 export const achievements = [
-    // Cake days
-    { achievement_id: '1', achievement_tier: 1, achievement_title: '1-Year Club', description: 'Has been a member for 1 year.', achievement_icon: 'Star' },
-    { achievement_id: '1', achievement_tier: 2, achievement_title: '2-Year Club', description: 'Has been a member for 2 years.', achievement_icon: 'Star' },
-    { achievement_id: '1', achievement_tier: 3, achievement_title: '3-Year Club', description: 'Has been a member for 3 years.', achievement_icon: 'Sparkle' },
-    { achievement_id: '1', achievement_tier: 4, achievement_title: '4-Year Club', description: 'Has been a member for 4 years.', achievement_icon: 'Sparkle' },
-    { achievement_id: '1', achievement_tier: 5, achievement_title: '5-Year Club', description: 'Has been a member for 5 years.', achievement_icon: 'Sparkle' },
-    { achievement_id: '1', achievement_tier: 6, achievement_title: '6-Year Club', description: 'Has been a member for 6 years.', achievement_icon: 'Sparkle' },
-    { achievement_id: '1', achievement_tier: 7, achievement_title: '7-Year Club', description: 'Has been a member for 7 years.', achievement_icon: 'Sparkle' },
-    { achievement_id: '1', achievement_tier: 8, achievement_title: '8-Year Club', description: 'Has been a member for 8 years.', achievement_icon: 'Sparkle' },
-    { achievement_id: '1', achievement_tier: 9, achievement_title: '9-Year Club', description: 'Has been a member for 9 years.', achievement_icon: 'Sparkle' },
-    { achievement_id: '1', achievement_tier: 10, achievement_title: 'Prestige Alumni', description: 'Has been a member for 10+ years.', achievement_icon: 'Sparkles' },
-
-    // Donations
-    { achievement_id: '2', achievement_tier: 1, achievement_title: 'Philanthropist I', description: 'Donated up to ₱5,000.', achievement_icon: 'Heart' },
-    { achievement_id: '2', achievement_tier: 2, achievement_title: 'Philanthropist II', description: 'Donated up to ₱20,000.', achievement_icon: 'HeartPulse' },
-    { achievement_id: '2', achievement_tier: 3, achievement_title: 'Philanthropist III', description: 'Donated up to ₱50,000.', achievement_icon: 'HandCoins' },
-    // Events
-    { achievement_id: '3', achievement_tier: 1, achievement_title: 'Event Enthusiast I', description: 'Attended 5 events.', achievement_icon: 'Calendar' },
-    { achievement_id: '3', achievement_tier: 2, achievement_title: 'Event Enthusiast II', description: 'Attended 15 events.', achievement_icon: 'CalendarDays' },
-    // Bulletins
-    { achievement_id: '4', achievement_tier: 1, achievement_title: 'Conversation Starter I', description: 'Created 1 bulletin.', achievement_icon: 'Newspaper' },
-    { achievement_id: '4', achievement_tier: 2, achievement_title: 'Conversation Starter II', description: 'Created 5 bulletins.', achievement_icon: 'Newspaper' },
-    // Comments
-    { achievement_id: '5', achievement_tier: 1, achievement_title: 'Contributor I', description: 'Written 10 comments.', achievement_icon: 'MessageSquare' },
-    { achievement_id: '5', achievement_tier: 2, achievement_title: 'Contributor II', description: 'Written 50 comments.', achievement_icon: 'MessageCircle' },
-    // Special awards
-    { achievement_id: '10000', achievement_tier: 1, achievement_title: 'READS Alumni', description: 'Part of the Recoletos Educational Assistance for Deserving Students.', achievement_icon: 'BookOpen' },
-    { achievement_id: '10001', achievement_tier: 1, achievement_title: 'Verified', description: 'User has been verified.', achievement_icon: 'Gear' },
+    { id: '1', achievement_tier: 1, achievement_title: '1-Year Club', description: 'Has been a member for 1 year.', achievement_icon: 'Star' },
+    { id: '1', achievement_tier: 2, achievement_title: '3-Year Club', description: 'Has been a member for 3 years.', achievement_icon: 'Sparkle' },
+    { id: '1', achievement_tier: 3, achievement_title: 'Prestige Alumni', description: 'Has been a member for 10+ years.', achievement_icon: 'Sparkles' },
+    { id: '2', achievement_tier: 1, achievement_title: 'Philanthropist I', description: 'Donated up to ₱5,000.', achievement_icon: 'Heart' },
+    { id: '2', achievement_tier: 2, achievement_title: 'Philanthropist II', description: 'Donated up to ₱20,000.', achievement_icon: 'HeartPulse' },
+    { id: '2', achievement_tier: 3, achievement_title: 'Philanthropist III', description: 'Donated up to ₱50,000.', achievement_icon: 'HandCoins' },
+    { id: '3', achievement_tier: 1, achievement_title: 'Event Enthusiast I', description: 'Attended 5 events.', achievement_icon: 'Calendar' },
+    { id: '3', achievement_tier: 2, achievement_title: 'Event Enthusiast II', description: 'Attended 15 events.', achievement_icon: 'CalendarDays' },
+    { id: '4', achievement_tier: 1, achievement_title: 'Conversation Starter I', description: 'Created 1 bulletin.', achievement_icon: 'Newspaper' },
+    { id: '4', achievement_tier: 2, achievement_title: 'Conversation Starter II', description: 'Created 5 bulletins.', achievement_icon: 'Newspaper' },
+    { id: '5', achievement_tier: 1, achievement_title: 'Contributor I', description: 'Written 10 comments.', achievement_icon: 'MessageSquare' },
+    { id: '5', achievement_tier: 2, achievement_title: 'Contributor II', description: 'Written 50 comments.', achievement_icon: 'MessageCircle' },
+    { id: '10000', achievement_tier: 1, achievement_title: 'READS Alumni', description: 'Part of the Recoletos Educational Assistance for Deserving Students.', achievement_icon: 'BookOpen' },
+    { id: '10001', achievement_tier: 1, achievement_title: 'Verified', description: 'User has been verified.', achievement_icon: 'Gear' },
 ];
 export const degree = [
     { degree_id: 100, degree_name: 'Mechanical Engineering', degree_abbr: 'BSME' },
@@ -48,11 +34,12 @@ export const user = [
     { user_id: '3', status_id: '402', current_record_id: '3' },
     { user_id: '4', status_id: '403', current_record_id: '4' }
 ];
+// Passwords hashed with bCrypt 
 export const userAuth = [
-    { user_id: '1', email: 'maria.santos@example.com', password_hash: '', last_login: '2025-01-01' },
-    { user_id: '2', email: 'juan.dela.cruz@example.com', password_hash: '', last_login: '2025-01-01' },
-    { user_id: '3', email: 'pedro.sanchez@example.com', password_hash: '', last_login: '2025-01-01' },
-    { user_id: '4', email: 'maria.santos@example.com', password_hash: '', last_login: '2025-01-01' }
+    { user_id: '1', email: 'maria.santos@example.com', password_hash: '$2a$10$RF01DLY3wzkMTDihPwqMZuOu9dqipFZokMMf14UutW2Zk9IauaJ4y', last_login: '2025-01-01' },
+    { user_id: '2', email: 'juan.dela.cruz@example.com', password_hash: '$2a$10$WMKCQI6WaDp05xN3Z9EI2.U8vkWiMqDQqxoSBbhk1ZySIpJqzxRm.', last_login: '2025-01-01' },
+    { user_id: '3', email: 'pedro.sanchez@example.com', password_hash: '$2a$10$7uOwsviOXiEL4L80plIJX.U/igdJW5/SkM8kboH2U.XW10bVBClaa', last_login: '2025-01-01' },
+    { user_id: '4', email: 'maria.santos@example.com', password_hash: '$2a$10$OsanOVVGOk5T12X.TqAOb.zZCFAFwAKZ972kj8Ad1GPfEFQr//tJy', last_login: '2025-01-01' }
 ]
 export const userRecords = [
     { record_id: '1', user_id: '1', status_id: '401', date_created: '2022-01-01', description: 'User created', date_expires: null },
@@ -67,13 +54,13 @@ export const userStatistics = [
     { user_id: '4', date_created: '2022-01-01', connections: 0, events_attended: 0, achievements: 0, donated_amount: 0 }
 ];
 export const userAchievements = [
-    { user_id: '1', achievement_id: '1', achievement_tier: 10, achieved_date: '2022-01-01' },
+    { user_id: '1', achievement_id: '1', achievement_tier: 4, achieved_date: '2022-01-01' },
     { user_id: '1', achievement_id: '2', achievement_tier: 3, achieved_date: '2022-01-02' },
     { user_id: '1', achievement_id: '3', achievement_tier: 2, achieved_date: '2022-01-03' },
     { user_id: '1', achievement_id: '4', achievement_tier: 2, achieved_date: '2022-01-04' },
     { user_id: '3', achievement_id: '3', achievement_tier: 1, achieved_date: '2022-01-03' },
     { user_id: '3', achievement_id: '4', achievement_tier: 2, achieved_date: '2022-01-04' },
-    { user_id: '3', achievement_id: '1', achievement_tier: 3, achieved_date: '2022-01-05' },
+    { user_id: '3', achievement_id: '1', achievement_tier: 2, achieved_date: '2022-01-05' },
     { user_id: '4', achievement_id: '1', achievement_tier: 1, achieved_date: '2022-01-05' },
     { user_id: '3', achievement_id: '10001', achievement_tier: 1, achieved_date: '2022-01-05' },
     { user_id: '4', achievement_id: '10000', achievement_tier: 1, achieved_date: '2022-01-05' }

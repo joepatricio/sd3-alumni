@@ -1,0 +1,199 @@
+
+erDiagram
+    USER ||--|| USER_STATUS : lookup
+    USER ||--|{ RECORDS : creates
+    RECORDS ||--|| USER_STATUS: lookup
+    USER ||--|| USER_AUTH : authenticates
+    
+    USER ||--|| PROFILE: contains
+    USER_STATISTICS ||--|| USER: contains
+    PROFILE ||--o{ USER_ACHIEVEMENT: contains
+    USER_RSVP ||--|| USER: contains
+    USER_CONNECTIONS ||--|| USER: contains
+    CONNECTION_STATUS ||--|| USER_CONNECTIONS: lookup
+    PROFILE ||--|| DEGREE: lookup
+    USER_ACHIEVEMENT ||--|| ACHIEVEMENTS: lookup
+
+    USER ||--o{ BULLETIN: creates
+    USER ||--o{ COMMENTS: creates
+    USER ||--o{ DONATIONS: creates
+    USER ||--o{ EVENTS: creates
+    ADMIN ||--o{ BULLETIN : reviews
+    ADMIN ||--o{ EVENTS : reviews
+    ADMIN ||--o{ USER : manages 
+    DONATIONS ||--|| DONATION_STATUS: lookup
+    BULLETIN ||--|| CONTENT_STATUS: lookup
+    EVENTS ||--|| CONTENT_STATUS: lookup
+    EVENTS ||--|| EVENT_CATEGORY: lookup
+    EVENTS ||--|| LOCATION: contains
+
+    %% 1XX - Degree-related
+    DEGREE {
+        smallint degree_id PK
+        string degree_name "e.g. BS Mechanical Engineering, BS Civil Engineering, etc."
+        string degree_abbr "e.g. BSME, BSCE, etc."
+    }
+    %% 2XX - USER_CONNECTIONS status
+    CONNECTION_STATUS {
+        shortint connection_code PK
+        string connection_name "e.g. Pending, Accepted, Blocked, etc."
+    }
+    %% 3XX - Content-related
+    CONTENT_STATUS {
+        smallint status_id PK
+        string status_name "e.g. Pending, Approved, Rejected"
+    }
+    %% 4XX - User-related
+    %% Content from banned users are automatically hidden from view
+    %% Suspended users still maintain content visibility
+    %% Suspended users cannot create or edit content, nor can they donate
+    %% Ditto for banned users
+    %% In all cases, their profile will show their status e.g. [SUSPENDED], [BANNED]
+    USER_STATUS {
+        smallint status_id PK
+        string status_name "e.g. Regular, Official, Banned, etc."
+    }
+    %% 5XX - Donation-related
+    DONATION_STATUS {
+        smallint status_id PK
+        string status_name "e.g. Processing, Completed, Failed"
+    }
+    
+    USER {
+        smallint user_id PK
+        smallint status_id FK
+        string current_record_id FK
+    }
+    RECORDS {
+        string record_id PK "New record created every time user status changes"
+        smallint user_id FK
+        string admin_id FK
+        smallint status_id FK
+        date date_created "Defaults to timestamp of query, immutable"
+        string description "Describes the nature of status"
+        date date_expires "`NULL` for statuses with no expiry"
+    }
+    USER_AUTH {
+        smallint user_id PK,FK
+        string email "Used as login identifier"
+        string password_hash "Hashed password (never store plain text)"
+        datetime last_login
+    }
+
+    USER_ACHIEVEMENT {
+        smallint user_id PK,FK
+        int achievement_id PK,FK
+        shortint achievement_tier PK,FK
+        datetime achieved_date "Defaults to timestamp of acquisition, immutable"
+    }
+    ACHIEVEMENTS {
+        int achievement_id PK
+        shortint achievement_tier PK
+        string achievement_title
+        string achievement_description
+        string achievement_icon
+    }
+    USER_CONNECTIONS {
+        smallint user_id PK,FK
+        smallint friend_id PK,FK
+        shortint connection_id
+        date date_updated
+    }
+    USER_RSVP {
+        smallint user_id PK,FK
+        int event_id PK,FK
+        boolean is_attending
+    }
+    USER_STATISTICS {
+        smallint user_id PK,FK
+        int user_connections
+        int events_attended
+        %% Possibly unused, whatever
+        int events_created
+        int bulletins_created
+        int comments_written
+        int achievements
+        int donated_amount
+        date date_registered
+    }
+    PROFILE {
+        smallint user_id PK,FK
+        string user_name
+        varchar(319) email
+        varchar(15) phone
+        string location
+        string currentJob
+        string company
+        string profileImage
+        smallint degree_id
+        smallint batch
+        string user_normalized_name
+        string user_normalized_company
+        date birthday
+    }
+
+    ADMIN {
+        string admin_id PK
+        string password_hash "Hashed password (never store plain text)"
+        datetime last_login
+    }
+
+    BULLETIN {
+        int bulletin_id PK
+        string admin_id FK
+        smallint author_id FK
+        smallint content_status_id FK
+        datetime bulletin_date
+        datetime review_date "NULL if not reviewed"
+        string title
+        smallint read_time_minutes
+        text content
+        string bulletin_image
+    }
+    EVENTS {
+        int event_id PK
+        string admin_id FK
+        smallint author_id FK
+        smallint status_id FK
+        string location_id FK
+        smallint event_category_id FK
+        datetime event_date
+        datetime review_date "NULL if not reviewed"
+        string title
+        text description
+        time startTime
+        time endTime
+        shortint responses
+        string modality
+        string event_image
+    }
+
+    LOCATION {
+        string location_id PK
+        string region_code
+        string province
+        string province_code
+        string city_municipality
+        string city_code
+        string barangay
+        string landmark
+        string street
+        float lat
+        float lng
+    }
+    COMMENTS {
+        string comment_id PK
+        smallint user_id FK
+        string bulletin_id FK
+        datetime comment_date
+        string comment
+        shortint likes
+    }
+    DONATIONS {
+        string donation_id PK
+        smallint user_id FK "NULL if anonymous"
+        smallint donation_status_id FK
+        datetime donation_date
+        float donation_amount
+        money donation_amount_php "Human-readable format"
+    }

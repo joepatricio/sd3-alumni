@@ -14,7 +14,6 @@ erDiagram
     %% Other systems described in other diagrams
     %% USER 1--1+ RECORDS: maintains
     %% USER 1--0+ CONTENT: creates
-    %% USER 1--0+ DONATIONS: makes
 
     %% 1XX - Degree-related
     DEGREE {
@@ -63,10 +62,11 @@ erDiagram
     }
     USER_STATISTICS {
         string user_id PK,FK
-        int USER_CONNECTIONS
+        int user_connections
         int events_attended
         int achievements
         int donated_amount
+        date date_registered
     }
     PROFILE {
         string user_id PK,FK

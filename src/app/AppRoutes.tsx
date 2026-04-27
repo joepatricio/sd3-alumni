@@ -17,7 +17,7 @@ import { PrivacyPolicy } from '@pages/user/PrivacyPolicy';
 import { Profile } from '@pages/user/Profile';
 import { EditProfile } from '@pages/user/EditProfile';
 import { Connections } from '@pages/user/Connections';
-import { UserEvents } from '@pages/user/UserEvents';
+import { UserEvents } from '@/assets/UserEvents';
 import { Achievements } from '@pages/user/Achievements';
 import { AlumniDirectory } from '@pages/user/AlumniDirectory';
 import { AdminDashboard } from '@pages/admin/AdminDashboard';
@@ -47,10 +47,13 @@ export default function AppRoutes() {
                 <Route path="/terms" element={<TermsOfService />} />
                 <Route path="/privacy" element={<PrivacyPolicy />} />
                 <Route path="/profile" element={<Profile />} />
+                <Route path="/profile/:id" element={<Profile />} />
                 <Route path="/profile/edit" element={<EditProfile />} />
                 <Route path="/profile/connections" element={<Connections />} />
+                <Route path="/profile/connections/:id" element={<Connections />} />
                 <Route path="/profile/events" element={<UserEvents />} />
                 <Route path="/profile/achievements" element={<Achievements />} />
+                <Route path="/profile/achievements/:id" element={<Achievements />} />
             </Route>
 
             <Route path="/admin" element={<AdminLayout />}>

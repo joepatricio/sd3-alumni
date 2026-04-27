@@ -50,6 +50,7 @@
   * Shadcn UI for components
   * Zod for form validation
   * Sonner for notifications
+  * json-server for REST API https://github.com/typicode/json-server
 
   ## Notes
 
@@ -64,33 +65,22 @@
   * Admin can only be accessed by URL hacking. `localhost:5173/admin`
   * Other stuff like Events, Bulletin, and Connections will not be fully implemented until DB development.
 
-  ## TODO before client approval
-  
-  * Implement basic search for Alumni Directory (search by name only)
-  * Admin Alumni Directory
-  * Inconsistent logic in profile (connections, events count)
-  * Redesign profile. Again. Make profile a hybrid of Steam and Reddit. Reddit for left column, Steam for right column
-  * RSVP should be disabled for past events. It should instead notify the user that the event has passed.
-  * Review the use of HTML buttons vs React Buttons
+  ## TODO
 
+  <!-- August 27 to May 1 -->
+  * Implement proper registration, login, and secure routing
+  * Implement donations system
+  * Implement connections system with proper visibility controls
+  * Dynamic content for everything (Registration, Events, Bulletin, etc.)
+  * Figure out image uploads using Multer
+  * Implement user-submitted content
+  * Editable Profile (e.g. change job, degree program, etc.)
+  * Admin stuffs (e.g. alumni directory, user management, etc.)
+  * Review the use of HTML buttons vs React Buttons
+  
+  <!-- Nice to have -->
+  * Implement "Deactivate Account"
   * Microinteractions (e.g. hover effects, button clicks, alumni directory, etc.), lazy loading for some INP-slow components (mostly just CreateEventModal)
   * UX stuff (Mobile testing, happy pathing, toasts everywhere)
-    * Notification for registration
-
-  * Project files (e.g. project charter, gantt chart, dev logs, technical docs, etc.)
-  * Refactor code for better readability and maintainability. Should be done last to avoid breaking stuff and make it easier to prototype
-
-  ## TODO after client approval
-  * Possible migration to Video.js
-  * Keywords for Bulletin using NLP.
-  * ADMIN: Add Keywords column. Bulletins can have multiple keywords (backward implementation to User screens)
-  * Performance optimizations to the website (CPU Throttle happy pathing, lazy loading, SSR, TTFB, LCP, etc.)
-  * Redesign Profile pages to be API-friendly
-  * Rich-text formatting support for Bulletin and Events? :(
-  * Look into TanStack Query, SQLite
-  * Implement DB development with proper CRUD.
-  * Implement secure routing.
-  * Implement CDN for images. Unsure whether cloud or self-hosted.
-  * Event RSVP system
-  * Donation system
-  * Mote tech docs... e.g. database schema
+    * Notification System (e.g. for when user is mentioned in a bulletin)
+  * Stress test everything under the sun

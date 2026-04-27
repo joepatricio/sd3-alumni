@@ -18,6 +18,22 @@ import {
     FormLabel,
     FormMessage,
 } from '@/app/components/ui/form';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/app/components/ui/select';
+
+const DEGREES = [
+    { id: "100", name: "Mechanical Engineering" },
+    { id: "101", name: "Civil Engineering" },
+    { id: "102", name: "Industrial Engineering" },
+    { id: "103", name: "Electrical Engineering" },
+    { id: "104", name: "Electronics and Communications Engineering" },
+    { id: "105", name: "Computer Engineering" }
+];
 
 const registerSchema = z.object({
     fullName: z.string().min(2, {
@@ -33,6 +49,9 @@ const registerSchema = z.object({
         message: "Password must be at least 6 characters.",
     }),
     confirmPassword: z.string(),
+    degreeProgram: z.string().min(1, {
+        message: "Please select a degree program.",
+    }),
     terms: z.boolean().refine(val => val === true, {
         message: "You must accept the terms and conditions.",
     }),
@@ -61,6 +80,7 @@ export function Register() {
             email: "",
             password: "",
             confirmPassword: "",
+            degreeProgram: "",
             terms: false,
         },
     });
@@ -150,6 +170,31 @@ export function Register() {
                                                 />
                                             </div>
                                         </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+
+                            <FormField
+                                control={form.control}
+                                name="degreeProgram"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Degree Program</FormLabel>
+                                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                            <FormControl>
+                                                <SelectTrigger className="selection:bg-blue-500 selection:text-white">
+                                                    <SelectValue placeholder="Select your degree program" />
+                                                </SelectTrigger>
+                                            </FormControl>
+                                            <SelectContent>
+                                                {DEGREES.map((degree) => (
+                                                    <SelectItem key={degree.id} value={degree.name}>
+                                                        {degree.name}
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
                                         <FormMessage />
                                     </FormItem>
                                 )}

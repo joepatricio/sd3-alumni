@@ -1,33 +1,103 @@
-import { useState } from 'react';
-import { Search, Users } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Search, Users, Loader2 } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { api, type ProfileData, type DegreeData, type AlumniCard } from '@utils/api';
+
+const ITEMS_PER_PAGE = 12;
 
 export function AlumniDirectory() {
+    const [loading, setLoading] = useState(true);
+    const [displayedAlumni, setDisplayedAlumni] = useState<AlumniCard[]>([]);
+    const [degrees, setDegrees] = useState<DegreeData[]>([]);
+
+    const [currentPage, setCurrentPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
+    const [absoluteTotalAlumni, setAbsoluteTotalAlumni] = useState(0);
+
+    // Form states
     const [searchName, setSearchName] = useState('');
-
-    // College filters
+    const [searchCompany, setSearchCompany] = useState('');
     const [collegeYear, setCollegeYear] = useState('');
-    const [collegeDegree, setCollegeDegree] = useState('');
+    const [collegeDegreeId, setCollegeDegreeId] = useState('');
 
-    const handleNameSearch = (e: React.SubmitEvent) => {
-        e.preventDefault();
-        console.log('Searching for:', searchName);
-        // Implement search logic
+    // Active filters
+    const [activeFilters, setActiveFilters] = useState({
+        name: '',
+        company: '',
+        year: '',
+        degree_id: ''
+    });
+
+    useEffect(() => {
+        api.get<any>('/DEGREE').then(res => setDegrees(res.data.data || res.data || []));
+        api.get('/PROFILE', { params: { _page: 1, _per_page: 1 } }).then(res => setAbsoluteTotalAlumni(res.data.items || 0));
+    }, []);
+
+    useEffect(() => {
+        if (degrees.length === 0) return;
+
+        const fetchData = async () => {
+            setLoading(true);
+            try {
+                const params: Record<string, string | number> = {
+                    _page: currentPage,
+                    _per_page: ITEMS_PER_PAGE
+                };
+
+                if (activeFilters.name) params['user_name:contains'] = activeFilters.name;
+                if (activeFilters.company) params['company:contains'] = activeFilters.company;
+                if (activeFilters.year) params.batch = activeFilters.year;
+                if (activeFilters.degree_id) params.degree_id = Number(activeFilters.degree_id);
+
+                // json-server v1 returns { first, prev, next, last, pages, items, data }
+                const res = await api.get<any>('/PROFILE', { params });
+
+                const totalCount = res.data.items || 0;
+                setTotalPages(Math.ceil(totalCount / ITEMS_PER_PAGE));
+
+                const profiles: ProfileData[] = res.data.data || [];
+                const cards: AlumniCard[] = profiles.map((profile: ProfileData) => {
+                    const deg = degrees.find(d => Number(d.degree_id) === Number(profile.degree_id));
+                    return {
+                        user_id: profile.user_id,
+                        name: profile.user_name,
+                        company: profile.company || '',
+                        currentJob: profile.currentJob || '',
+                        batch: profile.batch,
+                        degreeName: deg ? `${deg.degree_name} (${deg.degree_abbr})` : 'Unknown Degree',
+                        profileImage: profile.profileImage
+                    };
+                });
+
+                setDisplayedAlumni(cards);
+            } catch (err) {
+                console.error('Error fetching directory:', err);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchData();
+    }, [currentPage, activeFilters, degrees]);
+
+    const handleSearchSubmit = (e?: React.FormEvent) => {
+        if (e) e.preventDefault();
+        setActiveFilters({
+            name: searchName,
+            company: searchCompany,
+            year: collegeYear,
+            degree_id: collegeDegreeId
+        });
+        setCurrentPage(1);
     };
 
-    const handleCollegeSearch = (e: React.SubmitEvent) => {
-        e.preventDefault();
-        console.log('College search:', { collegeYear, collegeDegree });
-        // Implement search logic
+    const handleClearFilters = () => {
+        setSearchName('');
+        setSearchCompany('');
+        setCollegeYear('');
+        setCollegeDegreeId('');
+        setActiveFilters({ name: '', company: '', year: '', degree_id: '' });
+        setCurrentPage(1);
     };
-
-    const degrees = [
-        'Mechanical Engineering (BSME)',
-        'Civil Engineering (BSCE)',
-        'Industrial Engineering (BSIE)',
-        'Electrical Engineering (BSEE)',
-        'Electronics and Communications Engineering (BSECE)',
-        'Computer Engineering (BSCpE)'
-    ];
 
     // Generate year options (current year back to 1950)
     const currentYear = new Date().getFullYear();
@@ -37,128 +107,209 @@ export function AlumniDirectory() {
     );
 
     return (
-        <div className="min-h-screen bg-gray-50">
+        <div className="bg-gray-50 flex flex-col min-h-[calc(100vh-64px)] pb-12">
             {/* Hero Section */}
-            <div className="text-black py-20">
+            <div className="text-black pt-16 pb-8">
                 <div className="max-w-6xl mx-auto px-4 md:px-8 text-center">
-                    <h1 className="text-5xl md:text-6xl font-bold mb-4 text-brand-primary">
+                    <h1 className="text-4xl md:text-5xl font-bold mb-4 text-brand-primary">
                         Welcome to the home of
                     </h1>
-                    <h2 className="text-4xl md:text-5xl font-bold mb-8 text-brand-accent">
-                        15,234 alumna
+                    <h2 className="text-3xl md:text-4xl font-bold mb-6 text-brand-accent">
+                        {loading && displayedAlumni.length === 0 ? '...' : absoluteTotalAlumni} alumna
                     </h2>
-                    <p className="text-lg mb-12 text-gray-700 max-w-2xl mx-auto">
-                        Connect with fellow Josenians from across generations and around the
-                        world
+                    <p className="text-lg text-gray-700 max-w-2xl mx-auto">
+                        Connect with fellow Josenians from across generations and around the world
                     </p>
-
-                    {/* Simple Search Box */}
-                    <form
-                        onSubmit={handleNameSearch}
-                        className="max-w-2xl mx-auto relative"
-                    >
-                        <div className="relative">
-                            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                            <input
-                                type="text"
-                                value={searchName}
-                                onChange={(e) => setSearchName(e.target.value)}
-                                placeholder="Search alumni by name..."
-                                className="w-full pl-12 pr-4 py-4 rounded-lg text-gray-900 outline-noen ring-2 ring-gray-300 focus:outline-none focus:ring-2 focus:ring-brand-accent text-lg"
-                            />
-                            <button
-                                type="submit"
-                                className="absolute right-2 top-1/2 -translate-y-1/2 bg-brand-primary text-white px-6 py-2 rounded-lg hover:bg-brand-primary-hover transition-colors font-semibold"
-                            >
-                                Search
-                            </button>
-                        </div>
-                    </form>
                 </div>
             </div>
 
-            {/* Advanced Search Sections */}
-            <div className="max-w-6xl mx-auto px-4 md:px-8 py-12">
-                <div className="mb-8">
-                    <h2 className="text-2xl font-bold mb-2">Advanced Search</h2>
-                    <p className="text-gray-600">
-                        Use the filters below to refine your search.
-                    </p>
-                </div>
+            <div className="flex-1 max-w-6xl w-full mx-auto px-4 md:px-8">
+                {/* Search Sections */}
+                <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden mb-8">
+                    <div className="p-6 md:p-8 space-y-6">
+                        {/* Unified Search Form */}
+                        <form onSubmit={handleSearchSubmit} className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                            {/* Name Search */}
+                            <div className="md:col-span-3 relative md:order-first">
+                                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                                <input
+                                    type="text"
+                                    value={searchName}
+                                    onChange={(e) => setSearchName(e.target.value)}
+                                    placeholder="Search alumni by name..."
+                                    className="w-full pl-12 pr-4 py-3 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-brand-primary transition-all"
+                                />
+                            </div>
 
-                <div className="space-y-4">
-                    {/* College Alumni Directory */}
-                    <div className="bg-white rounded-lg shadow-md overflow-hidden">
+                            {/* Clear Button */}
+                            <div className="md:col-span-1 flex order-last md:-order-1">
+                                <button
+                                    type="button"
+                                    onClick={handleClearFilters}
+                                    className="w-full px-4 py-3 bg-gray-100 text-gray-700 hover:bg-gray-200 rounded-lg transition-colors font-medium flex items-center justify-center"
+                                >
+                                    Clear Filters
+                                </button>
+                            </div>
 
-                        {/* TODO: Improve responsive design */}
-                        <div className="px-6 py-6 bg-gray-50">
-                            <form onSubmit={handleCollegeSearch} className="space-y-4">
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                    {/* Company search */}
-                                    <div>
-                                        <input
-                                            type="text"
-                                            value={searchName}
-                                            onChange={(e) => setSearchName(e.target.value)}
-                                            placeholder="Search alumni by company..."
-                                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-primary"
-                                        />
-                                    </div>
-                                    {/* Filters / Submit button */}
-                                    <div className="grid grid-cols-1 md:col-span-2 md:grid-cols-3 gap-4">
-                                        <div>
-                                            <select
-                                                value={collegeYear}
-                                                onChange={(e) => setCollegeYear(e.target.value)}
-                                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-primary"
-                                            >
-                                                <option value="">All Years</option>
-                                                {years.map((year) => (
-                                                    <option key={year} value={year}>
-                                                        {year + ' Graduates'}
-                                                    </option>
-                                                ))}
-                                            </select>
-                                        </div>
-                                        <div>
-                                            <select
-                                                value={collegeDegree}
-                                                onChange={(e) => setCollegeDegree(e.target.value)}
-                                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-primary"
-                                            >
-                                                <option value="">All Degree Programs</option>
-                                                {degrees.map((industry) => (
-                                                    <option key={industry} value={industry}>
-                                                        {industry}
-                                                    </option>
-                                                ))}
-                                            </select>
-                                        </div>
-                                        <div>
-                                            <button
-                                                type="submit"
-                                                className="w-full bg-brand-primary text-white py-2 rounded-lg hover:bg-brand-primary-hover transition-colors font-semibold"
-                                            >
-                                                Clear Filters
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </form>
-                        </div>
+                            {/* Company Search */}
+                            <div className="md:col-span-1 relative">
+                                <input
+                                    type="text"
+                                    value={searchCompany}
+                                    onChange={(e) => setSearchCompany(e.target.value)}
+                                    placeholder="Search by company..."
+                                    className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-brand-primary transition-all"
+                                />
+                            </div>
+
+                            {/* Batch Filter */}
+                            <div className="md:col-span-1">
+                                <select
+                                    value={collegeYear}
+                                    onChange={(e) => setCollegeYear(e.target.value)}
+                                    className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-brand-primary bg-white transition-all"
+                                >
+                                    <option value="">All Years</option>
+                                    {years.map((year) => (
+                                        <option key={year} value={year}>
+                                            {year} Graduates
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            {/* Degree Filter */}
+                            <div className="md:col-span-1">
+                                <select
+                                    value={collegeDegreeId}
+                                    onChange={(e) => setCollegeDegreeId(e.target.value)}
+                                    className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-brand-primary bg-white transition-all"
+                                >
+                                    <option value="">All Degree Programs</option>
+                                    {degrees.map((deg) => {
+                                        const name = `${deg.degree_name} (${deg.degree_abbr})`;
+                                        return (
+                                            <option key={deg.degree_id} value={deg.degree_id}>
+                                                {name}
+                                            </option>
+                                        );
+                                    })}
+                                </select>
+                            </div>
+
+                            {/* Submit Button */}
+                            <div className="md:col-span-1 order-last">
+                                <button
+                                    type="submit"
+                                    className="w-full px-4 py-3 bg-brand-primary text-white hover:bg-brand-primary-hover rounded-lg transition-colors font-medium flex items-center justify-center"
+                                >
+                                    Search
+                                </button>
+                            </div>
+                        </form>
                     </div>
                 </div>
 
-                {/* Placeholder Results Section */}
-                <div className="mt-12 bg-white rounded-lg shadow-md p-8 text-center">
-                    <Users className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                    <h3 className="text-xl font-bold mb-2 text-gray-700">
-                        No Search Results Yet
-                    </h3>
-                    <p className="text-gray-600">
-                        Use the search options above to find alumni. Results will appear here.
-                    </p>
-                </div>
+                {/* Results Section */}
+                {loading && displayedAlumni.length === 0 ? (
+                    <div className="py-20 flex flex-col items-center justify-center">
+                        <Loader2 className="w-12 h-12 text-brand-primary animate-spin mb-4" />
+                        <p className="text-gray-500">Loading directory...</p>
+                    </div>
+                ) : displayedAlumni.length === 0 ? (
+                    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-12 text-center">
+                        <Users className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                        <h3 className="text-xl font-bold mb-2 text-gray-700">
+                            No Alumni Found
+                        </h3>
+                        <p className="text-gray-500">
+                            We couldn't find anyone matching your current filters. Try adjusting your search criteria.
+                        </p>
+                        <button
+                            onClick={handleClearFilters}
+                            className="mt-6 px-6 py-2 bg-brand-primary text-white rounded-lg hover:bg-brand-primary-hover transition-colors"
+                        >
+                            Reset Search
+                        </button>
+                    </div>
+                ) : (
+                    <>
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            {displayedAlumni.map((person) => (
+                                <Link
+                                    key={person.user_id}
+                                    to={`/profile/${person.user_id}`}
+                                    className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group"
+                                >
+                                    <div className="p-6 flex items-start space-x-4">
+                                        <img
+                                            src={person.profileImage}
+                                            alt={person.name}
+                                            className="w-16 h-16 rounded-full object-cover border-2 border-gray-100 group-hover:border-brand-primary transition-colors"
+                                        />
+                                        <div className="flex-1 min-w-0">
+                                            <h3 className="text-lg font-semibold text-gray-900 truncate">
+                                                {person.name}
+                                            </h3>
+                                            <p className="text-sm text-brand-primary font-medium mb-1">
+                                                Batch {person.batch}
+                                            </p>
+                                            <p className="text-xs text-gray-500 line-clamp-2 mb-2">
+                                                {person.degreeName}
+                                            </p>
+                                            {(person.currentJob || person.company) && (
+                                                <div className="mt-2 pt-2 border-t border-gray-50">
+                                                    <p className="text-sm text-gray-700 truncate">
+                                                        {person.currentJob && <span className="font-medium">{person.currentJob}</span>}
+                                                        {person.currentJob && person.company && <span> at </span>}
+                                                        {person.company && <span className="text-gray-600">{person.company}</span>}
+                                                    </p>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                </Link>
+                            ))}
+                        </div>
+
+                        {/* Pagination */}
+                        {totalPages > 1 && (
+                            <div className="flex justify-center items-center mt-10 space-x-2">
+                                <button
+                                    onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                                    disabled={currentPage === 1}
+                                    className="px-4 py-2 bg-white border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-50 hover:text-brand-primary disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-sm"
+                                >
+                                    Previous
+                                </button>
+
+                                <div className="flex items-center space-x-1">
+                                    {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+                                        <button
+                                            key={page}
+                                            onClick={() => setCurrentPage(page)}
+                                            className={`w-10 h-10 flex items-center justify-center rounded-lg font-medium transition-colors border shadow-sm ${currentPage === page
+                                                ? 'bg-brand-primary text-white border-brand-primary'
+                                                : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50 hover:text-brand-primary'
+                                                }`}
+                                        >
+                                            {page}
+                                        </button>
+                                    ))}
+                                </div>
+
+                                <button
+                                    onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                                    disabled={currentPage === totalPages}
+                                    className="px-4 py-2 bg-white border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-50 hover:text-brand-primary disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-sm"
+                                >
+                                    Next
+                                </button>
+                            </div>
+                        )}
+                    </>
+                )}
             </div>
         </div>
     );

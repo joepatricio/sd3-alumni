@@ -8,14 +8,10 @@ import { useAuth } from '@utils/auth';
 
 export function Donation() {
     const { isLoggedIn, setIsLoggedIn } = useAuth();
-    const [donationType, setDonationType] = useState<'one-time' | 'monthly'>('one-time');
     const [selectedAmount, setSelectedAmount] = useState<number | null>(1000);
     const [customAmount, setCustomAmount] = useState('');
 
-    const amounts = {
-        'one-time': [500, 1000, 2000, 5000, 10000, 20000],
-        'monthly': [200, 500, 1000, 2000, 5000, 10000]
-    };
+    const amounts = [500, 1000, 2000, 5000, 10000, 20000];
 
     const handleAmountSelect = (amount: number) => {
         setSelectedAmount(amount);
@@ -87,13 +83,9 @@ export function Donation() {
                 <div className="max-w-6xl mx-auto px-4 md:px-8">
                     <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
                         {/* Left Column: Impact & Information */}
-                        <div className="lg:col-span-7 space-y-12 pt-2">
+                        <div className="lg:col-span-7 space-y-12 pt-2 order-last lg:order-first">
                             <div className="text-lg text-gray-600">
                                 <h2 className="text-3xl font-bold text-brand-primary mb-6 mt-0">Why Donate?</h2>
-                                <p className="mb-6 leading-relaxed">
-                                    Every contribution creates a ripple effect. Whether it's funding a scholarship for a deserving student,
-                                    supporting alumni networking events, or maintaining our beloved campus, your gift makes a tangible difference.
-                                </p>
                             </div>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -155,31 +147,10 @@ export function Donation() {
                                 )}
 
                                 <div className="p-6 md:p-8">
-                                    {/* Donation Type Toggle */}
-                                    <div className="flex bg-gray-100 p-1 rounded-lg mb-8">
-                                        <button
-                                            onClick={() => setDonationType('one-time')}
-                                            className={`flex-1 py-3 px-4 rounded-md text-sm font-semibold transition-all ${donationType === 'one-time'
-                                                ? 'bg-white text-brand-primary shadow-sm'
-                                                : 'text-gray-500 hover:text-gray-700'
-                                                }`}
-                                        >
-                                            One-time
-                                        </button>
-                                        <button
-                                            onClick={() => setDonationType('monthly')}
-                                            className={`flex-1 py-3 px-4 rounded-md text-sm font-semibold transition-all ${donationType === 'monthly'
-                                                ? 'bg-white text-brand-primary shadow-sm'
-                                                : 'text-gray-500 hover:text-gray-700'
-                                                }`}
-                                        >
-                                            Monthly
-                                        </button>
-                                    </div>
 
                                     {/* Amount Grid */}
                                     <div className="grid grid-cols-3 gap-3 mb-6">
-                                        {amounts[donationType].map((amount) => (
+                                        {amounts.map((amount) => (
                                             <button
                                                 key={amount}
                                                 onClick={() => handleAmountSelect(amount)}
