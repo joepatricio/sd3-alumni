@@ -15,7 +15,7 @@ import {
     DialogHeader,
     DialogTitle,
     DialogTrigger,
-} from '@/app/components/ui/dialog';
+} from '@components/ui/dialog';
 import {
     Form,
     FormControl,
@@ -106,10 +106,9 @@ export function CreateBulletinModal({ trigger, initialData, isAdmin = false }: C
         }, 1000);
     }
 
-    const handleFileSelect = (file: File) => {
-        const url = URL.createObjectURL(file);
+    const handleFileSelect = (url: string) => {
         setPreviewUrl(url);
-        form.setValue('heroImage', file);
+        form.setValue('heroImage', url);
     };
 
     const handleClearImage = () => {

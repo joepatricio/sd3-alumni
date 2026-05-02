@@ -1,7 +1,6 @@
 import { User, Menu, X } from "lucide-react";
-import alumniLogo from "@/assets/alumni-logo.jpg";
 import { Link } from "react-router-dom";
-import { useAuth } from "@utils/auth";
+import { useAuth } from "@/app/views/auth";
 
 interface TopBarProps {
   isMenuOpen: boolean;
@@ -12,7 +11,7 @@ export function TopBar({
   isMenuOpen,
   setIsMenuOpen,
 }: TopBarProps) {
-  const { isLoggedIn, setIsLoggedIn } = useAuth();
+  const { isLoggedIn } = useAuth();
 
   return (
     <div className="bg-brand-primary text-white py-3 px-4 md:px-8 sticky top-0 left-0 right-0 z-50 shadow-md">
@@ -35,7 +34,7 @@ export function TopBar({
           <Link to="/" className="favi-alum">
             <div className="flex items-center gap-2">
               <img
-                src={alumniLogo}
+                src="http://localhost:3000/alumni-logo.jpg"
                 alt="Alumni"
                 className="h-8 w-8 object-contain rounded"
               />
@@ -48,15 +47,15 @@ export function TopBar({
 
         <div className="flex items-center gap-4">
           {/* Login/Profile */}
-          <button
-            onClick={() => setIsLoggedIn(!isLoggedIn)}
+          <Link
+            to={isLoggedIn ? "/profile" : "/login"}
             className="flex items-center gap-2 hover:text-brand-accent transition-colors"
           >
             <User className="w-4 h-4" />
             <span className="hidden sm:inline">
               {isLoggedIn ? "Profile" : "Login"}
             </span>
-          </button>
+          </Link>
         </div>
       </div>
     </div>

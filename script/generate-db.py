@@ -1,8 +1,9 @@
 import json
 import os
 import random
-import uuid
 import datetime
+import sys
+import shutil
 from nanoid import generate
 
 # Phase 1: Structural Foundation & Reference Tables
@@ -17,47 +18,45 @@ DEGREE = [
 ]
 
 CONNECTION_STATUS = [
-    {"connection_id": 200, "connection_name": "Pending"},
-    {"connection_id": 201, "connection_name": "Accepted"},
-    {"connection_id": 202, "connection_name": "Blocked"}
+    {"connection_code": 200, "connection_name": "Pending"},
+    {"connection_code": 201, "connection_name": "Accepted"},
+    {"connection_code": 202, "connection_name": "Blocked"}
 ]
 
 CONTENT_STATUS = [
-    {"content_id": 300, "status_name": "Pending"},
-    {"content_id": 301, "status_name": "Approved"},
-    {"content_id": 302, "status_name": "Rejected"}
+    {"content_status_id": 300, "status_name": "Pending"},
+    {"content_status_id": 301, "status_name": "Approved"},
+    {"content_status_id": 302, "status_name": "Rejected"}
 ]
 
 USER_STATUS = [
-    {"user_id": 400, "status_name": "Pending"},
-    {"user_id": 401, "status_name": "Regular"},
-    {"user_id": 402, "status_name": "Official"},
-    {"user_id": 403, "status_name": "Suspended"},
-    {"user_id": 404, "status_name": "Banned"}
+    {"user_status_id": 400, "status_name": "Pending"},
+    {"user_status_id": 401, "status_name": "Regular"},
+    {"user_status_id": 402, "status_name": "Official"},
+    {"user_status_id": 403, "status_name": "Suspended"},
+    {"user_status_id": 404, "status_name": "Banned"}
 ]
 
 DONATION_STATUS = [
-    {"donation_id": 500, "status_name": "Processing"},
-    {"donation_id": 501, "status_name": "Completed"},
-    {"donation_id": 502, "status_name": "Failed"}
+    {"donation_status_id": 500, "status_name": "Processing"},
+    {"donation_status_id": 501, "status_name": "Completed"},
+    {"donation_status_id": 502, "status_name": "Failed"}
 ]
 
 EVENT_CATEGORY = [
-    {"event_id": 600, "event_category_name": "Reunion"},
-    {"event_id": 601, "event_category_name": "Workshop"},
-    {"event_id": 602, "event_category_name": "Conference"},
-    {"event_id": 603, "event_category_name": "Networking"},
-    {"event_id": 604, "event_category_name": "Sports"},
-    {"event_id": 605, "event_category_name": "Virtual"}
+    {"event_category_id": 600, "event_category_name": "Reunion"},
+    {"event_category_id": 601, "event_category_name": "Workshop"},
+    {"event_category_id": 602, "event_category_name": "Conference"},
+    {"event_category_id": 603, "event_category_name": "Networking"},
+    {"event_category_id": 604, "event_category_name": "Sports"},
+    {"event_category_id": 605, "event_category_name": "Virtual"}
 ]
 
 ACHIEVEMENTS = [
     {"achievement_id": 1, "achievement_tier": 1, "achievement_title": "1-Year Club", "achievement_description": "Has been a member for 1 year.", "achievement_icon": "Star"},
     {"achievement_id": 1, "achievement_tier": 2, "achievement_title": "3-Year Club", "achievement_description": "Has been a member for 3 years.", "achievement_icon": "Sparkle"},
     {"achievement_id": 1, "achievement_tier": 3, "achievement_title": "Prestige Alumni", "achievement_description": "Has been a member for 10+ years.", "achievement_icon": "Sparkles"},
-    {"achievement_id": 2, "achievement_tier": 1, "achievement_title": "Philanthropist I", "achievement_description": "Donated a small amount to the association (up to ₱5,000 total).", "achievement_icon": "Heart"},
-    {"achievement_id": 2, "achievement_tier": 2, "achievement_title": "Philanthropist II", "achievement_description": "Donated a medium amount to the association (up to ₱20,000 total).", "achievement_icon": "HeartPulse"},
-    {"achievement_id": 2, "achievement_tier": 3, "achievement_title": "Philanthropist III", "achievement_description": "Donated a large amount to the association (over ₱20,000 total).", "achievement_icon": "HandCoins"},
+    {"achievement_id": 2, "achievement_tier": 1, "achievement_title": "Philanthropist", "achievement_description": "Donated to the alumni association. Thank you!", "achievement_icon": "Heart"},
     {"achievement_id": 3, "achievement_tier": 1, "achievement_title": "Event Enthusiast I", "achievement_description": "Attended 1 events.", "achievement_icon": "Calendar1"},    
     {"achievement_id": 3, "achievement_tier": 2, "achievement_title": "Event Enthusiast II", "achievement_description": "Attended 5 events.", "achievement_icon": "Calendar"},
     {"achievement_id": 3, "achievement_tier": 3, "achievement_title": "Event Enthusiast III", "achievement_description": "Attended 15 events.", "achievement_icon": "CalendarHeart"},
@@ -101,32 +100,32 @@ def generate_phase_2():
     for i in range(1, NUM_USERS + 1):
         user_id = i
         
-        status_weights = ["400", "401", "402", "403", "404"]
+        status_weights = [400, 401, 402, 403, 404]
         status_id = random.choices(status_weights, weights=[10, 70, 10, 5, 5])[0]
         
         record_id = generate(size=10)
         
         USER.append({
             "user_id": user_id,
-            "status_id": status_id,
+            "user_status_id": status_id,
             "current_record_id": record_id
         })
         
         date_created = random_date()
         date_expires = None
         description = "User created or status updated"
-        if status_id == "403":
+        if status_id == 403:
             expires_dt = datetime.datetime.now() + datetime.timedelta(days=30)
             date_expires = expires_dt.strftime("%Y-%m-%dT%H:%M:%S.000Z")
             description = "Suspended for terms violation"
-        elif status_id == "404":
+        elif status_id == 404:
             description = "Banned permanently"
 
         RECORDS.append({
             "record_id": record_id,
             "user_id": user_id,
             "admin_id": random.choice(["admin1", "admin2", "admin3"]), # Placeholder admin
-            "status_id": status_id,
+            "user_status_id": status_id,
             "date_created": date_created,
             "description": description,
             "date_expires": date_expires
@@ -155,12 +154,13 @@ def generate_phase_2():
         PROFILE.append({
             "user_id": user_id,
             "user_name": name,
+            "bio": f"A proud alumnus of University of San Jose - Recoletos. Batch of {batch}.",
             "email": email,
             "phone": f"+63 917 123 {random.randint(1000, 9999)}",
             "location": random.choice(["Cebu City, Philippines", "Manila, Philippines", "Davao, Philippines", "Abroad"]),
             "currentJob": job,
             "company": company,
-            "profileImage": "https://images.unsplash.com/photo-1655249493799-9cee4fe983bb?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxwcm9mZXNzaW9uYWwlMjBwb3J0cmFpdCUyMGJ1c2luZXNzJTIwcGVyc29ufGVufDF8fHx8MTc3MDMzODgyMHww&ixlib=rb-4.1.0&q=80&w=1080",
+            "profileImage": "http://localhost:3000/profile-image.jpg",
             "degree_id": degree_id,
             "batch": batch,
             "birthday": birthday
@@ -175,7 +175,7 @@ def generate_phase_2():
             "bulletins_created": 0,
             "comments_written": 0,
             "achievements": 0,
-            "donated_amount": 0
+            "donated_amount": 0,
         })
 
     return USER, USER_AUTH, RECORDS, PROFILE, USER_STATISTICS
@@ -263,7 +263,7 @@ def generate_phase_3(USER, USER_STATISTICS):
             
         # Give Verified achievement if status is Official (402)
         user_obj = next((u for u in USER if u["user_id"] == uid), None)
-        if user_obj and user_obj["status_id"] == "402":
+        if user_obj and user_obj["user_status_id"] == 402:
             USER_ACHIEVEMENT.append({
                 "user_achievement_id": generate(size=10),
                 "user_id": uid,
@@ -319,13 +319,13 @@ def generate_phase_4(USER):
     for i in range(1, NUM_BULLETINS + 1):
         bid = i
         author_id = random.choice(user_ids)
-        content_status_id = random.choice(["300", "301", "302"]) # Pending, Approved, Rejected
+        content_status_id = random.choice([300, 301, 302]) # Pending, Approved, Rejected
         
         bulletin_date_dt = datetime.datetime.strptime(random_date(2025, 2026), "%Y-%m-%dT%H:%M:%S.000Z")
         bulletin_date = bulletin_date_dt.strftime("%Y-%m-%dT%H:%M:%S.000Z")
         
         review_date = None
-        if content_status_id != "300":
+        if content_status_id != 300:
             # review happens after bulletin date
             review_dt = bulletin_date_dt + datetime.timedelta(days=random.randint(1, 30))
             review_date = review_dt.strftime("%Y-%m-%dT%H:%M:%S.000Z")
@@ -339,12 +339,12 @@ def generate_phase_4(USER):
             "title": f"Community Update {i}",
             "read_time_minutes": random.randint(2, 10),
             "content": f"Lorem ipsum dolor sit amet. Content for bulletin {i}.",
-            "bulletin_image": "https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=1080"
+            "bulletin_image": "http://localhost:3000/bulletin-image.jpg"
         })
         
     # 4. EVENTS
     NUM_EVENTS = 20
-    official_users = [u for u in USER if u["status_id"] == "402"]
+    official_users = [u for u in USER if u["user_status_id"] == 402]
     # Fallback in case probability yielded 0 officials
     if not official_users:
         official_users = USER
@@ -361,7 +361,7 @@ def generate_phase_4(USER):
         event_date = event_date_dt.strftime("%Y-%m-%dT%H:%M:%S.000Z")
         
         review_date = None
-        if status_id != "300":
+        if status_id != 300:
             # review happens before event date
             review_dt = event_date_dt - datetime.timedelta(days=random.randint(10, 100))
             review_date = review_dt.strftime("%Y-%m-%dT%H:%M:%S.000Z")
@@ -382,7 +382,7 @@ def generate_phase_4(USER):
             "event_id": eid,
             "admin_id": random.choice(["admin1", "admin2", "admin3"]),
             "organizer_id": organizer_id,
-            "status_id": status_id,
+            "event_status_id": status_id,
             "location_id": location_id,
             "event_category_id": event_category_id,
             "event_date": event_date,
@@ -393,7 +393,7 @@ def generate_phase_4(USER):
             "endTime": end_time,
             "responses": random.randint(10, 100),
             "modality": modality,
-            "event_image": "https://images.unsplash.com/photo-1511578314322-379afb476865?w=1080"
+            "event_image": "http://localhost:3000/events-image.jpg"
         })
         
     return ADMIN, LOCATION, BULLETIN, EVENTS
@@ -429,13 +429,16 @@ def generate_phase_5(USER, BULLETIN, EVENTS, USER_STATISTICS, USER_CONNECTIONS, 
         uid = random.choice(user_ids)
         donation_amount = random.choice([500.0, 1000.0, 5000.0, 10000.0, 25000.0])
         status_id = random.choice([500, 501, 502]) # Processing, Completed, Failed
+        ALPHABET = "23456789BCDFGHJKLMNPQRSTVWXYZ"
         DONATIONS.append({
             "donation_id": generate(size=10),
+            "donation_reference_id": f"DON-{generate(ALPHABET, size=3)}-{generate(ALPHABET, size=3)}",
             "user_id": uid,
             "donation_status_id": status_id,
             "donation_date": random_date(2025, 2026),
             "donation_amount": donation_amount,
-            "donation_amount_php": f"₱{donation_amount:,.2f}"
+            "donation_amount_php": f"₱{donation_amount:,.2f}",
+            "donation_anonymous": random.choice([True, False])
         })
         
     # 3. USER_RSVP
@@ -469,8 +472,9 @@ def generate_phase_5(USER, BULLETIN, EVENTS, USER_STATISTICS, USER_CONNECTIONS, 
         comment_count = sum(1 for c in COMMENTS if c["user_id"] == uid)
         stat["comments_written"] = comment_count
         
-        total_donated = sum(d["donation_amount"] for d in DONATIONS if d["user_id"] == uid and d["donation_status_id"] == 501)
-        stat["donated_amount"] = total_donated
+        total_donated_public = sum(d["donation_amount"] for d in DONATIONS 
+            if d["user_id"] == uid and d["donation_status_id"] == 501 and not d["donation_anonymous"])
+        stat["donated_amount"] = total_donated_public
 
         def award_achievement(ach_id, tier = 1):
             USER_ACHIEVEMENT.append({
@@ -481,35 +485,38 @@ def generate_phase_5(USER, BULLETIN, EVENTS, USER_STATISTICS, USER_CONNECTIONS, 
                 "achieved_date": random_date(2026, 2026)
             })
         
-        if total_donated > 20000:
-            award_achievement("2", 3)
-        elif total_donated > 5000:
-            award_achievement("2", 2)
-        elif total_donated > 0:
-            award_achievement("2", 1)
+        if total_donated_public > 0:
+            award_achievement(2, 1)
                 
         if attended_count >= 15:
-            award_achievement("3", 3)
+            award_achievement(3, 3)
         elif attended_count >= 5:
-            award_achievement("3", 2)
+            award_achievement(3, 2)
         elif attended_count >= 1:
-            award_achievement("3", 1)
+            award_achievement(3, 1)
             
         if bulletin_count >= 5:
-            award_achievement("4", 2)
+            award_achievement(4, 2)
         elif bulletin_count >= 1:
-            award_achievement("4", 1)
+            award_achievement(4, 1)
             
         if comment_count >= 50:
-            award_achievement("5", 2)
+            award_achievement(5, 2)
         elif comment_count >= 10:
-            award_achievement("5", 1)
+            award_achievement(5, 1)
             
         stat["achievements"] = sum(1 for a in USER_ACHIEVEMENT if a["user_id"] == uid)
             
     return COMMENTS, DONATIONS, USER_RSVP
 
 def main():
+    if "--empty" in sys.argv:
+        output_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "db.json")
+        empty_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "db-empty.json")
+        shutil.copy(empty_path, output_path)
+        print(f"Generated empty database at {output_path}")
+        return
+
     USER, USER_AUTH, RECORDS, PROFILE, USER_STATISTICS = generate_phase_2()
     USER_CONNECTIONS, USER_ACHIEVEMENT = generate_phase_3(USER, USER_STATISTICS)
     ADMIN, LOCATION, BULLETIN, EVENTS = generate_phase_4(USER)

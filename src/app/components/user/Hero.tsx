@@ -7,7 +7,7 @@ export function Hero() {
         className="absolute inset-0 bg-cover bg-center"
         style={{
           backgroundImage:
-            'url(https://images.unsplash.com/photo-1758270703262-2b40b6b66be6?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHx1bml2ZXJzaXR5JTIwYWx1bW5pJTIwY2VsZWJyYXRpb24lMjBncmFkdWF0aW9ufGVufDF8fHx8MTc3MDA5MTgzOHww&ixlib=rb-4.1.0&q=80&w=1080)',
+            'url(http://localhost:3000/main-hero.jpg)',
         }}
       >
         <div className="absolute inset-0 bg-gradient-to-r from-brand-primary/60 to-[#000000]/30"></div>

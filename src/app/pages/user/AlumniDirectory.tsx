@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Search, Users, Loader2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { api, type ProfileData, type DegreeData, type AlumniCard } from '@utils/api';
+import { api, type ProfileData, type DegreeData, type AlumniCard } from '@/app/views/api';
 
 const ITEMS_PER_PAGE = 12;
 

@@ -5,19 +5,43 @@ import { toast } from 'sonner';
 
 interface ImageUploadProps {
     previewUrl: string | null;
-    onFileSelect: (file: File) => void;
+    onFileSelect: (fileOrUrl: any) => void;
     onClear: () => void;
     placeholderText?: string;
 }
 
 export function ImageUpload({ previewUrl, onFileSelect, onClear, placeholderText = "Click or drag to upload" }: ImageUploadProps) {
     const [isDragging, setIsDragging] = useState(false);
+    const [isUploading, setIsUploading] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
+
+    const uploadFile = async (file: File) => {
+        setIsUploading(true);
+        const formData = new FormData();
+        formData.append('image', file);
+        try {
+            const res = await fetch('http://localhost:3001/upload', {
+                method: 'POST',
+                body: formData,
+            });
+            if (res.ok) {
+                const data = await res.json();
+                onFileSelect(data.url);
+                toast.success('Image uploaded successfully!');
+            } else {
+                toast.error('Failed to upload image.');
+            }
+        } catch (error) {
+            toast.error('Error uploading image.');
+        } finally {
+            setIsUploading(false);
+        }
+    };
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (file) {
-            onFileSelect(file);
+            uploadFile(file);
         }
     };
 
@@ -48,7 +72,7 @@ export function ImageUpload({ previewUrl, onFileSelect, onClear, placeholderText
         setIsDragging(false);
         const file = e.dataTransfer.files?.[0];
         if (file && file.type.startsWith('image/')) {
-            onFileSelect(file);
+            uploadFile(file);
             if (fileInputRef.current) {
                 const dataTransfer = new DataTransfer();
                 dataTransfer.items.add(file);
@@ -79,7 +103,12 @@ export function ImageUpload({ previewUrl, onFileSelect, onClear, placeholderText
                 style={{ display: 'none' }}
             />
 
-            {previewUrl ? (
+            {isUploading ? (
+                <div className="flex flex-col items-center justify-center p-8">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-primary mb-2"></div>
+                    <p className="text-sm text-gray-600 font-medium">Uploading...</p>
+                </div>
+            ) : previewUrl ? (
                 <div className="relative w-full h-48 rounded-lg overflow-hidden">
                     <img
                         src={previewUrl}

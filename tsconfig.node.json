@@ -37,8 +37,8 @@
       "@pages/*": [
         "app/pages/*"
       ],
-      "@utils/*": [
-        "app/utils/*"
+      "@views/*": [
+        "app/views/*"
       ]
     }
   },

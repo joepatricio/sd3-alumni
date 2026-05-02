@@ -40,7 +40,7 @@ erDiagram
     }
     %% 3XX - Content-related
     CONTENT_STATUS {
-        smallint status_id PK
+        smallint content_status_id PK
         string status_name "e.g. Pending, Approved, Rejected"
     }
     %% 4XX - User-related
@@ -50,25 +50,35 @@ erDiagram
     %% Ditto for banned users
     %% In all cases, their profile will show their status e.g. [SUSPENDED], [BANNED]
     USER_STATUS {
-        smallint status_id PK
+        smallint user_status_id PK
         string status_name "e.g. Regular, Official, Banned, etc."
     }
     %% 5XX - Donation-related
     DONATION_STATUS {
-        smallint status_id PK
+        smallint donation_status_id PK
         string status_name "e.g. Processing, Completed, Failed"
     }
-    
+    %% 6XX - Event-related
+    EVENT_CATEGORY {
+        smallint event_category_id PK
+        string event_category_name "e.g. Networking, Sports, Online, etc."
+    }
+    %% 7XX - Notification-related
+    NOTIFICATION_TYPE {
+        smallint notification_type_id PK
+        string notification_type_name "e.g. Connection, Event, etc."
+    }
+
     USER {
         smallint user_id PK
-        smallint status_id FK
+        smallint user_status_id FK
         string current_record_id FK
     }
     RECORDS {
         string record_id PK "New record created every time user status changes"
         smallint user_id FK
         string admin_id FK
-        smallint status_id FK
+        smallint user_status_id FK
         date date_created "Defaults to timestamp of query, immutable"
         string description "Describes the nature of status"
         date date_expires "`NULL` for statuses with no expiry"
@@ -96,7 +106,7 @@ erDiagram
     USER_CONNECTIONS {
         smallint user_id PK,FK
         smallint friend_id PK,FK
-        shortint connection_id
+        shortint connection_status_id
         date date_updated
     }
     USER_RSVP {
@@ -113,14 +123,15 @@ erDiagram
         int bulletins_created
         int comments_written
         int achievements
-        int donated_amount
+        float donated_amount
         date date_registered
     }
     PROFILE {
         smallint user_id PK,FK
         string user_name
-        varchar(319) email
-        varchar(15) phone
+        string bio
+        string email
+        string phone
         string location
         string currentJob
         string company
@@ -192,8 +203,19 @@ erDiagram
     DONATIONS {
         string donation_id PK
         smallint user_id FK "NULL if anonymous"
+        string donation_reference "Reference ID from payment"
         smallint donation_status_id FK
         datetime donation_date
         float donation_amount
         money donation_amount_php "Human-readable format"
+        bool donation_anonymous 
+        string donation_email
+    }
+    NOTIFICATIONS {
+        string notification_id PK
+        smallint user_id FK
+        smallint notification_type_id FK
+        string notification_message
+        datetime notification_date
+        boolean is_read
     }

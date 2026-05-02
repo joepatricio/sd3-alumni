@@ -1,7 +1,6 @@
 import { Mail, Phone, MapPin } from 'lucide-react';
 import { SiFacebook, SiX, SiInstagram, SiLinkedin } from 'react-icons/si';
 import { Link } from 'react-router-dom';
-import alumniLogo from "@/assets/alumni-logo.jpg";
 
 export function Footer() {
   const footerLinks = {
@@ -22,7 +21,7 @@ export function Footer() {
             <div className="flex items-center gap-2 mb-4">
               <Link to="/" className="flex items-center gap-2">
                 <img
-                  src={alumniLogo}
+                  src="http://localhost:3000/alumni-logo.jpg"
                   alt="Alumni"
                   className="h-8 w-8 object-contain rounded"
                 />
@@ -37,6 +36,7 @@ export function Footer() {
               <a
                 href="https://www.facebook.com/usjr.official"
                 target='_blank'
+                rel="noopener noreferrer"
                 className="w-9 h-9 bg-white rounded-full flex items-center justify-center hover:bg-brand-primary hover:text-white text-brand-primary transition-colors shadow-sm"
               >
                 <SiFacebook className="w-4 h-4" />
@@ -44,6 +44,7 @@ export function Footer() {
               <a
                 href="https://x.com/USJR_official"
                 target='_blank'
+                rel="noopener noreferrer"
                 className="w-9 h-9 bg-white rounded-full flex items-center justify-center hover:bg-brand-primary hover:text-white text-brand-primary transition-colors shadow-sm"
               >
                 <SiX className="w-4 h-4" />
@@ -51,6 +52,7 @@ export function Footer() {
               <a
                 href="https://www.instagram.com/usjr_official/"
                 target='_blank'
+                rel="noopener noreferrer"
                 className="w-9 h-9 bg-white rounded-full flex items-center justify-center hover:bg-brand-primary hover:text-white text-brand-primary transition-colors shadow-sm"
               >
                 <SiInstagram className="w-4 h-4" />
@@ -58,6 +60,7 @@ export function Footer() {
               <a
                 href="https://www.linkedin.com/school/usjrofficial/"
                 target='_blank'
+                rel="noopener noreferrer"
                 className="w-9 h-9 bg-white rounded-full flex items-center justify-center hover:bg-brand-primary hover:text-white text-brand-primary transition-colors shadow-sm"
               >
                 <SiLinkedin className="w-4 h-4" />

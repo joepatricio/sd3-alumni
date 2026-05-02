@@ -1,15 +1,13 @@
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { Ban, UserMinus, Loader2, Search } from 'lucide-react';
 import { ProfileHeader } from '@components/user/ProfileHeader';
-import { api, type ProfileData } from '@utils/api';
+import { api, useProfileRoute, type ProfileData } from '@/app/views/api';
 
 export function Connections() {
-    const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
 
-    const profileId = id || '1';
-    const isOwner = profileId === '1';
+    const { profileId, isOwner } = useProfileRoute();
 
     const [loading, setLoading] = useState(true);
     const [profile, setProfile] = useState<ProfileData | null>(null);

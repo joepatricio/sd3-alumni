@@ -11,9 +11,9 @@ import {
     FileText,
     Clock
 } from 'lucide-react';
-import { CreateBulletinModal } from '@/app/components/user/CreateBulletinModal';
-import { Button } from '@/app/components/ui/button';
-import { LazyImage } from '@/app/components/user/LazyImage';
+import { CreateBulletinModal } from '@components/user/CreateBulletinModal';
+import { Button } from '@components/ui/button';
+import { LazyImage } from '@components/user/LazyImage';
 import { bulletins } from '@assets/mockData';
 
 type ViewMode = 'headline' | 'article';

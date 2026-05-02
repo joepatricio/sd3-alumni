@@ -146,6 +146,7 @@ export function About() {
                                     </div>
                                     <a
                                         href="mailto:external.relations@usjr.edu.ph"
+                                        rel="noopener noreferrer"
                                         className="hover:text-brand-primary underline"
                                     >
                                         external.relations@usjr.edu.ph

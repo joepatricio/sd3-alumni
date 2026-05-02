@@ -608,10 +608,9 @@ export function CreateEventModal({ trigger, initialData, isAdmin }: CreateEventM
         }, 1000);
     }
 
-    const handleFileSelect = (file: File) => {
-        const url = URL.createObjectURL(file);
+    const handleFileSelect = (url: string) => {
         setPreviewUrl(url);
-        form.setValue('image', file);
+        form.setValue('image', url);
     };
 
     const handleClearImage = () => {

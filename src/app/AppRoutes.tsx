@@ -1,6 +1,7 @@
 import { Routes, Route } from 'react-router-dom';
 import { AdminLayout } from '@components/admin/AdminLayout';
 import { MainLayout } from '@components/user/MainLayout';
+import { ProtectedRoute } from '@components/user/ProtectedRoute';
 import { NotFound } from '@pages/NotFound';
 import { Donation } from '@pages/Donation';
 import { Register } from '@pages/user/Register';
@@ -46,14 +47,17 @@ export default function AppRoutes() {
                 <Route path="/forgot-password" element={<ForgotPassword />} />
                 <Route path="/terms" element={<TermsOfService />} />
                 <Route path="/privacy" element={<PrivacyPolicy />} />
-                <Route path="/profile" element={<Profile />} />
-                <Route path="/profile/:id" element={<Profile />} />
-                <Route path="/profile/edit" element={<EditProfile />} />
-                <Route path="/profile/connections" element={<Connections />} />
-                <Route path="/profile/connections/:id" element={<Connections />} />
-                <Route path="/profile/events" element={<UserEvents />} />
-                <Route path="/profile/achievements" element={<Achievements />} />
-                <Route path="/profile/achievements/:id" element={<Achievements />} />
+                
+                <Route element={<ProtectedRoute />}>
+                    <Route path="/profile" element={<Profile />} />
+                    <Route path="/profile/:id" element={<Profile />} />
+                    <Route path="/profile/edit" element={<EditProfile />} />
+                    <Route path="/profile/connections" element={<Connections />} />
+                    <Route path="/profile/connections/:id" element={<Connections />} />
+                    <Route path="/profile/events" element={<UserEvents />} />
+                    <Route path="/profile/achievements" element={<Achievements />} />
+                    <Route path="/profile/achievements/:id" element={<Achievements />} />
+                </Route>
             </Route>
 
             <Route path="/admin" element={<AdminLayout />}>

@@ -39,12 +39,12 @@ export function BulletinFeed() {
               Stay informed with news and stories from the USJ-R community
             </p>
           </div>
-          <a
-            href="https://www.facebook.com/usjr.official"
+          <Link
+            to="/bulletin"
             className="text-brand-primary hover:text-brand-primary-hover font-semibold hidden sm:block"
           >
             View All →
-          </a>
+          </Link>
         </div>
 
         {/* Featured Article */}
@@ -140,12 +140,12 @@ export function BulletinFeed() {
         </div>
 
         <div className="text-center mt-8 sm:hidden">
-          <a
-            href="https://www.facebook.com/usjr.official"
+          <Link
+            to="/bulletin"
             className="text-brand-primary hover:text-brand-primary-hover font-semibold"
           >
             View All Bulletins →
-          </a>
+          </Link>
         </div>
       </div>
     </section>

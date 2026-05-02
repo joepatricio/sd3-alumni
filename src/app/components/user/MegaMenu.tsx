@@ -68,6 +68,7 @@ export function MegaMenu({ isOpen, onClose }: MegaMenuProps) {
                   key={social.label}
                   href={social.href}
                   target='_blank'
+                  rel="noopener noreferrer"
                   className={`flex items-center gap-3 p-3 bg-gray-100 rounded-lg ${social.color} transition-colors group`}
                 >
                   <social.icon className="w-5 h-5 text-gray-700 group-hover:text-white" />

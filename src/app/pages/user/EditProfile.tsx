@@ -1,7 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
-import { ProfileHeader } from '@/app/components/user/ProfileHeader';
-import { profileData } from '@/assets/mockData';
+import { ProfileHeader } from '@components/user/ProfileHeader';
 import { Save, X } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -13,9 +12,13 @@ import {
     FormItem,
     FormLabel,
     FormMessage,
-} from '@/app/components/ui/form';
-import { Input } from '@/app/components/ui/input';
-import { Textarea } from '@/app/components/ui/textarea';
+} from '@components/ui/form';
+import { Input } from '@components/ui/input';
+import { Textarea } from '@components/ui/textarea';
+import { useAuth } from '@/app/views/auth';
+import { api } from '@/app/views/api';
+import { useEffect, useState } from 'react';
+import { ImageUpload } from '@components/user/ImageUpload';
 
 const profileSchema = z.object({
     name: z.string().min(2, { message: "Name must be at least 2 characters." }),
@@ -25,42 +28,112 @@ const profileSchema = z.object({
     currentJob: z.string().optional(),
     company: z.string().optional(),
     bio: z.string().optional(),
+    birthday: z.string().optional(),
 });
 
 type ProfileFormValues = z.infer<typeof profileSchema>;
 
 export function EditProfile() {
     const navigate = useNavigate();
+    const { session } = useAuth();
+
+    const [loading, setLoading] = useState(true);
+    const [profile, setProfile] = useState<any>(null);
+    const [degreeInfo, setDegreeInfo] = useState<any>(null);
+    const [profileImageUrl, setProfileImageUrl] = useState<string | null>(null);
 
     const form = useForm<ProfileFormValues>({
         resolver: zodResolver(profileSchema) as any,
         defaultValues: {
-            name: profileData.name || '',
-            email: profileData.email || '',
-            phone: profileData.phone || '',
-            location: profileData.location || '',
-            currentJob: profileData.currentJob || '',
-            company: profileData.company || '',
-            bio: profileData.bio || '',
+            name: '',
+            email: '',
+            phone: '',
+            location: '',
+            currentJob: '',
+            company: '',
+            bio: '',
+            birthday: '',
         },
     });
 
-    const onSubmit = (values: ProfileFormValues) => {
-        // Mock API call to save profile data
-        setTimeout(() => {
-            toast.success('Profile updated successfully!');
-            navigate('/profile');
-        }, 800);
+    useEffect(() => {
+        const fetchProfile = async () => {
+            if (!session?.user_id) return;
+            try {
+                const { data } = await api.get(`/PROFILE?user_id=${session.user_id}`);
+                if (data && data.length > 0) {
+                    const p = data[0];
+                    setProfile(p);
+                    setProfileImageUrl(p.profileImage);
+                    form.reset({
+                        name: p.user_name || '',
+                        email: p.email || '',
+                        phone: p.phone || '',
+                        location: p.location || '',
+                        currentJob: p.currentJob || '',
+                        company: p.company || '',
+                        bio: p.bio || '',
+                        birthday: p.birthday ? new Date(p.birthday).toISOString().split('T')[0] : '',
+                    });
+
+                    if (p.degree_id) {
+                        const deg = await api.get(`/DEGREE?degree_id=${p.degree_id}`);
+                        if (deg.data && deg.data.length > 0) {
+                            setDegreeInfo(deg.data[0]);
+                        }
+                    }
+                }
+            } catch (error) {
+                toast.error('Failed to load profile');
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchProfile();
+    }, [session, form]);
+
+    const handleImageSelect = (url: string) => {
+        setProfileImageUrl(url);
     };
 
-    // Watch the form values so the ProfileHeader can preview changes dynamically
+    const onSubmit = async (values: ProfileFormValues) => {
+        if (!profile) return;
+        try {
+            await api.patch(`/PROFILE/${profile.id}`, {
+                user_name: values.name,
+                email: values.email,
+                phone: values.phone,
+                location: values.location,
+                currentJob: values.currentJob,
+                company: values.company,
+                bio: values.bio,
+                birthday: values.birthday ? new Date(values.birthday).toISOString() : profile.birthday,
+                profileImage: profileImageUrl,
+            });
+            toast.success('Profile updated successfully!');
+            navigate('/profile');
+        } catch (error) {
+            toast.error('Failed to update profile');
+        }
+    };
+
     const watchedValues = form.watch();
+
+    if (loading) {
+        return <div className="min-h-screen bg-gray-50 flex items-center justify-center">Loading...</div>;
+    }
 
     return (
         <div className="min-h-screen bg-gray-50">
             <div className="max-w-4xl mx-auto px-4 md:px-8 py-12">
 
-                <ProfileHeader profileData={{ ...profileData, ...watchedValues }} />
+                <ProfileHeader
+                    name={watchedValues.name || 'Your Name'}
+                    degree={degreeInfo?.degree_abbr || 'Degree'}
+                    graduationYear={profile?.batch?.toString() || 'YYYY'}
+                    profileImage={profileImageUrl || 'http://localhost:3000/profile-image.jpg'}
+                    bio={watchedValues.bio || ''}
+                />
 
                 <Form {...form}>
                     <form onSubmit={form.handleSubmit(onSubmit)} className="bg-white rounded-lg shadow-md p-6 space-y-8">
@@ -87,6 +160,16 @@ export function EditProfile() {
                         </div>
 
                         {/* Personal Information */}
+                        <div className="space-y-4">
+                            <h3 className="text-lg font-semibold text-brand-primary border-b pb-2">Profile Picture</h3>
+                            <ImageUpload
+                                previewUrl={profileImageUrl}
+                                onFileSelect={handleImageSelect}
+                                onClear={() => setProfileImageUrl('http://localhost:3000/profile-image.jpg')}
+                                placeholderText="Upload a new profile picture"
+                            />
+                        </div>
+
                         <div className="space-y-4">
                             <h3 className="text-lg font-semibold text-brand-primary border-b pb-2">Personal Information</h3>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -163,6 +246,19 @@ export function EditProfile() {
                                             <FormLabel>Company</FormLabel>
                                             <FormControl>
                                                 <Input placeholder="Company" {...field} className="selection:bg-blue-500 selection:text-white focus-visible:ring-brand-primary" />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+                                <FormField
+                                    control={form.control}
+                                    name="birthday"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>Birthday</FormLabel>
+                                            <FormControl>
+                                                <Input type="date" {...field} className="selection:bg-blue-500 selection:text-white focus-visible:ring-brand-primary" />
                                             </FormControl>
                                             <FormMessage />
                                         </FormItem>

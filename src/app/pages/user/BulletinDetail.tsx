@@ -14,7 +14,7 @@ import { Button } from '@components/ui/button';
 import { NotFound } from '@pages/NotFound';
 import { bulletins, comments } from '@assets/mockData';
 import { LazyImage } from '@components/user/LazyImage';
-import { useAuth } from '@utils/auth';
+import { useAuth } from '@/app/views/auth';
 
 export function BulletinDetail() {
     const { id } = useParams();

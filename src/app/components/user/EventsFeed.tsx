@@ -1,8 +1,8 @@
 import { Calendar, MapPin, Users, Video } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { events } from '@assets/mockData';
-import { getCategoryColor } from '@utils/categoryColors';
-import { filterUpcomingEvents } from '@utils/eventFilters';
+import { getCategoryColor } from '@/app/views/categoryColors';
+import { filterUpcomingEvents } from '@/app/views/eventFilters';
 import { LazyImage } from '@components/user/LazyImage';
 
 const mockEvents = filterUpcomingEvents(events.filter(e => e.status === "Approved"));

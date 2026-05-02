@@ -19,7 +19,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@components/ui/avatar';
 import { Alert, AlertDescription, AlertTitle } from '@components/ui/alert';
 import { NotFound } from '@pages/NotFound';
 import { events } from '@assets/mockData';
-import { useAuth } from '@utils/auth';
+import { useAuth } from '@/app/views/auth';
 
 export function EventDetail() {
     const { id } = useParams<{ id: string }>();
@@ -289,6 +289,7 @@ export function EventDetail() {
                                     <Mail className="w-4 h-4 text-brand-primary" />
                                     <a
                                         href={`mailto:${eventData.organizer.email}`}
+                                        rel="noopener noreferrer"
                                         className="hover:text-brand-primary transition-colors"
                                     >
                                         {eventData.organizer.email}

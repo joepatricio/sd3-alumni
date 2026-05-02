@@ -1,3 +1,5 @@
+// LEGACY
+
 export function getCategoryColor(category: string): string {
     const format = category.toLowerCase().trim();
     switch (format) {

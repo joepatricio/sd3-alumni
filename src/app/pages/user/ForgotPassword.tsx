@@ -6,8 +6,8 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { toast } from 'sonner';
 
-import { Button } from '@/app/components/ui/button';
-import { Input } from '@/app/components/ui/input';
+import { Button } from '@components/ui/button';
+import { Input } from '@components/ui/input';
 import {
     Form,
     FormControl,
@@ -15,7 +15,7 @@ import {
     FormItem,
     FormLabel,
     FormMessage,
-} from '@/app/components/ui/form';
+} from '@components/ui/form';
 
 const forgotPasswordSchema = z.object({
     email: z.string().email({

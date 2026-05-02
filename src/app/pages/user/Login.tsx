@@ -5,11 +5,13 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { toast } from 'sonner';
-import { useAuth } from '@utils/auth';
+import { api } from '@/app/views/api';
+import bcrypt from 'bcryptjs';
+import { useAuth } from '@/app/views/auth';
 
-import { Button } from '@/app/components/ui/button';
-import { Input } from '@/app/components/ui/input';
-import { Checkbox } from '@/app/components/ui/checkbox';
+import { Button } from '@components/ui/button';
+import { Input } from '@components/ui/input';
+import { Checkbox } from '@components/ui/checkbox';
 import {
     Form,
     FormControl,
@@ -17,7 +19,7 @@ import {
     FormItem,
     FormLabel,
     FormMessage,
-} from '@/app/components/ui/form';
+} from '@components/ui/form';
 
 const loginSchema = z.object({
     email: z.string().email({
@@ -33,7 +35,7 @@ export function Login() {
     const [showPassword, setShowPassword] = useState(false);
     const navigate = useNavigate();
     const location = useLocation();
-    const { isLoggedIn, setIsLoggedIn } = useAuth();
+    const { isLoggedIn, setSession } = useAuth();
 
     useEffect(() => {
         if (isLoggedIn) {
@@ -51,20 +53,40 @@ export function Login() {
         },
     });
 
-    const onSubmit = (values: z.infer<typeof loginSchema>) => {
-        // Mock login - in production, this would authenticate with backend
-        console.log('Login attempt:', values);
+    const onSubmit = async (values: z.infer<typeof loginSchema>) => {
+        try {
+            const response = await api.get(`/USER_AUTH?email=${values.email}`);
+            const users = response.data;
 
-        // Simulate network delay
-        setTimeout(() => {
-            // Simulate successful login
-            setIsLoggedIn(true);
+            if (users.length === 0) {
+                toast.error("Login failed", { description: "Invalid email or password." });
+                return;
+            }
+
+            const user = users[0];
+            const isValidPassword = bcrypt.compareSync(values.password, user.password_hash);
+
+            if (!isValidPassword) {
+                toast.error("Login failed", { description: "Invalid email or password." });
+                return;
+            }
+
+            // Update last_login
+            await api.patch(`/USER_AUTH/${user.id}`, {
+                last_login: new Date().toISOString()
+            });
+
+            setSession({ user_id: user.user_id, email: user.email }, values.rememberMe);
+
             toast.success("Welcome back!", {
                 description: "You have successfully signed in.",
             });
             const from = location.state?.from || '/profile';
             navigate(from, { replace: true });
-        }, 1000);
+        } catch (error) {
+            console.error("Login error:", error);
+            toast.error("Login failed", { description: "An unexpected error occurred." });
+        }
     };
 
     return (

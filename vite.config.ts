@@ -75,7 +75,7 @@ export default defineConfig({
       '@components': path.resolve(__dirname, './src/app/components'),
       '@assets': path.resolve(__dirname, './src/assets'),
       '@pages': path.resolve(__dirname, './src/app/pages'),
-      '@utils': path.resolve(__dirname, './src/app/utils'),
+      '@views': path.resolve(__dirname, './src/app/views'),
     },
   },
   server: {

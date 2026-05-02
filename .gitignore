@@ -23,4 +23,14 @@ yarn-debug.log*
 yarn-error.log*
 
 #  Project files
+TODO.md
 /docs
+public/alumni-logo.jpg
+public/bulletin-image.jpg
+public/cubes.png
+public/donate-hero.avif
+public/events-image.jpg
+public/main-hero.jpg
+public/profile-*
+public/profile-*
+public/edit/*

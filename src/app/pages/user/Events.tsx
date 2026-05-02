@@ -5,8 +5,8 @@ import { CreateEventModal } from '@components/user/CreateEventModal';
 import { Button } from '@components/ui/button';
 import { events } from '@assets/mockData';
 import { Link } from 'react-router-dom';
-import { getCategoryColor } from '@utils/categoryColors';
-import { isEventUpcoming } from '@utils/eventFilters';
+import { getCategoryColor } from '@/app/views/categoryColors';
+import { isEventUpcoming } from '@/app/views/eventFilters';
 
 const EVENTS_PER_PAGE = 6;
 

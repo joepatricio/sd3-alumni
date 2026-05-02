@@ -1,15 +1,18 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Mail, Lock, Eye, EyeOff, User, Loader2 } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff, User, Loader2, GraduationCap, School } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { toast } from 'sonner';
-import { useAuth } from '@utils/auth';
+import { api } from '@/app/views/api';
+import bcrypt from 'bcryptjs';
+import { useAuth } from '@/app/views/auth';
+import { nanoid } from 'nanoid'
 
-import { Button } from '@/app/components/ui/button';
-import { Input } from '@/app/components/ui/input';
-import { Checkbox } from '@/app/components/ui/checkbox';
+import { Button } from '@components/ui/button';
+import { Input } from '@components/ui/input';
+import { Checkbox } from '@components/ui/checkbox';
 import {
     Form,
     FormControl,
@@ -17,14 +20,14 @@ import {
     FormItem,
     FormLabel,
     FormMessage,
-} from '@/app/components/ui/form';
+} from '@components/ui/form';
 import {
     Select,
     SelectContent,
     SelectItem,
     SelectTrigger,
     SelectValue,
-} from '@/app/components/ui/select';
+} from '@components/ui/select';
 
 const DEGREES = [
     { id: "100", name: "Mechanical Engineering" },
@@ -39,9 +42,6 @@ const registerSchema = z.object({
     fullName: z.string().min(2, {
         message: "Full name must be at least 2 characters.",
     }),
-    alumniId: z.string().min(1, {
-        message: "Alumni ID is required.",
-    }),
     email: z.string().email({
         message: "Please enter a valid email address.",
     }),
@@ -51,6 +51,9 @@ const registerSchema = z.object({
     confirmPassword: z.string(),
     degreeProgram: z.string().min(1, {
         message: "Please select a degree program.",
+    }),
+    batch: z.coerce.number().min(1950).max(new Date().getFullYear() + 5, {
+        message: "Please enter a valid batch year.",
     }),
     terms: z.boolean().refine(val => val === true, {
         message: "You must accept the terms and conditions.",
@@ -63,6 +66,7 @@ const registerSchema = z.object({
 export function Register() {
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
     const navigate = useNavigate();
     const { isLoggedIn } = useAuth();
 
@@ -76,26 +80,111 @@ export function Register() {
         resolver: zodResolver(registerSchema) as any,
         defaultValues: {
             fullName: "",
-            alumniId: "",
             email: "",
             password: "",
             confirmPassword: "",
             degreeProgram: "",
+            batch: new Date().getFullYear(),
             terms: false,
         },
     });
 
-    const onSubmit = (values: z.infer<typeof registerSchema>) => {
-        // Mock registration logic
-        console.log('Registration attempt:', values);
+    const onSubmit = async (values: z.infer<typeof registerSchema>) => {
+        try {
+            // Check user limit
+            const usersResponse = await api.get('/USER_AUTH');
+            if (usersResponse.data.length >= 100) {
+                toast.error("Registrations are closed", {
+                    description: "The maximum number of users has been reached."
+                });
+                return;
+            }
 
-        // Simulate network delay
-        setTimeout(() => {
+            // Check if email already exists
+            const existingUser = await api.get(`/USER_AUTH?email=${values.email}`);
+            if (existingUser.data.length > 0) {
+                toast.error("Registration failed", {
+                    description: "Email is already registered."
+                });
+                return;
+            }
+
+            if (isSubmitting) return;
+            setIsSubmitting(true);
+
+            // Generate ID and hash password
+            const user_id = Math.floor(Math.random() * 1000000) + 1000;
+            const password_hash = bcrypt.hashSync(values.password, 10);
+            const degree = DEGREES.find(d => d.name === values.degreeProgram);
+
+            // Create USER_AUTH
+            await api.post('/USER_AUTH', {
+                user_id,
+                email: values.email,
+                password_hash,
+                last_login: new Date().toISOString()
+            });
+
+            const record_id = nanoid(11);
+
+            // Create RECORDS
+            await api.post('/RECORDS', {
+                record_id,
+                user_id,
+                admin_id: "admin3",
+                status_id: "401",
+                date_created: new Date().toISOString(),
+                description: "User registered",
+                date_expires: null
+            });
+
+            // Create USER
+            await api.post('/USER', {
+                user_id,
+                status_id: "401",
+                current_record_id: record_id
+            });
+
+            // Create PROFILE
+            await api.post('/PROFILE', {
+                user_id,
+                user_name: values.fullName,
+                email: values.email,
+                phone: "",
+                location: "",
+                currentJob: "",
+                company: "",
+                bio: "",
+                degree_id: degree ? parseInt(degree.id) : null,
+                batch: values.batch,
+                birthday: null,
+                date_registered: new Date().toISOString(),
+                profileImage: "http://localhost:3000/engineer.png"
+            });
+
+            // Create USER_STATISTICS
+            await api.post('/USER_STATISTICS', {
+                user_id,
+                date_registered: new Date().toISOString(),
+                user_connections: 0,
+                events_attended: 0,
+                events_created: 0,
+                bulletins_created: 0,
+                comments_written: 0,
+                achievements: 0,
+                donated_amount: 0
+            });
+
             toast.success("Account created successfully!", {
                 description: "Welcome to the USJ-R SEA Alumni community.",
             });
             navigate('/login');
-        }, 1500);
+        } catch (error) {
+            console.error("Registration error:", error);
+            toast.error("Registration failed", {
+                description: "An unexpected error occurred. Please try again."
+            });
+        }
     };
 
     return (
@@ -135,27 +224,6 @@ export function Register() {
 
                             <FormField
                                 control={form.control}
-                                name="alumniId"
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>Alumni ID</FormLabel>
-                                        <FormControl>
-                                            <div className="relative">
-                                                <User className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
-                                                <Input
-                                                    placeholder="Enter your Alumni ID"
-                                                    className="pl-10 selection:bg-blue-500 selection:text-white"
-                                                    {...field}
-                                                />
-                                            </div>
-                                        </FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
-
-                            <FormField
-                                control={form.control}
                                 name="email"
                                 render={({ field }) => (
                                     <FormItem>
@@ -183,9 +251,12 @@ export function Register() {
                                         <FormLabel>Degree Program</FormLabel>
                                         <Select onValueChange={field.onChange} defaultValue={field.value}>
                                             <FormControl>
-                                                <SelectTrigger className="selection:bg-blue-500 selection:text-white">
-                                                    <SelectValue placeholder="Select your degree program" />
-                                                </SelectTrigger>
+                                                <div className="relative">
+                                                    <School className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
+                                                    <SelectTrigger className="selection:bg-blue-500 selection:text-white pl-10">
+                                                        <SelectValue placeholder="Select your degree program" />
+                                                    </SelectTrigger>
+                                                </div>
                                             </FormControl>
                                             <SelectContent>
                                                 {DEGREES.map((degree) => (
@@ -195,6 +266,28 @@ export function Register() {
                                                 ))}
                                             </SelectContent>
                                         </Select>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+
+                            <FormField
+                                control={form.control}
+                                name="batch"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Batch Year</FormLabel>
+                                        <FormControl>
+                                            <div className="relative">
+                                                <GraduationCap className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
+                                                <Input
+                                                    type="number"
+                                                    placeholder="YYYY"
+                                                    className="pl-10 selection:bg-blue-500 selection:text-white"
+                                                    {...field}
+                                                />
+                                            </div>
+                                        </FormControl>
                                         <FormMessage />
                                     </FormItem>
                                 )}

@@ -1,7 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import { LogOut, LayoutDashboard, Users, FileText, ChevronLeft, CreditCard, Calendar } from 'lucide-react';
-import alumniLogo from "@assets/alumni-logo.jpg";
 import ScrollToTop from '../ScrollToTop';
 
 export function AdminLayout() {
@@ -45,7 +44,7 @@ export function AdminLayout() {
             <aside className="w-64 bg-brand-primary text-white flex flex-col shadow-xl z-10 transition-all duration-300">
                 <div className="h-16 flex items-center flex justify-left gap-2 px-6 border-b border-white/20">
                     <img
-                        src={alumniLogo}
+                        src="http://localhost:3000/alumni-logo.jpg"
                         alt="Alumni"
                         className="h-8 w-8 object-contain rounded"
                     />

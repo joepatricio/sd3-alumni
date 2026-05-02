@@ -1,31 +1,13 @@
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { ProfileHeader } from '@components/user/ProfileHeader';
-import { api, type ProfileData, type UserStatisticsData } from '@utils/api';
+import { api, AchievementIconMap, useProfileRoute, type ProfileData, type UserStatisticsData } from '@/app/views/api';
 import { NotFound } from '@pages/NotFound';
-import {
-    Star, Award, Trophy, BookOpen,
-    Heart, HeartPulse, HandCoins,
-    Calendar, CalendarDays,
-    MessageSquare, MessageCircle,
-    Sparkle, Sparkles, Newspaper, Cog,
-    Loader2
-} from 'lucide-react';
-
-const IconMap: Record<string, any> = {
-    Star, Award, Trophy, BookOpen, Heart, HeartPulse, HandCoins,
-    Calendar, CalendarDays, MessageSquare, MessageCircle,
-    Sparkle, Sparkles, Newspaper, Cog,
-    'Calendar1': Calendar,
-    'CalendarHeart': Calendar
-};
+import { Trophy, Loader2 } from 'lucide-react';
 
 export function Achievements() {
-    const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
-
-    const profileId = id || '1';
-    const isOwner = !id || id === '1';
+    const { profileId, isOwner } = useProfileRoute();
 
     const [loading, setLoading] = useState(true);
     const [profile, setProfile] = useState<ProfileData | null>(null);
@@ -120,7 +102,7 @@ export function Achievements() {
                     ) : (
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             {achievements.map((achv, i) => {
-                                const Icon = IconMap[achv.achievement_icon] || Trophy;
+                                const Icon = AchievementIconMap[achv.achievement_icon] || Trophy;
 
                                 return (
                                     <div

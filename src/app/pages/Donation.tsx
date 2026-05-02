@@ -1,15 +1,19 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Heart, Globe, GraduationCap, Users, Lock, Mail, Phone, ArrowLeft, User } from 'lucide-react';
+import { Heart, Globe, GraduationCap, Users, Mail, Phone, ArrowLeft, User } from 'lucide-react';
 import { SiFacebook, SiX, SiInstagram, SiLinkedin } from 'react-icons/si';
 import { toast } from 'sonner';
-import alumniLogo from "@/assets/alumni-logo.jpg";
-import { useAuth } from '@utils/auth';
+import { useAuth } from '@/app/views/auth';
+import { formatCurrency } from '@/app/views/formatters';
+import { api } from '@/app/views/api';
+import { customAlphabet, nanoid } from 'nanoid';
 
 export function Donation() {
-    const { isLoggedIn, setIsLoggedIn } = useAuth();
+    const { isLoggedIn, setIsLoggedIn, session } = useAuth();
     const [selectedAmount, setSelectedAmount] = useState<number | null>(1000);
     const [customAmount, setCustomAmount] = useState('');
+    const [donorEmail, setDonorEmail] = useState('');
+    const [isAnonymous, setIsAnonymous] = useState(false);
 
     const amounts = [500, 1000, 2000, 5000, 10000, 20000];
 
@@ -23,17 +27,73 @@ export function Donation() {
         setSelectedAmount(null);
     };
 
-    const handleDonate = () => {
+    const handleDonate = async () => {
         const amount = selectedAmount || Number(customAmount);
         if (!amount || amount <= 0) {
             toast.error("Please select or enter a valid donation amount.");
             return;
         }
 
-        toast.success("Thank You for Your Generosity!", {
-            description: `Your donation of ₱${amount.toLocaleString()} will make a difference.`,
-            duration: 5000,
-        });
+        const nanoidRef = customAlphabet("23456789BCDFGHJKLMNPQRSTVWXYZ", 3);
+        const refId = `DON-${nanoidRef()}-${nanoidRef()}`;
+        const donationId = nanoid(10);
+
+        const newDonation = {
+            id: donationId,
+            donation_id: donationId,
+            donation_reference_id: refId,
+            user_id: isLoggedIn ? Number(session?.user_id) : null,
+            donation_status_id: 501,
+            donation_date: new Date().toISOString(),
+            donation_amount: amount,
+            donation_amount_php: formatCurrency(amount),
+            donation_anonymous: !isLoggedIn || isAnonymous,
+            donation_email: isLoggedIn ? session?.email : donorEmail
+        };
+
+        try {
+            await api.post('/DONATIONS', newDonation);
+
+            if (isLoggedIn && !isAnonymous) {
+                const statsRes = await api.get('/USER_STATISTICS', { params: { user_id: session?.user_id } });
+                const stats = statsRes.data.data || statsRes.data;
+                if (stats && stats.length > 0) {
+                    const currentStats = stats[0];
+                    await api.patch(`/USER_STATISTICS/${currentStats.id}`, {
+                        donated_amount: currentStats.donated_amount + amount
+                    });
+                }
+            }
+
+            if (isLoggedIn) {
+                const achRes = await api.get('/USER_ACHIEVEMENT', { params: { user_id: session?.user_id, achievement_id: 2 } });
+                const ach = achRes.data.data || achRes.data;
+                if (!ach || ach.length === 0) {
+                    await api.post('/USER_ACHIEVEMENT', {
+                        id: nanoid(10),
+                        user_achievement_id: nanoid(10),
+                        user_id: Number(session?.user_id),
+                        achievement_id: 2,
+                        achievement_tier: 1,
+                        achieved_date: new Date().toISOString()
+                    });
+                }
+            }
+
+            toast.success("Thank You for Your Generosity!", {
+                description: `Your donation of ${formatCurrency(amount)} was successful.\nReference ID: ${refId}`,
+                duration: 8000,
+            });
+
+            setSelectedAmount(1000);
+            setCustomAmount('');
+            setDonorEmail('');
+            setIsAnonymous(false);
+
+        } catch (error) {
+            toast.error("Failed to process donation. Please try again.");
+            console.error(error);
+        }
     };
 
     return (
@@ -44,7 +104,7 @@ export function Donation() {
                     className="absolute inset-0 bg-cover bg-center"
                     style={{
                         backgroundImage:
-                            'url(https://images.unsplash.com/photo-1532629345422-7515f3d16bb6?q=80&w=2070&auto=format&fit=crop)',
+                            'url(http://localhost:3000/donate-hero.avif)',
                     }}
                 >
                     <div className="absolute inset-0 bg-gradient-to-r from-brand-primary/90 to-brand-primary/40"></div>
@@ -66,7 +126,7 @@ export function Donation() {
                     </div>
                     <div className="flex items-center gap-3 mb-6">
                         <Link to="/" className="flex items-center gap-3 ">
-                            <img src={alumniLogo} alt="USJ-R Logo" className="w-12 h-12 rounded-full border-2 border-white/30" />
+                            <img src="http://localhost:3000/alumni-logo.jpg" alt="USJ-R Logo" className="w-12 h-12 rounded-full border-2 border-white/30" />
                             <span className="font-bold text-xl tracking-wide">USJ-R SEA Alumni</span>
                         </Link>
                     </div>
@@ -96,7 +156,7 @@ export function Donation() {
                                     { icon: Heart, title: "Student Welfare", desc: "Provide resources for student holistic development." }
                                 ].map((item, idx) => (
                                     <div key={idx} className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
-                                        <div className="w-12 h-12 bg-brand-primary/10 rounded-full flex items-center justify-center mb-4">
+                                        <div className="w-20 h-20 bg-brand-primary/10 rounded-full flex items-center justify-center mb-4">
                                             <item.icon className="w-6 h-6 text-brand-primary" />
                                         </div>
                                         <h3 className="text-lg font-bold text-gray-900 mb-2">{item.title}</h3>
@@ -159,13 +219,13 @@ export function Donation() {
                                                     : 'border-gray-200 hover:border-brand-primary/30 text-gray-600'
                                                     }`}
                                             >
-                                                ₱{amount.toLocaleString()}
+                                                {formatCurrency(amount)}
                                             </button>
                                         ))}
                                     </div>
 
                                     {/* Custom Amount */}
-                                    <div className="mb-8">
+                                    <div className="mb-6">
                                         <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
                                             Custom Amount
                                         </label>
@@ -181,19 +241,48 @@ export function Donation() {
                                         </div>
                                     </div>
 
+                                    {/* Additional Fields based on login state */}
+                                    <div className="mb-8">
+                                        {!isLoggedIn ? (
+                                            <div>
+                                                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
+                                                    Email Address (Optional for Receipt)
+                                                </label>
+                                                <div className="relative">
+                                                    <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
+                                                    <input
+                                                        type="email"
+                                                        placeholder="Enter email address"
+                                                        value={donorEmail}
+                                                        onChange={(e) => setDonorEmail(e.target.value)}
+                                                        className="w-full pl-10 pr-4 py-3 rounded-lg border-2 border-gray-200 focus:border-brand-primary focus:outline-none transition-colors text-sm"
+                                                    />
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            <label className="flex items-center gap-3 cursor-pointer p-3 rounded-lg border border-gray-100 bg-gray-50 hover:bg-gray-100 transition-colors">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={isAnonymous}
+                                                    onChange={(e) => setIsAnonymous(e.target.checked)}
+                                                    className="w-4 h-4 text-brand-primary border-gray-300 rounded focus:ring-brand-primary cursor-pointer"
+                                                />
+                                                <div className="flex flex-col">
+                                                    <span className="text-sm font-semibold text-gray-800">Make my donation anonymous</span>
+                                                    <span className="text-xs text-gray-500">Your donation will not update your public profile statistics.</span>
+                                                </div>
+                                            </label>
+                                        )}
+                                    </div>
+
                                     {/* Donate Button */}
                                     <button
                                         onClick={handleDonate}
                                         className="w-full bg-brand-accent text-white py-4 rounded-xl font-bold text-lg hover:bg-brand-accent-hover transition-all transform hover:scale-[1.01] shadow-lg shadow-brand-accent/20 flex items-center justify-center gap-2"
                                     >
                                         <Heart className="w-5 h-5 fill-current" />
-                                        Donate {selectedAmount ? `₱${selectedAmount.toLocaleString()}` : customAmount ? `₱${Number(customAmount).toLocaleString()}` : ''}
+                                        Donate {selectedAmount ? formatCurrency(selectedAmount) : customAmount ? formatCurrency(Number(customAmount)) : ''}
                                     </button>
-
-                                    <div className="mt-6 flex items-center justify-center gap-2 text-xs text-gray-400">
-                                        <Lock className="w-3 h-3" />
-                                        <span>Secure 256-bit SSL Encrypted Payment</span>
-                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -208,7 +297,7 @@ export function Donation() {
                         <div className="flex flex-col items-center md:items-start gap-4">
                             <div className="flex items-center gap-2 text-white/90">
                                 <Link to="/" className="flex items-center gap-2">
-                                    <img src={alumniLogo} alt="Logo" className="w-8 h-8 rounded opacity-80" />
+                                    <img src="http://localhost:3000/alumni-logo.jpg" alt="Logo" className="w-8 h-8 rounded opacity-80" />
                                     <span className="font-semibold tracking-wide">USJ-R SEA Alumni Association</span>
                                 </Link>
                             </div>
@@ -218,16 +307,16 @@ export function Donation() {
                         </div>
 
                         <div className="flex gap-6">
-                            <a href="https://www.facebook.com/usjr.official" target="_blank" className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center hover:bg-brand-primary transition-colors">
+                            <a href="https://www.facebook.com/usjr.official" target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center hover:bg-brand-primary transition-colors">
                                 <SiFacebook className="w-4 h-4 text-white" />
                             </a>
-                            <a href="https://x.com/USJR_official" target="_blank" className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center hover:bg-brand-primary transition-colors">
+                            <a href="https://x.com/USJR_official" target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center hover:bg-brand-primary transition-colors">
                                 <SiX className="w-4 h-4 text-white" />
                             </a>
-                            <a href="https://www.instagram.com/usjr_official" target="_blank" className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center hover:bg-brand-primary transition-colors">
+                            <a href="https://www.instagram.com/usjr_official" target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center hover:bg-brand-primary transition-colors">
                                 <SiInstagram className="w-4 h-4 text-white" />
                             </a>
-                            <a href="https://www.linkedin.com/school/usjrofficial/" target="_blank" className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center hover:bg-brand-primary transition-colors">
+                            <a href="https://www.linkedin.com/school/usjrofficial/" target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center hover:bg-brand-primary transition-colors">
                                 <SiLinkedin className="w-4 h-4 text-white" />
                             </a>
                         </div>

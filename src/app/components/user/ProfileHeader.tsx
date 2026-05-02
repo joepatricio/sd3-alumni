@@ -1,6 +1,6 @@
 import { Edit, LogOut, User } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { useAuth } from '@utils/auth';
+import { useAuth } from '@/app/views/auth';
 
 interface ProfileHeaderProps {
     name: string;
@@ -17,6 +17,7 @@ interface ProfileHeaderProps {
         comments_written: number;
         events_attended: number;
     };
+    isOwner?: boolean;
 }
 
 export function ProfileHeader({
@@ -29,15 +30,16 @@ export function ProfileHeader({
     onEdit,
     activeTab = 'overview',
     onTabChange = () => { },
-    statsData
+    statsData,
+    isOwner = false
 }: ProfileHeaderProps) {
-    const { isLoggedIn, setIsLoggedIn } = useAuth();
+    const { isLoggedIn, setSession } = useAuth();
 
     return (
         <div className="bg-white rounded-2xl shadow-xl overflow-hidden mb-8 border border-gray-100">
             {/* Cover Image - taller and more vibrant */}
             <div className="h-48 bg-gradient-to-br from-brand-primary via-brand-primary/90 to-brand-secondary relative">
-                <div className="absolute inset-0 opacity-20 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]"></div>
+                <div className="absolute inset-0 opacity-20 bg-[url('http://localhost:3000/cubes.png')]"></div>
             </div>
 
             {/* Profile Info Container */}
@@ -95,7 +97,7 @@ export function ProfileHeader({
                                                 </button>
                                                 <Link
                                                     to="/login"
-                                                    onClick={() => setIsLoggedIn(false)}
+                                                    onClick={() => setSession(null)}
                                                     className="flex items-center justify-center p-2.5 border-2 border-red-100 text-red-500 hover:bg-red-50 hover:border-red-200 rounded-xl transition-all duration-300"
                                                     title="Sign Out"
                                                 >
@@ -125,6 +127,7 @@ export function ProfileHeader({
                         { id: 'bulletins', label: 'Bulletins', count: statsData ? statsData.bulletins_created : 0 },
                         { id: 'comments', label: 'Comments', count: statsData ? statsData.comments_written : 0 },
                         { id: 'events', label: 'Events', count: statsData ? statsData.events_attended : 0 },
+                        ...(isOwner ? [{ id: 'donations', label: 'Donations', count: 0 }] : []),
                     ].map((tab) => (
                         <button
                             key={tab.id}

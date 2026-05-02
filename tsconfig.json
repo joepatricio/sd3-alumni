@@ -23,8 +23,8 @@
       "@pages/*": [
         "./src/app/pages/*"
       ],
-      "@utils/*": [
-        "./src/app/utils/*"
+      "@views/*": [
+        "src/app/views/*"
       ]
     }
   }
