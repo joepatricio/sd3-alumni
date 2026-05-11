@@ -92,7 +92,7 @@ export function Register() {
     const onSubmit = async (values: z.infer<typeof registerSchema>) => {
         try {
             // Check user limit
-            const usersResponse = await api.get('/USER_AUTH');
+            const usersResponse = await api.get('/userAuths');
             if (usersResponse.data.length >= 100) {
                 toast.error("Registrations are closed", {
                     description: "The maximum number of users has been reached."
@@ -101,7 +101,7 @@ export function Register() {
             }
 
             // Check if email already exists
-            const existingUser = await api.get(`/USER_AUTH?email=${values.email}`);
+            const existingUser = await api.get(`/userAuths?email=${values.email}`);
             if (existingUser.data.length > 0) {
                 toast.error("Registration failed", {
                     description: "Email is already registered."
@@ -118,7 +118,7 @@ export function Register() {
             const degree = DEGREES.find(d => d.name === values.degreeProgram);
 
             // Create USER_AUTH
-            await api.post('/USER_AUTH', {
+            await api.post('/userAuths', {
                 user_id,
                 email: values.email,
                 password_hash,

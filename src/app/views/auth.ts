@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 const AUTH_EVENT_KEY = 'usjr_alumni_auth_change';
 
 export interface UserSession {
-    user_id: number;
+    userId: string;
     email: string;
 }
 

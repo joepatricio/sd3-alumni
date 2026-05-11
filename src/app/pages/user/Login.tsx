@@ -55,7 +55,7 @@ export function Login() {
 
     const onSubmit = async (values: z.infer<typeof loginSchema>) => {
         try {
-            const response = await api.get(`/USER_AUTH?email=${values.email}`);
+            const response = await api.get(`/userAuths?email=${values.email}`);
             const users = response.data;
 
             if (users.length === 0) {
@@ -64,7 +64,7 @@ export function Login() {
             }
 
             const user = users[0];
-            const isValidPassword = bcrypt.compareSync(values.password, user.password_hash);
+            const isValidPassword = bcrypt.compareSync(values.password, user.passwordHash);
 
             if (!isValidPassword) {
                 toast.error("Login failed", { description: "Invalid email or password." });
@@ -72,11 +72,11 @@ export function Login() {
             }
 
             // Update last_login
-            await api.patch(`/USER_AUTH/${user.id}`, {
+            await api.patch(`/userAuths/${user.id}`, {
                 last_login: new Date().toISOString()
             });
 
-            setSession({ user_id: user.user_id, email: user.email }, values.rememberMe);
+            setSession({ userId: user.userId, email: user.email }, values.rememberMe);
 
             toast.success("Welcome back!", {
                 description: "You have successfully signed in.",

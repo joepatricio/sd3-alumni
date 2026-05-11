@@ -10,15 +10,15 @@ export function UserDonations({ userId, onStatsUpdate }: { userId: string, onSta
     const [donations, setDonations] = useState<any[]>([]);
     const [claimRefId, setClaimRefId] = useState('');
     const [isClaiming, setIsClaiming] = useState(false);
-    const { lookup } = useSystemLookup();
+    const { reverseLookup } = useSystemLookup();
 
     const fetchDonations = async () => {
         try {
             setLoading(true);
-            const res = await api.get('/DONATIONS', {
-                params: { user_id: userId, _sort: '-donation_date' }
+            const res = await api.get('/donations', {
+                params: { userId: userId, _embed: 'donationStatus', _sort: '-donationDate' }
             });
-            setDonations(res.data.data || res.data || []);
+            setDonations(res.data);
         } catch (err) {
             console.error('Failed to fetch donations', err);
             toast.error('Failed to load donations history.');
@@ -34,17 +34,17 @@ export function UserDonations({ userId, onStatsUpdate }: { userId: string, onSta
     const recalculateStats = async () => {
         try {
             // Fetch all public donations for this user
-            const pubRes = await api.get('/DONATIONS', {
-                params: { user_id: userId, donation_anonymous: false, donation_status_id: 501 }
+            const pubRes = await api.get('/donations', {
+                params: { userId: userId, donationAnonymous: false, donationStatusId: reverseLookup('Completed') }
             });
-            const pubDonations = pubRes.data.data || pubRes.data || [];
-            const total = pubDonations.reduce((sum: number, d: any) => sum + Number(d.donation_amount), 0);
+            const pubDonations = pubRes.data || [];
+            const total = pubDonations.reduce((sum: number, d: any) => sum + Number(d.donationAmount), 0);
 
-            const statsRes = await api.get('/USER_STATISTICS', { params: { user_id: userId } });
-            const stats = statsRes.data.data || statsRes.data;
+            const statsRes = await api.get('/userStatistics', { params: { userId: userId } });
+            const stats = statsRes.data || [];
             if (stats && stats.length > 0) {
-                await api.patch(`/USER_STATISTICS/${stats[0].id}`, {
-                    donated_amount: total
+                await api.patch(`/userStatistics/${stats[0].id}`, {
+                    donatedAmount: total
                 });
                 if (onStatsUpdate) {
                     onStatsUpdate(total);
@@ -57,16 +57,15 @@ export function UserDonations({ userId, onStatsUpdate }: { userId: string, onSta
 
     const awardAchievementIfMissing = async () => {
         try {
-            const achRes = await api.get('/USER_ACHIEVEMENT', { params: { user_id: userId, achievement_id: 2 } });
-            const ach = achRes.data.data || achRes.data;
+            const achRes = await api.get('/userAchievements', { params: { userId: userId, achievementId: 'ach_phila' } });
+            const ach = achRes.data;
             if (!ach || ach.length === 0) {
-                await api.post('/USER_ACHIEVEMENT', {
+                await api.post('/userAchievements', {
                     id: nanoid(10),
-                    user_achievement_id: nanoid(10),
-                    user_id: Number(userId),
-                    achievement_id: 2,
-                    achievement_tier: 1,
-                    achieved_date: new Date().toISOString()
+                    userId: userId,
+                    achievementId: 'ach_phila',
+                    achievementTier: 1,
+                    achievedDate: new Date().toISOString()
                 });
             }
         } catch (err) {
@@ -75,14 +74,14 @@ export function UserDonations({ userId, onStatsUpdate }: { userId: string, onSta
     };
 
     const handleToggleAnonymity = async (donation: any) => {
-        const newAnonymousState = !donation.donation_anonymous;
+        const newAnonymousState = !donation.donationAnonymous;
         try {
-            await api.patch(`/DONATIONS/${donation.id}`, {
-                donation_anonymous: newAnonymousState
+            await api.patch(`/donations/${donation.id}`, {
+                donationAnonymous: newAnonymousState
             });
 
             setDonations(prev => prev.map(d =>
-                d.id === donation.id ? { ...d, donation_anonymous: newAnonymousState } : d
+                d.id === donation.id ? { ...d, donationAnonymous: newAnonymousState } : d
             ));
 
             toast.success(`Donation marked as ${newAnonymousState ? 'private' : 'public'}.`);
@@ -102,10 +101,10 @@ export function UserDonations({ userId, onStatsUpdate }: { userId: string, onSta
 
         try {
             setIsClaiming(true);
-            const res = await api.get('/DONATIONS', {
-                params: { donation_reference_id: claimRefId.trim() }
+            const res = await api.get('/donations', {
+                params: { donationReference: claimRefId.trim() }
             });
-            const found = res.data.data || res.data;
+            const found = res.data;
 
             if (!found || found.length === 0) {
                 toast.error("No donation found with that reference ID.");
@@ -114,8 +113,8 @@ export function UserDonations({ userId, onStatsUpdate }: { userId: string, onSta
 
             const targetDonation = found[0];
 
-            if (targetDonation.user_id) {
-                if (String(targetDonation.user_id) === String(userId)) {
+            if (targetDonation.userId) {
+                if (String(targetDonation.userId) === String(userId)) {
                     toast.info("This donation is already linked to your account.");
                 } else {
                     toast.error("This donation has already been claimed by another account.");
@@ -124,8 +123,8 @@ export function UserDonations({ userId, onStatsUpdate }: { userId: string, onSta
             }
 
             // Claim it!
-            await api.patch(`/DONATIONS/${targetDonation.id}`, {
-                user_id: Number(userId)
+            await api.patch(`/donations/${targetDonation.id}`, {
+                userId: userId
             });
 
             toast.success("Successfully claimed donation!");
@@ -197,27 +196,27 @@ export function UserDonations({ userId, onStatsUpdate }: { userId: string, onSta
                                 <div>
                                     <div className="flex items-center gap-3 mb-1">
                                         <span className="font-bold text-lg text-brand-primary">
-                                            {formatCurrency(donation.donation_amount)}
+                                            {formatCurrency(donation.donationAmount)}
                                         </span>
-                                        <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${getStatusColor(lookup(donation.donation_status_id))}`}>
-                                            {lookup(donation.donation_status_id)}
+                                        <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${getStatusColor(donation.donationStatus.statusName)}`}>
+                                            {donation.donationStatus.statusName}
                                         </span>
                                     </div>
                                     <div className="text-sm text-gray-500 space-y-1">
-                                        <p>Date: {new Date(donation.donation_date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
-                                        <p className="font-mono text-xs">Ref: {donation.donation_reference_id}</p>
+                                        <p>Date: {new Date(donation.donationDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
+                                        <p className="font-mono text-xs">Ref: {donation.donationReference}</p>
                                     </div>
                                 </div>
 
                                 <div className="flex items-center sm:justify-end">
-                                    <button
+                                    {(donation.donationStatus.statusName !== 'Failed') && <button
                                         onClick={() => handleToggleAnonymity(donation)}
-                                        className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors border ${donation.donation_anonymous
+                                        className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors border ${donation.donationAnonymous
                                             ? 'border-gray-200 text-gray-600 hover:bg-gray-100'
                                             : 'border-brand-primary/20 text-brand-primary bg-brand-primary/5 hover:bg-brand-primary/10'
                                             }`}
                                     >
-                                        {donation.donation_anonymous ? (
+                                        {donation.donationAnonymous ? (
                                             <>
                                                 <EyeOff className="w-4 h-4" />
                                                 Private
@@ -228,7 +227,7 @@ export function UserDonations({ userId, onStatsUpdate }: { userId: string, onSta
                                                 Public
                                             </>
                                         )}
-                                    </button>
+                                    </button>}
                                 </div>
                             </div>
                         ))}

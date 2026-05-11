@@ -1,17 +1,17 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ProfileHeader } from '@components/user/ProfileHeader';
-import { api, AchievementIconMap, useProfileRoute, type ProfileData, type UserStatisticsData } from '@/app/views/api';
+import { api, AchievementIconMap, useProfileRoute, useSystemLookup, type ProfileData, type UserStatisticsData } from '@/app/views/api';
 import { NotFound } from '@pages/NotFound';
 import { Trophy, Loader2 } from 'lucide-react';
 
 export function Achievements() {
     const navigate = useNavigate();
     const { profileId, isOwner } = useProfileRoute();
+    const { lookup, loading: isLookupLoading } = useSystemLookup();
 
     const [loading, setLoading] = useState(true);
     const [profile, setProfile] = useState<ProfileData | null>(null);
-    const [degree, setDegree] = useState<string>('');
     const [statsData, setStatsData] = useState<UserStatisticsData | null>(null);
     const [achievements, setAchievements] = useState<any[]>([]);
 
@@ -19,35 +19,19 @@ export function Achievements() {
         const fetchAchievementsData = async () => {
             try {
                 setLoading(true);
-                const [profileRes, statsRes, degreesRes, achUserRes, achAllRes] = await Promise.all([
-                    api.get<any>('/PROFILE', { params: { 'user_id': profileId } }),
-                    api.get<any>('/USER_STATISTICS', { params: { 'user_id': profileId } }),
-                    api.get<any>('/DEGREE'),
-                    api.get(`/USER_ACHIEVEMENT`, { params: { 'user_id': profileId, _sort: '-achieved_date' } }),
-                    api.get(`/ACHIEVEMENTS`)
+                const [profileRes, statsRes, achUserRes] = await Promise.all([
+                    api.get<any>('/profiles', { params: { 'userId': profileId, '_embed': 'degree' } }),
+                    api.get<any>('/userStatistics', { params: { 'userId': profileId } }),
+                    api.get(`/userAchievements`, { params: { 'userId': profileId, _sort: '-achievedDate', '_embed': 'achievement' } })
                 ]);
 
-                const profileData = profileRes.data.data || profileRes.data;
-                const profile = Array.isArray(profileData) ? profileData[0] : profileData;
-
-                const statsDataRaw = statsRes.data.data || statsRes.data;
-                const statsData = Array.isArray(statsDataRaw) ? statsDataRaw[0] : statsDataRaw;
-
-                const degrees = degreesRes.data.data || degreesRes.data || [];
-                const degreeData = degrees.find((d: any) => Number(d.degree_id) === Number(profile.degree_id));
+                const profile = Array.isArray(profileRes.data) ? profileRes.data[0] : profileRes.data;
 
                 setProfile(profile);
-                setDegree(degreeData ? `${degreeData.degree_name} (${degreeData.degree_abbr})` : '');
-                setStatsData(statsData);
+                setStatsData(Array.isArray(statsRes.data) ? statsRes.data[0] : statsRes.data);
 
-                const userAchs = achUserRes.data.data || achUserRes.data || [];
-                const allAchs = achAllRes.data.data || achAllRes.data || [];
-                const fullAchs = userAchs.map((ua: any) => {
-                    const ach = allAchs.find((a: any) => String(a.achievement_id) === String(ua.achievement_id) && Number(a.achievement_tier) === Number(ua.achievement_tier));
-                    return ach ? { ...ach, achieved_date: ua.achieved_date } : null;
-                }).filter(Boolean);
-
-                setAchievements(fullAchs);
+                const userAchs = achUserRes.data || [];
+                setAchievements(userAchs);
             } catch (err) {
                 console.error("Failed to load achievements", err);
             } finally {
@@ -58,7 +42,7 @@ export function Achievements() {
         fetchAchievementsData();
     }, [profileId]);
 
-    if (loading) {
+    if (loading || isLookupLoading) {
         return (
             <div className="min-h-screen bg-gray-50 flex items-center justify-center">
                 <Loader2 className="w-12 h-12 text-brand-primary animate-spin" />
@@ -78,8 +62,8 @@ export function Achievements() {
         <div className="min-h-screen bg-gray-50">
             <div className="max-w-6xl mx-auto px-4 md:px-8 py-12">
                 <ProfileHeader
-                    name={profile.user_name}
-                    degree={degree}
+                    name={profile.userName}
+                    degree={profile.degree ? `${profile.degree.degreeName} (${profile.degree.degreeAbbr})` : lookup(profile.degreeId)}
                     graduationYear={profile.batch.toString()}
                     profileImage={profile.profileImage}
                     bio="Alumni of University of San Jose - Recoletos."
@@ -87,7 +71,7 @@ export function Achievements() {
                     onEdit={isOwner ? () => navigate('/profile/edit') : undefined}
                     activeTab="achievements"
                     onTabChange={handleTabChange}
-                    statsData={statsData}
+                    statsData={statsData as any}
                 />
 
                 <div className="bg-white rounded-lg shadow-md p-6 md:p-8">
@@ -102,7 +86,9 @@ export function Achievements() {
                     ) : (
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             {achievements.map((achv, i) => {
-                                const Icon = AchievementIconMap[achv.achievement_icon] || Trophy;
+                                const achievement = achv.achievement;
+                                if (!achievement) return null;
+                                const Icon = AchievementIconMap[achievement.achievementIcon] || Trophy;
 
                                 return (
                                     <div
@@ -114,18 +100,18 @@ export function Achievements() {
                                         </div>
                                         <div className="flex flex-col flex-1">
                                             <h3 className="font-bold text-lg text-gray-900 group-hover:text-brand-primary transition-colors">
-                                                {achv.achievement_title}
+                                                {achievement.achievementTitle}
                                             </h3>
                                             <p className="text-sm text-gray-600 mb-2">
-                                                {achv.achievement_description}
+                                                {achievement.achievementDescription}
                                             </p>
                                             <div className="text-xs text-gray-400 mt-auto font-medium">
-                                                Acquired: {new Date(achv.achieved_date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+                                                Acquired: {new Date(achv.achievedDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
                                             </div>
                                         </div>
-                                        {achv.achievement_tier && (
+                                        {achv.achievementTier && (
                                             <div className="absolute top-4 right-4 text-gray-300 font-black text-4xl opacity-20 pointer-events-none">
-                                                {achv.achievement_tier}
+                                                {achv.achievementTier}
                                             </div>
                                         )}
                                     </div>

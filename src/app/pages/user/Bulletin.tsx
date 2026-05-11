@@ -164,7 +164,7 @@ export function Bulletin() {
                             {paginatedItems.map((item) => (
                                 <div
                                     key={item.id}
-                                    className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow"
+                                    className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow relative group"
                                 >
                                     {viewMode === 'article' ? (
                                         /* Article View */
@@ -182,7 +182,7 @@ export function Bulletin() {
                                                 <div className="flex items-center gap-3 mb-4">
                                                     <Link
                                                         to="/profile"
-                                                        className="flex items-center gap-2 hover:opacity-80 transition-opacity"
+                                                        className="flex items-center gap-2 hover:opacity-80 transition-opacity relative z-10"
                                                     >
                                                         <img
                                                             src={item.author.image}
@@ -201,7 +201,7 @@ export function Bulletin() {
                                                 </div>
                                                 <Link
                                                     to={`/bulletin/${item.id}`}
-                                                    className="block group"
+                                                    className="block group before:absolute before:inset-0 before:z-0"
                                                 >
                                                     <h2 className="text-2xl font-bold mb-3 group-hover:text-brand-primary transition-colors">
                                                         {item.title}
@@ -217,7 +217,7 @@ export function Bulletin() {
                                         <div className="p-6 flex gap-4">
                                             <Link
                                                 to="/profile"
-                                                className="flex-shrink-0 hover:opacity-80 transition-opacity"
+                                                className="flex-shrink-0 hover:opacity-80 transition-opacity relative z-10"
                                             >
                                                 <img
                                                     src={item.author.image}
@@ -228,13 +228,13 @@ export function Bulletin() {
                                             <div className="flex-1 min-w-0">
                                                 <Link
                                                     to={`/bulletin/${item.id}`}
-                                                    className="block group"
+                                                    className="block group before:absolute before:inset-0 before:z-0"
                                                 >
                                                     <h2 className="text-xl font-bold mb-2 group-hover:text-brand-primary transition-colors">
                                                         {item.title}
                                                     </h2>
                                                 </Link>
-                                                <div className="flex items-center gap-2 mb-3 text-sm text-gray-600">
+                                                <div className="flex items-center gap-2 mb-3 text-sm text-gray-600 relative z-10">
                                                     <Link
                                                         to="/profile"
                                                         className="hover:text-brand-primary transition-colors"

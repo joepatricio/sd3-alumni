@@ -5,7 +5,7 @@ import { SiFacebook, SiX, SiInstagram, SiLinkedin } from 'react-icons/si';
 import { toast } from 'sonner';
 import { useAuth } from '@/app/views/auth';
 import { formatCurrency } from '@/app/views/formatters';
-import { api } from '@/app/views/api';
+import { api, useSystemLookup } from '@/app/views/api';
 import { customAlphabet, nanoid } from 'nanoid';
 
 export function Donation() {
@@ -14,6 +14,7 @@ export function Donation() {
     const [customAmount, setCustomAmount] = useState('');
     const [donorEmail, setDonorEmail] = useState('');
     const [isAnonymous, setIsAnonymous] = useState(false);
+    const { reverseLookup } = useSystemLookup();
 
     const amounts = [500, 1000, 2000, 5000, 10000, 20000];
 
@@ -40,42 +41,44 @@ export function Donation() {
 
         const newDonation = {
             id: donationId,
-            donation_id: donationId,
-            donation_reference_id: refId,
-            user_id: isLoggedIn ? Number(session?.user_id) : null,
-            donation_status_id: 501,
-            donation_date: new Date().toISOString(),
-            donation_amount: amount,
-            donation_amount_php: formatCurrency(amount),
-            donation_anonymous: !isLoggedIn || isAnonymous,
-            donation_email: isLoggedIn ? session?.email : donorEmail
+            donationId: donationId,
+            donationReference: refId,
+            userId: isLoggedIn ? session?.userId : null,
+            donationStatusId: reverseLookup('Completed'),
+            donationDate: new Date().toISOString(),
+            donationAmount: amount,
+            donationAmountPhp: formatCurrency(amount),
+            donationAnonymous: !isLoggedIn || isAnonymous,
+            donationEmail: isLoggedIn ? session?.email : donorEmail
         };
 
         try {
-            await api.post('/DONATIONS', newDonation);
+            await api.post('/donations', newDonation);
 
             if (isLoggedIn && !isAnonymous) {
-                const statsRes = await api.get('/USER_STATISTICS', { params: { user_id: session?.user_id } });
-                const stats = statsRes.data.data || statsRes.data;
+                const statsRes = await api.get('/userStatistics', { params: { userId: session?.userId } });
+                const stats = statsRes.data;
                 if (stats && stats.length > 0) {
                     const currentStats = stats[0];
-                    await api.patch(`/USER_STATISTICS/${currentStats.id}`, {
-                        donated_amount: currentStats.donated_amount + amount
+                    await api.patch(`/userStatistics/${currentStats.id}`, {
+                        donatedAmount: currentStats.donatedAmount + amount
                     });
                 }
             }
 
             if (isLoggedIn) {
-                const achRes = await api.get('/USER_ACHIEVEMENT', { params: { user_id: session?.user_id, achievement_id: 2 } });
-                const ach = achRes.data.data || achRes.data;
+                const achRes = await api.get('/achievements', { params: { 'achievementTitle': 'Philanthropist' } });
+                const id_donate = achRes.data[0].id;
+                const user_ach_donated = await api.get('/userAchievements', { params: { userId: session?.userId, achievementId: id_donate } });
+                const ach = user_ach_donated.data;
+
                 if (!ach || ach.length === 0) {
-                    await api.post('/USER_ACHIEVEMENT', {
+                    await api.post('/userAchievements', {
                         id: nanoid(10),
-                        user_achievement_id: nanoid(10),
-                        user_id: Number(session?.user_id),
-                        achievement_id: 2,
-                        achievement_tier: 1,
-                        achieved_date: new Date().toISOString()
+                        userId: session?.userId,
+                        achievementId: id_donate,
+                        achievementTier: 1,
+                        achievedDate: new Date().toISOString()
                     });
                 }
             }

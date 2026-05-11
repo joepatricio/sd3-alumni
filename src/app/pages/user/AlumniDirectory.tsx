@@ -25,12 +25,12 @@ export function AlumniDirectory() {
         name: '',
         company: '',
         year: '',
-        degree_id: ''
+        degreeId: ''
     });
 
     useEffect(() => {
-        api.get<any>('/DEGREE').then(res => setDegrees(res.data.data || res.data || []));
-        api.get('/PROFILE', { params: { _page: 1, _per_page: 1 } }).then(res => setAbsoluteTotalAlumni(res.data.items || 0));
+        api.get<any>('/degrees').then(res => setDegrees(res.data || []));
+        api.get('/profiles', { params: { _page: 1, _per_page: 1 } }).then(res => setAbsoluteTotalAlumni(res.data.items || 0));
     }, []);
 
     useEffect(() => {
@@ -41,30 +41,32 @@ export function AlumniDirectory() {
             try {
                 const params: Record<string, string | number> = {
                     _page: currentPage,
-                    _per_page: ITEMS_PER_PAGE
+                    _per_page: ITEMS_PER_PAGE,
+                    _sort: 'id',
+                    _embed: 'degree'
                 };
 
-                if (activeFilters.name) params['user_name:contains'] = activeFilters.name;
+                if (activeFilters.name) params['userName:contains'] = activeFilters.name;
                 if (activeFilters.company) params['company:contains'] = activeFilters.company;
                 if (activeFilters.year) params.batch = activeFilters.year;
-                if (activeFilters.degree_id) params.degree_id = Number(activeFilters.degree_id);
+                if (activeFilters.degreeId) params.degreeId = activeFilters.degreeId;
 
                 // json-server v1 returns { first, prev, next, last, pages, items, data }
-                const res = await api.get<any>('/PROFILE', { params });
+                const res = await api.get<any>('/profiles', { params });
 
                 const totalCount = res.data.items || 0;
                 setTotalPages(Math.ceil(totalCount / ITEMS_PER_PAGE));
 
                 const profiles: ProfileData[] = res.data.data || [];
                 const cards: AlumniCard[] = profiles.map((profile: ProfileData) => {
-                    const deg = degrees.find(d => Number(d.degree_id) === Number(profile.degree_id));
+                    const deg = profile.degree;
                     return {
-                        user_id: profile.user_id,
-                        name: profile.user_name,
+                        userId: profile.userId,
+                        name: profile.userName,
                         company: profile.company || '',
                         currentJob: profile.currentJob || '',
                         batch: profile.batch,
-                        degreeName: deg ? `${deg.degree_name} (${deg.degree_abbr})` : 'Unknown Degree',
+                        degreeName: deg ? `${deg.degreeName} (${deg.degreeAbbr})` : 'Unknown Degree',
                         profileImage: profile.profileImage
                     };
                 });
@@ -85,7 +87,7 @@ export function AlumniDirectory() {
             name: searchName,
             company: searchCompany,
             year: collegeYear,
-            degree_id: collegeDegreeId
+            degreeId: collegeDegreeId
         });
         setCurrentPage(1);
     };
@@ -95,7 +97,7 @@ export function AlumniDirectory() {
         setSearchCompany('');
         setCollegeYear('');
         setCollegeDegreeId('');
-        setActiveFilters({ name: '', company: '', year: '', degree_id: '' });
+        setActiveFilters({ name: '', company: '', year: '', degreeId: '' });
         setCurrentPage(1);
     };
 
@@ -188,9 +190,9 @@ export function AlumniDirectory() {
                                 >
                                     <option value="">All Degree Programs</option>
                                     {degrees.map((deg) => {
-                                        const name = `${deg.degree_name} (${deg.degree_abbr})`;
+                                        const name = `${deg.degreeName} (${deg.degreeAbbr})`;
                                         return (
-                                            <option key={deg.degree_id} value={deg.degree_id}>
+                                            <option key={deg.id} value={deg.id}>
                                                 {name}
                                             </option>
                                         );
@@ -238,8 +240,8 @@ export function AlumniDirectory() {
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                             {displayedAlumni.map((person) => (
                                 <Link
-                                    key={person.user_id}
-                                    to={`/profile/${person.user_id}`}
+                                    key={person.userId}
+                                    to={`/profile/${person.userId}`}
                                     className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group"
                                 >
                                     <div className="p-6 flex items-start space-x-4">
@@ -261,7 +263,7 @@ export function AlumniDirectory() {
                                             {(person.currentJob || person.company) && (
                                                 <div className="mt-2 pt-2 border-t border-gray-50">
                                                     <p className="text-sm text-gray-700 truncate">
-                                                        {person.currentJob && <span className="font-medium">{person.currentJob}</span>}
+                                                        {person.currentJob && <span>{person.currentJob}</span>}
                                                         {person.currentJob && person.company && <span> at </span>}
                                                         {person.company && <span className="text-gray-600">{person.company}</span>}
                                                     </p>
