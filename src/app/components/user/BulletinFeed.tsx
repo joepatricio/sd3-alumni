@@ -1,18 +1,64 @@
-import { Clock, FileText, Calendar } from 'lucide-react';
-import { bulletins } from '@assets/mockData';
+import { useState, useEffect, useMemo } from 'react';
+import { Clock, FileText, Calendar, Loader2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
-
-const mockBulletins = bulletins.filter(b => b.status === "Approved");
+import { api, useSystemLookup, type BulletinData, type ProfileData } from '@/app/views/api';
 
 export function BulletinFeed() {
-  const bulletins = mockBulletins.slice(0, 7).map((b) => ({
-    ...b,
-    excerpt: b.preview,
-    author: b.author.name,
-    image: b.heroImage,
-  }));
+  const { reverseLookup } = useSystemLookup();
+  const [bulletins, setBulletins] = useState<BulletinData[]>([]);
+  const [profilesMap, setProfilesMap] = useState<Record<string, ProfileData>>({});
+  const [loading, setLoading] = useState(true);
 
-  if (bulletins.length === 0) {
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [bRes] = await Promise.all([
+          api.get('/bulletins', {
+            params: {
+              contentStatusId: reverseLookup('Approved'),
+              _embed: 'profile',
+              _page: 1,
+              _per_page: 7,
+              _sort: '-reviewDate'
+            }
+          })
+        ]);
+        const bData = bRes.data.data;
+
+        setBulletins(bData || []);
+        const pMap: Record<string, ProfileData> = {};
+        bData.forEach((b: BulletinData) => {
+          if (b.profile) pMap[b.profileId] = b.profile;
+        });
+        setProfilesMap(pMap);
+      } catch (err) {
+        console.error("Failed to fetch bulletins:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
+
+  const displayBulletins = useMemo(() => {
+    const sorted = bulletins
+      .sort((a, b) => new Date(b.bulletinDate).getTime() - new Date(a.bulletinDate).getTime());
+
+    return sorted;
+  }, [bulletins, reverseLookup]);
+
+  if (loading) {
+    return (
+      <section id="bulletin" className="py-16 bg-gray-50">
+        <div className="max-w-6xl mx-auto px-4 md:px-8 text-center">
+          <Loader2 className="w-12 h-12 text-brand-primary animate-spin mx-auto mb-4" />
+          <p className="text-gray-500">Loading recent bulletins...</p>
+        </div>
+      </section>
+    );
+  }
+
+  if (displayBulletins.length === 0) {
     return (
       <section id="bulletin" className="py-16 bg-gray-50">
         <div className="max-w-6xl mx-auto px-4 md:px-8 text-center">
@@ -28,6 +74,9 @@ export function BulletinFeed() {
       </section>
     );
   }
+
+  const featured = displayBulletins[0];
+  const featuredAuthor = profilesMap[featured.profileId]?.userName || "Unknown Author";
 
   return (
     <section id="bulletin" className="py-16 bg-gray-50">
@@ -51,10 +100,10 @@ export function BulletinFeed() {
         <div className="bg-white rounded-lg overflow-hidden shadow-md hover:shadow-xl transition-shadow mb-8">
           <div className="grid md:grid-cols-2 gap-0">
             <div className="relative h-64 md:h-full max-h-[20rem] overflow-hidden bg-gray-100">
-              {bulletins[0].image ? (
+              {featured.bulletinImage ? (
                 <img
-                  src={bulletins[0].image}
-                  alt={bulletins[0].title}
+                  src={featured.bulletinImage}
+                  alt={featured.title}
                   className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
                 />
               ) : (
@@ -70,20 +119,20 @@ export function BulletinFeed() {
               <div className="flex items-center gap-4 mb-4">
                 <span className="text-sm text-gray-500 flex items-center gap-1">
                   <Calendar className="w-4 h-4" />
-                  {new Date(bulletins[0].date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+                  {new Date(featured.bulletinDate).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
                 </span>
                 <span className="text-sm text-gray-500 flex items-center gap-1">
                   <Clock className="w-4 h-4" />
-                  {bulletins[0].readTime}
+                  {featured.readTimeMinutes} min read
                 </span>
               </div>
-              <h3 className="text-2xl font-bold mb-4">{bulletins[0].title}</h3>
-              <p className="text-gray-600 mb-4">{bulletins[0].excerpt}</p>
+              <h3 className="text-2xl font-bold mb-4 line-clamp-2">{featured.title}</h3>
+              <p className="text-gray-600 mb-4 line-clamp-3">{featured.content}</p>
               <div className="flex items-center justify-between">
                 <div className="text-sm text-gray-500">
-                  <p>By {bulletins[0].author}</p>
+                  <p>By <Link to={`/profile/${featured.profileId}`} className="hover:text-brand-primary transition-colors">{featuredAuthor}</Link></p>
                 </div>
-                <Link to={`/bulletin/${bulletins[0].id}`} className="bg-brand-primary cursor-pointer text-white px-6 py-2 rounded-lg hover:bg-brand-primary-hover transition-colors font-semibold">
+                <Link to={`/bulletin/${featured.id}`} className="bg-brand-primary cursor-pointer text-white px-6 py-2 rounded-lg hover:bg-brand-primary-hover transition-colors font-semibold">
                   Read More
                 </Link>
               </div>
@@ -93,50 +142,53 @@ export function BulletinFeed() {
 
         {/* Grid of Articles */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {bulletins.slice(1).map((bulletin) => (
-            <div
-              key={bulletin.id}
-              className="bg-white rounded-lg overflow-hidden shadow-md hover:shadow-xl transition-shadow"
-            >
-              <div className="relative h-48 overflow-hidden bg-gray-100">
-                {bulletin.image ? (
-                  <img
-                    src={bulletin.image}
-                    alt={bulletin.title}
-                    className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center text-gray-400">
-                    <FileText className="w-8 h-8 opacity-50" />
+          {displayBulletins.slice(1).map((bulletin) => {
+            const authorName = profilesMap[bulletin.profileId]?.userName || "Unknown Author";
+            return (
+              <div
+                key={bulletin.id}
+                className="bg-white rounded-lg overflow-hidden shadow-md hover:shadow-xl transition-shadow"
+              >
+                <div className="relative h-48 overflow-hidden bg-gray-100">
+                  {bulletin.bulletinImage ? (
+                    <img
+                      src={bulletin.bulletinImage}
+                      alt={bulletin.title}
+                      className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-gray-400">
+                      <FileText className="w-8 h-8 opacity-50" />
+                    </div>
+                  )}
+                </div>
+                <div className="p-6">
+                  <div className="flex items-center gap-4 mb-3">
+                    <span className="text-xs text-gray-500 flex items-center gap-1">
+                      <Calendar className="w-3 h-3" />
+                      {new Date(bulletin.bulletinDate).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+                    </span>
+                    <span className="text-xs text-gray-500 flex items-center gap-1">
+                      <Clock className="w-3 h-3" />
+                      {bulletin.readTimeMinutes} min read
+                    </span>
                   </div>
-                )}
-              </div>
-              <div className="p-6">
-                <div className="flex items-center gap-4 mb-3">
-                  <span className="text-xs text-gray-500 flex items-center gap-1">
-                    <Calendar className="w-3 h-3" />
-                    {new Date(bulletin.date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
-                  </span>
-                  <span className="text-xs text-gray-500 flex items-center gap-1">
-                    <Clock className="w-3 h-3" />
-                    {bulletin.readTime}
-                  </span>
-                </div>
-                <h3 className="text-lg font-semibold mb-2 line-clamp-2">
-                  {bulletin.title}
-                </h3>
-                <p className="text-gray-600 text-sm mb-4 line-clamp-3">
-                  {bulletin.excerpt}
-                </p>
-                <div className="flex items-center justify-between text-sm text-gray-500">
-                  <span>By {bulletin.author}</span>
-                  <Link to={`/bulletin/${bulletin.id}`} className="text-brand-primary cursor-pointer hover:text-brand-primary-hover font-semibold">
-                    Read →
-                  </Link>
+                  <h3 className="text-lg font-semibold mb-2 line-clamp-2">
+                    {bulletin.title}
+                  </h3>
+                  <p className="text-gray-600 text-sm mb-4 line-clamp-3">
+                    {bulletin.content}
+                  </p>
+                  <div className="flex items-center justify-between text-sm text-gray-500">
+                    <span>By <Link to={`/profile/${bulletin.profileId}`} className="hover:text-brand-primary transition-colors">{authorName}</Link></span>
+                    <Link to={`/bulletin/${bulletin.id}`} className="text-brand-primary cursor-pointer hover:text-brand-primary-hover font-semibold">
+                      Read →
+                    </Link>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
         <div className="text-center mt-8 sm:hidden">

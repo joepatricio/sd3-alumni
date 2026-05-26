@@ -177,6 +177,8 @@ def generate_phase_2():
         batch = random.randint(birth_year + 20, 2025)
 
         PROFILE.append({
+            # Duplicate id required to allow prototype to use _embed
+            "id": user_id,
             "userId": user_id,
             "userName": name,
             "bio": f"A proud alumnus of University of San Jose - Recoletos. Batch of {batch}.",
@@ -381,7 +383,7 @@ def generate_phase_4(USER):
         BULLETIN.append({
             "id": bid,
             "adminId": random.choice(["admin1", "admin2", "admin3"]),
-            "authorId": author_id,
+            "userId": author_id,
             "contentStatusId": content_status_id,
             "bulletinDate": bulletin_date,
             "reviewDate": review_date,
@@ -431,7 +433,7 @@ def generate_phase_4(USER):
             "id": eid,
             "adminId": random.choice(["admin1", "admin2", "admin3"]),
             "authorId": organizer_id,
-            "statusId": status_id,
+            "contentStatusId": status_id,
             "locationId": location_id,
             "eventCategoryId": event_category_id,
             "eventDate": event_date,
@@ -493,6 +495,7 @@ def generate_phase_5(USER, BULLETIN, EVENTS, USER_STATISTICS, USER_CONNECTIONS, 
         })
         
     # 3. USER_RSVP
+    # TODO this fucking thing. The RSVP is only valid if event is accepted. 
     for event in EVENTS:
         num_rsvps = random.randint(5, 15)
         attendees = random.sample(user_ids, num_rsvps)
@@ -500,7 +503,8 @@ def generate_phase_5(USER, BULLETIN, EVENTS, USER_STATISTICS, USER_CONNECTIONS, 
             USER_RSVP.append({
                 "userId": uid,
                 "eventId": event["id"],
-                "isAttending": random.choice([True, False])
+                "isAttending": random.choice([True, False]),
+                "isValid": event["contentStatusId"] == "Accepted"
             })
             
     # 4. Finalize USER_STATISTICS and dynamic interaction achievements
@@ -511,13 +515,16 @@ def generate_phase_5(USER, BULLETIN, EVENTS, USER_STATISTICS, USER_CONNECTIONS, 
         accepted_status_id = get_connection_status_id("Accepted")
         stat["userConnections"] = sum(1 for c in USER_CONNECTIONS if c["userId"] == uid and c["connectionStatusId"] == accepted_status_id)
         
-        attended_count = sum(1 for r in USER_RSVP if r["userId"] == uid and r["isAttending"])
+        # TODO this is very shit. Either create a system to only count attended events
+        # OR take a more simple approach and only track affirmative RSVP responses in achievements.S
+        rsvp_going = [r for r in USER_RSVP if r["userId"] == uid and r["isAttending"]]
+        attended_count = sum(1 for e in EVENTS if e["id"] in [r["eventId"] for r in rsvp_going] and datetime.strptime(e["eventDate"], "%Y-%m-%dT%H:%M:%S.000Z") < datetime.now())
         stat["eventsAttended"] = attended_count
         
         events_count = sum(1 for e in EVENTS if e["authorId"] == uid)
         stat["eventsCreated"] = events_count
 
-        bulletin_count = sum(1 for b in BULLETIN if b["authorId"] == uid)
+        bulletin_count = sum(1 for b in BULLETIN if b["userId"] == uid)
         stat["bulletinsCreated"] = bulletin_count
 
         comment_count = sum(1 for c in COMMENTS if c["userId"] == uid)

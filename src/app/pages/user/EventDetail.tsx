@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import {
     Calendar,
@@ -11,6 +11,7 @@ import {
     CheckCircle2,
     XCircle,
     AlertCircle,
+    Loader2
 } from 'lucide-react';
 import { CreateEventModal } from '@components/user/CreateEventModal';
 import { Button } from '@components/ui/button';
@@ -18,48 +19,162 @@ import { Badge } from '@components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@components/ui/avatar';
 import { Alert, AlertDescription, AlertTitle } from '@components/ui/alert';
 import { NotFound } from '@pages/NotFound';
-import { events } from '@assets/mockData';
 import { useAuth } from '@/app/views/auth';
+import { api, useSystemLookup, type EventData, type ProfileData } from '@/app/views/api';
 
 export function EventDetail() {
     const { id } = useParams<{ id: string }>();
-    const [rsvpStatus, setRsvpStatus] = useState<'going' | 'not_going' | null>(null);
+    const { lookup, reverseLookup } = useSystemLookup();
     const isAdmin = !!localStorage.getItem('adminToken');
-    const { isLoggedIn } = useAuth();
+    const { isLoggedIn, session } = useAuth();
 
-    // Mock data for the event being edited
-    // In a real app, this would be fetched based on the ID
-    const eventData = events.find((e) => e.id === id);
+    const [eventData, setEventData] = useState<EventData | null>(null);
+    const [organizer, setOrganizer] = useState<ProfileData | null>(null);
+    const [loading, setLoading] = useState(true);
+    const [rsvpLoading, setRsvpLoading] = useState(false);
+    const [isSuspended, setIsSuspended] = useState(false);
 
-    if (!eventData || eventData.status === "Rejected") {
+    useEffect(() => {
+        const fetchEventAndOrganizer = async () => {
+            try {
+                const [eventRes, usersRes] = await Promise.all([
+                    api.get(`/events/${id}?_embed=location&_embed=userRsvps`),
+                    api.get('/users')
+                ]);
+                const event = eventRes.data;
+                const allUsers = Array.isArray(usersRes.data) ? usersRes.data : (usersRes.data?.data || []);
+
+                if (event?.authorId) {
+                    const authorUser = allUsers.find((u: any) => String(u.id) === String(event.authorId));
+                    if (authorUser && authorUser.userStatusId === reverseLookup('Banned')) {
+                        setEventData(null);
+                        setLoading(false);
+                        return;
+                    }
+
+                    const profRes = await api.get(`/profiles?userId=${event.authorId}`);
+                    const profData = Array.isArray(profRes.data) ? profRes.data : profRes.data.data;
+                    if (profData && profData.length > 0) {
+                        setOrganizer(profData[0]);
+                    }
+                }
+
+                if (session?.userId) {
+                    const currentU = allUsers.find((u: any) => String(u.id) === String(session.userId));
+                    if (currentU && currentU.userStatusId === reverseLookup('Suspended')) {
+                        setIsSuspended(true);
+                    }
+                }
+
+                setEventData(event);
+            } catch (error) {
+                console.error("Failed to fetch event details:", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchEventAndOrganizer();
+    }, [id]);
+
+    if (loading) {
+        return (
+            <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center">
+                <Loader2 className="w-12 h-12 text-brand-primary animate-spin mb-4" />
+                <p className="text-gray-500">Loading event details...</p>
+            </div>
+        );
+    }
+
+    const currentStatusName = eventData ? lookup(eventData.contentStatusId) : null;
+
+    if (!eventData || currentStatusName === "Rejected") {
         return <NotFound />;
     }
 
-    const isPastEvent = new Date(eventData.date) < new Date();
+    const isPastEvent = new Date(eventData.eventDate) < new Date();
 
-    // Calculate display time
-    const displayTime = `${eventData.startTimeHour}:${eventData.startTimeMinute} ${eventData.startTimeAmPm} - ${eventData.endTimeHour}:${eventData.endTimeMinute} ${eventData.endTimeAmPm}`;
-
-    const handleRsvp = (status: 'going' | 'not_going') => {
-        setRsvpStatus(status);
-        // In a real app, this would accept the invite via API
+    const formatTime = (timeStr: string) => {
+        // timeStr might be "16:00:00"
+        if (!timeStr) return '';
+        const [hours, minutes] = timeStr.split(':');
+        const h = parseInt(hours, 10);
+        const ampm = h >= 12 ? 'PM' : 'AM';
+        const displayHours = h % 12 || 12;
+        return `${displayHours}:${minutes} ${ampm}`;
     };
 
-    const formatLocation = (event: any) => {
-        if (event.category === 'Virtual') return `Virtual (${event.modality || 'Online'})`;
+    const displayTime = `${formatTime(eventData.startTime)} - ${formatTime(eventData.endTime)}`;
+    const categoryName = lookup(eventData.eventCategoryId);
+
+    const currentUserRsvp = eventData.userRsvps?.find(r => r.userId === session?.userId?.toString());
+    const rsvpStatus = currentUserRsvp ? (currentUserRsvp.isAttending ? 'going' : 'not_going') : null;
+
+    // Calculate total going responses directly from the field
+    const goingResponsesCount = eventData.responses;
+
+    const handleRsvp = async (status: 'going' | 'not_going') => {
+        if (!session?.userId || !eventData) return;
+        setRsvpLoading(true);
+        const isAttending = status === 'going';
+
+        try {
+            let newResponsesCount = eventData.responses || 0;
+
+            if (currentUserRsvp) {
+                // Update existing if status changed
+                if (currentUserRsvp.isAttending !== isAttending) {
+                    await api.patch(`/userRsvps/${currentUserRsvp.id}`, { isAttending });
+                    newResponsesCount += isAttending ? 1 : -1;
+
+                    await api.patch(`/events/${eventData.id}`, { responses: newResponsesCount });
+
+                    setEventData(prev => prev ? {
+                        ...prev,
+                        responses: newResponsesCount,
+                        userRsvps: prev.userRsvps?.map(r => r.id === currentUserRsvp.id ? { ...r, isAttending } : r)
+                    } : null);
+                }
+            } else {
+                // Create new
+                const res = await api.post('/userRsvps', {
+                    userId: session.userId.toString(),
+                    eventId: eventData.id,
+                    isAttending
+                });
+
+                if (isAttending) {
+                    newResponsesCount += 1;
+                    await api.patch(`/events/${eventData.id}`, { responses: newResponsesCount });
+                }
+
+                setEventData(prev => prev ? {
+                    ...prev,
+                    responses: newResponsesCount,
+                    userRsvps: [...(prev.userRsvps || []), res.data]
+                } : null);
+            }
+        } catch (error) {
+            console.error("Failed to update RSVP:", error);
+        } finally {
+            setRsvpLoading(false);
+        }
+    };
+
+    const formatLocation = (event: EventData) => {
+        if (categoryName === 'Virtual') return `Virtual (${event.modality || 'Online'})`;
         const loc = event.location;
-        if (typeof loc === 'string') return loc;
+        if (!loc) return 'TBA';
         const parts = [loc.landmark, loc.street, loc.barangay, loc.cityMunicipality, loc.province].filter(Boolean);
         return parts.join(', ');
     };
 
-    const loc: any = eventData.location;
-    const mapLat = typeof loc === 'object' && loc.lat ? loc.lat : 10.2954;
-    const mapLng = typeof loc === 'object' && loc.lng ? loc.lng : 123.8944;
+    const loc = eventData.location;
+    const mapLat = loc?.lat || 10.2954;
+    const mapLng = loc?.lng || 123.8944;
 
     return (
         <div className="bg-gray-50 pb-12">
-            {eventData.status === "Pending" && (
+            {currentStatusName === "Pending" && (
                 <div className="bg-yellow-50 px-4 py-3 border-b border-yellow-200 text-center">
                     <p className="text-yellow-800 font-medium text-sm">
                         ⚠️ This event is currently under review by an administrator. It is not visible to the public.
@@ -100,13 +215,13 @@ export function EventDetail() {
                         <div className="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-100">
                             <div className="h-64 sm:h-80 w-full relative">
                                 <img
-                                    src={eventData.image}
+                                    src={eventData.eventImage}
                                     alt={eventData.title}
                                     className="w-full h-full object-cover"
                                 />
                                 <div className="absolute top-4 left-4">
                                     <Badge className="bg-white/90 text-brand-primary hover:bg-white text-sm px-3 py-1 shadow-sm font-semibold backdrop-blur-sm border-none">
-                                        {eventData.category}
+                                        {categoryName}
                                     </Badge>
                                 </div>
                             </div>
@@ -117,7 +232,7 @@ export function EventDetail() {
                                 <div className="flex flex-wrap gap-4 sm:gap-6 text-gray-600 mb-6">
                                     <div className="flex items-center gap-2">
                                         <Calendar className="w-5 h-5 text-brand-primary" />
-                                        <span>{new Date(eventData.date).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</span>
+                                        <span>{new Date(eventData.eventDate).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</span>
                                     </div>
                                     <div className="flex items-center gap-2">
                                         <Clock className="w-5 h-5 text-brand-primary" />
@@ -138,7 +253,7 @@ export function EventDetail() {
                             </div>
                         </div>
 
-                        {eventData.category !== 'Virtual' && (
+                        {categoryName !== 'Virtual' && loc && (
                             <div className="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-100">
                                 <div className="p-4 border-b border-gray-100 bg-gray-50/50">
                                     <h3 className="font-semibold text-gray-900 flex items-center gap-2">
@@ -161,7 +276,7 @@ export function EventDetail() {
                                     ></iframe>
                                 </div>
                                 <div className="p-4 bg-gray-50">
-                                    <p className="font-medium text-gray-900 text-sm">{typeof loc === 'string' ? loc : loc.landmark || loc.street}</p>
+                                    <p className="font-medium text-gray-900 text-sm">{loc.landmark || loc.street}</p>
                                     <p className="text-gray-500 text-xs mt-1">{formatLocation(eventData)}</p>
                                     <a
                                         href={`https://www.openstreetmap.org/?mlat=${mapLat}&mlon=${mapLng}#map=16/${mapLat}/${mapLng}`}
@@ -188,7 +303,7 @@ export function EventDetail() {
                                         This event has already taken place. RSVP is no longer available.
                                     </AlertDescription>
                                 </Alert>
-                            ) : isLoggedIn ? (
+                            ) : isLoggedIn && !isSuspended ? (
                                 <>
                                     <div className="text-center mb-6">
                                         <h3 className="text-lg font-bold text-gray-900 mb-2">Are you going?</h3>
@@ -197,23 +312,31 @@ export function EventDetail() {
 
                                     <div className="grid grid-cols-2 gap-3 mb-6">
                                         <Button
+                                            disabled={rsvpLoading}
                                             variant={rsvpStatus === 'going' ? 'default' : 'outline'}
-                                            className={`w-full gap-2 ${rsvpStatus === 'going' ? 'bg-brand-primary hover:bg-brand-primary-hover' : 'hover:text-brand-primary hover:border-brand-primary'}`}
+                                            className={`w-full gap-2 ${rsvpStatus === 'going' ? 'bg-brand-primary hover:bg-brand-primary-hover text-white' : 'hover:text-brand-primary hover:border-brand-primary'}`}
                                             onClick={() => handleRsvp('going')}
                                         >
-                                            <CheckCircle2 className="w-4 h-4" />
+                                            {rsvpLoading && rsvpStatus === 'going' ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
                                             Going
                                         </Button>
                                         <Button
+                                            disabled={rsvpLoading}
                                             variant={rsvpStatus === 'not_going' ? 'default' : 'outline'}
-                                            className={`w-full gap-2 ${rsvpStatus === 'not_going' ? 'bg-gray-600 hover:bg-gray-700' : 'hover:text-gray-700 hover:border-gray-400'}`}
+                                            className={`w-full gap-2 ${rsvpStatus === 'not_going' ? 'bg-gray-600 hover:bg-gray-700 text-white' : 'hover:text-gray-700 hover:border-gray-400'}`}
                                             onClick={() => handleRsvp('not_going')}
                                         >
-                                            <XCircle className="w-4 h-4" />
+                                            {rsvpLoading && rsvpStatus === 'not_going' ? <Loader2 className="w-4 h-4 animate-spin" /> : <XCircle className="w-4 h-4" />}
                                             Not Going
                                         </Button>
                                     </div>
                                 </>
+                            ) : isSuspended ? (
+                                <div className="text-center py-4">
+                                    <AlertCircle className="w-8 h-8 text-brand-primary/50 mx-auto mb-3" />
+                                    <h3 className="text-lg font-bold text-gray-900 mb-2">RSVP Restricted</h3>
+                                    <p className="text-gray-500 text-sm mb-6">Your account has been suspended. You cannot RSVP to events at this time.</p>
+                                </div>
                             ) : (
                                 <div className="text-center py-4">
                                     <h3 className="text-lg font-bold text-gray-900 mb-2">RSVP to this Event</h3>
@@ -231,79 +354,58 @@ export function EventDetail() {
                                     <div className="border-t border-gray-100 pt-6">
                                         <div className="flex items-center justify-between mb-2">
                                             <span className="text-gray-600 font-medium">Responses</span>
-                                            <span className="text-brand-primary font-bold">{eventData.responses.going + (rsvpStatus === 'going' ? 1 : 0)} Going</span>
+                                            <span className="text-brand-primary font-bold">{goingResponsesCount} Going</span>
                                         </div>
-                                    </div>
-
-                                    <div className="mt-6 pt-6 border-t border-gray-100">
-                                        <div className="flex -space-x-2 overflow-hidden mb-3 justify-center">
-                                            {[
-                                                "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=64&h=64",
-                                                "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&q=80&w=64&h=64",
-                                                "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=64&h=64",
-                                                "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=64&h=64",
-                                                "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=64&h=64"
-                                            ].map((url, i) => (
-                                                <img
-                                                    key={i}
-                                                    src={url}
-                                                    alt=""
-                                                    className="inline-block h-8 w-8 rounded-full ring-2 ring-white object-cover"
-                                                />
-                                            ))}
-                                            <div className="flex items-center justify-center h-8 w-8 rounded-full ring-2 ring-white bg-gray-100 text-xs text-gray-500 font-medium">
-                                                +{(eventData.responses.going - 5)}
-                                            </div>
-                                        </div>
-                                        <p className="text-center text-sm text-gray-500">
-                                            See who else is going from your class
-                                        </p>
                                     </div>
                                 </>
                             )}
                         </div>
 
                         {/* Organizer Info */}
-                        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6 sm:p-8">
-                            <h3 className="text-xl font-bold text-gray-900 mb-6">Event Organizer</h3>
+                        {organizer && (
+                            <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6 sm:p-8">
+                                <h3 className="text-xl font-bold text-gray-900 mb-6">Event Organizer</h3>
 
-                            {/* Organizer header */}
-                            <div className="flex items-center gap-4 mb-6">
-                                <Avatar className="w-16 h-16 border-2 border-gray-100 shadow-sm">
-                                    <AvatarImage src={eventData.organizer.image} />
-                                    <AvatarFallback className="bg-brand-primary text-white text-xl font-semibold">
-                                        {eventData.organizer.name.charAt(0)}
-                                    </AvatarFallback>
-                                </Avatar>
+                                {/* Organizer header */}
+                                <div className="flex items-center gap-4 mb-6">
+                                    <Avatar className="w-16 h-16 border-2 border-gray-100 shadow-sm">
+                                        <AvatarImage src={organizer.profileImage} />
+                                        <AvatarFallback className="bg-brand-primary text-white text-xl font-semibold">
+                                            {organizer.userName.charAt(0)}
+                                        </AvatarFallback>
+                                    </Avatar>
 
-                                <div>
-                                    <span className="text-lg font-semibold text-gray-900 leading-tight">
-                                        {eventData.organizer.name}
-                                    </span>
+                                    <div>
+                                        <span className="text-lg font-semibold text-gray-900 leading-tight block hover:text-brand-primary transition-colors">
+                                            <Link to={`/profile/${organizer.userId}`}>{organizer.userName}</Link>
+                                        </span>
+                                    </div>
+                                </div>
+
+                                {/* Contact info */}
+                                <div className="space-y-3 text-sm">
+                                    <div className="flex items-center gap-3 text-gray-600">
+                                        <Mail className="w-4 h-4 text-brand-primary" />
+                                        <a
+                                            href={`mailto:${organizer.email}`}
+                                            rel="noopener noreferrer"
+                                            className="hover:text-brand-primary transition-colors"
+                                        >
+                                            {organizer.email}
+                                        </a>
+                                    </div>
+
+                                    {organizer.phone && (
+                                        <div className="flex items-center gap-3 text-gray-600">
+                                            <Phone className="w-4 h-4 text-brand-primary" />
+                                            <span className="hover:text-brand-primary transition-colors cursor-default">
+                                                {organizer.phone}
+                                            </span>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
-
-                            {/* Contact info */}
-                            <div className="space-y-3 text-sm">
-                                <div className="flex items-center gap-3 text-gray-600">
-                                    <Mail className="w-4 h-4 text-brand-primary" />
-                                    <a
-                                        href={`mailto:${eventData.organizer.email}`}
-                                        rel="noopener noreferrer"
-                                        className="hover:text-brand-primary transition-colors"
-                                    >
-                                        {eventData.organizer.email}
-                                    </a>
-                                </div>
-
-                                <div className="flex items-center gap-3 text-gray-600">
-                                    <Phone className="w-4 h-4 text-brand-primary" />
-                                    <span className="hover:text-brand-primary transition-colors">
-                                        {eventData.organizer.phone}
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
+                        )}
                     </div>
                 </div>
             </main>

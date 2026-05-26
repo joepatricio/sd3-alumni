@@ -95,9 +95,80 @@ export interface ProfileData {
     degreeId: string;
     batch: number;
     birthday: string;
-    
+
     degree?: DegreeData;
 }
+
+export interface LocationData {
+    id: string;
+    regionCode: string;
+    province: string;
+    provinceCode: string;
+    cityMunicipality: string;
+    cityCode: string;
+    barangay: string;
+    landmark: string;
+    street: string;
+    lat: number;
+    lng: number;
+}
+
+export interface RSVPData {
+    id: string;
+    userId: string;
+    eventId: string;
+    isAttending: boolean;
+}
+
+export interface EventData {
+    id: string;
+    adminId: string;
+    authorId: string;
+    contentStatusId: string;
+    locationId: string;
+    eventCategoryId: string;
+    eventDate: string;
+    reviewDate: string | null;
+    title: string;
+    description: string;
+    startTime: string;
+    endTime: string;
+    responses: number;
+    modality: string;
+    eventImage: string;
+
+    location?: LocationData;
+    userRsvps?: RSVPData[];
+}
+
+export interface BulletinCommentData {
+    id: string;
+    profileId: string;
+    bulletinId: string;
+    commentDate: string;
+    comment: string;
+    likes: number;
+
+    profile?: ProfileData;
+}
+
+export interface BulletinData {
+    id: string;
+    adminId: string;
+    profileId: string;
+    contentStatusId: string;
+    bulletinDate: string;
+    reviewDate: string | null;
+    title: string;
+    readTimeMinutes: number;
+    content: string;
+    bulletinImage: string;
+
+    comments?: BulletinCommentData[];
+    contentStatus?: ContentStatusData;
+    profile?: ProfileData;
+}
+
 
 export interface UserStatisticsData {
     id: string;
@@ -120,6 +191,25 @@ export interface AlumniCard {
     batch: number;
     degreeName: string;
     profileImage: string;
+}
+
+export interface User {
+    id: string;
+    profileStatusId: string;
+    userStatusId: string;
+    recordId: string;
+
+    userStatus?: UserStatusData;
+}
+
+export interface ContentStatusData {
+    id: string;
+    statusName: string;
+}
+
+export interface UserStatusData {
+    id: string;
+    statusName: string;
 }
 
 let globalLookupMap: Record<string, string> | null = null;

@@ -55,7 +55,7 @@ export function Login() {
 
     const onSubmit = async (values: z.infer<typeof loginSchema>) => {
         try {
-            const response = await api.get(`/userAuths?email=${values.email}`);
+            const response = await api.get(`/userAuths?email=${values.email}&_embed=user`);
             const users = response.data;
 
             if (users.length === 0) {
@@ -68,6 +68,14 @@ export function Login() {
 
             if (!isValidPassword) {
                 toast.error("Login failed", { description: "Invalid email or password." });
+                return;
+            }
+
+            const userStatusesRes = await api.get('/userStatuses');
+            const bannedStatusId = userStatusesRes.data.find((s: any) => s.statusName === 'Banned')?.id;
+
+            if (user.user?.userStatusId === bannedStatusId) {
+                toast.error("Login restricted", { description: "Your account has been banned." });
                 return;
             }
 

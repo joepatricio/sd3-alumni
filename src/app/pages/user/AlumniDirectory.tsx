@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Search, Users, Loader2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { api, type ProfileData, type DegreeData, type AlumniCard } from '@/app/views/api';
+import { api, useSystemLookup, type ProfileData, type DegreeData, type AlumniCard } from '@/app/views/api';
 
 const ITEMS_PER_PAGE = 12;
 
@@ -13,6 +13,7 @@ export function AlumniDirectory() {
     const [currentPage, setCurrentPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
     const [absoluteTotalAlumni, setAbsoluteTotalAlumni] = useState(0);
+    const { reverseLookup, loading: lookupLoading } = useSystemLookup();
 
     // Form states
     const [searchName, setSearchName] = useState('');
@@ -29,21 +30,24 @@ export function AlumniDirectory() {
     });
 
     useEffect(() => {
+        if (lookupLoading) return;
         api.get<any>('/degrees').then(res => setDegrees(res.data || []));
-        api.get('/profiles', { params: { _page: 1, _per_page: 1 } }).then(res => setAbsoluteTotalAlumni(res.data.items || 0));
-    }, []);
+        const bannedStatusId = reverseLookup('Banned');
+        const url = `/profiles?_page=1&_per_page=1${bannedStatusId ? `&_embed=user&user.userStatusId:ne=${bannedStatusId}` : ''}`;
+        api.get(url).then(res => setAbsoluteTotalAlumni(res.data.items || 0));
+    }, [lookupLoading, reverseLookup]);
 
     useEffect(() => {
-        if (degrees.length === 0) return;
+        if (degrees.length === 0 || lookupLoading) return;
 
         const fetchData = async () => {
             setLoading(true);
             try {
+                const bannedStatusId = reverseLookup('Banned');
                 const params: Record<string, string | number> = {
                     _page: currentPage,
                     _per_page: ITEMS_PER_PAGE,
-                    _sort: 'id',
-                    _embed: 'degree'
+                    _sort: 'id'
                 };
 
                 if (activeFilters.name) params['userName:contains'] = activeFilters.name;
@@ -51,8 +55,10 @@ export function AlumniDirectory() {
                 if (activeFilters.year) params.batch = activeFilters.year;
                 if (activeFilters.degreeId) params.degreeId = activeFilters.degreeId;
 
+                const url = `/profiles?_embed=degree${bannedStatusId ? `&_embed=user&user.userStatusId:ne=${bannedStatusId}` : ''}`;
+                
                 // json-server v1 returns { first, prev, next, last, pages, items, data }
-                const res = await api.get<any>('/profiles', { params });
+                const res = await api.get<any>(url, { params });
 
                 const totalCount = res.data.items || 0;
                 setTotalPages(Math.ceil(totalCount / ITEMS_PER_PAGE));

@@ -1,46 +1,106 @@
-// Create dialogue boxes for the Create Bulletin and the Create Events bulletin. 
-// Refer to the respective webpage for the required and optional fields. 
-// Additionally, create a popup to confirm that the entry has been "successfully created." 
-// or now, the create function does not need to actually create an entry in their corresponding feeds.
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import {
     Plus,
     List,
     LayoutGrid,
     FileText,
-    Clock
+    Clock,
+    Loader2
 } from 'lucide-react';
 import { CreateBulletinModal } from '@components/user/CreateBulletinModal';
 import { Button } from '@components/ui/button';
 import { LazyImage } from '@components/user/LazyImage';
-import { bulletins } from '@assets/mockData';
+import { api, useSystemLookup, type BulletinData, type ProfileData } from '@/app/views/api';
+import { useAuth } from '@/app/views/auth';
 
 type ViewMode = 'headline' | 'article';
 const ARTICLE_ITEMS_PER_PAGE = 5;
 const HEADLINE_ITEMS_PER_PAGE = 10;
 
 export function Bulletin() {
+    const { reverseLookup } = useSystemLookup();
     const [viewMode, setViewMode] = useState<ViewMode>('article');
     const [officialOnly, setOfficialOnly] = useState(false);
     const [dateFrom, setDateFrom] = useState('');
     const [dateTo, setDateTo] = useState('');
-    const [visibleCount, setVisibleCount] = useState(HEADLINE_ITEMS_PER_PAGE);
+    const [visibleCount, setVisibleCount] = useState(ARTICLE_ITEMS_PER_PAGE);
+
+    const { session } = useAuth();
+    const [bulletins, setBulletins] = useState<BulletinData[]>([]);
+    const [profilesMap, setProfilesMap] = useState<Record<string, ProfileData>>({});
+    const [officialUsers, setOfficialUsers] = useState<string[]>([]);
+    const [restrictedUsers, setRestrictedUsers] = useState<string[]>([]);
+    const [currentUserStatus, setCurrentUserStatus] = useState<string>('');
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                const [bRes, uRes, allUsersRes] = await Promise.all([
+                    // idk bro
+                    // Like, everything in Bulletin and Events is BAD code
+                    // A lot of filtering could be done server-side which would reduce response payload.
+                    // I want what's easy for now. Please if you are reading this improve the API calls.
+                    api.get('/bulletins?_embed=profile&_embed=contentStatus&contentStatus.statusName:contains=Approved'),
+                    api.get(`/users`, {
+                        params: {
+                            userStatusId: reverseLookup('Official')
+                        }
+                    }),
+                    api.get('/users')
+                ]);
+                const bData = Array.isArray(bRes.data) ? bRes.data : (bRes.data?.data || []);
+                const uData = Array.isArray(uRes.data) ? uRes.data : (uRes.data?.data || []);
+                const allUsers = Array.isArray(allUsersRes.data) ? allUsersRes.data : (allUsersRes.data?.data || []);
+                
+                const bannedId = reverseLookup('Banned');
+                const suspendedId = reverseLookup('Suspended');
+                const restrictedProfileIds = allUsers
+                    .filter((u: any) => u.userStatusId === bannedId || u.userStatusId === suspendedId)
+                    .map((u: any) => String(u.id));
+                setRestrictedUsers(restrictedProfileIds);
+
+                if (session?.userId) {
+                    const currentU = allUsers.find((u: any) => String(u.id) === String(session.userId));
+                    if (currentU) {
+                        setCurrentUserStatus(currentU.userStatusId);
+                    }
+                }
+
+                setBulletins(bData || []);
+                setOfficialUsers(uData.map((user: any) => String(user.id)) || []);
+
+                const pMap: Record<string, ProfileData> = {};
+                (bData || []).forEach((b: BulletinData) => {
+                    if (b.profile) pMap[b.profileId] = b.profile;
+                });
+                setProfilesMap(pMap);
+            } catch (err) {
+                console.error("Failed to fetch bulletins:", err);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchData();
+    }, [reverseLookup]);
 
     const filteredItems = useMemo(() => {
-        let filtered = officialOnly
-            ? bulletins.filter((item) => item.isOfficial && item.status === "Approved")
-            : bulletins.filter(item => item.status === "Approved");
+        let filtered = bulletins.filter(item => !restrictedUsers.includes(String(item.profile?.userId)));
+
+        if (officialOnly) {
+            filtered = filtered.filter(item => officialUsers.includes(item.profileId));
+        }
 
         if (dateFrom) {
-            filtered = filtered.filter(item => new Date(item.date) >= new Date(dateFrom));
+            filtered = filtered.filter(item => new Date(item.bulletinDate) >= new Date(dateFrom));
         }
         if (dateTo) {
-            filtered = filtered.filter(item => new Date(item.date) <= new Date(dateTo));
+            filtered = filtered.filter(item => new Date(item.bulletinDate) <= new Date(dateTo));
         }
 
-        return filtered;
-    }, [officialOnly, dateFrom, dateTo]);
+        return filtered.sort((a, b) => new Date(b.bulletinDate).getTime() - new Date(a.bulletinDate).getTime());
+    }, [bulletins, officialOnly, dateFrom, dateTo, reverseLookup, officialUsers]);
 
     const ITEMS_PER_PAGE = viewMode === 'article' ? ARTICLE_ITEMS_PER_PAGE : HEADLINE_ITEMS_PER_PAGE;
 
@@ -59,16 +119,18 @@ export function Bulletin() {
                                 USJ-R alumni community
                             </p>
                         </div>
-                        <CreateBulletinModal
-                            trigger={
-                                <button
-                                    className="flex items-center justify-center gap-2 bg-brand-primary text-white px-6 py-3 rounded-lg hover:bg-brand-primary-hover transition-colors font-semibold"
-                                >
-                                    <Plus className="w-5 h-5" />
-                                    Create Bulletin
-                                </button>
-                            }
-                        />
+                        {currentUserStatus !== reverseLookup('Suspended') && currentUserStatus !== reverseLookup('Banned') && (
+                            <CreateBulletinModal
+                                trigger={
+                                    <button
+                                        className="flex items-center justify-center gap-2 bg-brand-primary text-white px-6 py-3 rounded-lg hover:bg-brand-primary-hover transition-colors font-semibold"
+                                    >
+                                        <Plus className="w-5 h-5" />
+                                        Create Bulletin
+                                    </button>
+                                }
+                            />
+                        )}
                     </div>
                 </div>
             </div>
@@ -160,102 +222,112 @@ export function Bulletin() {
 
                     {/* Main Content */}
                     <div className="lg:col-span-3">
-                        <div className="space-y-6">
-                            {paginatedItems.map((item) => (
-                                <div
-                                    key={item.id}
-                                    className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow relative group"
-                                >
-                                    {viewMode === 'article' ? (
-                                        /* Article View */
-                                        <>
-                                            {item.heroImage && (
-                                                <div className="w-full h-64 overflow-hidden">
-                                                    <LazyImage
-                                                        src={item.heroImage}
-                                                        alt={item.title}
-                                                        className="w-full h-full object-cover"
-                                                    />
-                                                </div>
-                                            )}
-                                            <div className="p-6">
-                                                <div className="flex items-center gap-3 mb-4">
+                        {loading ? (
+                            <div className="py-20 flex flex-col items-center justify-center">
+                                <Loader2 className="w-12 h-12 text-brand-primary animate-spin mb-4" />
+                                <p className="text-gray-500">Loading bulletins...</p>
+                            </div>
+                        ) : (
+                            <div className="space-y-6">
+                                {paginatedItems.map((item) => {
+                                    const authorProfile = profilesMap[item.profileId];
+                                    return (
+                                        <div
+                                            key={item.id}
+                                            className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow relative group"
+                                        >
+                                            {viewMode === 'article' ? (
+                                                /* Article View */
+                                                <>
+                                                    {item.bulletinImage && (
+                                                        <Link to={`/bulletin/${item.id}`} className="block w-full h-64 overflow-hidden group">
+                                                            <LazyImage
+                                                                src={item.bulletinImage}
+                                                                alt={item.title}
+                                                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                                            />
+                                                        </Link>
+                                                    )}
+                                                    <div className="p-6">
+                                                        <div className="flex items-center gap-3 mb-4">
+                                                            <Link
+                                                                to={`/profile/${item.profileId}`}
+                                                                className="flex items-center gap-2 hover:opacity-80 transition-opacity relative z-10"
+                                                            >
+                                                                <img
+                                                                    src={authorProfile?.profileImage || "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&q=80&w=64&h=64"}
+                                                                    alt={authorProfile?.userName || "Author"}
+                                                                    className="w-8 h-8 rounded-full object-cover"
+                                                                />
+                                                                <span className="text-sm text-gray-600">
+                                                                    {authorProfile?.userName || "Unknown Author"}
+                                                                </span>
+                                                            </Link>
+                                                            <span className="text-gray-400">•</span>
+                                                            <div className="flex items-center gap-1 text-sm text-gray-500">
+                                                                <Clock className="w-4 h-4" />
+                                                                <span>{new Date(item.bulletinDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</span>
+                                                            </div>
+                                                        </div>
+                                                        <Link
+                                                            to={`/bulletin/${item.id}`}
+                                                            className="block group before:absolute before:inset-0 before:z-0"
+                                                        >
+                                                            <h2 className="text-2xl font-bold mb-3 group-hover:text-brand-primary transition-colors">
+                                                                {item.title}
+                                                            </h2>
+                                                            <p className="text-gray-700 leading-relaxed line-clamp-3">
+                                                                {item.content}
+                                                            </p>
+                                                        </Link>
+                                                    </div>
+                                                </>
+                                            ) : (
+                                                /* Headline View */
+                                                <div className="p-6 flex gap-4">
                                                     <Link
-                                                        to="/profile"
-                                                        className="flex items-center gap-2 hover:opacity-80 transition-opacity relative z-10"
+                                                        to={`/profile/${item.profileId}`}
+                                                        className="flex-shrink-0 hover:opacity-80 transition-opacity relative z-10"
                                                     >
                                                         <img
-                                                            src={item.author.image}
-                                                            alt={item.author.name}
-                                                            className="w-8 h-8 rounded-full object-cover"
+                                                            src={authorProfile?.profileImage || "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&q=80&w=64&h=64"}
+                                                            alt={authorProfile?.userName || "Author"}
+                                                            className="w-16 h-16 rounded-full object-cover"
                                                         />
-                                                        <span className="text-sm text-gray-600">
-                                                            {item.author.name}
-                                                        </span>
                                                     </Link>
-                                                    <span className="text-gray-400">•</span>
-                                                    <div className="flex items-center gap-1 text-sm text-gray-500">
-                                                        <Clock className="w-4 h-4" />
-                                                        <span>{new Date(item.date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</span>
+                                                    <div className="flex-1 min-w-0">
+                                                        <Link
+                                                            to={`/bulletin/${item.id}`}
+                                                            className="block group before:absolute before:inset-0 before:z-0"
+                                                        >
+                                                            <h2 className="text-xl font-bold mb-2 group-hover:text-brand-primary transition-colors">
+                                                                {item.title}
+                                                            </h2>
+                                                        </Link>
+                                                        <div className="flex items-center gap-2 mb-3 text-sm text-gray-600 relative z-10">
+                                                            <Link
+                                                                to={`/profile/${item.profileId}`}
+                                                                className="hover:text-brand-primary transition-colors"
+                                                            >
+                                                                {authorProfile?.userName || "Unknown Author"}
+                                                            </Link>
+                                                            <span>•</span>
+                                                            <span>{new Date(item.bulletinDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</span>
+                                                        </div>
+                                                        <p className="text-gray-700 line-clamp-2">
+                                                            {item.content}
+                                                        </p>
                                                     </div>
                                                 </div>
-                                                <Link
-                                                    to={`/bulletin/${item.id}`}
-                                                    className="block group before:absolute before:inset-0 before:z-0"
-                                                >
-                                                    <h2 className="text-2xl font-bold mb-3 group-hover:text-brand-primary transition-colors">
-                                                        {item.title}
-                                                    </h2>
-                                                    <p className="text-gray-700 leading-relaxed">
-                                                        {item.content}
-                                                    </p>
-                                                </Link>
-                                            </div>
-                                        </>
-                                    ) : (
-                                        /* Headline View */
-                                        <div className="p-6 flex gap-4">
-                                            <Link
-                                                to="/profile"
-                                                className="flex-shrink-0 hover:opacity-80 transition-opacity relative z-10"
-                                            >
-                                                <img
-                                                    src={item.author.image}
-                                                    alt={item.author.name}
-                                                    className="w-16 h-16 rounded-full object-cover"
-                                                />
-                                            </Link>
-                                            <div className="flex-1 min-w-0">
-                                                <Link
-                                                    to={`/bulletin/${item.id}`}
-                                                    className="block group before:absolute before:inset-0 before:z-0"
-                                                >
-                                                    <h2 className="text-xl font-bold mb-2 group-hover:text-brand-primary transition-colors">
-                                                        {item.title}
-                                                    </h2>
-                                                </Link>
-                                                <div className="flex items-center gap-2 mb-3 text-sm text-gray-600 relative z-10">
-                                                    <Link
-                                                        to="/profile"
-                                                        className="hover:text-brand-primary transition-colors"
-                                                    >
-                                                        {item.author.name}
-                                                    </Link>
-                                                    <span>•</span>
-                                                    <span>{new Date(item.date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</span>
-                                                </div>
-                                                <p className="text-gray-700 line-clamp-2">
-                                                    {item.preview}
-                                                </p>
-                                            </div>
+                                            )}
                                         </div>
-                                    )}
-                                </div>
-                            ))}
-                        </div>
+                                    );
+                                })}
+                            </div>
+                        )}
 
                         {/* Pagination */}
-                        {visibleCount < filteredItems.length && (
+                        {!loading && visibleCount < filteredItems.length && (
                             <div className="flex justify-center items-center gap-4 mt-8 mb-4">
                                 <Button
                                     variant="outline"
@@ -267,7 +339,7 @@ export function Bulletin() {
                             </div>
                         )}
 
-                        {filteredItems.length === 0 && (
+                        {!loading && filteredItems.length === 0 && (
                             <div className="bg-white rounded-lg shadow-md p-12 text-center">
                                 <FileText className="w-16 h-16 text-gray-300 mx-auto mb-4" />
                                 <h3 className="text-xl font-bold mb-2 text-gray-700">

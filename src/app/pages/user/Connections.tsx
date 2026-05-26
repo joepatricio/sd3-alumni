@@ -45,12 +45,14 @@ export function Connections() {
                     }
                 });
 
-                const connData = connectionsRes.data;
+                const connData = Array.isArray(connectionsRes.data) ? connectionsRes.data : (connectionsRes.data?.data || []);
 
                 if (connData.length > 0) {
                     const friendIds = connData.map((c: any) => c.friendId).join(',');
-                    const friendsRes = await api.get('/profiles', { params: { 'userId:in': friendIds, '_embed': 'degree' } });
-                    const friendsArray = friendsRes.data;
+                    const bannedStatusId = reverseLookup('Banned');
+                    const url = `/profiles?_embed=degree${bannedStatusId ? `&_embed=user&user.userStatusId:ne=${bannedStatusId}` : ''}`;
+                    const friendsRes = await api.get(url, { params: { 'userId:in': friendIds } });
+                    const friendsArray = Array.isArray(friendsRes.data) ? friendsRes.data : (friendsRes.data?.data || []);
 
                     // Attach the connection record to the profile data so we have the IDs for actions
                     const enrichedConnections = friendsArray.map((friend: any) => {

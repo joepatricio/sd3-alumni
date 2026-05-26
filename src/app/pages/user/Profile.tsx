@@ -39,34 +39,41 @@ export function Profile() {
                     api.get<any>('/profiles', { params: { 'userId': profileId, '_embed': 'degree' } }),
                     api.get<any>('/users', { params: { 'id': profileId } }),
                     api.get<any>('/userStatistics', { params: { 'userId': profileId } }),
-                    api.get(`/userConnections`, { params: { 'userId': profileId, _per_page: 6, 'connectionStatusId': reverseLookup('Accepted') } }),
+                    api.get(`/userConnections`, { params: { 'userId': profileId, _page: 1, _per_page: 6, 'connectionStatusId': reverseLookup('Accepted') } }),
                     api.get(`/userAchievements`, { params: { 'userId': profileId, _sort: '-achievedDate', '_embed': 'achievement' } }),
                     !isOwner && currentUserId ? api.get(`/userConnections`, { params: { 'userId': currentUserId, 'friendId': profileId } }) : Promise.resolve({ data: [] }),
                     isOwner ? api.get(`/userConnections`, { params: { 'userId': profileId, 'connectionStatusId': reverseLookup('Requested') } }) : Promise.resolve({ data: [] })
                 ]);
 
-                setProfile(profileRes.data[0]);
-                setUserRecord(userRes.data[0]);
-                setStatsData(statsRes.data[0]);
+                const pData = Array.isArray(profileRes.data) ? profileRes.data : (profileRes.data?.data || []);
+                const uData = Array.isArray(userRes.data) ? userRes.data : (userRes.data?.data || []);
+                const sData = Array.isArray(statsRes.data) ? statsRes.data : (statsRes.data?.data || []);
 
-                if (relRes.data && relRes.data.length > 0) {
-                    setConnection(relRes.data[0]);
+                setProfile(pData[0]);
+                setUserRecord(uData[0]);
+                setStatsData(sData[0]);
+
+                const rData = Array.isArray(relRes.data) ? relRes.data : (relRes.data?.data || []);
+                if (rData && rData.length > 0) {
+                    setConnection(rData[0]);
                 } else {
                     setConnection(null);
                 }
 
-                if (pendingRes.data) {
-                    setPendingRequestsCount(pendingRes.data.length);
+                const pendData = Array.isArray(pendingRes.data) ? pendingRes.data : (pendingRes.data?.data || []);
+                if (pendData) {
+                    setPendingRequestsCount(pendData.length);
                 }
 
-                const conns = connRes.data || [];
+                const conns = connRes.data.data || [];
                 if (conns.length > 0) {
                     const friendIds = conns.map((c: any) => c.friendId).join(',');
                     const friendsRes = await api.get(`/profiles`, { params: { 'userId:in': friendIds } });
-                    setConnections(friendsRes.data || []);
+                    const fData = Array.isArray(friendsRes.data) ? friendsRes.data : (friendsRes.data?.data || []);
+                    setConnections(fData);
                 }
 
-                const userAchs = achUserRes.data || [];
+                const userAchs = Array.isArray(achUserRes.data) ? achUserRes.data : (achUserRes.data?.data || []);
                 setAchievements(userAchs);
 
             } catch (err) {
@@ -84,23 +91,34 @@ export function Profile() {
     useEffect(() => {
         const fetchTabContent = async () => {
             if (activeTab === 'overview' || activeTab === 'bulletins') {
-                api.get('/bulletins', { params: { 'authorId': profileId, _sort: '-bulletinDate' } })
-                    .then(res => setBulletins(res.data || []));
+                api.get('/bulletins', { params: { 'profileId': profileId, _sort: '-bulletinDate' } })
+                    .then(res => {
+                        const data = Array.isArray(res.data) ? res.data : (res.data?.data || []);
+                        setBulletins(data);
+                    });
             }
             if (activeTab === 'overview' || activeTab === 'comments') {
-                api.get('/comments', { params: { 'userId': profileId, _sort: '-commentDate', '_embed': 'bulletin' } })
+                api.get('/comments', { params: { 'profileId': profileId, _sort: '-commentDate', '_embed': 'bulletin' } })
                     .then(res => {
-                        const fetchedComments = res.data || [];
+                        const fetchedComments = Array.isArray(res.data) ? res.data : (res.data?.data || []);
                         setComments(fetchedComments);
                     });
             }
             if (activeTab === 'events') {
                 api.get('/userRsvps', { params: { 'userId': profileId, 'isAttending': true } }).then(async rsvpRes => {
-                    const rsvps = rsvpRes.data || [];
+                    const rsvps = Array.isArray(rsvpRes.data) ? rsvpRes.data : (rsvpRes.data?.data || []);
                     if (rsvps.length > 0) {
                         const eventIds = rsvps.map((r: any) => r.eventId).join(',');
-                        const eventRes = await api.get('/events', { params: { 'id:in': eventIds, _sort: '-eventDate', '_embed': 'location' } });
-                        const attended = eventRes.data || [];
+                        const eventApproved = reverseLookup("Approved");
+                        const eventRes = await api.get('/events', {
+                            params: {
+                                'id:in': eventIds,
+                                _sort: '-eventDate',
+                                'contentStatusId': eventApproved,
+                                '_embed': 'location'
+                            }
+                        });
+                        const attended = Array.isArray(eventRes.data) ? eventRes.data : (eventRes.data?.data || []);
                         const now = new Date();
                         now.setHours(0, 0, 0, 0);
                         attended.sort((a: any, b: any) => {
@@ -132,6 +150,10 @@ export function Profile() {
     }
 
     if (!profile || !statsData || !userRecord) {
+        return <NotFound />;
+    }
+
+    if (userRecord.userStatusId === reverseLookup('Banned')) {
         return <NotFound />;
     }
 
