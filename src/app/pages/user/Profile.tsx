@@ -37,7 +37,7 @@ export function Profile() {
                 setLoading(true);
                 const [profileRes, userRes, statsRes, connRes, achUserRes, relRes, pendingRes] = await Promise.all([
                     api.get<any>('/profiles', { params: { 'userId': profileId, '_embed': 'degree' } }),
-                    api.get<any>('/users', { params: { 'id': profileId } }),
+                    api.get<any>('/users', { params: { 'userId': profileId } }),
                     api.get<any>('/userStatistics', { params: { 'userId': profileId } }),
                     api.get(`/userConnections`, { params: { 'userId': profileId, _page: 1, _per_page: 6, 'connectionStatusId': reverseLookup('Accepted') } }),
                     api.get(`/userAchievements`, { params: { 'userId': profileId, _sort: '-achievedDate', '_embed': 'achievement' } }),
@@ -382,6 +382,7 @@ export function Profile() {
                                 </div>
                                 <div className="grid grid-cols-4 gap-3">
                                     {achievements.map((ach, i) => {
+                                        if (!ach.achievement) return null;
                                         const Icon = AchievementIconMap[ach.achievement.achievementIcon] || Award;
                                         return (
                                             <div key={i} className="flex justify-center" title={ach.achievement.achievementTitle}>

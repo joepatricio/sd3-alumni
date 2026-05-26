@@ -37,6 +37,17 @@ CONTENT_STATUS = [
 for base in CONTENT_STATUS:
     base["id"] = generate(size=10)
 
+EVENT_STATUS = [
+    {"statusName": "Pending"},
+    {"statusName": "Approved"},
+    {"statusName": "Rejected"},
+    {"statusName": "Concluded"},
+    {"statusName": "Archived"},
+    {"statusName": "Cancelled"}
+]
+for base in EVENT_STATUS:
+    base["id"] = generate(size=10)
+
 USER_STATUS = [
     {"statusName": "Pending"},
     {"statusName": "Regular"},
@@ -131,6 +142,7 @@ def generate_phase_2():
         
         USER.append({
             "id": user_id,
+            "userId": user_id,
             "profileStatusId": random.choices([p["id"] for p in PROFILE_STATUS], weights=[20, 40, 40])[0],
             "userStatusId": status_id,
             "recordId": record_id
@@ -176,11 +188,13 @@ def generate_phase_2():
         birth_year = int(birthday.split("-")[0])
         batch = random.randint(birth_year + 20, 2025)
 
+        gender = random.choice(["Male", "Female"])
         PROFILE.append({
             # Duplicate id required to allow prototype to use _embed
             "id": user_id,
             "userId": user_id,
             "userName": name,
+            "gender": gender,
             "bio": f"A proud alumnus of University of San Jose - Recoletos. Batch of {batch}.",
             "email": email,
             "phone": f"+63 917 123 {random.randint(1000, 9999)}",
@@ -403,7 +417,7 @@ def generate_phase_4(USER):
         eid = generate(size=10)
         organizer = random.choice(official_users)
         organizer_id = organizer["id"]
-        status = random.choice(CONTENT_STATUS)
+        status = random.choice(EVENT_STATUS)
         status_id = status["id"]
         location_id = random.choice([l["id"] for l in LOCATION])
         event_category_id = random.choice([c["id"] for c in EVENT_CATEGORY])
@@ -433,7 +447,7 @@ def generate_phase_4(USER):
             "id": eid,
             "adminId": random.choice(["admin1", "admin2", "admin3"]),
             "authorId": organizer_id,
-            "contentStatusId": status_id,
+            "eventStatusId": status_id,
             "locationId": location_id,
             "eventCategoryId": event_category_id,
             "eventDate": event_date,
@@ -455,6 +469,7 @@ def generate_phase_5(USER, BULLETIN, EVENTS, USER_STATISTICS, USER_CONNECTIONS, 
     COMMENTS = []
     DONATIONS = []
     USER_RSVP = []
+    BULLETIN_LIKES = []
     
     user_ids = [u["id"] for u in USER]
     
@@ -482,10 +497,12 @@ def generate_phase_5(USER, BULLETIN, EVENTS, USER_STATISTICS, USER_CONNECTIONS, 
         status = random.choice(DONATION_STATUS)
         status_id = status["id"]
         ALPHABET = "23456789BCDFGHJKLMNPQRSTVWXYZ"
+        bank_name = random.choice(["GCash", "Maya", "BDO", "BPI", "UnionBank"])
         DONATIONS.append({
             "id": generate(size=10),
             "donationReference": f"DON-{generate(ALPHABET, size=3)}-{generate(ALPHABET, size=3)}",
             "userId": uid,
+            "bankName": bank_name,
             "donationStatusId": status_id,
             "donationDate": random_date(2025, 2026),
             "donationAmount": donation_amount,
@@ -504,10 +521,21 @@ def generate_phase_5(USER, BULLETIN, EVENTS, USER_STATISTICS, USER_CONNECTIONS, 
                 "userId": uid,
                 "eventId": event["id"],
                 "isAttending": random.choice([True, False]),
-                "isValid": event["contentStatusId"] == "Accepted"
+                "isValid": event["eventStatusId"] == next(s["id"] for s in EVENT_STATUS if s["statusName"] == "Approved")
+            })
+
+    # 5. BULLETIN_LIKES
+    for bulletin in BULLETIN:
+        num_likes = random.randint(0, 15)
+        likers = random.sample(user_ids, min(num_likes, len(user_ids)))
+        for uid in likers:
+            BULLETIN_LIKES.append({
+                "userId": uid,
+                "bulletinId": bulletin["id"],
+                "isLiked": random.choice([True, True, True, False])
             })
             
-    # 4. Finalize USER_STATISTICS and dynamic interaction achievements
+    # 6. Finalize USER_STATISTICS and dynamic interaction achievements
     for stat in USER_STATISTICS:
         uid = stat["userId"]
         
@@ -517,8 +545,9 @@ def generate_phase_5(USER, BULLETIN, EVENTS, USER_STATISTICS, USER_CONNECTIONS, 
         
         # TODO this is very shit. Either create a system to only count attended events
         # OR take a more simple approach and only track affirmative RSVP responses in achievements.S
+        concluded_status_id = next(s["id"] for s in EVENT_STATUS if s["statusName"] == "Concluded")
         rsvp_going = [r for r in USER_RSVP if r["userId"] == uid and r["isAttending"]]
-        attended_count = sum(1 for e in EVENTS if e["id"] in [r["eventId"] for r in rsvp_going] and datetime.strptime(e["eventDate"], "%Y-%m-%dT%H:%M:%S.000Z") < datetime.now())
+        attended_count = sum(1 for e in EVENTS if e["id"] in [r["eventId"] for r in rsvp_going] and e["eventStatusId"] == concluded_status_id)
         stat["eventsAttended"] = attended_count
         
         events_count = sum(1 for e in EVENTS if e["authorId"] == uid)
@@ -565,7 +594,7 @@ def generate_phase_5(USER, BULLETIN, EVENTS, USER_STATISTICS, USER_CONNECTIONS, 
             
         stat["achievements"] = sum(1 for a in USER_ACHIEVEMENT if a["userId"] == uid)
             
-    return COMMENTS, DONATIONS, USER_RSVP
+    return COMMENTS, DONATIONS, USER_RSVP, BULLETIN_LIKES
 
 def main():
     if "--empty" in sys.argv:
@@ -578,7 +607,7 @@ def main():
     USER, USER_AUTH, RECORDS, PROFILE, USER_STATISTICS = generate_phase_2()
     USER_CONNECTIONS, USER_ACHIEVEMENT = generate_phase_3(USER, USER_STATISTICS)
     ADMIN, LOCATION, BULLETIN, EVENTS = generate_phase_4(USER)
-    COMMENTS, DONATIONS, USER_RSVP = generate_phase_5(USER, BULLETIN, EVENTS, USER_STATISTICS, USER_CONNECTIONS, USER_ACHIEVEMENT)
+    COMMENTS, DONATIONS, USER_RSVP, BULLETIN_LIKES = generate_phase_5(USER, BULLETIN, EVENTS, USER_STATISTICS, USER_CONNECTIONS, USER_ACHIEVEMENT)
 
     db = {
         "degrees": DEGREE,
@@ -602,7 +631,8 @@ def main():
         "events": EVENTS,
         "comments": COMMENTS,
         "donations": DONATIONS,
-        "userRsvps": USER_RSVP
+        "userRsvps": USER_RSVP,
+        "bulletinLikes": BULLETIN_LIKES
     }
 
     output_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "db.json")

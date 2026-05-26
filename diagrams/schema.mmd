@@ -16,6 +16,8 @@ erDiagram
     userAchievements ||--|| achievements: lookup
 
     user ||--o{ bulletin: creates
+    user ||--o{ bulletinLikes: toggles
+    bulletin ||--o{ bulletinLikes: receives
     user ||--o{ comments: creates
     user ||--o{ donations: creates
     user ||--o{ events: creates
@@ -24,7 +26,7 @@ erDiagram
     admin ||--o{ user : manages 
     donations ||--|| donationStatuses: lookup
     bulletin ||--|| contentStatuses: lookup
-    events ||--|| contentStatuses: lookup
+    events ||--|| eventStatuses: lookup
     events ||--|| eventCategories: lookup
     events ||--|| location: contains
 
@@ -43,6 +45,10 @@ erDiagram
     contentStatuses {
         string id PK
         string statusName "e.g. Pending, Approved, Rejected"
+    }
+    eventStatuses {
+        string id PK
+        string statusName "e.g. Pending, Approved, Rejected, Concluded, Archived, Cancelled"
     }
     %% 4XX - User-related
     %% Content from banned users are automatically hidden from view
@@ -137,6 +143,7 @@ erDiagram
     profile {
         string userId PK,FK
         string userName
+        string gender
         string bio
         string email
         string phone
@@ -171,7 +178,7 @@ erDiagram
         string id PK
         string adminId FK
         string authorId FK
-        string statusId FK
+        string eventStatusId FK
         string locationId FK
         string eventCategoryId FK
         datetime eventDate
@@ -206,10 +213,16 @@ erDiagram
         string comment
         shortint likes
     }
+    bulletinLikes {
+        string userId PK,FK
+        string bulletinId PK,FK
+        boolean isLiked
+    }
     donations {
         string id PK
         string userId FK "NULL if anonymous"
         string donationReference "Reference ID from payment"
+        string bankName "Bank or e-wallet used"
         string donationStatusId FK
         datetime donationDate
         float donationAmount

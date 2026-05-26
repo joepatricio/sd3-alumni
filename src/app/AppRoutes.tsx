@@ -37,7 +37,6 @@ export default function AppRoutes() {
             <Route element={<MainLayout />}>
                 <Route path="/" element={<Home />} />
                 <Route path="/about" element={<About />} />
-                <Route path="/directory" element={<AlumniDirectory />} />
                 <Route path="/bulletin" element={<Bulletin />} />
                 <Route path="/events" element={<Events />} />
                 <Route path="/bulletin/:id" element={<BulletinDetail />} />
@@ -47,8 +46,9 @@ export default function AppRoutes() {
                 <Route path="/forgot-password" element={<ForgotPassword />} />
                 <Route path="/terms" element={<TermsOfService />} />
                 <Route path="/privacy" element={<PrivacyPolicy />} />
-                
+
                 <Route element={<ProtectedRoute />}>
+                    <Route path="/directory" element={<AlumniDirectory />} />
                     <Route path="/profile" element={<Profile />} />
                     <Route path="/profile/:id" element={<Profile />} />
                     <Route path="/profile/edit" element={<EditProfile />} />

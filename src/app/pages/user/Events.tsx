@@ -40,7 +40,7 @@ export function Events() {
                 setRestrictedUsers(restricted);
 
                 if (session?.userId) {
-                    const currentU = allUsers.find((u: any) => String(u.id) === String(session.userId));
+                    const currentU = allUsers.find((u: any) => String(u.userId) === String(session.userId));
                     if (currentU) {
                         setCurrentUserStatus(currentU.userStatusId);
                     }

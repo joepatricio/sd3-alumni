@@ -11,7 +11,6 @@
   * Login/Profile with features for career networking, achievements, and donations.
   * Event RSVPs
   * Messaging capabilities (achieved through the Bulletin system.)
-  * Age verification for data privacy controls. 
   * Dashboard to create a portal for aforementioned features.
   
   ## Running the code

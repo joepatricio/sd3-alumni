@@ -81,7 +81,7 @@ export function Login() {
 
             // Update last_login
             await api.patch(`/userAuths/${user.id}`, {
-                last_login: new Date().toISOString()
+                lastLogin: new Date().toISOString()
             });
 
             setSession({ userId: user.userId, email: user.email }, values.rememberMe);

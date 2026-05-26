@@ -29,14 +29,11 @@ import {
     SelectValue,
 } from '@components/ui/select';
 
-const DEGREES = [
-    { id: "100", name: "Mechanical Engineering" },
-    { id: "101", name: "Civil Engineering" },
-    { id: "102", name: "Industrial Engineering" },
-    { id: "103", name: "Electrical Engineering" },
-    { id: "104", name: "Electronics and Communications Engineering" },
-    { id: "105", name: "Computer Engineering" }
-];
+interface Degree {
+    id: string;
+    degreeName: string;
+    degreeAbbr: string;
+}
 
 const registerSchema = z.object({
     fullName: z.string().min(2, {
@@ -70,11 +67,25 @@ export function Register() {
     const navigate = useNavigate();
     const { isLoggedIn } = useAuth();
 
+    const [degrees, setDegrees] = useState<Degree[]>([]);
+
     useEffect(() => {
         if (isLoggedIn) {
             navigate('/profile', { replace: true });
         }
     }, [isLoggedIn, navigate]);
+
+    useEffect(() => {
+        const fetchDegrees = async () => {
+            try {
+                const response = await api.get('/degrees');
+                setDegrees(response.data);
+            } catch (error) {
+                console.error("Failed to fetch degrees", error);
+            }
+        };
+        fetchDegrees();
+    }, []);
 
     const form = useForm<z.infer<typeof registerSchema>>({
         resolver: zodResolver(registerSchema) as any,
@@ -113,66 +124,66 @@ export function Register() {
             setIsSubmitting(true);
 
             // Generate ID and hash password
-            const user_id = Math.floor(Math.random() * 1000000) + 1000;
+            const user_id = nanoid(10);
             const password_hash = bcrypt.hashSync(values.password, 10);
-            const degree = DEGREES.find(d => d.name === values.degreeProgram);
+            const degree = degrees.find(d => d.degreeName === values.degreeProgram);
 
             // Create USER_AUTH
             await api.post('/userAuths', {
-                user_id,
+                userId: user_id,
                 email: values.email,
-                password_hash,
-                last_login: new Date().toISOString()
+                passwordHash: password_hash,
+                lastLogin: new Date().toISOString()
             });
-
-            const record_id = nanoid(11);
 
             // Create RECORDS
-            await api.post('/RECORDS', {
-                record_id,
-                user_id,
-                admin_id: "admin3",
-                status_id: "401",
-                date_created: new Date().toISOString(),
+            const recordRes = await api.post('/records', {
+                userId: user_id,
+                adminId: "admin3",
+                userStatusId: "9V8IPmXwTH",
+                dateCreated: new Date().toISOString(),
                 description: "User registered",
-                date_expires: null
+                dateExpires: null
             });
+            const actual_record_id = recordRes.data.id;
 
             // Create USER
-            await api.post('/USER', {
-                user_id,
-                status_id: "401",
-                current_record_id: record_id
+            await api.post('/users', {
+                userId: user_id,
+                profileStatusId: "47NabY0Pdv",
+                userStatusId: "9V8IPmXwTH",
+                recordId: actual_record_id
             });
 
             // Create PROFILE
-            await api.post('/PROFILE', {
-                user_id,
-                user_name: values.fullName,
+            await api.post('/profiles', {
+                id: user_id,
+                userId: user_id,
+                userName: values.fullName,
                 email: values.email,
                 phone: "",
                 location: "",
                 currentJob: "",
                 company: "",
                 bio: "",
-                degree_id: degree ? parseInt(degree.id) : null,
+                degreeId: degree ? degree.id : null,
                 batch: values.batch,
                 birthday: null,
-                date_registered: new Date().toISOString(),
+                dateRegistered: new Date().toISOString(),
                 profileImage: "http://localhost:3000/engineer.png"
             });
 
             // Create USER_STATISTICS
-            await api.post('/USER_STATISTICS', {
-                user_id,
-                date_registered: new Date().toISOString(),
-                user_connections: 0,
-                events_attended: 0,
-                events_created: 0,
-                bulletins_created: 0,
-                comments_written: 0,
+            await api.post('/userStatistics', {
+                userId: user_id,
+                dateRegistered: new Date().toISOString(),
+                userConnections: 0,
+                eventsAttended: 0,
+                eventsCreated: 0,
+                bulletinsCreated: 0,
+                commentsWritten: 0,
                 achievements: 0,
-                donated_amount: 0
+                donatedAmount: 0
             });
 
             toast.success("Account created successfully!", {
@@ -259,9 +270,9 @@ export function Register() {
                                                 </div>
                                             </FormControl>
                                             <SelectContent>
-                                                {DEGREES.map((degree) => (
-                                                    <SelectItem key={degree.id} value={degree.name}>
-                                                        {degree.name}
+                                                {degrees.map((degree) => (
+                                                    <SelectItem key={degree.id} value={degree.degreeName}>
+                                                        {degree.degreeName}
                                                     </SelectItem>
                                                 ))}
                                             </SelectContent>
