@@ -5,6 +5,11 @@
 /.pnp
 .pnp.js
 
+# Python venv
+/Lib
+/Scripts
+/Include
+
 # testing
 /coverage
 
