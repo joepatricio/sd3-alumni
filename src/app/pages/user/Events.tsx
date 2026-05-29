@@ -27,7 +27,7 @@ export function Events() {
         const fetchEvents = async () => {
             try {
                 const [res, usersRes] = await Promise.all([
-                    api.get('/events?_embed=location'),
+                    api.get('/events'),
                     api.get('/users')
                 ]);
                 

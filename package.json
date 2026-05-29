@@ -4,8 +4,11 @@
   "version": "0.0.1",
   "type": "module",
   "scripts": {
-    "build": "vite build",
-    "dev": "vite --host"
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "lint": "eslint .",
+    "preview": "vite preview",
+    "server": "node api/index.js"
   },
   "dependencies": {
     "@emotion/react": "11.14.0",
@@ -14,6 +17,7 @@
     "@mui/icons-material": "7.3.5",
     "@mui/material": "7.3.5",
     "@popperjs/core": "2.11.8",
+    "@prisma/client": "^5.22.0",
     "@radix-ui/react-accordion": "1.2.3",
     "@radix-ui/react-alert-dialog": "1.1.6",
     "@radix-ui/react-aspect-ratio": "1.1.2",
@@ -47,14 +51,17 @@
     "class-variance-authority": "0.7.1",
     "clsx": "2.1.1",
     "cmdk": "1.1.1",
+    "cookie-parser": "^1.4.7",
     "cors": "^2.8.6",
     "date-fns": "3.6.0",
+    "dotenv": "^17.4.2",
     "embla-carousel-react": "8.6.0",
     "express": "^5.2.1",
     "framer-motion": "^12.40.0",
     "input-otp": "1.4.2",
     "json-server": "1.0.0-beta.15",
     "json5": "^2.2.3",
+    "jsonwebtoken": "^9.0.3",
     "leaflet": "^1.9.4",
     "lucide-react": "0.487.0",
     "motion": "12.23.24",
@@ -85,25 +92,21 @@
   },
   "devDependencies": {
     "@tailwindcss/vite": "4.1.12",
+    "@types/bcryptjs": "^3.0.0",
+    "@types/cookie-parser": "^1.4.10",
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.6",
+    "@types/jsonwebtoken": "^9.0.10",
     "@types/leaflet": "^1.9.21",
+    "@types/multer": "^2.1.0",
     "@types/react": "^19.0.8",
     "@types/react-dom": "^19.0.3",
+    "@types/uuid": "^11.0.0",
     "@vitejs/plugin-react": "4.7.0",
+    "prisma": "^5.22.0",
     "tailwindcss": "4.1.12",
+    "tsx": "^4.22.3",
     "typescript": "^5.9.3",
     "vite": "6.3.5"
-  },
-  "pnpm": {
-    "overrides": {
-      "vite": "6.3.5"
-    },
-    "onlyBuiltDependencies": [
-      "@tailwindcss/oxide",
-      "esbuild",
-      "msw"
-    ],
-    "ignoredBuiltDependencies": [
-      "msw"
-    ]
   }
 }

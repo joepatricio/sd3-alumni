@@ -42,7 +42,7 @@ export function Bulletin() {
                     // Like, everything in Bulletin and Events is BAD code
                     // A lot of filtering could be done server-side which would reduce response payload.
                     // I want what's easy for now. Please if you are reading this improve the API calls.
-                    api.get('/bulletins?_embed=profile&_embed=contentStatus&contentStatus.statusName:contains=Approved'),
+                    api.get('/bulletins?_embed=contentStatus'),
                     api.get(`/users`, {
                         params: {
                             userStatusId: reverseLookup('Official')

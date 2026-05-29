@@ -24,7 +24,7 @@ export function Connections() {
                 setLoading(true);
                 // Fetch profile of the user being viewed
                 const [profileRes] = await Promise.all([
-                    api.get('/profiles', { params: { 'userId': profileId, '_embed': 'degree' } })
+                    api.get('/profiles', { params: { 'userId': profileId, } })
                 ]);
 
                 const profileDataRaw = profileRes.data;
@@ -50,7 +50,7 @@ export function Connections() {
                 if (connData.length > 0) {
                     const friendIds = connData.map((c: any) => c.friendId).join(',');
                     const bannedStatusId = reverseLookup('Banned');
-                    const url = `/profiles?_embed=degree${bannedStatusId ? `&_embed=user&user.userStatusId:ne=${bannedStatusId}` : ''}`;
+                    const url = `/profiles?${bannedStatusId ? `` : ''}`;
                     const friendsRes = await api.get(url, { params: { 'userId:in': friendIds } });
                     const friendsArray = Array.isArray(friendsRes.data) ? friendsRes.data : (friendsRes.data?.data || []);
 

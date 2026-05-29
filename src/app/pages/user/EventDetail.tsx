@@ -38,7 +38,7 @@ export function EventDetail() {
         const fetchEventAndOrganizer = async () => {
             try {
                 const [eventRes, usersRes] = await Promise.all([
-                    api.get(`/events/${id}?_embed=location&_embed=userRsvps`),
+                    api.get(`/events/${id}?_embed=userRsvps`),
                     api.get('/users')
                 ]);
                 const event = eventRes.data;

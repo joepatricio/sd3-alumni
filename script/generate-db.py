@@ -613,6 +613,7 @@ def main():
         "degrees": DEGREE,
         "connectionStatuses": CONNECTION_STATUS,
         "contentStatuses": CONTENT_STATUS,
+        "eventStatuses": EVENT_STATUS,
         "userStatuses": USER_STATUS,
         "donationStatuses": DONATION_STATUS,
         "eventCategories": EVENT_CATEGORY,

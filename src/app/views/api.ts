@@ -25,9 +25,7 @@ export const useProfileRoute = () => {
     return { profileId, isOwner };
 };
 
-// Based on tests: 20ms is safe, 10ms dropped 1/2000 requests
-const API_BASE_URL = 'http://localhost:3000';
-const DELAY = 20;
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 export const api = axios.create({
     baseURL: API_BASE_URL,
@@ -36,43 +34,15 @@ export const api = axios.create({
     },
 });
 
-// Global queue for mutating requests to prevent json-server race conditions
-let requestQueue = Promise.resolve();
-
-const queueRequest = <T>(requestFn: () => Promise<T>): Promise<T> => {
-    return new Promise((resolve, reject) => {
-        requestQueue = requestQueue.then(async () => {
-            try {
-                const res = await requestFn();
-                await new Promise(r => setTimeout(r, DELAY));
-                resolve(res);
-            } catch (err) {
-                reject(err);
-            }
-        });
-    });
-};
-
-const originalPost = api.post;
-const originalPut = api.put;
-const originalPatch = api.patch;
-const originalDelete = api.delete;
-
-api.post = function (this: any, ...args: any[]) {
-    return queueRequest(() => originalPost.apply(this, args));
-} as typeof api.post;
-
-api.put = function (this: any, ...args: any[]) {
-    return queueRequest(() => originalPut.apply(this, args));
-} as typeof api.put;
-
-api.patch = function (this: any, ...args: any[]) {
-    return queueRequest(() => originalPatch.apply(this, args));
-} as typeof api.patch;
-
-api.delete = function (this: any, ...args: any[]) {
-    return queueRequest(() => originalDelete.apply(this, args));
-} as typeof api.delete;
+// Ensure that all requests correctly use the /api prefix or relative paths
+api.interceptors.request.use(config => {
+    // If the baseURL already ends with /api or /api/, and the request url starts with /,
+    // Axios will strip the /api path. To fix this, we strip the leading slash from the request url.
+    if (config.url && config.url.startsWith('/')) {
+        config.url = config.url.substring(1);
+    }
+    return config;
+});
 
 export interface DegreeData {
     id: string;

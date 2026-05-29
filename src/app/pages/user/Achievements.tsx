@@ -20,9 +20,9 @@ export function Achievements() {
             try {
                 setLoading(true);
                 const [profileRes, statsRes, achUserRes] = await Promise.all([
-                    api.get<any>('/profiles', { params: { 'userId': profileId, '_embed': 'degree' } }),
+                    api.get<any>('/profiles', { params: { 'userId': profileId, } }),
                     api.get<any>('/userStatistics', { params: { 'userId': profileId } }),
-                    api.get(`/userAchievements`, { params: { 'userId': profileId, _sort: '-achievedDate', '_embed': 'achievement' } })
+                    api.get(`/userAchievements`, { params: { 'userId': profileId, } })
                 ]);
 
                 const profile = Array.isArray(profileRes.data) ? profileRes.data[0] : profileRes.data;

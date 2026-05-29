@@ -35,8 +35,8 @@ export function BulletinDetail() {
         const fetchBulletinAndProfiles = async () => {
             try {
                 const [bRes, cRes, usersRes] = await Promise.all([
-                    api.get(`/bulletins`, { params: { id: id, _embed: 'profile' } }),
-                    api.get(`/comments`, { params: { bulletinId: id, _embed: 'profile' } }),
+                    api.get(`/bulletins`, { params: { id: id, } }),
+                    api.get(`/comments`, { params: { bulletinId: id, } }),
                     api.get('/users')
                 ]);
 
@@ -100,7 +100,7 @@ export function BulletinDetail() {
             });
 
             // Re-fetch the newly created comment with embedded profile
-            const newCommentRes = await api.get('/comments', { params: { id: res.data.id, _embed: 'profile' } });
+            const newCommentRes = await api.get('/comments', { params: { id: res.data.id, } });
             if (newCommentRes.data && newCommentRes.data.length > 0) {
                 setCommentsList(prev => [newCommentRes.data[0], ...prev]);
             } else {

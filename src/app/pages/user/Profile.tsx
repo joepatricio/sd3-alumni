@@ -36,11 +36,11 @@ export function Profile() {
             try {
                 setLoading(true);
                 const [profileRes, userRes, statsRes, connRes, achUserRes, relRes, pendingRes] = await Promise.all([
-                    api.get<any>('/profiles', { params: { 'userId': profileId, '_embed': 'degree' } }),
+                    api.get<any>('/profiles', { params: { 'userId': profileId, } }),
                     api.get<any>('/users', { params: { 'userId': profileId } }),
                     api.get<any>('/userStatistics', { params: { 'userId': profileId } }),
                     api.get(`/userConnections`, { params: { 'userId': profileId, _page: 1, _per_page: 6, 'connectionStatusId': reverseLookup('Accepted') } }),
-                    api.get(`/userAchievements`, { params: { 'userId': profileId, _sort: '-achievedDate', '_embed': 'achievement' } }),
+                    api.get(`/userAchievements`, { params: { 'userId': profileId, } }),
                     !isOwner && currentUserId ? api.get(`/userConnections`, { params: { 'userId': currentUserId, 'friendId': profileId } }) : Promise.resolve({ data: [] }),
                     isOwner ? api.get(`/userConnections`, { params: { 'userId': profileId, 'connectionStatusId': reverseLookup('Requested') } }) : Promise.resolve({ data: [] })
                 ]);
@@ -91,14 +91,14 @@ export function Profile() {
     useEffect(() => {
         const fetchTabContent = async () => {
             if (activeTab === 'overview' || activeTab === 'bulletins') {
-                api.get('/bulletins', { params: { 'profileId': profileId, _sort: '-bulletinDate' } })
+                api.get('/bulletins', { params: { 'profileId': profileId, } })
                     .then(res => {
                         const data = Array.isArray(res.data) ? res.data : (res.data?.data || []);
                         setBulletins(data);
                     });
             }
             if (activeTab === 'overview' || activeTab === 'comments') {
-                api.get('/comments', { params: { 'profileId': profileId, _sort: '-commentDate', '_embed': 'bulletin' } })
+                api.get('/comments', { params: { 'profileId': profileId, } })
                     .then(res => {
                         const fetchedComments = Array.isArray(res.data) ? res.data : (res.data?.data || []);
                         setComments(fetchedComments);
@@ -113,10 +113,8 @@ export function Profile() {
                         const eventRes = await api.get('/events', {
                             params: {
                                 'id:in': eventIds,
-                                _sort: '-eventDate',
                                 'contentStatusId': eventApproved,
-                                '_embed': 'location'
-                            }
+                                }
                         });
                         const attended = Array.isArray(eventRes.data) ? eventRes.data : (eventRes.data?.data || []);
                         const now = new Date();

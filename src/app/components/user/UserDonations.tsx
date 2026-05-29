@@ -16,7 +16,7 @@ export function UserDonations({ userId, onStatsUpdate }: { userId: string, onSta
         try {
             setLoading(true);
             const res = await api.get('/donations', {
-                params: { userId: userId, _embed: 'donationStatus', _sort: '-donationDate' }
+                params: { userId: userId, }
             });
             setDonations(res.data);
         } catch (err) {
@@ -57,13 +57,21 @@ export function UserDonations({ userId, onStatsUpdate }: { userId: string, onSta
 
     const awardAchievementIfMissing = async () => {
         try {
-            const achRes = await api.get('/userAchievements', { params: { userId: userId, achievementId: 'ach_phila' } });
+            const achDefRes = await api.get('/achievements', { params: { achievementTitle: 'Philanthropist' } });
+            const achievements = achDefRes.data || [];
+            if (achievements.length === 0) {
+                console.error("Philanthropist achievement not found in database.");
+                return;
+            }
+            const achId = achievements[0].id;
+
+            const achRes = await api.get('/userAchievements', { params: { userId: userId, achievementId: achId } });
             const ach = achRes.data;
             if (!ach || ach.length === 0) {
                 await api.post('/userAchievements', {
                     id: nanoid(10),
                     userId: userId,
-                    achievementId: 'ach_phila',
+                    achievementId: achId,
                     achievementTier: 1,
                     achievedDate: new Date().toISOString()
                 });
@@ -156,7 +164,7 @@ export function UserDonations({ userId, onStatsUpdate }: { userId: string, onSta
             <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-6">
                 <h3 className="font-bold text-lg text-gray-900 mb-4">Claim Anonymous Donation</h3>
                 <p className="text-sm text-gray-600 mb-4">
-                    Did you make a donation while logged out? Enter your Reference ID below to link it to your account and receive the Philanthropist achievement!
+                    Did you make a donation while logged out? Enter your Reference ID below to link it to your account!
                 </p>
                 <form onSubmit={handleClaimDonation} className="flex gap-3">
                     <div className="relative flex-grow">

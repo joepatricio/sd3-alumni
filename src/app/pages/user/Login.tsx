@@ -55,7 +55,7 @@ export function Login() {
 
     const onSubmit = async (values: z.infer<typeof loginSchema>) => {
         try {
-            const response = await api.get(`/userAuths?email=${values.email}&_embed=user`);
+            const response = await api.get(`/userAuths?email=${values.email}`);
             const users = response.data;
 
             if (users.length === 0) {

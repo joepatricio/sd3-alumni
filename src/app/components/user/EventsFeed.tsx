@@ -14,7 +14,7 @@ export function EventsFeed() {
   useEffect(() => {
     const fetchEvents = async () => {
       try {
-        const res = await api.get('/events?_embed=location');
+        const res = await api.get('/events');
         const data = Array.isArray(res.data) ? res.data : res.data.data;
         setEvents(data || []);
       } catch (error) {

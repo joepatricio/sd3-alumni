@@ -6,9 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { toast } from 'sonner';
 import { api } from '@/app/views/api';
-import bcrypt from 'bcryptjs';
 import { useAuth } from '@/app/views/auth';
-import { nanoid } from 'nanoid'
 
 import { Button } from '@components/ui/button';
 import { Input } from '@components/ui/input';
@@ -101,100 +99,30 @@ export function Register() {
     });
 
     const onSubmit = async (values: z.infer<typeof registerSchema>) => {
+        if (isSubmitting) return;
+        setIsSubmitting(true);
+
         try {
-            // Check user limit
-            const usersResponse = await api.get('/userAuths');
-            if (usersResponse.data.length >= 100) {
-                toast.error("Registrations are closed", {
-                    description: "The maximum number of users has been reached."
-                });
-                return;
-            }
-
-            // Check if email already exists
-            const existingUser = await api.get(`/userAuths?email=${values.email}`);
-            if (existingUser.data.length > 0) {
-                toast.error("Registration failed", {
-                    description: "Email is already registered."
-                });
-                return;
-            }
-
-            if (isSubmitting) return;
-            setIsSubmitting(true);
-
-            // Generate ID and hash password
-            const user_id = nanoid(10);
-            const password_hash = bcrypt.hashSync(values.password, 10);
-            const degree = degrees.find(d => d.degreeName === values.degreeProgram);
-
-            // Create USER_AUTH
-            await api.post('/userAuths', {
-                userId: user_id,
+            await api.post('/auth/register', {
+                fullName: values.fullName,
                 email: values.email,
-                passwordHash: password_hash,
-                lastLogin: new Date().toISOString()
-            });
-
-            // Create RECORDS
-            const recordRes = await api.post('/records', {
-                userId: user_id,
-                adminId: "admin3",
-                userStatusId: "9V8IPmXwTH",
-                dateCreated: new Date().toISOString(),
-                description: "User registered",
-                dateExpires: null
-            });
-            const actual_record_id = recordRes.data.id;
-
-            // Create USER
-            await api.post('/users', {
-                userId: user_id,
-                profileStatusId: "47NabY0Pdv",
-                userStatusId: "9V8IPmXwTH",
-                recordId: actual_record_id
-            });
-
-            // Create PROFILE
-            await api.post('/profiles', {
-                id: user_id,
-                userId: user_id,
-                userName: values.fullName,
-                email: values.email,
-                phone: "",
-                location: "",
-                currentJob: "",
-                company: "",
-                bio: "",
-                degreeId: degree ? degree.id : null,
-                batch: values.batch,
-                birthday: null,
-                dateRegistered: new Date().toISOString(),
-                profileImage: "http://localhost:3000/engineer.png"
-            });
-
-            // Create USER_STATISTICS
-            await api.post('/userStatistics', {
-                userId: user_id,
-                dateRegistered: new Date().toISOString(),
-                userConnections: 0,
-                eventsAttended: 0,
-                eventsCreated: 0,
-                bulletinsCreated: 0,
-                commentsWritten: 0,
-                achievements: 0,
-                donatedAmount: 0
+                password: values.password,
+                degreeProgram: values.degreeProgram,
+                batch: values.batch
             });
 
             toast.success("Account created successfully!", {
                 description: "Welcome to the USJ-R SEA Alumni community.",
             });
             navigate('/login');
-        } catch (error) {
+        } catch (error: any) {
             console.error("Registration error:", error);
+            const errorMessage = error.response?.data?.error || "An unexpected error occurred. Please try again.";
             toast.error("Registration failed", {
-                description: "An unexpected error occurred. Please try again."
+                description: errorMessage
             });
+        } finally {
+            setIsSubmitting(false);
         }
     };
 

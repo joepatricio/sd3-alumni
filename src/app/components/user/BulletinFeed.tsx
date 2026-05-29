@@ -16,11 +16,9 @@ export function BulletinFeed() {
           api.get('/bulletins', {
             params: {
               contentStatusId: reverseLookup('Approved'),
-              _embed: 'profile',
               _page: 1,
               _per_page: 7,
-              _sort: '-reviewDate'
-            }
+              }
           })
         ]);
         const bData = bRes.data.data;
