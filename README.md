@@ -27,9 +27,7 @@
 
   6) Run `npx json-server .\db.json` to start the REST API server.
 
-  7) Run `node server.js` to start the Express upload server.
-
-  8) Run `pnpm dev` to start the development server.
+  7) Run `pnpm server` and `pnpm dev` to start the local development server.
 
   This will expose port 5173 to the network by default. This can be changed to run on localhost only by removing the `--host` option in `package.json`. 
   In both cases, the website can be accessed at `localhost:5173`.
