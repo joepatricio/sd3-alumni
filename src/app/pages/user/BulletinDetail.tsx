@@ -15,12 +15,11 @@ import { Button } from '@components/ui/button';
 import { NotFound } from '@pages/NotFound';
 import { LazyImage } from '@components/user/LazyImage';
 import { useAuth } from '@/app/views/auth';
-import { api, useSystemLookup, type BulletinData, type BulletinCommentData } from '@/app/views/api';
+import { api, type BulletinData, type BulletinCommentData } from '@/app/views/api';
 
 export function BulletinDetail() {
     const { id } = useParams();
     const { isLoggedIn, session } = useAuth();
-    const { lookup, reverseLookup } = useSystemLookup();
     const [comment, setComment] = useState('');
     const [likedComments, setLikedComments] = useState<string[]>([]);
     const isAdmin = !!localStorage.getItem('adminToken');
@@ -46,7 +45,7 @@ export function BulletinDetail() {
 
                 if (bulletinData && bulletinData.profile) {
                     const authorUser = allUsers.find((u: any) => String(u.id) === String(bulletinData.profile.userId));
-                    if (authorUser && authorUser.userStatusId === lookup('Banned') || authorUser?.userStatusId === reverseLookup('Banned')) {
+                    if (authorUser && authorUser.userStatus?.statusName === 'Banned') {
                         setBulletin(null);
                         setLoading(false);
                         return;
@@ -55,7 +54,7 @@ export function BulletinDetail() {
 
                 if (session?.userId) {
                     const currentU = allUsers.find((u: any) => String(u.userId) === String(session.userId));
-                    if (currentU && currentU.userStatusId === reverseLookup('Suspended')) {
+                    if (currentU && currentU.userStatus?.statusName === 'Suspended') {
                         setIsSuspended(true);
                     }
                 }
@@ -80,7 +79,7 @@ export function BulletinDetail() {
         );
     }
 
-    const currentStatusName = bulletin ? lookup(bulletin.contentStatusId) : null;
+    const currentStatusName = bulletin?.contentStatus?.statusName || null;
 
     if (!bulletin || currentStatusName === "Rejected") {
         return <NotFound />;
@@ -194,7 +193,7 @@ export function BulletinDetail() {
                         {/* Author Info */}
                         <div className="flex items-center gap-4 pb-6 mb-8 border-b border-gray-200">
                             <Link
-                                to={`/profile/${bulletin.profileId}`}
+                                to={`/profile/${bulletin.authorId}`}
                                 className="flex items-center gap-3 hover:opacity-80 transition-opacity"
                             >
                                 <img

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Heart, Search, Eye, EyeOff, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
-import { api, useSystemLookup } from '@/app/views/api';
+import { api } from '@/app/views/api';
 import { formatCurrency, getStatusColor } from '@/app/views/formatters';
 import { nanoid } from 'nanoid';
 
@@ -10,7 +10,6 @@ export function UserDonations({ userId, onStatsUpdate }: { userId: string, onSta
     const [donations, setDonations] = useState<any[]>([]);
     const [claimRefId, setClaimRefId] = useState('');
     const [isClaiming, setIsClaiming] = useState(false);
-    const { reverseLookup } = useSystemLookup();
 
     const fetchDonations = async () => {
         try {
@@ -35,7 +34,7 @@ export function UserDonations({ userId, onStatsUpdate }: { userId: string, onSta
         try {
             // Fetch all public donations for this user
             const pubRes = await api.get('/donations', {
-                params: { userId: userId, donationAnonymous: false, donationStatusId: reverseLookup('Completed') }
+                params: { userId: userId, donationAnonymous: false, 'status.statusName': 'Completed' }
             });
             const pubDonations = pubRes.data || [];
             const total = pubDonations.reduce((sum: number, d: any) => sum + Number(d.donationAmount), 0);

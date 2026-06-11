@@ -1,4 +1,3 @@
-import { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import { useParams } from 'react-router-dom';
 import { useAuth } from '@/app/views/auth';
@@ -65,6 +64,7 @@ export interface ProfileData {
     degreeId: string;
     batch: number;
     birthday: string;
+    gender: string;
 
     degree?: DegreeData;
 }
@@ -94,7 +94,7 @@ export interface EventData {
     id: string;
     adminId: string;
     authorId: string;
-    contentStatusId: string;
+    eventStatusId: string;
     locationId: string;
     eventCategoryId: string;
     eventDate: string;
@@ -109,6 +109,8 @@ export interface EventData {
 
     location?: LocationData;
     userRsvps?: RSVPData[];
+    eventStatus?: { id: string, statusName: string };
+    eventCategory?: { id: string, eventCategoryName: string };
 }
 
 export interface BulletinCommentData {
@@ -125,7 +127,7 @@ export interface BulletinCommentData {
 export interface BulletinData {
     id: string;
     adminId: string;
-    profileId: string;
+    authorId: string;
     contentStatusId: string;
     bulletinDate: string;
     reviewDate: string | null;
@@ -170,6 +172,8 @@ export interface User {
     recordId: string;
 
     userStatus?: UserStatusData;
+    profileStatus?: ProfileStatusData;
+    profile?: ProfileData;
 }
 
 export interface ContentStatusData {
@@ -182,54 +186,40 @@ export interface UserStatusData {
     statusName: string;
 }
 
-let globalLookupMap: Record<string, string> | null = null;
-let fetchPromise: Promise<Record<string, string>> | null = null;
+export interface ProfileStatusData {
+    id: string;
+    statusName: string;
+}
 
-export const useSystemLookup = () => {
-    const [lookupMap, setLookupMap] = useState<Record<string, string>>(globalLookupMap || {});
-    const [loading, setLoading] = useState(!globalLookupMap);
+export interface EventCategoryData {
+    id: string;
+    eventCategoryName: string;
+}
 
-    useEffect(() => {
-        if (globalLookupMap) return;
+export interface ConnectionStatusData {
+    id: string;
+    connectionName: string;
+}
 
-        if (!fetchPromise) {
-            fetchPromise = Promise.all([
-                api.get('/degrees'),
-                api.get('/connectionStatuses'),
-                api.get('/contentStatuses'),
-                api.get('/userStatuses'),
-                api.get('/donationStatuses'),
-                api.get('/eventCategories'),
-                api.get('/profileStatuses')
-            ]).then(([deg, conn, cont, usr, don, evt, prof]) => {
-                const map: Record<string, string> = {};
-                if (deg.data) (deg.data).forEach((d: any) => map[d.id] = `${d.degreeName} (${d.degreeAbbr})`);
-                if (conn.data) (conn.data).forEach((d: any) => map[d.id] = d.connectionName);
-                if (cont.data) (cont.data).forEach((d: any) => map[d.id] = d.statusName);
-                if (usr.data) (usr.data).forEach((d: any) => map[d.id] = d.statusName);
-                if (don.data) (don.data).forEach((d: any) => map[d.id] = d.statusName);
-                if (evt.data) (evt.data).forEach((d: any) => map[d.id] = d.eventCategoryName);
-                if (prof.data) (prof.data).forEach((d: any) => map[d.id] = d.statusName);
-                return map;
-            }).catch(err => {
-                console.error("Failed to fetch lookup tables", err);
-                return {};
-            });
-        }
+export interface DonationStatusData {
+    id: string;
+    statusName: string;
+}
 
-        fetchPromise.then(map => {
-            globalLookupMap = map;
-            setLookupMap(map);
-            setLoading(false);
-        });
-    }, []);
+export interface UserConnectionData {
+    id: string;
+    userId: string;
+    friendId: string;
+    connectionStatusId: string;
+    dateUpdated: string;
+    status?: ConnectionStatusData;
+    user?: User;
+    friend?: User;
+}
 
-    const lookup = useCallback((id: string | null | undefined) => (id ? lookupMap[id] || 'N/A' : 'N/A'), [lookupMap]);
+export interface UserStatusData {
+    id: string;
+    statusName: string;
+}
 
-    const reverseLookup = useCallback((value: string) => {
-        const entry = Object.entries(lookupMap).find(([_, val]) => val === value);
-        return entry ? entry[0] : null;
-    }, [lookupMap]);
-
-    return { lookupMap, loading, lookup, reverseLookup };
-};
+// useSystemLookup has been refactored to use backend includes.

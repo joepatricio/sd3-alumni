@@ -4,10 +4,9 @@ import { Link } from 'react-router-dom';
 import { getCategoryColor } from '@/app/views/categoryColors';
 import { isEventUpcoming } from '@/app/views/eventFilters';
 import { LazyImage } from '@components/user/LazyImage';
-import { api, useSystemLookup, type EventData } from '@/app/views/api';
+import { api, type EventData } from '@/app/views/api';
 
 export function EventsFeed() {
-  const { lookup, reverseLookup } = useSystemLookup();
   const [events, setEvents] = useState<EventData[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -27,14 +26,13 @@ export function EventsFeed() {
   }, []);
 
   const displayEvents = useMemo(() => {
-    const approvedStatusId = reverseLookup('Approved');
     const sorted = events
-      .filter(event => event.contentStatusId === approvedStatusId)
+      .filter(event => event.eventStatus?.statusName === 'Approved')
       .filter(event => isEventUpcoming(event.eventDate))
       .sort((a, b) => new Date(a.eventDate).getTime() - new Date(b.eventDate).getTime());
 
     return sorted.slice(0, 4);
-  }, [events, reverseLookup]);
+  }, [events]);
 
   const formatLocation = (loc: any) => {
     if (!loc) return 'TBA';
@@ -91,7 +89,7 @@ export function EventsFeed() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {displayEvents.map((event) => {
-            const categoryName = lookup(event.eventCategoryId);
+            const categoryName = event.eventCategory?.eventCategoryName || 'Unknown';
             return (
               <div
                 key={event.id}

@@ -53,6 +53,8 @@ const registerSchema = z.object({
     terms: z.boolean().refine(val => val === true, {
         message: "You must accept the terms and conditions.",
     }),
+    gender: z.string().min(1, { message: "Please select a gender." }),
+    pronoun: z.string().optional()
 }).refine((data) => data.password === data.confirmPassword, {
     message: "Passwords do not match",
     path: ["confirmPassword"],
@@ -95,6 +97,8 @@ export function Register() {
             degreeProgram: "",
             batch: new Date().getFullYear(),
             terms: false,
+            gender: "",
+            pronoun: ""
         },
     });
 
@@ -108,7 +112,8 @@ export function Register() {
                 email: values.email,
                 password: values.password,
                 degreeProgram: values.degreeProgram,
-                batch: values.batch
+                batch: values.batch,
+                gender: values.gender === 'Custom' ? values.pronoun || '' : values.gender
             });
 
             toast.success("Account created successfully!", {
@@ -297,6 +302,53 @@ export function Register() {
                                     </FormItem>
                                 )}
                             />
+
+                            <FormField
+                                control={form.control}
+                                name="gender"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <div className="flex items-center gap-2 mb-2">
+                                            <FormLabel className="!mb-0">Gender</FormLabel>
+                                            <div className="w-4 h-4 rounded-full border border-gray-400 text-gray-500 flex items-center justify-center text-[10px] font-bold cursor-help" title="You can change who sees your gender on your profile later. Select Custom to choose another gender, or if you'd rather not say.">?</div>
+                                        </div>
+                                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                            <FormControl>
+                                                <SelectTrigger className="selection:bg-blue-500 selection:text-white">
+                                                    <SelectValue placeholder="Select your gender" />
+                                                </SelectTrigger>
+                                            </FormControl>
+                                            <SelectContent>
+                                                <SelectItem value="Male">Male</SelectItem>
+                                                <SelectItem value="Female">Female</SelectItem>
+                                                <SelectItem value="Custom">Custom</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+
+                            {form.watch("gender") === "Custom" && (
+                                <div className="space-y-4">
+                                    <FormField
+                                        control={form.control}
+                                        name="pronoun"
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormControl>
+                                                    <Input
+                                                        placeholder="Gender (optional)"
+                                                        className="selection:bg-blue-500 selection:text-white"
+                                                        {...field}
+                                                    />
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+                                </div>
+                            )}
 
                             <FormField
                                 control={form.control}

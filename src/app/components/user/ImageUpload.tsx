@@ -2,6 +2,7 @@ import React, { useRef, useState } from 'react';
 import { Upload, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
+import { api } from '@/app/views/api';
 
 interface ImageUploadProps {
     previewUrl: string | null;
@@ -20,13 +21,11 @@ export function ImageUpload({ previewUrl, onFileSelect, onClear, placeholderText
         const formData = new FormData();
         formData.append('image', file);
         try {
-            const res = await fetch('http://localhost:3001/upload', {
-                method: 'POST',
-                body: formData,
+            const res = await api.post('/upload', formData, {
+                headers: { 'Content-Type': 'multipart/form-data' }
             });
-            if (res.ok) {
-                const data = await res.json();
-                onFileSelect(data.url);
+            if (res.data && res.data.url) {
+                onFileSelect(res.data.url);
                 toast.success('Image uploaded successfully!');
             } else {
                 toast.error('Failed to upload image.');

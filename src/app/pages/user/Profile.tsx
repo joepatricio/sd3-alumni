@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
-import { Calendar, Award, Heart, Loader2, Mail, Phone, MapPin, Briefcase, MessageSquare, FileText, User } from 'lucide-react';
+import { Calendar, Award, Heart, Loader2, Mail, Phone, MapPin, Briefcase, MessageSquare, FileText, User, NonBinary, Mars, Venus } from 'lucide-react';
 import { ProfileHeader } from '@components/user/ProfileHeader';
-import { api, AchievementIconMap, useProfileRoute, useSystemLookup, type ProfileData, type UserStatisticsData } from '@/app/views/api';
+import { api, AchievementIconMap, useProfileRoute, type ProfileData, type UserStatisticsData } from '@/app/views/api';
 import { useAuth } from '@/app/views/auth';
 import { formatCurrency } from '@/app/views/formatters';
 import { NotFound } from '@pages/NotFound';
@@ -15,7 +15,6 @@ export function Profile() {
     const { profileId, isOwner } = useProfileRoute();
     const { session } = useAuth();
     const currentUserId = session?.userId;
-    const { lookup, reverseLookup, loading: lookupLoading } = useSystemLookup();
 
     const [loading, setLoading] = useState(true);
     const [profile, setProfile] = useState<ProfileData | null>(null);
@@ -39,10 +38,10 @@ export function Profile() {
                     api.get<any>('/profiles', { params: { 'userId': profileId, } }),
                     api.get<any>('/users', { params: { 'userId': profileId } }),
                     api.get<any>('/userStatistics', { params: { 'userId': profileId } }),
-                    api.get(`/userConnections`, { params: { 'userId': profileId, _page: 1, _per_page: 6, 'connectionStatusId': reverseLookup('Accepted') } }),
-                    api.get(`/userAchievements`, { params: { 'userId': profileId, } }),
-                    !isOwner && currentUserId ? api.get(`/userConnections`, { params: { 'userId': currentUserId, 'friendId': profileId } }) : Promise.resolve({ data: [] }),
-                    isOwner ? api.get(`/userConnections`, { params: { 'userId': profileId, 'connectionStatusId': reverseLookup('Requested') } }) : Promise.resolve({ data: [] })
+                    api.get(`/userConnections`, { params: { 'userId': profileId, _page: 1, _per_page: 6, 'status.connectionName': 'Accepted' } }).catch(() => ({ data: { data: [] } })),
+                    api.get(`/userAchievements`, { params: { 'userId': profileId, } }).catch(() => ({ data: [] })),
+                    !isOwner && currentUserId ? api.get(`/userConnections`, { params: { 'userId': currentUserId, 'friendId': profileId } }).catch(() => ({ data: [] })) : Promise.resolve({ data: [] }),
+                    isOwner ? api.get(`/userConnections`, { params: { 'userId': profileId, 'status.connectionName': 'Requested' } }).catch(() => ({ data: [] })) : Promise.resolve({ data: [] })
                 ]);
 
                 const pData = Array.isArray(profileRes.data) ? profileRes.data : (profileRes.data?.data || []);
@@ -65,10 +64,10 @@ export function Profile() {
                     setPendingRequestsCount(pendData.length);
                 }
 
-                const conns = connRes.data.data || [];
+                const conns = connRes.data?.data || [];
                 if (conns.length > 0) {
                     const friendIds = conns.map((c: any) => c.friendId).join(',');
-                    const friendsRes = await api.get(`/profiles`, { params: { 'userId:in': friendIds } });
+                    const friendsRes = await api.get(`/profiles`, { params: { 'userId:in': friendIds } }).catch(() => ({ data: [] }));
                     const fData = Array.isArray(friendsRes.data) ? friendsRes.data : (friendsRes.data?.data || []);
                     setConnections(fData);
                 }
@@ -83,39 +82,38 @@ export function Profile() {
             }
         };
 
-        if (!lookupLoading) {
-            fetchProfileData();
-        }
-    }, [profileId, lookupLoading, reverseLookup]);
+        fetchProfileData();
+    }, [profileId, isOwner, currentUserId]);
 
     useEffect(() => {
         const fetchTabContent = async () => {
             if (activeTab === 'overview' || activeTab === 'bulletins') {
-                api.get('/bulletins', { params: { 'profileId': profileId, } })
+                api.get('/bulletins', { params: { 'profileId': profileId } })
+                    .catch(() => ({ data: [] }))
                     .then(res => {
                         const data = Array.isArray(res.data) ? res.data : (res.data?.data || []);
                         setBulletins(data);
                     });
             }
             if (activeTab === 'overview' || activeTab === 'comments') {
-                api.get('/comments', { params: { 'profileId': profileId, } })
+                api.get('/comments', { params: { 'profileId': profileId } })
+                    .catch(() => ({ data: [] }))
                     .then(res => {
                         const fetchedComments = Array.isArray(res.data) ? res.data : (res.data?.data || []);
                         setComments(fetchedComments);
                     });
             }
             if (activeTab === 'events') {
-                api.get('/userRsvps', { params: { 'userId': profileId, 'isAttending': true } }).then(async rsvpRes => {
+                api.get('/userRsvps', { params: { 'userId': profileId, 'isAttending': true } }).catch(() => ({ data: [] })).then(async rsvpRes => {
                     const rsvps = Array.isArray(rsvpRes.data) ? rsvpRes.data : (rsvpRes.data?.data || []);
                     if (rsvps.length > 0) {
                         const eventIds = rsvps.map((r: any) => r.eventId).join(',');
-                        const eventApproved = reverseLookup("Approved");
                         const eventRes = await api.get('/events', {
                             params: {
                                 'id:in': eventIds,
-                                'contentStatusId': eventApproved,
-                                }
-                        });
+                                'status.statusName': 'Approved',
+                            }
+                        }).catch(() => ({ data: [] }));
                         const attended = Array.isArray(eventRes.data) ? eventRes.data : (eventRes.data?.data || []);
                         const now = new Date();
                         now.setHours(0, 0, 0, 0);
@@ -139,7 +137,7 @@ export function Profile() {
         fetchTabContent();
     }, [profileId, activeTab]);
 
-    if (loading || lookupLoading) {
+    if (loading) {
         return (
             <div className="min-h-screen bg-gray-50 flex items-center justify-center">
                 <Loader2 className="w-12 h-12 text-brand-primary animate-spin" />
@@ -151,7 +149,7 @@ export function Profile() {
         return <NotFound />;
     }
 
-    if (userRecord.userStatusId === reverseLookup('Banned')) {
+    if (userRecord.userStatus?.statusName === 'Banned') {
         return <NotFound />;
     }
 
@@ -239,57 +237,58 @@ export function Profile() {
         );
     };
 
+    const isValidString = (val: any) => Boolean(val && String(val).trim() !== '' && String(val).trim() !== 'null' && String(val).trim() !== 'undefined');
+
     const aboutConfig = [
         {
-            condition: profile.currentJob || profile.company,
             icon: Briefcase,
-            content: (
+            content: isValidString(profile.currentJob) || isValidString(profile.company) ? (
                 <>
-                    {profile.currentJob}
-                    {profile.currentJob && profile.company && " at "}
-                    {profile.company}
+                    {isValidString(profile.currentJob) ? profile.currentJob : ''}
+                    {isValidString(profile.currentJob) && isValidString(profile.company) ? " at " : ""}
+                    {isValidString(profile.company) ? profile.company : ''}
                 </>
-            ),
+            ) : null
         },
         {
-            condition: profile.email,
             icon: Mail,
             content: (
-                <a
+                isValidString(profile.email) ? <a
                     href={`mailto:${profile.email}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="truncate hover:underline hover:text-brand-primary-hover cursor-pointer"
                 >
                     {profile.email}
-                </a>
+                </a> : null
             ),
         },
         {
-            condition: profile.phone,
             icon: Phone,
-            content: profile.phone,
+            content: isValidString(profile.phone) ? profile.phone : null,
         },
         {
-            condition: profile.location,
             icon: MapPin,
-            content: profile.location,
+            content: isValidString(profile.location) ? profile.location : null,
         },
         {
-            condition: profile.birthday,
             icon: Calendar,
-            content: `Born ${new Date(profile.birthday).toLocaleDateString(
+            content: isValidString(profile.birthday) ? `Born ${new Date(profile.birthday).toLocaleDateString(
                 "en-US",
                 { month: "long", day: "numeric", year: "numeric" }
-            )}`,
+            )}` : null
         },
+        {
+            icon: profile.gender === 'Male' ? Mars : profile.gender === 'Female' ? Venus : NonBinary,
+            content: isValidString(profile.gender) ? profile.gender : null,
+        }
     ];
-    const aboutIsEmpty = !aboutConfig.some(field => field.condition);
+    const aboutIsEmpty = !aboutConfig.some(field => field.content !== null);
 
     let visibility = 'hidden';
     let tabVisibility = false;
-    const profStatus = userRecord ? lookup(userRecord.profileStatusId) : 'hidden';
-    const isConnected = connection?.connectionStatusId === reverseLookup('Accepted');
+    const profStatus = userRecord?.profileStatus?.statusName || 'hidden';
+    const isConnected = connection?.status?.connectionName === 'Accepted';
 
     if (isOwner || profStatus === 'Public') {
         visibility = 'full';
@@ -303,8 +302,8 @@ export function Profile() {
             <div className="max-w-6xl mx-auto px-4 md:px-8 py-12">
                 <ProfileHeader
                     name={profile.userName}
-                    degree={profile.degree ? `${profile.degree.degreeName} (${profile.degree.degreeAbbr})` : lookup(profile.degreeId)}
-                    graduationYear={profile.batch.toString()}
+                    degree={profile.degree ? `${profile.degree.degreeName} (${profile.degree.degreeAbbr})` : ''}
+                    graduationYear={profile.batch?.toString() || ''}
                     profileImage={profile.profileImage}
                     bio={profile.bio}
                     isProfilePage={true}
@@ -314,7 +313,7 @@ export function Profile() {
                     onTabChange={setActiveTab}
                     statsData={statsData}
                     isOwner={isOwner}
-                    connectionCode={connection?.connectionStatusId}
+                    connectionStatus={connection?.status?.connectionName}
                     pendingRequestsCount={pendingRequestsCount}
                     onConnectionUpdate={(newCode, newCount) => {
                         setConnection(newCode !== null ? { connectionStatusId: newCode } : null);
@@ -322,7 +321,6 @@ export function Profile() {
                             setStatsData(prev => prev ? { ...prev, userConnections: newCount } : prev);
                         }
                     }}
-                    reverseLookup={reverseLookup}
                 />
 
                 {visibility === 'hidden' ? (
@@ -339,7 +337,7 @@ export function Profile() {
                                     <h3 className="font-bold text-lg mb-4 text-gray-900">About</h3>
                                     <div className="space-y-3 text-sm text-gray-600">
                                         {aboutConfig.map(({ icon: Icon, content }, i) => {
-                                            if (!content) return null;
+                                            if (content === null) return null;
                                             return (
                                                 <div key={i} className="flex items-center gap-3">
                                                     <Icon className="w-4 h-4 text-gray-900" />

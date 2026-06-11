@@ -1,14 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ProfileHeader } from '@components/user/ProfileHeader';
-import { api, AchievementIconMap, useProfileRoute, useSystemLookup, type ProfileData, type UserStatisticsData } from '@/app/views/api';
+import { api, AchievementIconMap, useProfileRoute, type ProfileData, type UserStatisticsData } from '@/app/views/api';
 import { NotFound } from '@pages/NotFound';
 import { Trophy, Loader2 } from 'lucide-react';
 
 export function Achievements() {
     const navigate = useNavigate();
     const { profileId, isOwner } = useProfileRoute();
-    const { lookup, loading: isLookupLoading } = useSystemLookup();
 
     const [loading, setLoading] = useState(true);
     const [profile, setProfile] = useState<ProfileData | null>(null);
@@ -42,7 +41,7 @@ export function Achievements() {
         fetchAchievementsData();
     }, [profileId]);
 
-    if (loading || isLookupLoading) {
+    if (loading) {
         return (
             <div className="min-h-screen bg-gray-50 flex items-center justify-center">
                 <Loader2 className="w-12 h-12 text-brand-primary animate-spin" />
@@ -63,8 +62,8 @@ export function Achievements() {
             <div className="max-w-6xl mx-auto px-4 md:px-8 py-12">
                 <ProfileHeader
                     name={profile.userName}
-                    degree={profile.degree ? `${profile.degree.degreeName} (${profile.degree.degreeAbbr})` : lookup(profile.degreeId)}
-                    graduationYear={profile.batch.toString()}
+                    degree={profile.degree ? `${profile.degree.degreeName} (${profile.degree.degreeAbbr})` : ''}
+                    graduationYear={profile.batch?.toString() || ''}
                     profileImage={profile.profileImage}
                     bio="Alumni of University of San Jose - Recoletos."
                     isProfilePage={false}

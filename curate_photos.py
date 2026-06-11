@@ -1,6 +1,7 @@
 import os
 import requests
 import time
+import csv
 from playwright.sync_api import sync_playwright
 from urllib.parse import urlparse, urljoin
 
@@ -14,12 +15,6 @@ PAGES = [
     "https://www.facebook.com/usjrcomes/photos_albums",
     "https://www.facebook.com/usjrIEJOINTS/photos_albums",
     "https://www.facebook.com/profile.php?id=61579301007838&sk=photos_albums"
-]
-
-KEYWORDS = [
-    "graduation", "grad", "alumni", "group", "candid", "classroom", 
-    "student", "students", "laugh", "smile", "smiling", "event", 
-    "organization", "org", "uniform", "friends", "friendship", "legacy", "people", "standing", "text"
 ]
 
 def get_image_id(src):
@@ -82,8 +77,17 @@ def enter_theater_mode(page):
     return False
 
 def run():
-    gallery_dir = os.path.join(os.getcwd(), "gallery")
+    base_dir = os.getcwd()
+    gallery_dir = os.path.join(base_dir, "gallery")
     os.makedirs(gallery_dir, exist_ok=True)
+    
+    tracker_path = os.path.join(base_dir, "album_tracker.csv")
+    tracker_exists = os.path.exists(tracker_path)
+    
+    with open(tracker_path, mode='a', newline='', encoding='utf-8') as f:
+        writer = csv.writer(f)
+        if not tracker_exists:
+            writer.writerow(["Page_Name", "Album_Name", "Album_Dir", "Album_URL"])
     
     with sync_playwright() as p:
         print("Connecting to your existing Chrome browser on port 9222...")
@@ -98,9 +102,9 @@ def run():
         
         print("Proceeding with scraping using your existing session...")
         
-        for idx, page_url in enumerate(PAGES):
-            print(f"\nProcessing page {idx+1}/{len(PAGES)}: {page_url}")
-            page_name = "page_" + str(idx+1)
+        for page_idx, page_url in enumerate(PAGES):
+            print(f"\nProcessing page {page_idx+1}/{len(PAGES)}: {page_url}")
+            page_name = f"page_{page_idx+1}"
             try:
                 page.goto(page_url, timeout=30000)
                 page.wait_for_timeout(3000)
@@ -125,16 +129,22 @@ def run():
             
             print(f"Found {len(album_hrefs)} potential albums/photos links.")
             
-            downloaded = 0
             albums_to_visit = list(album_hrefs)
-            albums_to_visit.append(page_url)
+            albums_to_visit.append(page_url)  # Root photos page fallback
             
-            seen_src_ids = set()
-            
-            for album_url in albums_to_visit:
-                if downloaded >= 200:
-                    break
-                print(f"  Visiting album: {album_url}")
+            for album_idx, album_url in enumerate(albums_to_visit):
+                album_name = f"album_{album_idx+1}"
+                album_dir_relative = f"gallery/{page_name}/{album_name}"
+                album_dir_absolute = os.path.join(base_dir, "gallery", page_name, album_name)
+                
+                os.makedirs(album_dir_absolute, exist_ok=True)
+                
+                # Log to tracker
+                with open(tracker_path, mode='a', newline='', encoding='utf-8') as f:
+                    writer = csv.writer(f)
+                    writer.writerow([page_name, album_name, album_dir_relative, album_url])
+                
+                print(f"  Visiting {album_name}: {album_url}")
                 try:
                     page.goto(album_url, timeout=30000)
                     page.wait_for_timeout(3000)
@@ -148,11 +158,12 @@ def run():
                     print("    Failed to find a valid photo thumbnail to click. Skipping album.")
                     continue
                 
+                downloaded = 0
                 album_seen_src_ids = set()
                 consecutive_fails = 0
                 last_src_id = None
                 
-                while downloaded < 200:
+                while downloaded < 15:
                     try:
                         main_img = get_main_image(page)
                         if not main_img:
@@ -187,33 +198,18 @@ def run():
                             
                         album_seen_src_ids.add(src_id)
                         
-                        if src_id not in seen_src_ids:
-                            alt = main_img.get_attribute("alt") or ""
-                            alt_lower = alt.lower()
-                            match = False
-                            
-                            if not alt:
-                                match = True 
-                            else:
-                                for kw in KEYWORDS:
-                                    if kw in alt_lower:
-                                        match = True
-                                        break
-                                        
-                            if match:
-                                success = download_image(src, gallery_dir, f"{page_name}_{downloaded+1}")
-                                if success:
-                                    downloaded += 1
-                                    seen_src_ids.add(src_id)
-                                    print(f"    Downloaded HD image {downloaded}/200")
-                                    
+                        success = download_image(src, album_dir_absolute, f"img_{downloaded+1}")
+                        if success:
+                            downloaded += 1
+                            print(f"    Downloaded HD image {downloaded}/15")
+                                
                         page.keyboard.press("ArrowRight")
                         page.wait_for_timeout(1500)
                     except Exception as e:
                         print(f"    Error in theater loop: {e}")
                         break
 
-            print(f"Finished processing {page_name}. Downloaded {downloaded} images.")
+            print(f"Finished processing {page_name}.")
 
         print("\nAll pages processed. Closing our tab.")
         try:

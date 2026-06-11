@@ -20,11 +20,10 @@ import { Avatar, AvatarFallback, AvatarImage } from '@components/ui/avatar';
 import { Alert, AlertDescription, AlertTitle } from '@components/ui/alert';
 import { NotFound } from '@pages/NotFound';
 import { useAuth } from '@/app/views/auth';
-import { api, useSystemLookup, type EventData, type ProfileData } from '@/app/views/api';
+import { api, type EventData, type ProfileData } from '@/app/views/api';
 
 export function EventDetail() {
     const { id } = useParams<{ id: string }>();
-    const { lookup, reverseLookup } = useSystemLookup();
     const isAdmin = !!localStorage.getItem('adminToken');
     const { isLoggedIn, session } = useAuth();
 
@@ -46,7 +45,7 @@ export function EventDetail() {
 
                 if (event?.authorId) {
                     const authorUser = allUsers.find((u: any) => String(u.id) === String(event.authorId));
-                    if (authorUser && authorUser.userStatusId === reverseLookup('Banned')) {
+                    if (authorUser && authorUser.userStatus?.statusName === 'Banned') {
                         setEventData(null);
                         setLoading(false);
                         return;
@@ -61,7 +60,7 @@ export function EventDetail() {
 
                 if (session?.userId) {
                     const currentU = allUsers.find((u: any) => String(u.userId) === String(session.userId));
-                    if (currentU && currentU.userStatusId === reverseLookup('Suspended')) {
+                    if (currentU && currentU.userStatus?.statusName === 'Suspended') {
                         setIsSuspended(true);
                     }
                 }
@@ -85,7 +84,7 @@ export function EventDetail() {
         );
     }
 
-    const currentStatusName = eventData ? lookup(eventData.contentStatusId) : null;
+    const currentStatusName = eventData?.eventStatus?.statusName || null;
 
     if (!eventData || currentStatusName === "Rejected") {
         return <NotFound />;
@@ -104,7 +103,7 @@ export function EventDetail() {
     };
 
     const displayTime = `${formatTime(eventData.startTime)} - ${formatTime(eventData.endTime)}`;
-    const categoryName = lookup(eventData.eventCategoryId);
+    const categoryName = eventData.eventCategory?.eventCategoryName || 'Unknown';
 
     const currentUserRsvp = eventData.userRsvps?.find(r => r.userId === session?.userId?.toString());
     const rsvpStatus = currentUserRsvp ? (currentUserRsvp.isAttending ? 'going' : 'not_going') : null;

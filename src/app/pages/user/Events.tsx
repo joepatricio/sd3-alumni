@@ -6,13 +6,12 @@ import { Button } from '@components/ui/button';
 import { Link } from 'react-router-dom';
 import { getCategoryColor } from '@/app/views/categoryColors';
 import { isEventUpcoming } from '@/app/views/eventFilters';
-import { api, useSystemLookup, type EventData } from '@/app/views/api';
+import { api, type EventData } from '@/app/views/api';
 import { useAuth } from '@/app/views/auth';
 
 const EVENTS_PER_PAGE = 6;
 
 export function Events() {
-    const { lookup, reverseLookup } = useSystemLookup();
     const [events, setEvents] = useState<EventData[]>([]);
     const [loading, setLoading] = useState(true);
     const { session } = useAuth();
@@ -32,17 +31,15 @@ export function Events() {
                 ]);
                 
                 const allUsers = Array.isArray(usersRes.data) ? usersRes.data : (usersRes.data?.data || []);
-                const bannedId = reverseLookup('Banned');
-                const suspendedId = reverseLookup('Suspended');
                 const restricted = allUsers
-                    .filter((u: any) => u.userStatusId === bannedId || u.userStatusId === suspendedId)
+                    .filter((u: any) => u.userStatus?.statusName === 'Banned' || u.userStatus?.statusName === 'Suspended')
                     .map((u: any) => String(u.id));
                 setRestrictedUsers(restricted);
 
                 if (session?.userId) {
                     const currentU = allUsers.find((u: any) => String(u.userId) === String(session.userId));
                     if (currentU) {
-                        setCurrentUserStatus(currentU.userStatusId);
+                        setCurrentUserStatus(currentU.userStatus?.statusName || '');
                     }
                 }
 
@@ -60,8 +57,8 @@ export function Events() {
     }, []);
 
     const categories = useMemo(() => {
-        return Array.from(new Set(events.map(event => lookup(event.eventCategoryId))));
-    }, [events, lookup]);
+        return Array.from(new Set(events.map(event => event.eventCategory?.eventCategoryName).filter(Boolean))) as string[];
+    }, [events]);
 
     const toggleCategory = (cat: string) => {
         setSelectedCategories(prev =>
@@ -77,15 +74,12 @@ export function Events() {
     };
 
     const filteredEvents = useMemo(() => {
-        // "Approved" status usually has a specific lookup
-        const approvedStatusId = reverseLookup('Approved');
-
         let sorted = events
-            .filter(event => event.contentStatusId === approvedStatusId && !restrictedUsers.includes(String(event.authorId)))
+            .filter(event => event.eventStatus?.statusName === 'Approved' && !restrictedUsers.includes(String(event.authorId)))
             .sort((a, b) => new Date(a.eventDate).getTime() - new Date(b.eventDate).getTime());
 
         if (selectedCategories.length > 0) {
-            sorted = sorted.filter(event => selectedCategories.includes(lookup(event.eventCategoryId)));
+            sorted = sorted.filter(event => selectedCategories.includes(event.eventCategory?.eventCategoryName || ''));
         }
 
         sorted = sorted.filter(event => {
@@ -106,7 +100,7 @@ export function Events() {
 
         if (timeRange === 'Past') return sorted.reverse();
         else return sorted;
-    }, [events, selectedCategories, timeRange, lookup, reverseLookup]);
+    }, [events, selectedCategories, timeRange, restrictedUsers]);
 
     const paginatedEvents = filteredEvents.slice(0, visibleCount);
 
@@ -131,7 +125,7 @@ export function Events() {
                                     events
                                 </p>
                             </div>
-                            {currentUserStatus !== reverseLookup('Suspended') && currentUserStatus !== reverseLookup('Banned') && (
+                            {currentUserStatus !== 'Suspended' && currentUserStatus !== 'Banned' && (
                                 <CreateEventModal
                                     trigger={
                                         <button
@@ -196,7 +190,7 @@ export function Events() {
                     <>
                         <div className="space-y-6 mb-6">
                             {paginatedEvents.map((event) => {
-                                const categoryName = lookup(event.eventCategoryId);
+                                const categoryName = event.eventCategory?.eventCategoryName || 'Unknown';
                                 return (
                                     <Link
                                         key={event.id}

@@ -85,7 +85,7 @@ app.post('/api/auth/register', async (req, res) => {
         // Look up IDs for relations
         const pendingUserStatus = await prisma.userStatus.findFirst({ where: { statusName: 'Pending' } });
         const privateProfileStatus = await prisma.profileStatus.findFirst({ where: { statusName: 'Private' } });
-        
+
         let degreeId = null;
         if (degreeProgram) {
             const degree = await prisma.degree.findFirst({
@@ -361,10 +361,10 @@ const tableToModel = {
 
 const defaultIncludes = {
     profile: { degree: true, user: true },
-    user: { profile: true, userStatus: true },
+    user: { profile: { include: { degree: true } }, userStatus: true, profileStatus: true },
     bulletin: { comments: { include: { user: { include: { profile: true } } } }, status: true, author: { include: { profile: true } }, likes: true },
-    event: { location: true, rsvps: true },
-    userConnection: { status: true, user: { include: { profile: true } }, friend: { include: { profile: true } } },
+    event: { location: true, rsvps: true, status: true, category: true },
+    userConnection: { status: true, user: { include: { profile: { include: { degree: true } } } }, friend: { include: { profile: { include: { degree: true } } } } },
     comment: { user: { include: { profile: true } }, bulletin: true },
     userAchievement: { achievement: true },
     userRsvp: { event: true },
@@ -372,8 +372,9 @@ const defaultIncludes = {
     userAuth: {
         user: {
             include: {
-                profile: true,
-                userStatus: true
+                profile: { include: { degree: true } },
+                userStatus: true,
+                profileStatus: true
             }
         }
     }
@@ -402,7 +403,38 @@ function parseQuery(query, modelName) {
             else if (key === 'profileId:in') key = 'userId:in';
         }
 
-        if (key.endsWith(':in')) {
+        if (key.includes('.')) {
+            const parts = key.split('.');
+            let current = where;
+            for (let i = 0; i < parts.length - 1; i++) {
+                if (!current[parts[i]]) {
+                    current[parts[i]] = { is: {} };
+                } else if (!current[parts[i]].is) {
+                    current[parts[i]] = { is: current[parts[i]] };
+                }
+                current = current[parts[i]].is;
+            }
+            const lastPart = parts[parts.length - 1];
+            if (lastPart.endsWith(':in')) {
+                const field = lastPart.replace(':in', '');
+                const values = typeof val === 'string' ? val.split(',') : (Array.isArray(val) ? val : [val]);
+                const mappedValues = values.map(v => {
+                    if (v === 'true') return true;
+                    if (v === 'false') return false;
+                    if (numericFields.has(field) && !isNaN(v) && v.trim() !== '') return Number(v);
+                    return v;
+                });
+                current[field] = { in: mappedValues };
+            } else {
+                let parsedVal = val;
+                if (val === 'true') parsedVal = true;
+                else if (val === 'false') parsedVal = false;
+                else if (numericFields.has(lastPart) && !isNaN(val) && val.trim() !== '') {
+                    parsedVal = Number(val);
+                }
+                current[lastPart] = parsedVal;
+            }
+        } else if (key.endsWith(':in')) {
             const field = key.replace(':in', '');
             const values = typeof val === 'string' ? val.split(',') : (Array.isArray(val) ? val : [val]);
             const mappedValues = values.map(v => {
@@ -435,7 +467,7 @@ function formatOutput(modelName, data) {
             item.id = item.userId;
         }
 
-        // 2. Relation naming translation (status -> donationStatus / contentStatus)
+        // 2. Relation naming translation
         if (modelName === 'donation' && item.status) {
             item.donationStatus = item.status;
         }
@@ -450,6 +482,10 @@ function formatOutput(modelName, data) {
                     }
                 });
             }
+        }
+        if (modelName === 'event' && item.status) {
+            item.eventStatus = item.status;
+            item.eventCategory = item.category;
         }
         if (modelName === 'comment') {
             if (item.user?.profile) {
@@ -493,12 +529,43 @@ app.get('/api/:table', async (req, res, next) => {
         const where = parseQuery(req.query, modelName);
         const includes = defaultIncludes[modelName];
 
-        const data = await delegate.findMany({
-            where,
-            ...(includes && { include: includes })
-        });
+        const page = req.query._page ? parseInt(req.query._page, 10) : undefined;
+        const perPage = req.query._per_page ? parseInt(req.query._per_page, 10) : (req.query._limit ? parseInt(req.query._limit, 10) : undefined);
+        const isPaginated = page !== undefined && perPage !== undefined && !isNaN(page) && !isNaN(perPage);
 
-        res.json(formatOutput(modelName, data));
+        if (isPaginated) {
+            const skip = (page - 1) * perPage;
+            const take = perPage;
+            
+            const [data, totalItems] = await Promise.all([
+                delegate.findMany({
+                    where,
+                    skip,
+                    take,
+                    ...(includes && { include: includes })
+                }),
+                delegate.count({ where })
+            ]);
+
+            const totalPages = Math.ceil(totalItems / perPage);
+            
+            res.json({
+                first: 1,
+                prev: page > 1 ? page - 1 : null,
+                next: page < totalPages ? page + 1 : null,
+                last: totalPages,
+                pages: totalPages,
+                items: totalItems,
+                data: formatOutput(modelName, data)
+            });
+        } else {
+            const data = await delegate.findMany({
+                where,
+                ...(includes && { include: includes })
+            });
+
+            res.json(formatOutput(modelName, data));
+        }
     } catch (error) {
         console.error(`Generic GET /api/${table} failed:`, error);
         res.status(500).json({ error: `Failed to fetch ${table}` });
@@ -543,7 +610,7 @@ app.post('/api/:table', async (req, res, next) => {
         if (!delegate) return res.status(404).json({ error: `Model for ${table} not found` });
 
         let data = req.body;
-        
+
         // Safety coercion for numeric fields in POST payloads
         for (const [k, v] of Object.entries(data)) {
             if (numericFields.has(k) && typeof v === 'string' && !isNaN(v) && v.trim() !== '') {

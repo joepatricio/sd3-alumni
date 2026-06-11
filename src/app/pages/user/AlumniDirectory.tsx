@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Search, Users, Loader2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { api, useSystemLookup, type DegreeData, type AlumniCard } from '@/app/views/api';
+import { api, type DegreeData, type AlumniCard } from '@/app/views/api';
 
 const ITEMS_PER_PAGE = 12;
 
@@ -13,7 +13,6 @@ export function AlumniDirectory() {
     const [currentPage, setCurrentPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
     const [absoluteTotalAlumni, setAbsoluteTotalAlumni] = useState(0);
-    const { reverseLookup, loading: lookupLoading } = useSystemLookup();
 
     // Form states
     const [searchName, setSearchName] = useState('');
@@ -30,19 +29,17 @@ export function AlumniDirectory() {
     });
 
     useEffect(() => {
-        if (lookupLoading) return;
         api.get<any>('/degrees').then(res => setDegrees(res.data || []));
         const url = `/profiles`;
         api.get(url).then(res => setAbsoluteTotalAlumni(res.data.length || 0));
-    }, [lookupLoading, reverseLookup]);
+    }, []);
 
     useEffect(() => {
-        if (degrees.length === 0 || lookupLoading) return;
+        if (degrees.length === 0) return;
 
         const fetchData = async () => {
             setLoading(true);
             try {
-                const bannedStatusId = reverseLookup('Banned');
                 const url = `/profiles`;
 
                 const res = await api.get<any>(url);
@@ -62,12 +59,10 @@ export function AlumniDirectory() {
                     profiles = profiles.filter((p: any) => String(p.degreeId) === String(activeFilters.degreeId));
                 }
 
-                if (bannedStatusId) {
-                    // Filter out banned users
-                    const usersRes = await api.get('/users');
-                    const bannedUsers = usersRes.data.filter((u: any) => u.userStatusId === bannedStatusId).map((u: any) => u.id);
-                    profiles = profiles.filter((p: any) => !bannedUsers.includes(p.userId));
-                }
+                // Filter out banned users
+                const usersRes = await api.get('/users');
+                const bannedUsers = usersRes.data.filter((u: any) => u.userStatus?.statusName === 'Banned').map((u: any) => String(u.id));
+                profiles = profiles.filter((p: any) => !bannedUsers.includes(String(p.userId)));
 
                 setTotalPages(Math.ceil(profiles.length / ITEMS_PER_PAGE));
 

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Ban, UserMinus, Loader2, Search, UserCheck, X, Unlock } from 'lucide-react';
 import { ProfileHeader } from '@components/user/ProfileHeader';
-import { api, useProfileRoute, useSystemLookup, type ProfileData } from '@/app/views/api';
+import { api, useProfileRoute, type ProfileData } from '@/app/views/api';
 import { handleConnection } from '@/app/views/user';
 
 export function Connections() {
@@ -10,7 +10,6 @@ export function Connections() {
     const location = useLocation();
 
     const { profileId, isOwner } = useProfileRoute();
-    const { lookup, reverseLookup } = useSystemLookup();
 
     const [loading, setLoading] = useState(true);
     const [profile, setProfile] = useState<ProfileData | null>(null);
@@ -31,17 +30,17 @@ export function Connections() {
                 const profile = Array.isArray(profileDataRaw) ? profileDataRaw[0] : profileDataRaw;
                 setProfile(profile);
 
-                let connectionCode = reverseLookup('Accepted');
+                let connectionStatusName = 'Accepted';
                 if (isOwner) {
-                    if (activeTab === 'pending') connectionCode = reverseLookup('Requested');
-                    if (activeTab === 'blocked') connectionCode = reverseLookup('Blocking');
+                    if (activeTab === 'pending') connectionStatusName = 'Requested';
+                    if (activeTab === 'blocked') connectionStatusName = 'Blocking';
                 }
 
                 // Fetch user's connections
                 const connectionsRes = await api.get('/userConnections', {
                     params: {
                         'userId': profileId,
-                        'connectionStatusId': connectionCode
+                        'status.connectionName': connectionStatusName
                     }
                 });
 
@@ -49,9 +48,7 @@ export function Connections() {
 
                 if (connData.length > 0) {
                     const friendIds = connData.map((c: any) => c.friendId).join(',');
-                    const bannedStatusId = reverseLookup('Banned');
-                    const url = `/profiles?${bannedStatusId ? `` : ''}`;
-                    const friendsRes = await api.get(url, { params: { 'userId:in': friendIds } });
+                    const friendsRes = await api.get('/profiles', { params: { 'userId:in': friendIds } });
                     const friendsArray = Array.isArray(friendsRes.data) ? friendsRes.data : (friendsRes.data?.data || []);
 
                     // Attach the connection record to the profile data so we have the IDs for actions
@@ -74,12 +71,12 @@ export function Connections() {
         if (profileId) {
             fetchConnectionsData();
         }
-    }, [profileId, activeTab, reverseLookup]);
+    }, [profileId, activeTab]);
 
     const handleAction = async (action: string, friendId: string) => {
         setLoading(true);
         try {
-            await handleConnection(action as any, profileId, friendId, reverseLookup);
+            await handleConnection(action as any, profileId, friendId);
             // Refresh list
             setConnections(connections.filter(c => c.userId !== friendId));
         } catch (err) {
@@ -125,8 +122,8 @@ export function Connections() {
                 {/* Profile Header */}
                 <ProfileHeader
                     name={profile.userName}
-                    degree={profile.degree ? `${profile.degree.degreeName} (${profile.degree.degreeAbbr})` : lookup(profile.degreeId)}
-                    graduationYear={profile.batch.toString()}
+                    degree={profile.degree ? `${profile.degree.degreeName} (${profile.degree.degreeAbbr})` : ''}
+                    graduationYear={profile.batch?.toString() || ''}
                     profileImage={profile.profileImage}
                     bio="Alumni of University of San Jose - Recoletos."
                     isProfilePage={false}

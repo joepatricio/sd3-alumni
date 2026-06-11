@@ -11,7 +11,7 @@ import {
 import { CreateBulletinModal } from '@components/user/CreateBulletinModal';
 import { Button } from '@components/ui/button';
 import { LazyImage } from '@components/user/LazyImage';
-import { api, useSystemLookup, type BulletinData, type ProfileData } from '@/app/views/api';
+import { api, type BulletinData, type ProfileData } from '@/app/views/api';
 import { useAuth } from '@/app/views/auth';
 
 type ViewMode = 'headline' | 'article';
@@ -19,7 +19,6 @@ const ARTICLE_ITEMS_PER_PAGE = 5;
 const HEADLINE_ITEMS_PER_PAGE = 10;
 
 export function Bulletin() {
-    const { reverseLookup } = useSystemLookup();
     const [viewMode, setViewMode] = useState<ViewMode>('article');
     const [officialOnly, setOfficialOnly] = useState(false);
     const [dateFrom, setDateFrom] = useState('');
@@ -38,14 +37,10 @@ export function Bulletin() {
         const fetchData = async () => {
             try {
                 const [bRes, uRes, allUsersRes] = await Promise.all([
-                    // idk bro
-                    // Like, everything in Bulletin and Events is BAD code
-                    // A lot of filtering could be done server-side which would reduce response payload.
-                    // I want what's easy for now. Please if you are reading this improve the API calls.
-                    api.get('/bulletins?_embed=contentStatus'),
+                    api.get('/bulletins', { params: { 'status.statusName': 'Approved' } }),
                     api.get(`/users`, {
                         params: {
-                            userStatusId: reverseLookup('Official')
+                            'userStatus.statusName': 'Official'
                         }
                     }),
                     api.get('/users')
@@ -53,18 +48,16 @@ export function Bulletin() {
                 const bData = Array.isArray(bRes.data) ? bRes.data : (bRes.data?.data || []);
                 const uData = Array.isArray(uRes.data) ? uRes.data : (uRes.data?.data || []);
                 const allUsers = Array.isArray(allUsersRes.data) ? allUsersRes.data : (allUsersRes.data?.data || []);
-                
-                const bannedId = reverseLookup('Banned');
-                const suspendedId = reverseLookup('Suspended');
+
                 const restrictedProfileIds = allUsers
-                    .filter((u: any) => u.userStatusId === bannedId || u.userStatusId === suspendedId)
+                    .filter((u: any) => u.userStatus?.statusName === 'Banned' || u.userStatus?.statusName === 'Suspended')
                     .map((u: any) => String(u.id));
                 setRestrictedUsers(restrictedProfileIds);
 
                 if (session?.userId) {
                     const currentU = allUsers.find((u: any) => String(u.userId) === String(session.userId));
                     if (currentU) {
-                        setCurrentUserStatus(currentU.userStatusId);
+                        setCurrentUserStatus(currentU.userStatus?.statusName || '');
                     }
                 }
 
@@ -73,7 +66,7 @@ export function Bulletin() {
 
                 const pMap: Record<string, ProfileData> = {};
                 (bData || []).forEach((b: BulletinData) => {
-                    if (b.profile) pMap[b.profileId] = b.profile;
+                    if (b.profile) pMap[b.authorId] = b.profile;
                 });
                 setProfilesMap(pMap);
             } catch (err) {
@@ -83,13 +76,13 @@ export function Bulletin() {
             }
         };
         fetchData();
-    }, [reverseLookup]);
+    }, []);
 
     const filteredItems = useMemo(() => {
         let filtered = bulletins.filter(item => !restrictedUsers.includes(String(item.profile?.userId)));
 
         if (officialOnly) {
-            filtered = filtered.filter(item => officialUsers.includes(item.profileId));
+            filtered = filtered.filter(item => officialUsers.includes(item.authorId));
         }
 
         if (dateFrom) {
@@ -100,7 +93,7 @@ export function Bulletin() {
         }
 
         return filtered.sort((a, b) => new Date(b.bulletinDate).getTime() - new Date(a.bulletinDate).getTime());
-    }, [bulletins, officialOnly, dateFrom, dateTo, reverseLookup, officialUsers]);
+    }, [bulletins, officialOnly, dateFrom, dateTo, officialUsers, restrictedUsers]);
 
     const ITEMS_PER_PAGE = viewMode === 'article' ? ARTICLE_ITEMS_PER_PAGE : HEADLINE_ITEMS_PER_PAGE;
 
@@ -119,7 +112,7 @@ export function Bulletin() {
                                 USJ-R alumni community
                             </p>
                         </div>
-                        {currentUserStatus !== reverseLookup('Suspended') && currentUserStatus !== reverseLookup('Banned') && (
+                        {currentUserStatus !== 'Suspended' && currentUserStatus !== 'Banned' && (
                             <CreateBulletinModal
                                 trigger={
                                     <button
@@ -230,7 +223,7 @@ export function Bulletin() {
                         ) : (
                             <div className="space-y-6">
                                 {paginatedItems.map((item) => {
-                                    const authorProfile = profilesMap[item.profileId];
+                                    const authorProfile = profilesMap[item.authorId];
                                     return (
                                         <div
                                             key={item.id}
@@ -251,7 +244,7 @@ export function Bulletin() {
                                                     <div className="p-6">
                                                         <div className="flex items-center gap-3 mb-4">
                                                             <Link
-                                                                to={`/profile/${item.profileId}`}
+                                                                to={`/profile/${item.authorId}`}
                                                                 className="flex items-center gap-2 hover:opacity-80 transition-opacity relative z-10"
                                                             >
                                                                 <img
@@ -286,7 +279,7 @@ export function Bulletin() {
                                                 /* Headline View */
                                                 <div className="p-6 flex gap-4">
                                                     <Link
-                                                        to={`/profile/${item.profileId}`}
+                                                        to={`/profile/${item.authorId}`}
                                                         className="flex-shrink-0 hover:opacity-80 transition-opacity relative z-10"
                                                     >
                                                         <img
@@ -306,7 +299,7 @@ export function Bulletin() {
                                                         </Link>
                                                         <div className="flex items-center gap-2 mb-3 text-sm text-gray-600 relative z-10">
                                                             <Link
-                                                                to={`/profile/${item.profileId}`}
+                                                                to={`/profile/${item.authorId}`}
                                                                 className="hover:text-brand-primary transition-colors"
                                                             >
                                                                 {authorProfile?.userName || "Unknown Author"}

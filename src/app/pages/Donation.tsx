@@ -5,16 +5,17 @@ import { SiFacebook, SiX, SiInstagram, SiLinkedin } from 'react-icons/si';
 import { toast } from 'sonner';
 import { useAuth } from '@/app/views/auth';
 import { formatCurrency } from '@/app/views/formatters';
-import { api, useSystemLookup } from '@/app/views/api';
+import { api } from '@/app/views/api';
 import { customAlphabet, nanoid } from 'nanoid';
+import { z } from 'zod';
 
 export function Donation() {
-    const { isLoggedIn, setIsLoggedIn, session } = useAuth();
+    const { isLoggedIn, session, setSession } = useAuth();
     const [selectedAmount, setSelectedAmount] = useState<number | null>(1000);
     const [customAmount, setCustomAmount] = useState('');
     const [donorEmail, setDonorEmail] = useState('');
+    const [emailError, setEmailError] = useState<string | null>(null);
     const [isAnonymous, setIsAnonymous] = useState(false);
-    const { reverseLookup } = useSystemLookup();
 
     const amounts = [500, 1000, 2000, 5000, 10000, 20000];
 
@@ -35,24 +36,36 @@ export function Donation() {
             return;
         }
 
+        if (!isLoggedIn && donorEmail) {
+            const emailResult = z.string().email().safeParse(donorEmail);
+            if (!emailResult.success) {
+                setEmailError("Please enter a valid email address.");
+                return;
+            }
+        }
+        setEmailError(null);
+
         const nanoidRef = customAlphabet("23456789BCDFGHJKLMNPQRSTVWXYZ", 3);
         const refId = `DON-${nanoidRef()}-${nanoidRef()}`;
         const donationId = nanoid(10);
 
-        const newDonation = {
-            id: donationId,
-            donationId: donationId,
-            donationReference: refId,
-            userId: isLoggedIn ? session?.userId : null,
-            donationStatusId: reverseLookup('Completed'),
-            donationDate: new Date().toISOString(),
-            donationAmount: amount,
-            donationAmountPhp: formatCurrency(amount),
-            donationAnonymous: !isLoggedIn || isAnonymous,
-            donationEmail: isLoggedIn ? session?.email : donorEmail
-        };
-
         try {
+            const statusRes = await api.get('/donationStatuses');
+            const completedId = statusRes.data.find((s: any) => s.statusName === 'Completed')?.id;
+
+            const newDonation = {
+                id: donationId,
+                donationId: donationId,
+                donationReference: refId,
+                userId: isLoggedIn ? session?.userId : null,
+                donationStatusId: completedId,
+                donationDate: new Date().toISOString(),
+                donationAmount: amount,
+                donationAmountPhp: formatCurrency(amount),
+                donationAnonymous: !isLoggedIn || isAnonymous,
+                donationEmail: isLoggedIn ? session?.email : donorEmail
+            };
+
             await api.post('/donations', newDonation);
 
             if (isLoggedIn && !isAnonymous) {
@@ -91,6 +104,7 @@ export function Donation() {
             setSelectedAmount(1000);
             setCustomAmount('');
             setDonorEmail('');
+            setEmailError(null);
             setIsAnonymous(false);
 
         } catch (error) {
@@ -197,10 +211,8 @@ export function Donation() {
                                         </div>
                                         <button
                                             onClick={() => {
-                                                localStorage.setItem('userIsLoggedIn', 'false');
-                                                setIsLoggedIn(false);
+                                                setSession(null);
                                                 toast.success("You are now making an anonymous donation.");
-                                                window.dispatchEvent(new Event('storage'));
                                             }}
                                             className="whitespace-nowrap bg-white/10 hover:bg-white/20 px-4 py-2.5 rounded-lg text-xs font-semibold text-white transition-colors border border-white/20"
                                         >
@@ -257,10 +269,14 @@ export function Donation() {
                                                         type="email"
                                                         placeholder="Enter email address"
                                                         value={donorEmail}
-                                                        onChange={(e) => setDonorEmail(e.target.value)}
-                                                        className="w-full pl-10 pr-4 py-3 rounded-lg border-2 border-gray-200 focus:border-brand-primary focus:outline-none transition-colors text-sm"
+                                                        onChange={(e) => {
+                                                            setDonorEmail(e.target.value);
+                                                            if (emailError) setEmailError(null);
+                                                        }}
+                                                        className={`w-full pl-10 pr-4 py-3 rounded-lg border-2 ${emailError ? 'border-red-500 focus:border-red-500' : 'border-gray-200 focus:border-brand-primary'} focus:outline-none transition-colors text-sm`}
                                                     />
                                                 </div>
+                                                {emailError && <p className="text-red-500 text-xs mt-1">{emailError}</p>}
                                             </div>
                                         ) : (
                                             <label className="flex items-center gap-3 cursor-pointer p-3 rounded-lg border border-gray-100 bg-gray-50 hover:bg-gray-100 transition-colors">
