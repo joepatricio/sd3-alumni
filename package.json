@@ -8,7 +8,8 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "server": "node api/index.js"
+    "server": "tsx api/index.js",
+    "seed": "tsx prisma/seed.ts"
   },
   "dependencies": {
     "@emotion/react": "11.14.0",
@@ -17,7 +18,8 @@
     "@mui/icons-material": "7.3.5",
     "@mui/material": "7.3.5",
     "@popperjs/core": "2.11.8",
-    "@prisma/client": "^5.22.0",
+    "@prisma/adapter-better-sqlite3": "^7.8.0",
+    "@prisma/client": "^7.8.0",
     "@radix-ui/react-accordion": "1.2.3",
     "@radix-ui/react-alert-dialog": "1.1.6",
     "@radix-ui/react-aspect-ratio": "1.1.2",
@@ -47,6 +49,7 @@
     "@types/node": "^25.3.3",
     "axios": "^1.13.6",
     "bcryptjs": "^3.0.3",
+    "better-sqlite3": "^12.10.0",
     "chroma-js": "^3.2.0",
     "class-variance-authority": "0.7.1",
     "clsx": "2.1.1",
@@ -93,6 +96,7 @@
   "devDependencies": {
     "@tailwindcss/vite": "4.1.12",
     "@types/bcryptjs": "^3.0.0",
+    "@types/better-sqlite3": "^7.6.13",
     "@types/cookie-parser": "^1.4.10",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
@@ -103,7 +107,7 @@
     "@types/react-dom": "^19.0.3",
     "@types/uuid": "^11.0.0",
     "@vitejs/plugin-react": "4.7.0",
-    "prisma": "^5.22.0",
+    "prisma": "^7.8.0",
     "tailwindcss": "4.1.12",
     "tsx": "^4.22.3",
     "typescript": "^5.9.3",

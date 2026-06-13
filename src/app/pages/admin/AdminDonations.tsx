@@ -1,11 +1,12 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@components/ui/card';
 import { Button } from '@components/ui/button';
 import { Badge } from '@components/ui/badge';
 import { Tabs, TabsList, TabsTrigger } from '@components/ui/tabs';
 import { Input } from '@components/ui/input';
-import { Download, Search, ArrowUp, ArrowDown, ArrowUpDown, ChevronLeft, ChevronRight } from 'lucide-react';
-import { adminDonationsMock, getDonationStats } from '@assets/adminMockData';
+import { Download, Search, ArrowUp, ArrowDown, ArrowUpDown, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
+import { api } from '@/app/views/api';
+import { format } from 'date-fns';
 
 interface Donation {
     id: string;
@@ -19,7 +20,61 @@ interface Donation {
 
 export function AdminDonations() {
     const ITEMS_PER_PAGE = 20;
-    const stats = getDonationStats();
+    
+    const [donations, setDonations] = useState<Donation[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchDonations = async () => {
+            try {
+                const response = await api.get('/donations');
+                const data = response.data.map((d: any) => ({
+                    id: d.id,
+                    date: format(new Date(d.donationDate), 'MMM dd, yyyy'),
+                    donor: d.donationAnonymous || !d.user?.profile?.userName ? 'Anonymous' : d.user.profile.userName,
+                    amount: `₱${d.donationAmount.toLocaleString()}`,
+                    status: d.status?.statusName || 'Processing',
+                    rawAmount: d.donationAmount,
+                    rawDate: new Date(d.donationDate).getTime()
+                }));
+                setDonations(data);
+            } catch (error) {
+                console.error("Failed to fetch donations", error);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+        fetchDonations();
+    }, []);
+
+    const stats = useMemo(() => {
+        const currentYear = new Date().getFullYear();
+        
+        let totalRaised = 0;
+        let pendingCount = 0;
+        let pendingClearances = 0;
+        const uniqueDonors = new Set();
+
+        donations.forEach(d => {
+            const isThisYear = new Date(d.rawDate).getFullYear() === currentYear;
+            if (d.status === 'Completed') {
+                totalRaised += d.rawAmount;
+            } else if (d.status === 'Processing') {
+                pendingCount++;
+                pendingClearances += d.rawAmount;
+            }
+            if (isThisYear && d.donor !== 'Anonymous') {
+                uniqueDonors.add(d.donor);
+            }
+        });
+
+        return {
+            totalRaised: `₱${totalRaised.toLocaleString()}`,
+            pendingClearances: `₱${pendingClearances.toLocaleString()}`,
+            pendingCount,
+            activeDonors: uniqueDonors.size
+        };
+    }, [donations]);
 
     // Filter State
     const [activeTab, setActiveTab] = useState('All');
@@ -100,7 +155,6 @@ export function AdminDonations() {
     };
 
     const filteredDonations = useMemo(() => {
-        const donations = adminDonationsMock as Donation[];
         let result = donations;
 
         // Status Filter
@@ -161,7 +215,7 @@ export function AdminDonations() {
         }
 
         return result;
-    }, [activeTab, appliedSearchDonor, appliedMinAmount, appliedMaxAmount, appliedStartDate, appliedEndDate, sortConfig]);
+    }, [donations, activeTab, appliedSearchDonor, appliedMinAmount, appliedMaxAmount, appliedStartDate, appliedEndDate, sortConfig]);
 
     const totalPages = Math.ceil(filteredDonations.length / ITEMS_PER_PAGE);
     const paginatedDonations = filteredDonations.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
@@ -169,8 +223,8 @@ export function AdminDonations() {
     // Top 5 recent donations for the separate table
     // Creating a new array before sorting to avoid mutating the original mock data
     const recentDonations = useMemo(() => {
-        return [...(adminDonationsMock as Donation[])].sort((a, b) => b.rawDate - a.rawDate).slice(0, 5);
-    }, []);
+        return [...donations].sort((a, b) => b.rawDate - a.rawDate).slice(0, 5);
+    }, [donations]);
 
     const onTabChange = (val: string) => {
         setActiveTab(val);
@@ -185,6 +239,12 @@ export function AdminDonations() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {isLoading ? (
+                    <div className="col-span-3 flex justify-center py-10">
+                        <Loader2 className="w-8 h-8 animate-spin text-brand-primary" />
+                    </div>
+                ) : (
+                    <>
                 <Card className="border-none shadow-md bg-green-50">
                     <CardHeader className="pb-2">
                         <CardTitle className="text-sm font-medium text-green-800">Total Raised (YTD)</CardTitle>
@@ -208,10 +268,12 @@ export function AdminDonations() {
                         <CardTitle className="text-sm font-medium text-gray-500">Active Donors</CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <div className="text-3xl font-bold text-gray-900">142</div>
+                        <div className="text-3xl font-bold text-gray-900">{stats.activeDonors}</div>
                         <p className="text-xs text-gray-500 mt-1">This year</p>
                     </CardContent>
                 </Card>
+                    </>
+                )}
             </div>
 
             <Card className="border-none shadow-md">

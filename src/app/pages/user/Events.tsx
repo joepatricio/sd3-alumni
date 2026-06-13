@@ -111,6 +111,16 @@ export function Events() {
         return parts.join(', ');
     };
 
+    const formatTime = (timeStr: string) => {
+        if (!timeStr) return '';
+        if (timeStr.includes('AM') || timeStr.includes('PM')) return timeStr;
+        const [hours, minutes] = timeStr.split(':');
+        const h = parseInt(hours, 10);
+        const ampm = h >= 12 ? 'PM' : 'AM';
+        const displayHours = h % 12 || 12;
+        return `${displayHours}:${minutes} ${ampm}`;
+    };
+
     return (
         <div className="min-h-screen bg-gray-50">
             <div className="max-w-6xl mx-auto">
@@ -229,7 +239,7 @@ export function Events() {
                                                         </div>
                                                         <div className="flex items-center gap-2">
                                                             <Clock className="w-4 h-4 text-brand-primary" />
-                                                            <span>{event.startTime}</span>
+                                                            <span>{event.endTime ? `${formatTime(event.startTime)} - ${formatTime(event.endTime)}` : formatTime(event.startTime)}</span>
                                                         </div>
                                                         <div className="flex items-center gap-2">
                                                             {categoryName === 'Virtual' ? (

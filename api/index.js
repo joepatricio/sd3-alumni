@@ -1,20 +1,23 @@
 import express from 'express';
 import cors from 'cors';
-import dotenv from 'dotenv';
+import 'dotenv/config';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import cookieParser from 'cookie-parser';
-import pkg from '@prisma/client';
+import Database from 'better-sqlite3';
 import multer from 'multer';
-import { v4 as uuidv4 } from 'uuid';
 import path from 'path';
+import { v4 as uuidv4 } from 'uuid';
+import { PrismaClient } from "../prisma/generated/client";
+import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
 
-const { PrismaClient } = pkg;
+const adapter = new PrismaBetterSqlite3({
+    url: process.env.DATABASE_URL || "file:./dev.db",
+});
 
-dotenv.config();
+export const prisma = new PrismaClient({ adapter });
 
 const app = express();
-const prisma = new PrismaClient();
 
 const PORT = process.env.PORT;
 const JWT_SECRET = process.env.JWT_SECRET;
@@ -113,12 +116,6 @@ app.post('/api/auth/register', async (req, res) => {
             return res.status(500).json({ error: 'Internal configuration error (missing statuses)' });
         }
 
-        // Find or create a default Admin for the Record
-        let defaultAdmin = await prisma.admin.findFirst();
-        if (!defaultAdmin) {
-            defaultAdmin = await prisma.admin.create({ data: { passwordHash: 'default' } });
-        }
-
         // Hash password
         const passwordHash = bcrypt.hashSync(password, 10);
         const userId = uuidv4();
@@ -150,7 +147,6 @@ app.post('/api/auth/register', async (req, res) => {
                     },
                     records: {
                         create: {
-                            adminId: defaultAdmin.id,
                             userStatusId: pendingUserStatus.id,
                             description: "User registered",
                         }
@@ -177,7 +173,7 @@ app.post('/api/auth/register', async (req, res) => {
     }
 });
 
-// Custom Auth Login (optional fallback, though frontend uses /api/userAuths query)
+// Custom Auth Login
 app.post('/api/auth/login', async (req, res) => {
     const { email, password } = req.body;
     try {
@@ -205,6 +201,15 @@ app.post('/api/auth/login', async (req, res) => {
             return res.status(401).json({ error: 'Invalid email or password' });
         }
 
+        if (userAuth.user?.userStatus?.statusName === 'Banned') {
+            return res.status(403).json({ error: 'Your account has been banned' });
+        }
+
+        await prisma.userAuth.update({
+            where: { userId: userAuth.userId },
+            data: { lastLogin: new Date() }
+        });
+
         const token = jwt.sign(
             { id: userAuth.user.id, email: userAuth.email },
             JWT_SECRET,
@@ -220,6 +225,42 @@ app.post('/api/auth/login', async (req, res) => {
                 name: userAuth.user.profile?.userName,
             }
         });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+// Custom Admin Login
+app.post('/api/auth/admin/login', async (req, res) => {
+    const { username, password } = req.body;
+    try {
+        const admin = await prisma.admin.findUnique({
+            where: { username }
+        });
+
+        if (!admin) {
+            return res.status(401).json({ error: 'Invalid admin credentials' });
+        }
+
+        const isValid = await bcrypt.compare(password, admin.passwordHash);
+
+        if (!isValid) {
+            return res.status(401).json({ error: 'Invalid admin credentials' });
+        }
+
+        await prisma.admin.update({
+            where: { id: admin.id },
+            data: { lastLogin: new Date() }
+        });
+
+        const token = jwt.sign(
+            { id: admin.id, role: 'admin' },
+            JWT_SECRET,
+            { expiresIn: '24h' }
+        );
+
+        res.json({ token, admin: { id: admin.id } });
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: 'Internal server error' });
@@ -330,6 +371,92 @@ app.post('/api/connections/action', authenticateToken, async (req, res) => {
 });
 
 
+// Custom Event Conclude Logic
+const concludeEvent = async (eventId) => {
+    try {
+        const eventStatuses = await prisma.eventStatus.findMany();
+        const concludedStatus = eventStatuses.find(s => s.statusName === 'Concluded');
+        if (!concludedStatus) return;
+
+        const event = await prisma.event.findUnique({
+            where: { id: eventId },
+            include: { rsvps: true }
+        });
+
+        if (!event || event.eventStatusId === concludedStatus.id) return;
+
+        await prisma.$transaction(async (tx) => {
+            await tx.event.update({
+                where: { id: eventId },
+                data: { eventStatusId: concludedStatus.id }
+            });
+
+            const attendees = event.rsvps.filter(r => r.isAttending);
+            for (const rsvp of attendees) {
+                const stat = await tx.userStatistic.findFirst({ where: { userId: rsvp.userId } });
+                if (stat) {
+                    await tx.userStatistic.update({
+                        where: { userId: rsvp.userId },
+                        data: { eventsAttended: (stat.eventsAttended || 0) + 1 }
+                    });
+                }
+            }
+        });
+        console.log(`Event ${eventId} concluded.`);
+    } catch (err) {
+        console.error(`Failed to conclude event ${eventId}:`, err);
+    }
+};
+
+app.post('/api/events/:id/conclude', authenticateToken, async (req, res) => {
+    try {
+        const { id } = req.params;
+        await concludeEvent(id);
+        res.json({ message: 'Event concluded successfully.' });
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to conclude event' });
+    }
+});
+
+const setupWatchdog = () => {
+    const runWatchdog = async () => {
+        try {
+            console.log("Running midnight event watchdog...");
+            const eventStatuses = await prisma.eventStatus.findMany();
+            const concludedStatus = eventStatuses.find(s => s.statusName === 'Concluded');
+            if (!concludedStatus) return;
+
+            const now = new Date();
+            const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+
+            const eventsToConclude = await prisma.event.findMany({
+                where: {
+                    eventStatusId: { not: concludedStatus.id },
+                    eventDate: { lte: oneDayAgo }
+                }
+            });
+
+            for (const event of eventsToConclude) {
+                await concludeEvent(event.id);
+            }
+        } catch (e) {
+            console.error("Watchdog error:", e);
+        }
+        scheduleNextWatchdog();
+    };
+
+    const scheduleNextWatchdog = () => {
+        const now = new Date();
+        const nextMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 0, 0, 0);
+        const timeToNextMidnight = nextMidnight.getTime() - now.getTime();
+        setTimeout(runWatchdog, timeToNextMidnight);
+    };
+
+    scheduleNextWatchdog();
+};
+setupWatchdog();
+
+
 // =======================
 // GENERIC FALLBACK CRUD ROUTER (COMPATIBILITY ENGINE)
 // =======================
@@ -356,19 +483,23 @@ const tableToModel = {
     donations: 'donation',
     locations: 'location',
     achievements: 'achievement',
-    bulletinLikes: 'bulletinLike'
+    bulletinLikes: 'bulletinLike',
+    commentLikes: 'commentLike',
+    userRsvps: 'userRsvp',
+    profiles: 'profile',
+    users: 'user'
 };
 
 const defaultIncludes = {
     profile: { degree: true, user: true },
     user: { profile: { include: { degree: true } }, userStatus: true, profileStatus: true },
-    bulletin: { comments: { include: { user: { include: { profile: true } } } }, status: true, author: { include: { profile: true } }, likes: true },
+    bulletin: { comments: { include: { user: { include: { profile: true } }, likesList: true } }, status: true, author: { include: { profile: true } }, likes: true },
     event: { location: true, rsvps: true, status: true, category: true },
     userConnection: { status: true, user: { include: { profile: { include: { degree: true } } } }, friend: { include: { profile: { include: { degree: true } } } } },
-    comment: { user: { include: { profile: true } }, bulletin: true },
+    comment: { user: { include: { profile: true } }, bulletin: true, likesList: true },
     userAchievement: { achievement: true },
     userRsvp: { event: true },
-    donation: { status: true },
+    donation: { status: true, user: { select: { profile: { select: { userName: true } } } } },
     userAuth: {
         user: {
             include: {
@@ -470,9 +601,11 @@ function formatOutput(modelName, data) {
         // 2. Relation naming translation
         if (modelName === 'donation' && item.status) {
             item.donationStatus = item.status;
+            delete item.status;
         }
         if (modelName === 'bulletin' && item.status) {
             item.contentStatus = item.status;
+            delete item.status;
             item.profile = item.author?.profile;
             if (item.comments) {
                 item.comments.forEach(c => {
@@ -485,7 +618,9 @@ function formatOutput(modelName, data) {
         }
         if (modelName === 'event' && item.status) {
             item.eventStatus = item.status;
+            delete item.status;
             item.eventCategory = item.category;
+            if (item.rsvps) item.userRsvps = item.rsvps;
         }
         if (modelName === 'comment') {
             if (item.user?.profile) {
@@ -536,7 +671,7 @@ app.get('/api/:table', async (req, res, next) => {
         if (isPaginated) {
             const skip = (page - 1) * perPage;
             const take = perPage;
-            
+
             const [data, totalItems] = await Promise.all([
                 delegate.findMany({
                     where,
@@ -548,7 +683,7 @@ app.get('/api/:table', async (req, res, next) => {
             ]);
 
             const totalPages = Math.ceil(totalItems / perPage);
-            
+
             res.json({
                 first: 1,
                 prev: page > 1 ? page - 1 : null,
@@ -618,6 +753,15 @@ app.post('/api/:table', async (req, res, next) => {
             }
         }
 
+        // Strip seconds for event times
+        if (modelName === 'event') {
+            if (data.startTime && typeof data.startTime === 'string') data.startTime = data.startTime.substring(0, 5);
+            if (data.endTime && typeof data.endTime === 'string') data.endTime = data.endTime.substring(0, 5);
+            if (data.eventDate && typeof data.eventDate === 'string' && data.eventDate.includes('T')) {
+                data.eventDate = data.eventDate.split('T')[0] + 'T00:00:00.000Z';
+            }
+        }
+
         // Filter schema fields to prevent unknown field errors (e.g. donationId)
         data = filterModelFields(modelName, data);
 
@@ -649,6 +793,15 @@ app.patch('/api/:table/:id', async (req, res, next) => {
         for (const [k, v] of Object.entries(data)) {
             if (numericFields.has(k) && typeof v === 'string' && !isNaN(v) && v.trim() !== '') {
                 data[k] = Number(v);
+            }
+        }
+
+        // Strip seconds for event times
+        if (modelName === 'event') {
+            if (data.startTime && typeof data.startTime === 'string') data.startTime = data.startTime.substring(0, 5);
+            if (data.endTime && typeof data.endTime === 'string') data.endTime = data.endTime.substring(0, 5);
+            if (data.eventDate && typeof data.eventDate === 'string' && data.eventDate.includes('T')) {
+                data.eventDate = data.eventDate.split('T')[0] + 'T00:00:00.000Z';
             }
         }
 
@@ -684,6 +837,15 @@ app.put('/api/:table/:id', async (req, res, next) => {
         for (const [k, v] of Object.entries(data)) {
             if (numericFields.has(k) && typeof v === 'string' && !isNaN(v) && v.trim() !== '') {
                 data[k] = Number(v);
+            }
+        }
+
+        // Strip seconds for event times
+        if (modelName === 'event') {
+            if (data.startTime && typeof data.startTime === 'string') data.startTime = data.startTime.substring(0, 5);
+            if (data.endTime && typeof data.endTime === 'string') data.endTime = data.endTime.substring(0, 5);
+            if (data.eventDate && typeof data.eventDate === 'string' && data.eventDate.includes('T')) {
+                data.eventDate = data.eventDate.split('T')[0] + 'T00:00:00.000Z';
             }
         }
 

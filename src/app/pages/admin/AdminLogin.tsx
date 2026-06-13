@@ -5,24 +5,32 @@ import { Button } from '@components/ui/button';
 import { Input } from '@components/ui/input';
 import { Label } from '@components/ui/label';
 import { Alert, AlertDescription } from '@components/ui/alert';
-import { Lock, User } from 'lucide-react';
+import { Lock, User, Loader2 } from 'lucide-react';
+import { api } from '@/app/views/api';
 
 export function AdminLogin() {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
+    const [isLoading, setIsLoading] = useState(false);
     const navigate = useNavigate();
 
-    const handleLogin = (e: React.FormEvent) => {
+    const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
         setError('');
+        setIsLoading(true);
 
-        if (username === 'admin' && password === 'password') {
-            // Set simple auth token in localStorage
-            localStorage.setItem('adminToken', 'authed');
+        try {
+            const response = await api.post('/auth/admin/login', { username, password });
+            const { token } = response.data;
+            
+            // Set simple auth token in sessionStorage
+            sessionStorage.setItem('adminToken', token);
             navigate('/admin');
-        } else {
-            setError('Invalid credentials. Please try again.');
+        } catch (err: any) {
+            setError(err.response?.data?.error || 'Invalid credentials. Please try again.');
+        } finally {
+            setIsLoading(false);
         }
     };
 
@@ -52,7 +60,7 @@ export function AdminLogin() {
                                 <Input
                                     id="username"
                                     placeholder="Enter username"
-                                    className="pl-10"
+                                    className="pl-10 selection:bg-blue-500 selection:text-white"
                                     value={username}
                                     onChange={(e) => setUsername(e.target.value)}
                                     required
@@ -69,14 +77,15 @@ export function AdminLogin() {
                                     id="password"
                                     type="password"
                                     placeholder="Enter password"
-                                    className="pl-10"
+                                    className="pl-10 selection:bg-blue-500 selection:text-white"
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
                                     required
                                 />
                             </div>
                         </div>
-                        <Button type="submit" className="w-full bg-brand-primary hover:bg-brand-primary-hover text-white">
+                        <Button type="submit" disabled={isLoading} className="w-full bg-brand-primary hover:bg-brand-primary-hover text-white">
+                            {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                             Sign In
                         </Button>
                     </form>

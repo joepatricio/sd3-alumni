@@ -1,10 +1,10 @@
 generator client {
-  provider = "prisma-client-js"
+  provider = "prisma-client"
+  output   = "./generated"
 }
 
 datasource db {
   provider = "sqlite"
-  url      = env("DATABASE_URL")
 }
 
 model Degree {
@@ -88,6 +88,7 @@ model User {
   rsvps         UserRsvp[]
   achievements  UserAchievement[]
   bulletinLikes BulletinLike[]
+  commentLikes  CommentLike[]
   notifications Notification[]
 }
 
@@ -200,6 +201,7 @@ model Profile {
 
 model Admin {
   id           String   @id @default(uuid())
+  username     String  @unique
   passwordHash String
   lastLogin    DateTime @default(now())
 
@@ -290,6 +292,19 @@ model Comment {
 
   user     User     @relation(fields: [userId], references: [id])
   bulletin Bulletin @relation(fields: [bulletinId], references: [id])
+  likesList CommentLike[]
+}
+
+model CommentLike {
+  id         String  @id @default(uuid())
+  userId     String
+  commentId  String
+  isLiked    Boolean
+
+  user       User    @relation(fields: [userId], references: [id])
+  comment    Comment @relation(fields: [commentId], references: [id])
+
+  @@unique([userId, commentId])
 }
 
 model Donation {

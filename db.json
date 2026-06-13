@@ -2204,7 +2204,7 @@
             "bulletinsCreated": 0,
             "commentsWritten": 4,
             "achievements": 3,
-            "donatedAmount": 1000.0
+            "donatedAmount": 1000
         },
         {
             "userId": "JaXSrFk9Nc",
@@ -2303,7 +2303,7 @@
             "bulletinsCreated": 0,
             "commentsWritten": 1,
             "achievements": 2,
-            "donatedAmount": 25000.0
+            "donatedAmount": 25000
         },
         {
             "userId": "Jvs-YtBlep",
@@ -2369,7 +2369,7 @@
             "bulletinsCreated": 1,
             "commentsWritten": 1,
             "achievements": 3,
-            "donatedAmount": 25000.0
+            "donatedAmount": 25000
         },
         {
             "userId": "7qL6Ob2zDh",
@@ -2391,7 +2391,7 @@
             "bulletinsCreated": 0,
             "commentsWritten": 2,
             "achievements": 2,
-            "donatedAmount": 500.0
+            "donatedAmount": 500
         },
         {
             "userId": "jXOVCcq6_C",
@@ -2402,7 +2402,7 @@
             "bulletinsCreated": 1,
             "commentsWritten": 2,
             "achievements": 3,
-            "donatedAmount": 5000.0
+            "donatedAmount": 5000
         },
         {
             "userId": "I5xNkEJChn",
@@ -2424,7 +2424,7 @@
             "bulletinsCreated": 0,
             "commentsWritten": 2,
             "achievements": 2,
-            "donatedAmount": 5000.0
+            "donatedAmount": 5000
         },
         {
             "userId": "FChcLSm7nZ",
@@ -2435,7 +2435,7 @@
             "bulletinsCreated": 0,
             "commentsWritten": 5,
             "achievements": 3,
-            "donatedAmount": 25000.0
+            "donatedAmount": 25000
         },
         {
             "userId": "ZLzELNZbP4",
@@ -2457,7 +2457,7 @@
             "bulletinsCreated": 0,
             "commentsWritten": 1,
             "achievements": 2,
-            "donatedAmount": 1000.0
+            "donatedAmount": 1000
         },
         {
             "userId": "FnjloxuMxf",
@@ -2479,7 +2479,7 @@
             "bulletinsCreated": 1,
             "commentsWritten": 0,
             "achievements": 3,
-            "donatedAmount": 25000.0
+            "donatedAmount": 25000
         },
         {
             "userId": "93DsDelF9u",
@@ -2512,7 +2512,7 @@
             "bulletinsCreated": 2,
             "commentsWritten": 2,
             "achievements": 4,
-            "donatedAmount": 1000.0
+            "donatedAmount": 1000
         },
         {
             "userId": "mDw344bAaT",
@@ -2589,7 +2589,7 @@
             "bulletinsCreated": 0,
             "commentsWritten": 1,
             "achievements": 2,
-            "donatedAmount": 5000.0
+            "donatedAmount": 5000
         },
         {
             "userId": "hPIJCGUe8J",
@@ -2611,7 +2611,7 @@
             "bulletinsCreated": 1,
             "commentsWritten": 4,
             "achievements": 3,
-            "donatedAmount": 5000.0
+            "donatedAmount": 5000
         },
         {
             "userId": "V3XKE5HZwY",
@@ -2655,7 +2655,7 @@
             "bulletinsCreated": 1,
             "commentsWritten": 2,
             "achievements": 4,
-            "donatedAmount": 25000.0
+            "donatedAmount": 25000
         },
         {
             "userId": "A_4re0x5WM",
@@ -2666,7 +2666,7 @@
             "bulletinsCreated": 0,
             "commentsWritten": 3,
             "achievements": 3,
-            "donatedAmount": 5000.0
+            "donatedAmount": 5000
         },
         {
             "userId": "dgKHZz6YF1",
@@ -2677,7 +2677,7 @@
             "bulletinsCreated": 2,
             "commentsWritten": 0,
             "achievements": 2,
-            "donatedAmount": 10000.0
+            "donatedAmount": 10000
         },
         {
             "userId": "5qGAIduIov",
@@ -5165,17 +5165,20 @@
     ],
     "admins": [
         {
-            "id": "admin1",
+            "id": "0lQ64uO0-o",
+            "username": "admin1",
             "passwordHash": "$2a$10$RF01DLY3wzkMTDihPwqMZuOu9dqipFZokMMf14UutW2Zk9IauaJ4y",
             "lastLogin": "2025-08-26T00:00:00.000Z"
         },
         {
-            "id": "admin2",
+            "id": "W3i4e3h6bT",
+            "username": "admin2",
             "passwordHash": "$2a$10$RF01DLY3wzkMTDihPwqMZuOu9dqipFZokMMf14UutW2Zk9IauaJ4y",
             "lastLogin": "2025-09-12T00:00:00.000Z"
         },
         {
-            "id": "admin3",
+            "id": "pW76oD1b2q",
+            "username": "admin3",
             "passwordHash": "$2a$10$RF01DLY3wzkMTDihPwqMZuOu9dqipFZokMMf14UutW2Zk9IauaJ4y",
             "lastLogin": "2026-02-22T00:00:00.000Z"
         }
@@ -5216,7 +5219,7 @@
             "cityCode": "072217",
             "barangay": "Sambag I",
             "landmark": "Cebu Normal University",
-            "street": "Osme\u00f1a Boulevard",
+            "street": "Osmeña Boulevard",
             "lat": 10.3016486,
             "lng": 123.8967853
         },
@@ -5621,8 +5624,8 @@
             "reviewDate": "2026-03-07T00:00:00.000Z",
             "title": "Awesome Event 1",
             "description": "Detailed description for event 1.",
-            "startTime": "09:00:00",
-            "endTime": "10:00:00",
+            "startTime": "09:00",
+            "endTime": "10:00",
             "responses": 86,
             "modality": "Virtual",
             "eventImage": "http://localhost:3000/events-image.jpg"
@@ -5638,8 +5641,8 @@
             "reviewDate": "2027-03-02T00:00:00.000Z",
             "title": "Awesome Event 2",
             "description": "Detailed description for event 2.",
-            "startTime": "16:00:00",
-            "endTime": "17:00:00",
+            "startTime": "16:00",
+            "endTime": "17:00",
             "responses": 96,
             "modality": "Virtual",
             "eventImage": "http://localhost:3000/events-image.jpg"
@@ -5655,8 +5658,8 @@
             "reviewDate": "2027-07-22T00:00:00.000Z",
             "title": "Awesome Event 3",
             "description": "Detailed description for event 3.",
-            "startTime": "12:00:00",
-            "endTime": "14:00:00",
+            "startTime": "12:00",
+            "endTime": "14:00",
             "responses": 82,
             "modality": "Virtual",
             "eventImage": "http://localhost:3000/events-image.jpg"
@@ -5672,8 +5675,8 @@
             "reviewDate": "2027-08-19T00:00:00.000Z",
             "title": "Awesome Event 4",
             "description": "Detailed description for event 4.",
-            "startTime": "15:00:00",
-            "endTime": "17:00:00",
+            "startTime": "15:00",
+            "endTime": "17:00",
             "responses": 79,
             "modality": "Virtual",
             "eventImage": "http://localhost:3000/events-image.jpg"
@@ -5689,8 +5692,8 @@
             "reviewDate": "2027-09-04T00:00:00.000Z",
             "title": "Awesome Event 5",
             "description": "Detailed description for event 5.",
-            "startTime": "12:00:00",
-            "endTime": "16:00:00",
+            "startTime": "12:00",
+            "endTime": "16:00",
             "responses": 25,
             "modality": "Virtual",
             "eventImage": "http://localhost:3000/events-image.jpg"
@@ -5706,8 +5709,8 @@
             "reviewDate": "2027-03-30T00:00:00.000Z",
             "title": "Awesome Event 6",
             "description": "Detailed description for event 6.",
-            "startTime": "10:00:00",
-            "endTime": "14:00:00",
+            "startTime": "10:00",
+            "endTime": "14:00",
             "responses": 92,
             "modality": "Virtual",
             "eventImage": "http://localhost:3000/events-image.jpg"
@@ -5723,8 +5726,8 @@
             "reviewDate": "2025-10-23T00:00:00.000Z",
             "title": "Awesome Event 7",
             "description": "Detailed description for event 7.",
-            "startTime": "12:00:00",
-            "endTime": "13:00:00",
+            "startTime": "12:00",
+            "endTime": "13:00",
             "responses": 17,
             "modality": "Virtual",
             "eventImage": "http://localhost:3000/events-image.jpg"
@@ -5740,8 +5743,8 @@
             "reviewDate": "2026-02-06T00:00:00.000Z",
             "title": "Awesome Event 8",
             "description": "Detailed description for event 8.",
-            "startTime": "09:00:00",
-            "endTime": "13:00:00",
+            "startTime": "09:00",
+            "endTime": "13:00",
             "responses": 38,
             "modality": "Virtual",
             "eventImage": "http://localhost:3000/events-image.jpg"
@@ -5757,8 +5760,8 @@
             "reviewDate": "2026-03-03T00:00:00.000Z",
             "title": "Awesome Event 9",
             "description": "Detailed description for event 9.",
-            "startTime": "08:00:00",
-            "endTime": "11:00:00",
+            "startTime": "08:00",
+            "endTime": "11:00",
             "responses": 87,
             "modality": "In-Person",
             "eventImage": "http://localhost:3000/events-image.jpg"
@@ -5774,8 +5777,8 @@
             "reviewDate": "2026-10-18T00:00:00.000Z",
             "title": "Awesome Event 10",
             "description": "Detailed description for event 10.",
-            "startTime": "08:00:00",
-            "endTime": "09:00:00",
+            "startTime": "08:00",
+            "endTime": "09:00",
             "responses": 57,
             "modality": "Virtual",
             "eventImage": "http://localhost:3000/events-image.jpg"
@@ -5791,8 +5794,8 @@
             "reviewDate": "2026-03-15T00:00:00.000Z",
             "title": "Awesome Event 11",
             "description": "Detailed description for event 11.",
-            "startTime": "11:00:00",
-            "endTime": "15:00:00",
+            "startTime": "11:00",
+            "endTime": "15:00",
             "responses": 62,
             "modality": "Virtual",
             "eventImage": "http://localhost:3000/events-image.jpg"
@@ -5808,8 +5811,8 @@
             "reviewDate": "2026-10-11T00:00:00.000Z",
             "title": "Awesome Event 12",
             "description": "Detailed description for event 12.",
-            "startTime": "10:00:00",
-            "endTime": "14:00:00",
+            "startTime": "10:00",
+            "endTime": "14:00",
             "responses": 14,
             "modality": "Virtual",
             "eventImage": "http://localhost:3000/events-image.jpg"
@@ -5825,8 +5828,8 @@
             "reviewDate": "2026-07-23T00:00:00.000Z",
             "title": "Awesome Event 13",
             "description": "Detailed description for event 13.",
-            "startTime": "15:00:00",
-            "endTime": "19:00:00",
+            "startTime": "15:00",
+            "endTime": "19:00",
             "responses": 12,
             "modality": "Virtual",
             "eventImage": "http://localhost:3000/events-image.jpg"
@@ -5842,8 +5845,8 @@
             "reviewDate": "2027-04-02T00:00:00.000Z",
             "title": "Awesome Event 14",
             "description": "Detailed description for event 14.",
-            "startTime": "10:00:00",
-            "endTime": "14:00:00",
+            "startTime": "10:00",
+            "endTime": "14:00",
             "responses": 61,
             "modality": "Hybrid",
             "eventImage": "http://localhost:3000/events-image.jpg"
@@ -5859,8 +5862,8 @@
             "reviewDate": null,
             "title": "Awesome Event 15",
             "description": "Detailed description for event 15.",
-            "startTime": "10:00:00",
-            "endTime": "13:00:00",
+            "startTime": "10:00",
+            "endTime": "13:00",
             "responses": 17,
             "modality": "Virtual",
             "eventImage": "http://localhost:3000/events-image.jpg"
@@ -5876,8 +5879,8 @@
             "reviewDate": "2026-07-19T00:00:00.000Z",
             "title": "Awesome Event 16",
             "description": "Detailed description for event 16.",
-            "startTime": "16:00:00",
-            "endTime": "17:00:00",
+            "startTime": "16:00",
+            "endTime": "17:00",
             "responses": 84,
             "modality": "In-Person",
             "eventImage": "http://localhost:3000/events-image.jpg"
@@ -5893,8 +5896,8 @@
             "reviewDate": "2027-07-14T00:00:00.000Z",
             "title": "Awesome Event 17",
             "description": "Detailed description for event 17.",
-            "startTime": "13:00:00",
-            "endTime": "14:00:00",
+            "startTime": "13:00",
+            "endTime": "14:00",
             "responses": 60,
             "modality": "Virtual",
             "eventImage": "http://localhost:3000/events-image.jpg"
@@ -5910,8 +5913,8 @@
             "reviewDate": null,
             "title": "Awesome Event 18",
             "description": "Detailed description for event 18.",
-            "startTime": "16:00:00",
-            "endTime": "19:00:00",
+            "startTime": "16:00",
+            "endTime": "19:00",
             "responses": 40,
             "modality": "In-Person",
             "eventImage": "http://localhost:3000/events-image.jpg"
@@ -5927,8 +5930,8 @@
             "reviewDate": "2025-11-16T00:00:00.000Z",
             "title": "Awesome Event 19",
             "description": "Detailed description for event 19.",
-            "startTime": "11:00:00",
-            "endTime": "15:00:00",
+            "startTime": "11:00",
+            "endTime": "15:00",
             "responses": 58,
             "modality": "In-Person",
             "eventImage": "http://localhost:3000/events-image.jpg"
@@ -5944,8 +5947,8 @@
             "reviewDate": "2025-12-27T00:00:00.000Z",
             "title": "Awesome Event 20",
             "description": "Detailed description for event 20.",
-            "startTime": "16:00:00",
-            "endTime": "18:00:00",
+            "startTime": "16:00",
+            "endTime": "18:00",
             "responses": 10,
             "modality": "Virtual",
             "eventImage": "http://localhost:3000/events-image.jpg"
@@ -6761,8 +6764,8 @@
             "bankName": "UnionBank",
             "donationStatusId": "XFyLS9pmJQ",
             "donationDate": "2025-07-18T00:00:00.000Z",
-            "donationAmount": 25000.0,
-            "donationAmountPhp": "\u20b125,000.00",
+            "donationAmount": 25000,
+            "donationAmountPhp": "₱25,000.00",
             "donationAnonymous": false,
             "donationEmail": "donor1@example.com"
         },
@@ -6773,8 +6776,8 @@
             "bankName": "Maya",
             "donationStatusId": "RXnTl_qKBb",
             "donationDate": "2026-02-27T00:00:00.000Z",
-            "donationAmount": 5000.0,
-            "donationAmountPhp": "\u20b15,000.00",
+            "donationAmount": 5000,
+            "donationAmountPhp": "₱5,000.00",
             "donationAnonymous": false,
             "donationEmail": "donor2@example.com"
         },
@@ -6785,8 +6788,8 @@
             "bankName": "Maya",
             "donationStatusId": "RXnTl_qKBb",
             "donationDate": "2025-11-09T00:00:00.000Z",
-            "donationAmount": 1000.0,
-            "donationAmountPhp": "\u20b11,000.00",
+            "donationAmount": 1000,
+            "donationAmountPhp": "₱1,000.00",
             "donationAnonymous": true,
             "donationEmail": "donor3@example.com"
         },
@@ -6797,8 +6800,8 @@
             "bankName": "BPI",
             "donationStatusId": "XFyLS9pmJQ",
             "donationDate": "2026-02-18T00:00:00.000Z",
-            "donationAmount": 500.0,
-            "donationAmountPhp": "\u20b1500.00",
+            "donationAmount": 500,
+            "donationAmountPhp": "₱500.00",
             "donationAnonymous": true,
             "donationEmail": "donor4@example.com"
         },
@@ -6809,8 +6812,8 @@
             "bankName": "UnionBank",
             "donationStatusId": "XFyLS9pmJQ",
             "donationDate": "2025-06-03T00:00:00.000Z",
-            "donationAmount": 1000.0,
-            "donationAmountPhp": "\u20b11,000.00",
+            "donationAmount": 1000,
+            "donationAmountPhp": "₱1,000.00",
             "donationAnonymous": true,
             "donationEmail": "donor5@example.com"
         },
@@ -6821,8 +6824,8 @@
             "bankName": "GCash",
             "donationStatusId": "RXnTl_qKBb",
             "donationDate": "2026-10-25T00:00:00.000Z",
-            "donationAmount": 25000.0,
-            "donationAmountPhp": "\u20b125,000.00",
+            "donationAmount": 25000,
+            "donationAmountPhp": "₱25,000.00",
             "donationAnonymous": false,
             "donationEmail": "donor6@example.com"
         },
@@ -6833,8 +6836,8 @@
             "bankName": "Maya",
             "donationStatusId": "RXnTl_qKBb",
             "donationDate": "2025-02-11T00:00:00.000Z",
-            "donationAmount": 5000.0,
-            "donationAmountPhp": "\u20b15,000.00",
+            "donationAmount": 5000,
+            "donationAmountPhp": "₱5,000.00",
             "donationAnonymous": false,
             "donationEmail": "donor7@example.com"
         },
@@ -6845,8 +6848,8 @@
             "bankName": "GCash",
             "donationStatusId": "RXnTl_qKBb",
             "donationDate": "2025-10-29T00:00:00.000Z",
-            "donationAmount": 25000.0,
-            "donationAmountPhp": "\u20b125,000.00",
+            "donationAmount": 25000,
+            "donationAmountPhp": "₱25,000.00",
             "donationAnonymous": false,
             "donationEmail": "donor8@example.com"
         },
@@ -6857,8 +6860,8 @@
             "bankName": "Maya",
             "donationStatusId": "u24w4cD0c8",
             "donationDate": "2025-07-01T00:00:00.000Z",
-            "donationAmount": 5000.0,
-            "donationAmountPhp": "\u20b15,000.00",
+            "donationAmount": 5000,
+            "donationAmountPhp": "₱5,000.00",
             "donationAnonymous": false,
             "donationEmail": "donor9@example.com"
         },
@@ -6869,8 +6872,8 @@
             "bankName": "Maya",
             "donationStatusId": "u24w4cD0c8",
             "donationDate": "2025-10-15T00:00:00.000Z",
-            "donationAmount": 25000.0,
-            "donationAmountPhp": "\u20b125,000.00",
+            "donationAmount": 25000,
+            "donationAmountPhp": "₱25,000.00",
             "donationAnonymous": false,
             "donationEmail": "donor10@example.com"
         },
@@ -6881,8 +6884,8 @@
             "bankName": "BPI",
             "donationStatusId": "RXnTl_qKBb",
             "donationDate": "2025-07-29T00:00:00.000Z",
-            "donationAmount": 5000.0,
-            "donationAmountPhp": "\u20b15,000.00",
+            "donationAmount": 5000,
+            "donationAmountPhp": "₱5,000.00",
             "donationAnonymous": true,
             "donationEmail": "donor11@example.com"
         },
@@ -6893,8 +6896,8 @@
             "bankName": "GCash",
             "donationStatusId": "RXnTl_qKBb",
             "donationDate": "2025-12-07T00:00:00.000Z",
-            "donationAmount": 10000.0,
-            "donationAmountPhp": "\u20b110,000.00",
+            "donationAmount": 10000,
+            "donationAmountPhp": "₱10,000.00",
             "donationAnonymous": true,
             "donationEmail": "donor12@example.com"
         },
@@ -6905,8 +6908,8 @@
             "bankName": "Maya",
             "donationStatusId": "RXnTl_qKBb",
             "donationDate": "2025-06-02T00:00:00.000Z",
-            "donationAmount": 1000.0,
-            "donationAmountPhp": "\u20b11,000.00",
+            "donationAmount": 1000,
+            "donationAmountPhp": "₱1,000.00",
             "donationAnonymous": false,
             "donationEmail": "donor13@example.com"
         },
@@ -6917,8 +6920,8 @@
             "bankName": "Maya",
             "donationStatusId": "u24w4cD0c8",
             "donationDate": "2026-06-22T00:00:00.000Z",
-            "donationAmount": 5000.0,
-            "donationAmountPhp": "\u20b15,000.00",
+            "donationAmount": 5000,
+            "donationAmountPhp": "₱5,000.00",
             "donationAnonymous": true,
             "donationEmail": "donor14@example.com"
         },
@@ -6929,8 +6932,8 @@
             "bankName": "Maya",
             "donationStatusId": "RXnTl_qKBb",
             "donationDate": "2026-10-11T00:00:00.000Z",
-            "donationAmount": 5000.0,
-            "donationAmountPhp": "\u20b15,000.00",
+            "donationAmount": 5000,
+            "donationAmountPhp": "₱5,000.00",
             "donationAnonymous": true,
             "donationEmail": "donor15@example.com"
         },
@@ -6941,8 +6944,8 @@
             "bankName": "BPI",
             "donationStatusId": "RXnTl_qKBb",
             "donationDate": "2025-09-22T00:00:00.000Z",
-            "donationAmount": 5000.0,
-            "donationAmountPhp": "\u20b15,000.00",
+            "donationAmount": 5000,
+            "donationAmountPhp": "₱5,000.00",
             "donationAnonymous": true,
             "donationEmail": "donor16@example.com"
         },
@@ -6953,8 +6956,8 @@
             "bankName": "BDO",
             "donationStatusId": "u24w4cD0c8",
             "donationDate": "2025-09-30T00:00:00.000Z",
-            "donationAmount": 5000.0,
-            "donationAmountPhp": "\u20b15,000.00",
+            "donationAmount": 5000,
+            "donationAmountPhp": "₱5,000.00",
             "donationAnonymous": false,
             "donationEmail": "donor17@example.com"
         },
@@ -6965,8 +6968,8 @@
             "bankName": "UnionBank",
             "donationStatusId": "u24w4cD0c8",
             "donationDate": "2026-02-01T00:00:00.000Z",
-            "donationAmount": 1000.0,
-            "donationAmountPhp": "\u20b11,000.00",
+            "donationAmount": 1000,
+            "donationAmountPhp": "₱1,000.00",
             "donationAnonymous": true,
             "donationEmail": "donor18@example.com"
         },
@@ -6977,8 +6980,8 @@
             "bankName": "BDO",
             "donationStatusId": "RXnTl_qKBb",
             "donationDate": "2025-11-10T00:00:00.000Z",
-            "donationAmount": 10000.0,
-            "donationAmountPhp": "\u20b110,000.00",
+            "donationAmount": 10000,
+            "donationAmountPhp": "₱10,000.00",
             "donationAnonymous": true,
             "donationEmail": "donor19@example.com"
         },
@@ -6989,8 +6992,8 @@
             "bankName": "BDO",
             "donationStatusId": "RXnTl_qKBb",
             "donationDate": "2025-04-12T00:00:00.000Z",
-            "donationAmount": 1000.0,
-            "donationAmountPhp": "\u20b11,000.00",
+            "donationAmount": 1000,
+            "donationAmountPhp": "₱1,000.00",
             "donationAnonymous": false,
             "donationEmail": "donor20@example.com"
         },
@@ -7001,8 +7004,8 @@
             "bankName": "BDO",
             "donationStatusId": "RXnTl_qKBb",
             "donationDate": "2025-06-14T00:00:00.000Z",
-            "donationAmount": 25000.0,
-            "donationAmountPhp": "\u20b125,000.00",
+            "donationAmount": 25000,
+            "donationAmountPhp": "₱25,000.00",
             "donationAnonymous": true,
             "donationEmail": "donor21@example.com"
         },
@@ -7013,8 +7016,8 @@
             "bankName": "BDO",
             "donationStatusId": "u24w4cD0c8",
             "donationDate": "2026-08-26T00:00:00.000Z",
-            "donationAmount": 1000.0,
-            "donationAmountPhp": "\u20b11,000.00",
+            "donationAmount": 1000,
+            "donationAmountPhp": "₱1,000.00",
             "donationAnonymous": true,
             "donationEmail": "donor22@example.com"
         },
@@ -7025,8 +7028,8 @@
             "bankName": "BDO",
             "donationStatusId": "u24w4cD0c8",
             "donationDate": "2026-11-04T00:00:00.000Z",
-            "donationAmount": 5000.0,
-            "donationAmountPhp": "\u20b15,000.00",
+            "donationAmount": 5000,
+            "donationAmountPhp": "₱5,000.00",
             "donationAnonymous": false,
             "donationEmail": "donor23@example.com"
         },
@@ -7037,8 +7040,8 @@
             "bankName": "UnionBank",
             "donationStatusId": "RXnTl_qKBb",
             "donationDate": "2026-10-01T00:00:00.000Z",
-            "donationAmount": 25000.0,
-            "donationAmountPhp": "\u20b125,000.00",
+            "donationAmount": 25000,
+            "donationAmountPhp": "₱25,000.00",
             "donationAnonymous": false,
             "donationEmail": "donor24@example.com"
         },
@@ -7049,8 +7052,8 @@
             "bankName": "Maya",
             "donationStatusId": "RXnTl_qKBb",
             "donationDate": "2026-04-03T00:00:00.000Z",
-            "donationAmount": 10000.0,
-            "donationAmountPhp": "\u20b110,000.00",
+            "donationAmount": 10000,
+            "donationAmountPhp": "₱10,000.00",
             "donationAnonymous": true,
             "donationEmail": "donor25@example.com"
         },
@@ -7061,8 +7064,8 @@
             "bankName": "UnionBank",
             "donationStatusId": "XFyLS9pmJQ",
             "donationDate": "2025-05-19T00:00:00.000Z",
-            "donationAmount": 10000.0,
-            "donationAmountPhp": "\u20b110,000.00",
+            "donationAmount": 10000,
+            "donationAmountPhp": "₱10,000.00",
             "donationAnonymous": false,
             "donationEmail": "donor26@example.com"
         },
@@ -7073,8 +7076,8 @@
             "bankName": "BPI",
             "donationStatusId": "u24w4cD0c8",
             "donationDate": "2025-01-29T00:00:00.000Z",
-            "donationAmount": 1000.0,
-            "donationAmountPhp": "\u20b11,000.00",
+            "donationAmount": 1000,
+            "donationAmountPhp": "₱1,000.00",
             "donationAnonymous": true,
             "donationEmail": "donor27@example.com"
         },
@@ -7085,8 +7088,8 @@
             "bankName": "UnionBank",
             "donationStatusId": "RXnTl_qKBb",
             "donationDate": "2026-07-04T00:00:00.000Z",
-            "donationAmount": 10000.0,
-            "donationAmountPhp": "\u20b110,000.00",
+            "donationAmount": 10000,
+            "donationAmountPhp": "₱10,000.00",
             "donationAnonymous": true,
             "donationEmail": "donor28@example.com"
         },
@@ -7097,8 +7100,8 @@
             "bankName": "BDO",
             "donationStatusId": "XFyLS9pmJQ",
             "donationDate": "2025-01-03T00:00:00.000Z",
-            "donationAmount": 5000.0,
-            "donationAmountPhp": "\u20b15,000.00",
+            "donationAmount": 5000,
+            "donationAmountPhp": "₱5,000.00",
             "donationAnonymous": true,
             "donationEmail": "donor29@example.com"
         },
@@ -7109,8 +7112,8 @@
             "bankName": "BDO",
             "donationStatusId": "u24w4cD0c8",
             "donationDate": "2026-05-15T00:00:00.000Z",
-            "donationAmount": 25000.0,
-            "donationAmountPhp": "\u20b125,000.00",
+            "donationAmount": 25000,
+            "donationAmountPhp": "₱25,000.00",
             "donationAnonymous": true,
             "donationEmail": "donor30@example.com"
         },
@@ -7121,8 +7124,8 @@
             "bankName": "Maya",
             "donationStatusId": "RXnTl_qKBb",
             "donationDate": "2026-12-27T00:00:00.000Z",
-            "donationAmount": 5000.0,
-            "donationAmountPhp": "\u20b15,000.00",
+            "donationAmount": 5000,
+            "donationAmountPhp": "₱5,000.00",
             "donationAnonymous": false,
             "donationEmail": "donor31@example.com"
         },
@@ -7133,8 +7136,8 @@
             "bankName": "Maya",
             "donationStatusId": "RXnTl_qKBb",
             "donationDate": "2025-09-26T00:00:00.000Z",
-            "donationAmount": 500.0,
-            "donationAmountPhp": "\u20b1500.00",
+            "donationAmount": 500,
+            "donationAmountPhp": "₱500.00",
             "donationAnonymous": false,
             "donationEmail": "donor32@example.com"
         },
@@ -7145,8 +7148,8 @@
             "bankName": "UnionBank",
             "donationStatusId": "u24w4cD0c8",
             "donationDate": "2026-06-16T00:00:00.000Z",
-            "donationAmount": 25000.0,
-            "donationAmountPhp": "\u20b125,000.00",
+            "donationAmount": 25000,
+            "donationAmountPhp": "₱25,000.00",
             "donationAnonymous": true,
             "donationEmail": "donor33@example.com"
         },
@@ -7157,8 +7160,8 @@
             "bankName": "BPI",
             "donationStatusId": "XFyLS9pmJQ",
             "donationDate": "2025-10-02T00:00:00.000Z",
-            "donationAmount": 10000.0,
-            "donationAmountPhp": "\u20b110,000.00",
+            "donationAmount": 10000,
+            "donationAmountPhp": "₱10,000.00",
             "donationAnonymous": false,
             "donationEmail": "donor34@example.com"
         },
@@ -7169,8 +7172,8 @@
             "bankName": "BPI",
             "donationStatusId": "u24w4cD0c8",
             "donationDate": "2025-06-25T00:00:00.000Z",
-            "donationAmount": 500.0,
-            "donationAmountPhp": "\u20b1500.00",
+            "donationAmount": 500,
+            "donationAmountPhp": "₱500.00",
             "donationAnonymous": false,
             "donationEmail": "donor35@example.com"
         },
@@ -7181,8 +7184,8 @@
             "bankName": "BDO",
             "donationStatusId": "u24w4cD0c8",
             "donationDate": "2026-02-17T00:00:00.000Z",
-            "donationAmount": 25000.0,
-            "donationAmountPhp": "\u20b125,000.00",
+            "donationAmount": 25000,
+            "donationAmountPhp": "₱25,000.00",
             "donationAnonymous": true,
             "donationEmail": "donor36@example.com"
         },
@@ -7193,8 +7196,8 @@
             "bankName": "BPI",
             "donationStatusId": "u24w4cD0c8",
             "donationDate": "2025-09-10T00:00:00.000Z",
-            "donationAmount": 5000.0,
-            "donationAmountPhp": "\u20b15,000.00",
+            "donationAmount": 5000,
+            "donationAmountPhp": "₱5,000.00",
             "donationAnonymous": false,
             "donationEmail": "donor37@example.com"
         },
@@ -7205,8 +7208,8 @@
             "bankName": "GCash",
             "donationStatusId": "XFyLS9pmJQ",
             "donationDate": "2025-11-01T00:00:00.000Z",
-            "donationAmount": 25000.0,
-            "donationAmountPhp": "\u20b125,000.00",
+            "donationAmount": 25000,
+            "donationAmountPhp": "₱25,000.00",
             "donationAnonymous": true,
             "donationEmail": "donor38@example.com"
         },
@@ -7217,8 +7220,8 @@
             "bankName": "BDO",
             "donationStatusId": "u24w4cD0c8",
             "donationDate": "2026-05-30T00:00:00.000Z",
-            "donationAmount": 10000.0,
-            "donationAmountPhp": "\u20b110,000.00",
+            "donationAmount": 10000,
+            "donationAmountPhp": "₱10,000.00",
             "donationAnonymous": false,
             "donationEmail": "donor39@example.com"
         },
@@ -7229,8 +7232,8 @@
             "bankName": "Maya",
             "donationStatusId": "XFyLS9pmJQ",
             "donationDate": "2025-03-09T00:00:00.000Z",
-            "donationAmount": 25000.0,
-            "donationAmountPhp": "\u20b125,000.00",
+            "donationAmount": 25000,
+            "donationAmountPhp": "₱25,000.00",
             "donationAnonymous": false,
             "donationEmail": "donor40@example.com"
         },
@@ -7241,8 +7244,8 @@
             "bankName": "UnionBank",
             "donationStatusId": "XFyLS9pmJQ",
             "donationDate": "2025-10-25T00:00:00.000Z",
-            "donationAmount": 25000.0,
-            "donationAmountPhp": "\u20b125,000.00",
+            "donationAmount": 25000,
+            "donationAmountPhp": "₱25,000.00",
             "donationAnonymous": true,
             "donationEmail": "donor41@example.com"
         },
@@ -7253,8 +7256,8 @@
             "bankName": "Maya",
             "donationStatusId": "RXnTl_qKBb",
             "donationDate": "2025-08-12T00:00:00.000Z",
-            "donationAmount": 500.0,
-            "donationAmountPhp": "\u20b1500.00",
+            "donationAmount": 500,
+            "donationAmountPhp": "₱500.00",
             "donationAnonymous": false,
             "donationEmail": "donor42@example.com"
         },
@@ -7265,8 +7268,8 @@
             "bankName": "Maya",
             "donationStatusId": "XFyLS9pmJQ",
             "donationDate": "2026-12-26T00:00:00.000Z",
-            "donationAmount": 500.0,
-            "donationAmountPhp": "\u20b1500.00",
+            "donationAmount": 500,
+            "donationAmountPhp": "₱500.00",
             "donationAnonymous": false,
             "donationEmail": "donor43@example.com"
         },
@@ -7277,8 +7280,8 @@
             "bankName": "GCash",
             "donationStatusId": "XFyLS9pmJQ",
             "donationDate": "2025-08-27T00:00:00.000Z",
-            "donationAmount": 10000.0,
-            "donationAmountPhp": "\u20b110,000.00",
+            "donationAmount": 10000,
+            "donationAmountPhp": "₱10,000.00",
             "donationAnonymous": false,
             "donationEmail": "donor44@example.com"
         },
@@ -7289,8 +7292,8 @@
             "bankName": "GCash",
             "donationStatusId": "XFyLS9pmJQ",
             "donationDate": "2026-02-24T00:00:00.000Z",
-            "donationAmount": 5000.0,
-            "donationAmountPhp": "\u20b15,000.00",
+            "donationAmount": 5000,
+            "donationAmountPhp": "₱5,000.00",
             "donationAnonymous": true,
             "donationEmail": "donor45@example.com"
         },
@@ -7301,8 +7304,8 @@
             "bankName": "BDO",
             "donationStatusId": "XFyLS9pmJQ",
             "donationDate": "2025-05-01T00:00:00.000Z",
-            "donationAmount": 1000.0,
-            "donationAmountPhp": "\u20b11,000.00",
+            "donationAmount": 1000,
+            "donationAmountPhp": "₱1,000.00",
             "donationAnonymous": false,
             "donationEmail": "donor46@example.com"
         },
@@ -7313,8 +7316,8 @@
             "bankName": "BDO",
             "donationStatusId": "RXnTl_qKBb",
             "donationDate": "2025-12-26T00:00:00.000Z",
-            "donationAmount": 500.0,
-            "donationAmountPhp": "\u20b1500.00",
+            "donationAmount": 500,
+            "donationAmountPhp": "₱500.00",
             "donationAnonymous": false,
             "donationEmail": "donor47@example.com"
         },
@@ -7325,8 +7328,8 @@
             "bankName": "GCash",
             "donationStatusId": "u24w4cD0c8",
             "donationDate": "2025-05-22T00:00:00.000Z",
-            "donationAmount": 25000.0,
-            "donationAmountPhp": "\u20b125,000.00",
+            "donationAmount": 25000,
+            "donationAmountPhp": "₱25,000.00",
             "donationAnonymous": false,
             "donationEmail": "donor48@example.com"
         },
@@ -7337,8 +7340,8 @@
             "bankName": "BPI",
             "donationStatusId": "XFyLS9pmJQ",
             "donationDate": "2025-10-24T00:00:00.000Z",
-            "donationAmount": 25000.0,
-            "donationAmountPhp": "\u20b125,000.00",
+            "donationAmount": 25000,
+            "donationAmountPhp": "₱25,000.00",
             "donationAnonymous": false,
             "donationEmail": "donor49@example.com"
         },
@@ -7349,8 +7352,8 @@
             "bankName": "GCash",
             "donationStatusId": "RXnTl_qKBb",
             "donationDate": "2025-03-02T00:00:00.000Z",
-            "donationAmount": 25000.0,
-            "donationAmountPhp": "\u20b125,000.00",
+            "donationAmount": 25000,
+            "donationAmountPhp": "₱25,000.00",
             "donationAnonymous": true,
             "donationEmail": "donor50@example.com"
         }
@@ -9573,5 +9576,6 @@
             "bulletinId": "ERtp2j1anD",
             "isLiked": true
         }
-    ]
+    ],
+    "commentLikes": []
 }

@@ -1,19 +1,13 @@
 import { useEffect, useRef } from 'react';
-import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
+import { Outlet, Link, useLocation, Navigate } from 'react-router-dom';
 import { LogOut, LayoutDashboard, Users, FileText, ChevronLeft, CreditCard, Calendar } from 'lucide-react';
 import ScrollToTop from '../ScrollToTop';
 
 export function AdminLayout() {
     const location = useLocation();
-    const navigate = useNavigate();
     const scrollRef = useRef<HTMLDivElement>(null);
 
-    useEffect(() => {
-        const token = localStorage.getItem('adminToken');
-        if (!token) {
-            navigate('/admin/login');
-        }
-    }, [navigate, location.pathname]);
+    const token = sessionStorage.getItem('adminToken');
 
     const scrollToTop = () => {
         if (scrollRef.current) {
@@ -26,9 +20,13 @@ export function AdminLayout() {
     }, [location.pathname]);
 
     const handleLogout = () => {
-        localStorage.removeItem('adminToken');
-        navigate('/admin/login');
+        sessionStorage.removeItem('adminToken');
+        window.location.href = '/admin/login'; // Hard redirect to clear session completely
     };
+
+    if (!token) {
+        return <Navigate to="/admin/login" replace />;
+    }
 
     const navItems = [
         { path: '/admin', label: 'Dashboard', icon: LayoutDashboard },

@@ -93,8 +93,9 @@ export function EventDetail() {
     const isPastEvent = new Date(eventData.eventDate) < new Date();
 
     const formatTime = (timeStr: string) => {
-        // timeStr might be "16:00:00"
+        // timeStr might be "16:00:00" or "16:00"
         if (!timeStr) return '';
+        if (timeStr.includes('AM') || timeStr.includes('PM')) return timeStr;
         const [hours, minutes] = timeStr.split(':');
         const h = parseInt(hours, 10);
         const ampm = h >= 12 ? 'PM' : 'AM';
@@ -159,6 +160,25 @@ export function EventDetail() {
         }
     };
 
+    const handleConcludeEvent = async () => {
+        if (!eventData) return;
+        try {
+            await api.post(`/events/${eventData.id}/conclude`, {});
+            // Optimistically update the local state to Concluded
+            // We know the status string won't be exactly right without refetching the object
+            // but we can just reload the page or update the status name
+            setEventData({
+                ...eventData,
+                eventStatus: {
+                    ...eventData.eventStatus,
+                    statusName: 'Concluded'
+                }
+            });
+        } catch (err) {
+            console.error('Failed to conclude event:', err);
+        }
+    };
+
     const formatLocation = (event: EventData) => {
         if (categoryName === 'Virtual') return `Virtual (${event.modality || 'Online'})`;
         const loc = event.location;
@@ -191,6 +211,12 @@ export function EventDetail() {
                 </Link>
 
                 <div className="flex gap-2">
+                    {isLoggedIn && (session?.userId === eventData.authorId || isAdmin) && currentStatusName !== "Concluded" && (
+                        <Button variant="outline" className="gap-2 text-brand-primary border-brand-primary hover:bg-brand-primary hover:text-white transition-colors" onClick={handleConcludeEvent}>
+                            <CheckCircle2 className="w-4 h-4" />
+                            Conclude Event
+                        </Button>
+                    )}
                     {isLoggedIn && (
                         <CreateEventModal
                             trigger={

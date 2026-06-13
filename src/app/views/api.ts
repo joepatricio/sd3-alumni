@@ -122,6 +122,7 @@ export interface BulletinCommentData {
     likes: number;
 
     profile?: ProfileData;
+    likesList?: any[];
 }
 
 export interface BulletinData {

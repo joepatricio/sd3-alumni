@@ -21,7 +21,6 @@ export function BulletinDetail() {
     const { id } = useParams();
     const { isLoggedIn, session } = useAuth();
     const [comment, setComment] = useState('');
-    const [likedComments, setLikedComments] = useState<string[]>([]);
     const isAdmin = !!localStorage.getItem('adminToken');
 
     const [bulletin, setBulletin] = useState<BulletinData | null>(null);
@@ -91,7 +90,7 @@ export function BulletinDetail() {
         setSubmitting(true);
         try {
             const res = await api.post('/comments', {
-                profileId: session.userId.toString(),
+                userId: session.userId.toString(),
                 bulletinId: bulletin.id,
                 commentDate: new Date().toISOString(),
                 comment,
@@ -115,22 +114,39 @@ export function BulletinDetail() {
     };
 
     const handleToggleLike = async (commentItem: BulletinCommentData) => {
-        if (!isLoggedIn) return;
-        const isLiked = likedComments.includes(commentItem.id);
-        const newLikes = isLiked ? Math.max(0, commentItem.likes - 1) : commentItem.likes + 1;
+        if (!isLoggedIn || !session?.userId) return;
+        const currentLike = commentItem.likesList?.find(l => String(l.userId) === String(session.userId));
+        const isLiked = !!currentLike;
+        const newLikesCount = isLiked ? Math.max(0, commentItem.likes - 1) : commentItem.likes + 1;
 
         try {
-            await api.patch(`/comments/${commentItem.id}`, { likes: newLikes });
-
-            setLikedComments(prev =>
-                isLiked
-                    ? prev.filter(vid => vid !== commentItem.id)
-                    : [...prev, commentItem.id]
-            );
-
-            setCommentsList(prev =>
-                prev.map(c => c.id === commentItem.id ? { ...c, likes: newLikes } : c)
-            );
+            if (isLiked) {
+                // Remove like
+                await api.delete(`/commentLikes/${currentLike.id}`);
+                await api.patch(`/comments/${commentItem.id}`, { likes: newLikesCount });
+                setCommentsList(prev =>
+                    prev.map(c => c.id === commentItem.id ? { 
+                        ...c, 
+                        likes: newLikesCount,
+                        likesList: c.likesList?.filter(l => l.id !== currentLike.id)
+                    } : c)
+                );
+            } else {
+                // Add like
+                const res = await api.post('/commentLikes', {
+                    userId: session.userId.toString(),
+                    commentId: commentItem.id,
+                    isLiked: true
+                });
+                await api.patch(`/comments/${commentItem.id}`, { likes: newLikesCount });
+                setCommentsList(prev =>
+                    prev.map(c => c.id === commentItem.id ? { 
+                        ...c, 
+                        likes: newLikesCount,
+                        likesList: [...(c.likesList || []), res.data]
+                    } : c)
+                );
+            }
         } catch (error) {
             console.error("Failed to toggle like:", error);
         }
@@ -290,7 +306,7 @@ export function BulletinDetail() {
                     {/* Comments List */}
                     <div className="space-y-6">
                         {sortedComments.map((commentItem) => {
-                            const isLiked = likedComments.includes(commentItem.id);
+                            const isLiked = !!commentItem.likesList?.find(l => String(l.userId) === String(session?.userId));
                             const commenterProfile = commentItem.profile;
                             return (
                                 <div key={commentItem.id} className="flex gap-3">
