@@ -283,9 +283,9 @@ export type AdminUncheckedUpdateManyInput = {
   lastLogin?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
-export type AdminScalarRelationFilter = {
-  is?: Prisma.AdminWhereInput
-  isNot?: Prisma.AdminWhereInput
+export type AdminNullableScalarRelationFilter = {
+  is?: Prisma.AdminWhereInput | null
+  isNot?: Prisma.AdminWhereInput | null
 }
 
 export type AdminCountOrderByAggregateInput = {
@@ -309,21 +309,18 @@ export type AdminMinOrderByAggregateInput = {
   lastLogin?: Prisma.SortOrder
 }
 
-export type AdminNullableScalarRelationFilter = {
-  is?: Prisma.AdminWhereInput | null
-  isNot?: Prisma.AdminWhereInput | null
-}
-
 export type AdminCreateNestedOneWithoutRecordsInput = {
   create?: Prisma.XOR<Prisma.AdminCreateWithoutRecordsInput, Prisma.AdminUncheckedCreateWithoutRecordsInput>
   connectOrCreate?: Prisma.AdminCreateOrConnectWithoutRecordsInput
   connect?: Prisma.AdminWhereUniqueInput
 }
 
-export type AdminUpdateOneRequiredWithoutRecordsNestedInput = {
+export type AdminUpdateOneWithoutRecordsNestedInput = {
   create?: Prisma.XOR<Prisma.AdminCreateWithoutRecordsInput, Prisma.AdminUncheckedCreateWithoutRecordsInput>
   connectOrCreate?: Prisma.AdminCreateOrConnectWithoutRecordsInput
   upsert?: Prisma.AdminUpsertWithoutRecordsInput
+  disconnect?: Prisma.AdminWhereInput | boolean
+  delete?: Prisma.AdminWhereInput | boolean
   connect?: Prisma.AdminWhereUniqueInput
   update?: Prisma.XOR<Prisma.XOR<Prisma.AdminUpdateToOneWithWhereWithoutRecordsInput, Prisma.AdminUpdateWithoutRecordsInput>, Prisma.AdminUncheckedUpdateWithoutRecordsInput>
 }

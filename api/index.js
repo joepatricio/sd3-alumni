@@ -4,12 +4,12 @@ import 'dotenv/config';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import cookieParser from 'cookie-parser';
-import Database from 'better-sqlite3';
 import multer from 'multer';
 import path from 'path';
 import { v4 as uuidv4 } from 'uuid';
 import { PrismaClient } from "../prisma/generated/client";
 import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
+import { parseWhere, parseSort } from './queryParser.js';
 
 const adapter = new PrismaBetterSqlite3({
     url: process.env.DATABASE_URL || "file:./dev.db",
@@ -62,13 +62,25 @@ const authenticateToken = (req, res, next) => {
     });
 };
 
+const authenticateAdminToken = (req, res, next) => {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+    if (token == null) return res.sendStatus(401);
+
+    jwt.verify(token, JWT_SECRET, (err, admin) => {
+        if (err || admin.role !== 'admin') return res.sendStatus(403);
+        req.admin = admin;
+        next();
+    });
+};
+
 // =======================
 // AUTH ROUTES & CUSTOM OVERRIDES
 // =======================
 
 // User limits check and registration
 app.post('/api/auth/register', async (req, res) => {
-    const { fullName, email, password, degreeProgram, batch } = req.body;
+    const { fullName, email, password, degreeProgram, batch, gender } = req.body;
 
     try {
         // Check user limit
@@ -120,6 +132,11 @@ app.post('/api/auth/register', async (req, res) => {
         const passwordHash = bcrypt.hashSync(password, 10);
         const userId = uuidv4();
 
+        // Gender
+        if (!gender) {
+            gender = null;
+        }
+
         // Transaction to ensure atomic success with nested writes
         await prisma.$transaction(async (tx) => {
             const newUser = await tx.user.create({
@@ -139,7 +156,8 @@ app.post('/api/auth/register', async (req, res) => {
                             email,
                             degreeId: degreeId,
                             batch: parseInt(batch, 10) || null,
-                            profileImage: "http://localhost:3000/engineer.png"
+                            profileImage: "http://localhost:3000/engineer.png",
+                            gender: gender
                         }
                     },
                     statistics: {
@@ -149,6 +167,7 @@ app.post('/api/auth/register', async (req, res) => {
                         create: {
                             userStatusId: pendingUserStatus.id,
                             description: "User registered",
+                            adminId: null
                         }
                     }
                 },
@@ -193,9 +212,7 @@ app.post('/api/auth/login', async (req, res) => {
             return res.status(401).json({ error: 'Invalid email or password' });
         }
 
-        const isValid = userAuth.passwordHash.startsWith('$2a$')
-            ? await bcrypt.compare(password, userAuth.passwordHash)
-            : password === userAuth.passwordHash;
+        const isValid = await bcrypt.compare(password, userAuth.passwordHash);
 
         if (!isValid) {
             return res.status(401).json({ error: 'Invalid email or password' });
@@ -458,6 +475,135 @@ setupWatchdog();
 
 
 // =======================
+// ADMIN ROUTES (SECURE)
+// =======================
+
+// Admin GET Events
+app.get('/api/admin/events', authenticateAdminToken, async (req, res) => {
+    try {
+        const where = parseWhere(req.query, 'event');
+        const orderBy = parseSort(req.query._sort);
+        const page = req.query._page ? parseInt(req.query._page, 10) : undefined;
+        const perPage = req.query._per_page ? parseInt(req.query._per_page, 10) : undefined;
+
+        let queryArgs = {
+            where,
+            orderBy,
+            include: { location: true, rsvps: true, status: true, category: true, author: { include: { profile: true } } }
+        };
+
+        if (page !== undefined && perPage !== undefined) {
+            queryArgs.skip = (page - 1) * perPage;
+            queryArgs.take = perPage;
+            const [events, totalItems] = await Promise.all([
+                prisma.event.findMany(queryArgs),
+                prisma.event.count({ where })
+            ]);
+            res.json({
+                first: 1,
+                prev: page > 1 ? page - 1 : null,
+                next: page * perPage < totalItems ? page + 1 : null,
+                last: Math.ceil(totalItems / perPage),
+                pages: Math.ceil(totalItems / perPage),
+                items: totalItems,
+                data: formatOutput('event', events)
+            });
+        } else {
+            const events = await prisma.event.findMany(queryArgs);
+            res.json(formatOutput('event', events));
+        }
+    } catch (error) {
+        console.error('Failed to fetch admin events:', error);
+        res.status(500).json({ error: 'Failed to fetch admin events' });
+    }
+});
+
+// Admin PATCH Event Status
+app.patch('/api/admin/events/:id/status', authenticateAdminToken, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { status } = req.body;
+        
+        const statusRecord = await prisma.eventStatus.findFirst({
+            where: { statusName: status }
+        });
+
+        if (!statusRecord) return res.status(400).json({ error: 'Invalid status' });
+
+        const updatedEvent = await prisma.event.update({
+            where: { id },
+            data: { eventStatusId: statusRecord.id },
+            include: { location: true, rsvps: true, status: true, category: true, author: { include: { profile: true } } }
+        });
+
+        res.json(formatOutput('event', updatedEvent));
+    } catch (error) {
+        console.error('Failed to update event status:', error);
+        res.status(500).json({ error: 'Failed to update event status' });
+    }
+});
+
+// Admin GET Bulletins
+app.get('/api/admin/bulletins', authenticateAdminToken, async (req, res) => {
+    try {
+        const where = parseWhere(req.query, 'bulletin');
+        const orderBy = parseSort(req.query._sort);
+        const page = req.query._page ? parseInt(req.query._page, 10) : undefined;
+        const perPage = req.query._per_page ? parseInt(req.query._per_page, 10) : undefined;
+
+        let queryArgs = {
+            where,
+            orderBy,
+            include: { comments: { include: { user: { include: { profile: true } }, likesList: true } }, status: true, author: { include: { profile: true } }, likes: true }
+        };
+
+        if (page !== undefined && perPage !== undefined) {
+            queryArgs.skip = (page - 1) * perPage;
+            queryArgs.take = perPage;
+            const [bulletins, totalItems] = await Promise.all([
+                prisma.bulletin.findMany(queryArgs),
+                prisma.bulletin.count({ where })
+            ]);
+            res.json({
+                first: 1,
+                prev: page > 1 ? page - 1 : null,
+                next: page * perPage < totalItems ? page + 1 : null,
+                last: Math.ceil(totalItems / perPage),
+                pages: Math.ceil(totalItems / perPage),
+                items: totalItems,
+                data: formatOutput('bulletin', bulletins)
+            });
+        } else {
+            const bulletins = await prisma.bulletin.findMany(queryArgs);
+            res.json(formatOutput('bulletin', bulletins));
+        }
+    } catch (error) {
+        console.error('Failed to fetch admin bulletins:', error);
+        res.status(500).json({ error: 'Failed to fetch admin bulletins' });
+    }
+});
+
+// Admin PATCH Bulletin Status
+app.patch('/api/admin/bulletins/:id/status', authenticateAdminToken, async (req, res) => {
+    const { id } = req.params;
+    const { status } = req.body;
+    try {
+        const statusRecord = await prisma.contentStatus.findFirst({ where: { statusName: status } });
+        if (!statusRecord) return res.status(400).json({ error: 'Invalid status name' });
+
+        const updatedBulletin = await prisma.bulletin.update({
+            where: { id },
+            data: { contentStatusId: statusRecord.id },
+            include: { comments: { include: { user: { include: { profile: true } }, likesList: true } }, status: true, author: { include: { profile: true } }, likes: true }
+        });
+        res.json(formatOutput('bulletin', updatedBulletin));
+    } catch (error) {
+        console.error('Failed to update bulletin status:', error);
+        res.status(500).json({ error: 'Failed to update bulletin status' });
+    }
+});
+
+// =======================
 // GENERIC FALLBACK CRUD ROUTER (COMPATIBILITY ENGINE)
 // =======================
 
@@ -494,7 +640,7 @@ const defaultIncludes = {
     profile: { degree: true, user: true },
     user: { profile: { include: { degree: true } }, userStatus: true, profileStatus: true },
     bulletin: { comments: { include: { user: { include: { profile: true } }, likesList: true } }, status: true, author: { include: { profile: true } }, likes: true },
-    event: { location: true, rsvps: true, status: true, category: true },
+    event: { location: true, rsvps: true, status: true, category: true, author: { include: { profile: true } } },
     userConnection: { status: true, user: { include: { profile: { include: { degree: true } } } }, friend: { include: { profile: { include: { degree: true } } } } },
     comment: { user: { include: { profile: true } }, bulletin: true, likesList: true },
     userAchievement: { achievement: true },
@@ -510,83 +656,6 @@ const defaultIncludes = {
         }
     }
 };
-
-const numericFields = new Set([
-    'batch', 'donationAmount', 'achievementTier', 'lat', 'lng', 'responses', 'readTimeMinutes', 'likes', 'eventsAttended', 'eventsCreated', 'bulletinsCreated', 'commentsWritten', 'achievements', 'donatedAmount', 'userConnections'
-]);
-
-function parseQuery(query, modelName) {
-    const where = {};
-    for (let [key, val] of Object.entries(query)) {
-        if (key.startsWith('_')) continue; // Skip pagination
-
-        // Dynamic mapping of query keys for specific models
-        if (modelName === 'user') {
-            if (key === 'userId') key = 'id';
-            else if (key === 'userId:in') key = 'id:in';
-        }
-        if (modelName === 'bulletin') {
-            if (key === 'profileId') key = 'authorId';
-            else if (key === 'profileId:in') key = 'authorId:in';
-        }
-        if (modelName === 'comment' || modelName === 'bulletinLike') {
-            if (key === 'profileId') key = 'userId';
-            else if (key === 'profileId:in') key = 'userId:in';
-        }
-
-        if (key.includes('.')) {
-            const parts = key.split('.');
-            let current = where;
-            for (let i = 0; i < parts.length - 1; i++) {
-                if (!current[parts[i]]) {
-                    current[parts[i]] = { is: {} };
-                } else if (!current[parts[i]].is) {
-                    current[parts[i]] = { is: current[parts[i]] };
-                }
-                current = current[parts[i]].is;
-            }
-            const lastPart = parts[parts.length - 1];
-            if (lastPart.endsWith(':in')) {
-                const field = lastPart.replace(':in', '');
-                const values = typeof val === 'string' ? val.split(',') : (Array.isArray(val) ? val : [val]);
-                const mappedValues = values.map(v => {
-                    if (v === 'true') return true;
-                    if (v === 'false') return false;
-                    if (numericFields.has(field) && !isNaN(v) && v.trim() !== '') return Number(v);
-                    return v;
-                });
-                current[field] = { in: mappedValues };
-            } else {
-                let parsedVal = val;
-                if (val === 'true') parsedVal = true;
-                else if (val === 'false') parsedVal = false;
-                else if (numericFields.has(lastPart) && !isNaN(val) && val.trim() !== '') {
-                    parsedVal = Number(val);
-                }
-                current[lastPart] = parsedVal;
-            }
-        } else if (key.endsWith(':in')) {
-            const field = key.replace(':in', '');
-            const values = typeof val === 'string' ? val.split(',') : (Array.isArray(val) ? val : [val]);
-            const mappedValues = values.map(v => {
-                if (v === 'true') return true;
-                if (v === 'false') return false;
-                if (numericFields.has(field) && !isNaN(v) && v.trim() !== '') return Number(v);
-                return v;
-            });
-            where[field] = { in: mappedValues };
-        } else {
-            let parsedVal = val;
-            if (val === 'true') parsedVal = true;
-            else if (val === 'false') parsedVal = false;
-            else if (numericFields.has(key) && !isNaN(val) && val.trim() !== '') {
-                parsedVal = Number(val);
-            }
-            where[key] = parsedVal;
-        }
-    }
-    return where;
-}
 
 // Map database entities/relations to json-server expected shapes
 function formatOutput(modelName, data) {
@@ -620,7 +689,11 @@ function formatOutput(modelName, data) {
             item.eventStatus = item.status;
             delete item.status;
             item.eventCategory = item.category;
-            if (item.rsvps) item.userRsvps = item.rsvps;
+            delete item.category;
+            if (item.rsvps) {
+                item.userRsvps = item.rsvps;
+                delete item.rsvps;
+            }
         }
         if (modelName === 'comment') {
             if (item.user?.profile) {
@@ -650,7 +723,6 @@ function filterModelFields(modelName, data) {
     return filtered;
 }
 
-
 // Generic GET all
 app.get('/api/:table', async (req, res, next) => {
     const { table } = req.params;
@@ -661,7 +733,8 @@ app.get('/api/:table', async (req, res, next) => {
         const delegate = prisma[modelName];
         if (!delegate) return res.status(404).json({ error: `Model for ${table} not found` });
 
-        const where = parseQuery(req.query, modelName);
+        const where = parseWhere(req.query, modelName);
+        const orderBy = parseSort(req.query._sort);
         const includes = defaultIncludes[modelName];
 
         const page = req.query._page ? parseInt(req.query._page, 10) : undefined;
@@ -675,6 +748,7 @@ app.get('/api/:table', async (req, res, next) => {
             const [data, totalItems] = await Promise.all([
                 delegate.findMany({
                     where,
+                    orderBy,
                     skip,
                     take,
                     ...(includes && { include: includes })
@@ -694,12 +768,26 @@ app.get('/api/:table', async (req, res, next) => {
                 data: formatOutput(modelName, data)
             });
         } else {
+            let totalItems;
+            if (perPage !== undefined && !isNaN(perPage)) {
+                totalItems = await delegate.count({ where });
+            }
+
             const data = await delegate.findMany({
                 where,
+                orderBy,
+                ...(perPage !== undefined && !isNaN(perPage) && { take: perPage }),
                 ...(includes && { include: includes })
             });
 
-            res.json(formatOutput(modelName, data));
+            if (totalItems !== undefined) {
+                res.json({
+                    items: totalItems,
+                    data: formatOutput(modelName, data)
+                });
+            } else {
+                res.json(formatOutput(modelName, data));
+            }
         }
     } catch (error) {
         console.error(`Generic GET /api/${table} failed:`, error);

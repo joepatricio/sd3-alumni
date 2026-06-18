@@ -17,6 +17,13 @@ export function Connections() {
     const [searchTerm, setSearchTerm] = useState('');
     const [activeTab, setActiveTab] = useState(location.state?.tab || 'friends');
 
+    const [debouncedSearchTerm, setDebouncedSearchTerm] = useState(searchTerm);
+
+    useEffect(() => {
+        const timer = setTimeout(() => setDebouncedSearchTerm(searchTerm), 300);
+        return () => clearTimeout(timer);
+    }, [searchTerm]);
+
     useEffect(() => {
         const fetchConnectionsData = async () => {
             try {
@@ -47,8 +54,18 @@ export function Connections() {
                 const connData = Array.isArray(connectionsRes.data) ? connectionsRes.data : (connectionsRes.data?.data || []);
 
                 if (connData.length > 0) {
-                    const friendIds = connData.map((c: any) => c.friendId).join(',');
-                    const friendsRes = await api.get('/profiles', { params: { 'userId:in': friendIds } });
+                    const friendIds = connData.map((c: any) => c.friendId);
+                    
+                    const whereClause: any = { userId: { in: friendIds } };
+                    if (debouncedSearchTerm) {
+                        whereClause.OR = [
+                            { userName: { contains: debouncedSearchTerm } },
+                            { company: { contains: debouncedSearchTerm } },
+                            { currentJob: { contains: debouncedSearchTerm } }
+                        ];
+                    }
+
+                    const friendsRes = await api.get('/profiles', { params: { _where: JSON.stringify(whereClause) } });
                     const friendsArray = Array.isArray(friendsRes.data) ? friendsRes.data : (friendsRes.data?.data || []);
 
                     // Attach the connection record to the profile data so we have the IDs for actions
@@ -71,7 +88,7 @@ export function Connections() {
         if (profileId) {
             fetchConnectionsData();
         }
-    }, [profileId, activeTab]);
+    }, [profileId, activeTab, debouncedSearchTerm]);
 
     const handleAction = async (action: string, friendId: string) => {
         setLoading(true);
@@ -86,11 +103,7 @@ export function Connections() {
         }
     };
 
-    const filteredConnections = connections.filter(conn =>
-        conn.userName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        conn.company.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        conn.currentJob.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    const filteredConnections = connections;
 
     if (loading) {
         return (

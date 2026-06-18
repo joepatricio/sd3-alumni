@@ -141,7 +141,6 @@ def generate_phase_2():
         user_id = generate(size=10)
         
         USER.append({
-            "id": user_id,
             "userId": user_id,
             "profileStatusId": random.choices([p["id"] for p in PROFILE_STATUS], weights=[20, 40, 40])[0],
             "userStatusId": status_id,
@@ -159,7 +158,7 @@ def generate_phase_2():
             description = "Banned permanently"
 
         RECORDS.append({
-            "id": record_id,
+            "recordId": record_id,
             "userId": user_id,
             "adminId": random.choice(["admin1", "admin2", "admin3"]), # Placeholder admin
             "userStatusId": status_id,
@@ -190,8 +189,6 @@ def generate_phase_2():
 
         gender = random.choice(["Male", "Female"])
         PROFILE.append({
-            # Duplicate id required to allow prototype to use _embed
-            "id": user_id,
             "userId": user_id,
             "userName": name,
             "gender": gender,
@@ -338,17 +335,17 @@ def generate_phase_4(USER):
     
     # 1. ADMIN
     ADMIN.append({
-        "id": "admin1",
+        "username": "admin1",
         "passwordHash": "$2a$10$RF01DLY3wzkMTDihPwqMZuOu9dqipFZokMMf14UutW2Zk9IauaJ4y", 
         "lastLogin": random_date(2025, 2026)
     })
     ADMIN.append({
-        "id": "admin2",
+        "username": "admin2",
         "passwordHash": "$2a$10$RF01DLY3wzkMTDihPwqMZuOu9dqipFZokMMf14UutW2Zk9IauaJ4y", 
         "lastLogin": random_date(2025, 2026)
     })
     ADMIN.append({
-        "id": "admin3",
+        "username": "admin3",
         "passwordHash": "$2a$10$RF01DLY3wzkMTDihPwqMZuOu9dqipFZokMMf14UutW2Zk9IauaJ4y", 
         "lastLogin": random_date(2025, 2026)
     })
@@ -363,7 +360,6 @@ def generate_phase_4(USER):
     ]
     for base in locations_base:
         LOCATION.append({
-            "id": generate(size=10),
             "regionCode": base["region_code"],
             "province": base["province"],
             "provinceCode": base["province_code"],
@@ -395,7 +391,6 @@ def generate_phase_4(USER):
             review_date = review_dt.strftime("%Y-%m-%dT%H:%M:%S.000Z")
         
         BULLETIN.append({
-            "id": bid,
             "adminId": random.choice(["admin1", "admin2", "admin3"]),
             "userId": author_id,
             "contentStatusId": content_status_id,
@@ -444,7 +439,6 @@ def generate_phase_4(USER):
         end_time = f"{end_hour:02d}:00:00"
             
         EVENTS.append({
-            "id": eid,
             "adminId": random.choice(["admin1", "admin2", "admin3"]),
             "authorId": organizer_id,
             "eventStatusId": status_id,
@@ -481,7 +475,6 @@ def generate_phase_5(USER, BULLETIN, EVENTS, USER_STATISTICS, USER_CONNECTIONS, 
         comment_date = random_date(2025, 2026) 
         
         COMMENTS.append({
-            "id": generate(size=10),
             "userId": author_id,
             "bulletinId": bulletin["id"],
             "commentDate": comment_date,
@@ -499,7 +492,6 @@ def generate_phase_5(USER, BULLETIN, EVENTS, USER_STATISTICS, USER_CONNECTIONS, 
         ALPHABET = "23456789BCDFGHJKLMNPQRSTVWXYZ"
         bank_name = random.choice(["GCash", "Maya", "BDO", "BPI", "UnionBank"])
         DONATIONS.append({
-            "id": generate(size=10),
             "donationReference": f"DON-{generate(ALPHABET, size=3)}-{generate(ALPHABET, size=3)}",
             "userId": uid,
             "bankName": bank_name,

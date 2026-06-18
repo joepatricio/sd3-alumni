@@ -1,11 +1,12 @@
-import { useState, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@components/ui/card';
 import { Button } from '@components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@components/ui/tabs';
 import { Input } from '@components/ui/input';
 import { Badge } from '@components/ui/badge';
-import { ArrowUp, ArrowDown, ArrowUpDown, ChevronLeft, ChevronRight, Search, CheckCircle, XCircle, RotateCcw, Eye } from 'lucide-react';
+import { ArrowUp, ArrowDown, ArrowUpDown, ChevronLeft, ChevronRight, Search, CheckCircle, XCircle, RotateCcw, Eye, Archive, FileText } from 'lucide-react';
 import { Link, useSearchParams } from 'react-router-dom';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@components/ui/select';
 
 export interface ContentItem {
     id: string;
@@ -13,7 +14,7 @@ export interface ContentItem {
     author: string;
     date: string;
     type: 'Event' | 'Bulletin';
-    status: "Pending" | "Approved" | "Rejected" | string;
+    status: string;
     description: string;
     rawDate: number;
 }
@@ -22,22 +23,27 @@ interface AdminContentTableProps {
     title: string;
     description: string;
     contentType: 'Event' | 'Bulletin';
-    mockData: ContentItem[];
-    primaryColorClass: string; // e.g., 'bg-brand-primary hover:bg-brand-primary-hover'
-    outlineColorClass: string; // e.g., 'text-amber-600 border-amber-200 hover:bg-amber-50'
-    onStatusChange?: (id: string, newStatus: "Approved" | "Rejected" | "Pending") => void;
+    fetchData: (params: { page: number, perPage: number, search: string, status: string, sort: { key: string, direction: 'asc' | 'desc' } | null }) => Promise<{ data: ContentItem[], total: number }>;
+    primaryColorClass: string;
+    outlineColorClass: string;
+    statuses?: string[];
+    onStatusChange?: (id: string, newStatus: string) => void;
 }
 
 export function AdminContentTable({
     title,
     description,
     contentType,
-    mockData,
+    fetchData,
     primaryColorClass,
+    statuses = ["All", "Pending", "Approved", "Rejected"],
     onStatusChange
 }: AdminContentTableProps) {
-    const statuses = ["All", "Pending", "Approved", "Rejected"];
     const ITEMS_PER_PAGE = 20;
+
+    const [data, setData] = useState<ContentItem[]>([]);
+    const [totalItems, setTotalItems] = useState(0);
+    const [isLoading, setIsLoading] = useState(false);
 
     const [searchParams, setSearchParams] = useSearchParams();
     const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'All');
@@ -80,7 +86,7 @@ export function AdminContentTable({
 
     const handleExportCSV = () => {
         const headers = ['Title', 'Author', 'Date', 'Type', 'Status'];
-        const csvContent = filteredContent.map(c =>
+        const csvContent = data.map(c =>
             `"${c.title.replace(/"/g, '""')}","${c.author}","${new Date(c.date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}","${c.type}","${c.status}"`
         );
 
@@ -92,37 +98,30 @@ export function AdminContentTable({
         link.click();
     };
 
-    const filteredContent = useMemo(() => {
-        let filtered = [...mockData];
+    useEffect(() => {
+        const load = async () => {
+            setIsLoading(true);
+            try {
+                const result = await fetchData({
+                    page: currentPage,
+                    perPage: ITEMS_PER_PAGE,
+                    search: appliedSearchName,
+                    status: activeTab,
+                    sort: sortConfig
+                });
+                setData(result.data);
+                setTotalItems(result.total);
+            } catch (err) {
+                console.error(err);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+        load();
+    }, [currentPage, appliedSearchName, activeTab, sortConfig, fetchData]);
 
-        if (activeTab !== "All") {
-            filtered = filtered.filter(c => c.status === activeTab);
-        }
-
-        if (appliedSearchName) {
-            const lowerQuery = appliedSearchName.toLowerCase();
-            filtered = filtered.filter(c =>
-                c.title.toLowerCase().includes(lowerQuery) ||
-                c.author.toLowerCase().includes(lowerQuery)
-            );
-        }
-
-        if (sortConfig) {
-            filtered.sort((a, b) => {
-                const aVal = a[sortConfig.key];
-                const bVal = b[sortConfig.key];
-
-                if (aVal < bVal) return sortConfig.direction === 'asc' ? -1 : 1;
-                if (aVal > bVal) return sortConfig.direction === 'asc' ? 1 : -1;
-                return 0;
-            });
-        }
-
-        return filtered;
-    }, [mockData, activeTab, appliedSearchName, sortConfig]);
-
-    const totalPages = Math.ceil(filteredContent.length / ITEMS_PER_PAGE);
-    const paginatedContent = filteredContent.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
+    const totalPages = Math.ceil(totalItems / ITEMS_PER_PAGE);
+    const paginatedContent = data;
 
     const onTabChange = (val: string) => {
         setActiveTab(val);
@@ -136,12 +135,34 @@ export function AdminContentTable({
             case "Pending": return { title: 'Needs Attention', description: `${contentType}s awaiting moderator approval before publishing` };
             case "Approved": return { title: `Published ${contentType}s`, description: 'Previously approved and currently visible to the public' };
             case "Rejected": return { title: `Rejected ${contentType}s`, description: 'Submissions that did not meet community guidelines' };
-            default: return { title: '', description: '' };
+            case "Cancelled": return { title: `Cancelled ${contentType}s`, description: 'Events that were cancelled' };
+            case "Archived": return { title: `Archived ${contentType}s`, description: 'Events that are archived' };
+            case "Concluded": return { title: `Concluded ${contentType}s`, description: 'Events that have concluded successfully' };
+            default: return { title: `${status} ${contentType}s`, description: `Viewing ${status.toLowerCase()} items` };
+        }
+    };
+
+    const getBadgeClass = (status: string) => {
+        switch (status) {
+            case "Approved": return 'bg-green-100 text-green-800';
+            case "Pending": return 'bg-yellow-100 text-yellow-800';
+            case "Rejected": return 'bg-red-100 text-red-800';
+            case "Cancelled": return 'bg-gray-100 text-gray-800';
+            case "Archived": return 'bg-slate-200 text-slate-800';
+            case "Concluded": return 'bg-blue-100 text-blue-800';
+            default: return 'bg-gray-100 text-gray-800';
         }
     };
 
     const renderTable = () => {
-        if (filteredContent.length === 0) {
+        if (isLoading) {
+            return (
+                <div className="py-8 text-center border rounded-md border-dashed text-gray-500 bg-gray-50">
+                    Loading items...
+                </div>
+            );
+        }
+        if (data.length === 0) {
             return (
                 <div className="py-8 text-center border rounded-md border-dashed text-gray-500 bg-gray-50">
                     No items found for this category or search criteria.
@@ -164,75 +185,113 @@ export function AdminContentTable({
                                 <th className="px-6 py-3 cursor-pointer hover:bg-gray-100 transition-colors" onClick={() => handleSort('date')}>
                                     <div className="flex items-center gap-1">Date Submitted {renderSortIcon('date')}</div>
                                 </th>
-                                {activeTab === "All" && (
-                                    <th className="px-6 py-3 cursor-pointer hover:bg-gray-100 transition-colors" onClick={() => handleSort('status')}>
-                                        <div className="flex items-center gap-1">Status {renderSortIcon('status')}</div>
+                                {activeTab === "All" ? (
+                                    <th className="px-6 py-3 hover:bg-gray-100 transition-colors flex justify-center">
+                                        <div className="flex items-center justify-center gap-1">Status</div>
                                     </th>
+                                ) : (
+                                    <th className="px-6 py-3 text-center">Quick Actions</th>
                                 )}
-                                <th className="px-6 py-3 text-right">Actions</th>
+                                <th className="px-6 py-3 text-center">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
                             {paginatedContent.map((item) => (
                                 <tr key={item.id} className="border-t">
                                     <td className="px-6 py-4">
-                                        <div className="font-semibold text-gray-900">{item.title}</div>
+                                        <div className="font-semibold text-gray-900 flex items-center gap-2">
+                                            {item.title}
+                                            <Link to={`/${item.type === 'Bulletin' ? 'bulletin' : 'events'}/${item.id}`} className="text-gray-400 hover:text-brand-primary">
+                                                <Eye className="w-4 h-4" />
+                                            </Link>
+                                        </div>
                                         <div className="text-xs text-gray-500 line-clamp-1 max-w-sm">{item.description}</div>
                                     </td>
                                     <td className="px-6 py-4">{item.author}</td>
                                     <td className="px-6 py-4">{new Date(item.date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</td>
-                                    {activeTab === "All" && (
-                                        <td className="px-6 py-4">
-                                            <Badge className={
-                                                item.status === "Approved" ? 'bg-green-100 text-green-800' :
-                                                    item.status === "Pending" ? 'bg-yellow-100 text-yellow-800' :
-                                                        'bg-red-100 text-red-800'
-                                            }>
+                                    {activeTab === "All" ? (
+                                        <td className="px-6 py-4 flex justify-center">
+                                            <Badge className={getBadgeClass(item.status)}>
                                                 {item.status}
                                             </Badge>
                                         </td>
+                                    ) : (
+                                        <td className="px-6 py-4">
+                                            <div className="flex justify-center gap-2">
+                                                {item.status === "Pending" && (
+                                                    <>
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="sm"
+                                                            className="text-green-600 hover:text-green-700 hover:bg-green-50"
+                                                            onClick={() => onStatusChange?.(item.id, "Approved")}
+                                                        >
+                                                            <CheckCircle className="w-4 h-4 mr-1" />
+                                                            Approve
+                                                        </Button>
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="sm"
+                                                            className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                                                            onClick={() => onStatusChange?.(item.id, "Rejected")}
+                                                        >
+                                                            <XCircle className="w-4 h-4 mr-1" />
+                                                            Reject
+                                                        </Button>
+                                                    </>
+                                                )}
+                                                {(item.status === "Approved" || item.status === "Rejected" || item.status === "Cancelled") && (
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="sm"
+                                                        className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                                                        onClick={() => onStatusChange?.(item.id, "Pending")}
+                                                    >
+                                                        <RotateCcw className="w-4 h-4 mr-1" />
+                                                        Reset
+                                                    </Button>
+                                                )}
+                                                {item.status === "Concluded" && (
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="sm"
+                                                        className="text-gray-600 hover:text-gray-700 hover:bg-gray-50"
+                                                        onClick={() => onStatusChange?.(item.id, "Archived")}
+                                                    >
+                                                        <Archive className="w-4 h-4 mr-1" />
+                                                        Archive
+                                                    </Button>
+                                                )}
+                                                {item.status === "Archived" && (
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="sm"
+                                                        className="text-gray-600 hover:text-gray-700 hover:bg-gray-50"
+                                                        onClick={() => onStatusChange?.(item.id, "Concluded")}
+                                                    >
+                                                        <RotateCcw className="w-4 h-4 mr-1" />
+                                                        Unarchive
+                                                    </Button>
+                                                )}
+                                            </div>
+                                        </td>
                                     )}
                                     <td className="px-6 py-4">
-                                        <div className="flex gap-2 justify-end">
-                                            {activeTab !== "All" && item.status === "Pending" && (
-                                                <>
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="sm"
-                                                        className="text-green-600 hover:text-green-700 hover:bg-green-50"
-                                                        onClick={() => onStatusChange?.(item.id, "Approved")}
-                                                    >
-                                                        <CheckCircle className="w-4 h-4 mr-1" />
-                                                        Approve
-                                                    </Button>
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="sm"
-                                                        className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                                                        onClick={() => onStatusChange?.(item.id, "Rejected")}
-                                                    >
-                                                        <XCircle className="w-4 h-4 mr-1" />
-                                                        Reject
-                                                    </Button>
-                                                </>
-                                            )}
-                                            {activeTab !== "All" && (item.status === "Approved" || item.status === "Rejected") && (
-                                                <Button
-                                                    variant="ghost"
-                                                    size="sm"
-                                                    className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
-                                                    onClick={() => onStatusChange?.(item.id, "Pending")}
-                                                >
-                                                    <RotateCcw className="w-4 h-4 mr-1" />
-                                                    Reset
-                                                </Button>
-                                            )}
-                                            <Link to={`/${item.type === 'Bulletin' ? 'bulletin' : 'events'}/${item.id}`}>
-                                                <Button variant="outline" size="sm" className="gap-1 px-3">
-                                                    <Eye className="w-4 h-4" />
-                                                    View Details
-                                                </Button>
-                                            </Link>
+                                        <div className="flex gap-2 justify-center">
+                                            <Select value={item.status} onValueChange={(val) => onStatusChange?.(item.id, val)}>
+                                                <SelectTrigger className="w-[140px] h-8 text-xs bg-white">
+                                                    <SelectValue placeholder="Status" />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    {statuses.filter(s => s !== "All").map(s => (
+                                                        <SelectItem key={s} value={s}>{s}</SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
+                                            <Button variant="ghost" size="sm" className="text-gray-600 hover:text-gray-700 hover:bg-gray-50">
+                                                <FileText className="w-4 h-4 mr-1" />
+                                                Details
+                                            </Button>
                                         </div>
                                     </td>
                                 </tr>
@@ -241,25 +300,27 @@ export function AdminContentTable({
                     </table>
                 </div>
 
-                {totalPages > 1 && (
-                    <div className="flex items-center justify-between">
-                        <div className="text-sm text-gray-500">
-                            Showing {(currentPage - 1) * ITEMS_PER_PAGE + 1} to {Math.min(currentPage * ITEMS_PER_PAGE, filteredContent.length)} of {filteredContent.length} items
-                        </div>
-                        <div className="flex items-center space-x-2">
-                            <Button variant="outline" size="sm" onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1}>
-                                <ChevronLeft className="h-4 w-4" />
-                            </Button>
-                            <div className="text-sm font-medium">
-                                Page {currentPage} of {totalPages}
+                {
+                    totalPages > 1 && (
+                        <div className="flex items-center justify-between">
+                            <div className="text-sm text-gray-500">
+                                Showing {(currentPage - 1) * ITEMS_PER_PAGE + 1} to {Math.min(currentPage * ITEMS_PER_PAGE, totalItems)} of {totalItems} items
                             </div>
-                            <Button variant="outline" size="sm" onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages}>
-                                <ChevronRight className="h-4 w-4" />
-                            </Button>
+                            <div className="flex items-center space-x-2">
+                                <Button variant="outline" size="sm" onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1}>
+                                    <ChevronLeft className="h-4 w-4" />
+                                </Button>
+                                <div className="text-sm font-medium">
+                                    Page {currentPage} of {totalPages}
+                                </div>
+                                <Button variant="outline" size="sm" onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages}>
+                                    <ChevronRight className="h-4 w-4" />
+                                </Button>
+                            </div>
                         </div>
-                    </div>
-                )}
-            </div>
+                    )
+                }
+            </div >
         );
     };
 
@@ -273,10 +334,9 @@ export function AdminContentTable({
             <Tabs value={activeTab} onValueChange={onTabChange} className="w-full">
                 <div className="overflow-x-auto pb-2 flex justify-between items-center gap-4">
                     <TabsList className="mb-4 inline-flex min-w-full sm:min-w-0 flex-1">
-                        <TabsTrigger value="All">All</TabsTrigger>
-                        <TabsTrigger value="Pending">Pending</TabsTrigger>
-                        <TabsTrigger value="Approved">Approved</TabsTrigger>
-                        <TabsTrigger value="Rejected">Rejected</TabsTrigger>
+                        {statuses.map(status => (
+                            <TabsTrigger key={status} value={status}>{status}</TabsTrigger>
+                        ))}
                     </TabsList>
                 </div>
 

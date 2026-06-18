@@ -2,12 +2,31 @@ import fs from 'fs'
 import path from 'path'
 import { PrismaClient } from "./generated/client";
 import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
+import { randomUUID } from 'crypto';
 
 const adapter = new PrismaBetterSqlite3({
   url: process.env.DATABASE_URL || "file:./dev.db",
 });
 
 export const prisma = new PrismaClient({ adapter });
+
+function assignIds(items: any[], referenceLists: any[][], idField: string) {
+  const ids = new Set<string>();
+  for (const list of referenceLists) {
+    for (const item of list || []) {
+      if (item[idField]) {
+        ids.add(item[idField]);
+      }
+    }
+  }
+  const idArray = Array.from(ids);
+  let idIndex = 0;
+  return items.map((item: any) => {
+    if (item.id) return item;
+    const assignedId = idIndex < idArray.length ? idArray[idIndex++] : randomUUID();
+    return { ...item, id: assignedId };
+  });
+}
 
 async function main() {
   const dbPath = path.resolve('db.json')
@@ -17,36 +36,54 @@ async function main() {
   console.log('Seeding Database...')
 
   // 1. Lookup Tables
-  for (const degree of db.degrees) {
+  const degrees = assignIds(db.degrees || [], [db.profiles], 'degreeId');
+  for (const degree of degrees) {
     await prisma.degree.create({ data: degree })
   }
-  for (const connectionStatus of db.connectionStatuses) {
+
+  const connectionStatuses = assignIds(db.connectionStatuses || [], [db.userConnections], 'connectionStatusId');
+  for (const connectionStatus of connectionStatuses) {
     await prisma.connectionStatus.create({ data: connectionStatus })
   }
-  for (const eventStatus of db.eventStatuses) {
+
+  const eventStatuses = assignIds(db.eventStatuses || [], [db.events], 'eventStatusId');
+  for (const eventStatus of eventStatuses) {
     await prisma.eventStatus.create({ data: eventStatus })
   }
-  for (const contentStatus of db.contentStatuses) {
+
+  const contentStatuses = assignIds(db.contentStatuses || [], [db.bulletins], 'contentStatusId');
+  for (const contentStatus of contentStatuses) {
     await prisma.contentStatus.create({ data: contentStatus })
   }
-  for (const userStatus of db.userStatuses) {
+
+  const userStatuses = assignIds(db.userStatuses || [], [db.users, db.records], 'userStatusId');
+  for (const userStatus of userStatuses) {
     await prisma.userStatus.create({ data: userStatus })
   }
-  for (const donationStatus of db.donationStatuses) {
+
+  const donationStatuses = assignIds(db.donationStatuses || [], [db.donations], 'donationStatusId');
+  for (const donationStatus of donationStatuses) {
     await prisma.donationStatus.create({ data: donationStatus })
   }
-  for (const eventCategory of db.eventCategories) {
+
+  const eventCategories = assignIds(db.eventCategories || [], [db.events], 'eventCategoryId');
+  for (const eventCategory of eventCategories) {
     await prisma.eventCategory.create({ data: eventCategory })
   }
-  for (const profileStatus of db.profileStatuses) {
+
+  const profileStatuses = assignIds(db.profileStatuses || [], [db.users], 'profileStatusId');
+  for (const profileStatus of profileStatuses) {
     await prisma.profileStatus.create({ data: profileStatus })
   }
-  for (const notificationType of db.notificationTypes || []) {
+
+  const notificationTypes = assignIds(db.notificationTypes || [], [db.notifications], 'notificationTypeId');
+  for (const notificationType of notificationTypes) {
     await prisma.notificationType.create({ data: notificationType })
   }
 
   // 2. Independent Tables
-  for (const location of db.locations || []) {
+  const locations = assignIds(db.locations || [], [db.events], 'locationId');
+  for (const location of locations) {
     await prisma.location.create({ data: location })
   }
 
@@ -61,7 +98,9 @@ async function main() {
     })
     adminIdMap[admin.username] = createdAdmin.id
   }
-  for (const achievement of db.achievements || []) {
+
+  const achievements = assignIds(db.achievements || [], [db.userAchievements], 'achievementId');
+  for (const achievement of achievements) {
     await prisma.achievement.create({ data: achievement })
   }
 
@@ -70,6 +109,7 @@ async function main() {
     const { userId, recordId, ...rest } = user
     await prisma.user.create({
       data: {
+        id: userId,
         ...rest,
         currentRecordId: recordId
       }
@@ -77,7 +117,7 @@ async function main() {
   }
   for (const profile of db.profiles) {
     // Remove duplicate id mapped from json-server
-    const { id, birthday, ...rest } = profile
+    const { birthday, ...rest } = profile
     await prisma.profile.create({
       data: {
         ...rest,
@@ -86,7 +126,7 @@ async function main() {
     })
   }
   for (const userAuth of db.userAuths) {
-    const { id, lastLogin, ...rest } = userAuth
+    const { lastLogin, ...rest } = userAuth
     await prisma.userAuth.create({
       data: {
         ...rest,
@@ -95,7 +135,7 @@ async function main() {
     })
   }
   for (const userStatistic of db.userStatistics) {
-    const { id, dateRegistered, ...rest } = userStatistic
+    const { dateRegistered, ...rest } = userStatistic
     await prisma.userStatistic.create({
       data: {
         ...rest,
@@ -105,7 +145,8 @@ async function main() {
   }
 
   // 4. Content (Events, Bulletins)
-  for (const event of db.events) {
+  const events = assignIds(db.events || [], [db.userRsvps], 'eventId');
+  for (const event of events) {
     const { eventDate, reviewDate, adminId, ...rest } = event
     await prisma.event.create({
       data: {
@@ -116,7 +157,8 @@ async function main() {
       }
     })
   }
-  for (const bulletin of db.bulletins) {
+  const bulletins = assignIds(db.bulletins || [], [db.comments, db.bulletinLikes], 'bulletinId');
+  for (const bulletin of bulletins) {
     const { bulletinDate, reviewDate, userId, adminId, ...rest } = bulletin
     await prisma.bulletin.create({
       data: {
@@ -130,7 +172,8 @@ async function main() {
   }
 
   // 5. Relations and Engagements
-  for (const record of db.records) {
+  const records = assignIds(db.records || [], [db.users], 'recordId');
+  for (const record of records) {
     const { dateCreated, dateExpires, adminId, ...rest } = record
     await prisma.record.create({
       data: {
@@ -141,7 +184,8 @@ async function main() {
       }
     })
   }
-  for (const comment of db.comments) {
+  const comments = assignIds(db.comments || [], [db.commentLikes], 'commentId');
+  for (const comment of comments) {
     const { commentDate, ...rest } = comment
     await prisma.comment.create({
       data: {

@@ -1,8 +1,7 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { Calendar, MapPin, Users, Video, Loader2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { getCategoryColor } from '@/app/views/categoryColors';
-import { isEventUpcoming } from '@/app/views/eventFilters';
+import { getCategoryColor } from '@/app/views/formatters';
 import { LazyImage } from '@components/user/LazyImage';
 import { api, type EventData } from '@/app/views/api';
 
@@ -13,7 +12,17 @@ export function EventsFeed() {
   useEffect(() => {
     const fetchEvents = async () => {
       try {
-        const res = await api.get('/events');
+        const todayStr = new Date().toISOString().split('T')[0] + 'T00:00:00.000Z';
+        const res = await api.get('/events', {
+          params: {
+            _limit: 4,
+            _sort: 'eventDate',
+            _where: JSON.stringify({
+              eventStatus: { statusName: 'Approved' },
+              eventDate: { gte: todayStr }
+            })
+          }
+        });
         const data = Array.isArray(res.data) ? res.data : res.data.data;
         setEvents(data || []);
       } catch (error) {
@@ -25,14 +34,7 @@ export function EventsFeed() {
     fetchEvents();
   }, []);
 
-  const displayEvents = useMemo(() => {
-    const sorted = events
-      .filter(event => event.eventStatus?.statusName === 'Approved')
-      .filter(event => isEventUpcoming(event.eventDate))
-      .sort((a, b) => new Date(a.eventDate).getTime() - new Date(b.eventDate).getTime());
-
-    return sorted.slice(0, 4);
-  }, [events]);
+  const displayEvents = events;
 
   const formatLocation = (loc: any) => {
     if (!loc) return 'TBA';

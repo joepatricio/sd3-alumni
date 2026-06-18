@@ -40,36 +40,37 @@ export function AlumniDirectory() {
         const fetchData = async () => {
             setLoading(true);
             try {
-                const url = `/profiles`;
-
-                const res = await api.get<any>(url);
-                let profiles = res.data;
-
-                // Client side filtering and pagination since Express API returns all
+                const whereClause: any = {
+                    user: { userStatus: { statusName: { not: 'Banned' } } }
+                };
+                
                 if (activeFilters.name) {
-                    profiles = profiles.filter((p: any) => p.userName.toLowerCase().includes(String(activeFilters.name).toLowerCase()));
+                    whereClause.userName = { contains: activeFilters.name };
                 }
                 if (activeFilters.company) {
-                    profiles = profiles.filter((p: any) => p.company && p.company.toLowerCase().includes(String(activeFilters.company).toLowerCase()));
+                    whereClause.company = { contains: activeFilters.company };
                 }
                 if (activeFilters.year) {
-                    profiles = profiles.filter((p: any) => String(p.batch) === String(activeFilters.year));
+                    whereClause.batch = parseInt(activeFilters.year, 10);
                 }
                 if (activeFilters.degreeId) {
-                    profiles = profiles.filter((p: any) => String(p.degreeId) === String(activeFilters.degreeId));
+                    whereClause.degreeId = activeFilters.degreeId;
                 }
 
-                // Filter out banned users
-                const usersRes = await api.get('/users');
-                const bannedUsers = usersRes.data.filter((u: any) => u.userStatus?.statusName === 'Banned').map((u: any) => String(u.id));
-                profiles = profiles.filter((p: any) => !bannedUsers.includes(String(p.userId)));
+                const res = await api.get('/profiles', {
+                    params: {
+                        _page: currentPage,
+                        _per_page: ITEMS_PER_PAGE,
+                        _where: JSON.stringify(whereClause)
+                    }
+                });
 
-                setTotalPages(Math.ceil(profiles.length / ITEMS_PER_PAGE));
+                const data = res.data.data || res.data;
+                const total = res.data.items || data.length;
 
-                const start = (currentPage - 1) * ITEMS_PER_PAGE;
-                const end = start + ITEMS_PER_PAGE;
+                setTotalPages(Math.ceil(total / ITEMS_PER_PAGE));
 
-                const mappedAlumni = profiles.slice(start, end).map((profile: any) => {
+                const mappedAlumni = data.map((profile: any) => {
                     const deg = degrees.find(d => String(d.id) === String(profile.degreeId));
                     return {
                         userId: profile.userId,

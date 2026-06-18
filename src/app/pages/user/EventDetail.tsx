@@ -24,7 +24,6 @@ import { api, type EventData, type ProfileData } from '@/app/views/api';
 
 export function EventDetail() {
     const { id } = useParams<{ id: string }>();
-    const isAdmin = !!localStorage.getItem('adminToken');
     const { isLoggedIn, session } = useAuth();
 
     const [eventData, setEventData] = useState<EventData | null>(null);
@@ -201,7 +200,7 @@ export function EventDetail() {
                 </div>
             )}
             {/* Header / Nav */}
-            <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 flex justify-between items-center">
+            <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 flex justify-between items-center">
                 <Link
                     to="/events"
                     className="inline-flex items-center gap-2 text-gray-600 hover:text-brand-primary transition-colors"
@@ -211,23 +210,25 @@ export function EventDetail() {
                 </Link>
 
                 <div className="flex gap-2">
-                    {isLoggedIn && (session?.userId === eventData.authorId || isAdmin) && currentStatusName !== "Concluded" && (
-                        <Button variant="outline" className="gap-2 text-brand-primary border-brand-primary hover:bg-brand-primary hover:text-white transition-colors" onClick={handleConcludeEvent}>
-                            <CheckCircle2 className="w-4 h-4" />
-                            Conclude Event
-                        </Button>
-                    )}
-                    {isLoggedIn && (
-                        <CreateEventModal
-                            trigger={
-                                <Button variant="outline" className="gap-2 text-brand-primary border-brand-primary hover:bg-brand-primary hover:text-white transition-colors">
-                                    <Edit className="w-4 h-4" />
-                                    Edit Event
+                    {isLoggedIn && (session?.userId === eventData.authorId) && (
+                        <>
+                            <CreateEventModal
+                                trigger={
+                                    <Button variant="outline" className="gap-2 text-brand-primary border-brand-primary hover:bg-brand-primary hover:text-white transition-colors">
+                                        <Edit className="w-4 h-4" />
+                                        Edit Event
+                                    </Button>
+                                }
+                                initialData={eventData as any}
+                            />
+
+                            {currentStatusName !== "Concluded" && (
+                                <Button variant="outline" className="gap-2 text-brand-primary border-brand-primary hover:bg-brand-primary hover:text-white transition-colors" onClick={handleConcludeEvent}>
+                                    <CheckCircle2 className="w-4 h-4" />
+                                    Conclude Event
                                 </Button>
-                            }
-                            initialData={eventData as any}
-                            isAdmin={isAdmin}
-                        />
+                            )}
+                        </>
                     )}
                 </div>
             </div>

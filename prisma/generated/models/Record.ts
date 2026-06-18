@@ -162,7 +162,7 @@ export type RecordGroupByArgs<ExtArgs extends runtime.Types.Extensions.InternalA
 export type RecordGroupByOutputType = {
   id: string
   userId: string
-  adminId: string
+  adminId: string | null
   userStatusId: string
   dateCreated: Date
   description: string
@@ -193,20 +193,20 @@ export type RecordWhereInput = {
   NOT?: Prisma.RecordWhereInput | Prisma.RecordWhereInput[]
   id?: Prisma.StringFilter<"Record"> | string
   userId?: Prisma.StringFilter<"Record"> | string
-  adminId?: Prisma.StringFilter<"Record"> | string
+  adminId?: Prisma.StringNullableFilter<"Record"> | string | null
   userStatusId?: Prisma.StringFilter<"Record"> | string
   dateCreated?: Prisma.DateTimeFilter<"Record"> | Date | string
   description?: Prisma.StringFilter<"Record"> | string
   dateExpires?: Prisma.DateTimeNullableFilter<"Record"> | Date | string | null
   user?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
-  admin?: Prisma.XOR<Prisma.AdminScalarRelationFilter, Prisma.AdminWhereInput>
+  admin?: Prisma.XOR<Prisma.AdminNullableScalarRelationFilter, Prisma.AdminWhereInput> | null
   userStatus?: Prisma.XOR<Prisma.UserStatusScalarRelationFilter, Prisma.UserStatusWhereInput>
 }
 
 export type RecordOrderByWithRelationInput = {
   id?: Prisma.SortOrder
   userId?: Prisma.SortOrder
-  adminId?: Prisma.SortOrder
+  adminId?: Prisma.SortOrderInput | Prisma.SortOrder
   userStatusId?: Prisma.SortOrder
   dateCreated?: Prisma.SortOrder
   description?: Prisma.SortOrder
@@ -222,20 +222,20 @@ export type RecordWhereUniqueInput = Prisma.AtLeast<{
   OR?: Prisma.RecordWhereInput[]
   NOT?: Prisma.RecordWhereInput | Prisma.RecordWhereInput[]
   userId?: Prisma.StringFilter<"Record"> | string
-  adminId?: Prisma.StringFilter<"Record"> | string
+  adminId?: Prisma.StringNullableFilter<"Record"> | string | null
   userStatusId?: Prisma.StringFilter<"Record"> | string
   dateCreated?: Prisma.DateTimeFilter<"Record"> | Date | string
   description?: Prisma.StringFilter<"Record"> | string
   dateExpires?: Prisma.DateTimeNullableFilter<"Record"> | Date | string | null
   user?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
-  admin?: Prisma.XOR<Prisma.AdminScalarRelationFilter, Prisma.AdminWhereInput>
+  admin?: Prisma.XOR<Prisma.AdminNullableScalarRelationFilter, Prisma.AdminWhereInput> | null
   userStatus?: Prisma.XOR<Prisma.UserStatusScalarRelationFilter, Prisma.UserStatusWhereInput>
 }, "id">
 
 export type RecordOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
   userId?: Prisma.SortOrder
-  adminId?: Prisma.SortOrder
+  adminId?: Prisma.SortOrderInput | Prisma.SortOrder
   userStatusId?: Prisma.SortOrder
   dateCreated?: Prisma.SortOrder
   description?: Prisma.SortOrder
@@ -251,7 +251,7 @@ export type RecordScalarWhereWithAggregatesInput = {
   NOT?: Prisma.RecordScalarWhereWithAggregatesInput | Prisma.RecordScalarWhereWithAggregatesInput[]
   id?: Prisma.StringWithAggregatesFilter<"Record"> | string
   userId?: Prisma.StringWithAggregatesFilter<"Record"> | string
-  adminId?: Prisma.StringWithAggregatesFilter<"Record"> | string
+  adminId?: Prisma.StringNullableWithAggregatesFilter<"Record"> | string | null
   userStatusId?: Prisma.StringWithAggregatesFilter<"Record"> | string
   dateCreated?: Prisma.DateTimeWithAggregatesFilter<"Record"> | Date | string
   description?: Prisma.StringWithAggregatesFilter<"Record"> | string
@@ -264,14 +264,14 @@ export type RecordCreateInput = {
   description: string
   dateExpires?: Date | string | null
   user: Prisma.UserCreateNestedOneWithoutRecordsInput
-  admin: Prisma.AdminCreateNestedOneWithoutRecordsInput
+  admin?: Prisma.AdminCreateNestedOneWithoutRecordsInput
   userStatus: Prisma.UserStatusCreateNestedOneWithoutRecordsInput
 }
 
 export type RecordUncheckedCreateInput = {
   id?: string
   userId: string
-  adminId: string
+  adminId?: string | null
   userStatusId: string
   dateCreated?: Date | string
   description: string
@@ -284,14 +284,14 @@ export type RecordUpdateInput = {
   description?: Prisma.StringFieldUpdateOperationsInput | string
   dateExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   user?: Prisma.UserUpdateOneRequiredWithoutRecordsNestedInput
-  admin?: Prisma.AdminUpdateOneRequiredWithoutRecordsNestedInput
+  admin?: Prisma.AdminUpdateOneWithoutRecordsNestedInput
   userStatus?: Prisma.UserStatusUpdateOneRequiredWithoutRecordsNestedInput
 }
 
 export type RecordUncheckedUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   userId?: Prisma.StringFieldUpdateOperationsInput | string
-  adminId?: Prisma.StringFieldUpdateOperationsInput | string
+  adminId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   userStatusId?: Prisma.StringFieldUpdateOperationsInput | string
   dateCreated?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   description?: Prisma.StringFieldUpdateOperationsInput | string
@@ -301,7 +301,7 @@ export type RecordUncheckedUpdateInput = {
 export type RecordCreateManyInput = {
   id?: string
   userId: string
-  adminId: string
+  adminId?: string | null
   userStatusId: string
   dateCreated?: Date | string
   description: string
@@ -318,7 +318,7 @@ export type RecordUpdateManyMutationInput = {
 export type RecordUncheckedUpdateManyInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   userId?: Prisma.StringFieldUpdateOperationsInput | string
-  adminId?: Prisma.StringFieldUpdateOperationsInput | string
+  adminId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   userStatusId?: Prisma.StringFieldUpdateOperationsInput | string
   dateCreated?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   description?: Prisma.StringFieldUpdateOperationsInput | string
@@ -505,13 +505,13 @@ export type RecordCreateWithoutUserStatusInput = {
   description: string
   dateExpires?: Date | string | null
   user: Prisma.UserCreateNestedOneWithoutRecordsInput
-  admin: Prisma.AdminCreateNestedOneWithoutRecordsInput
+  admin?: Prisma.AdminCreateNestedOneWithoutRecordsInput
 }
 
 export type RecordUncheckedCreateWithoutUserStatusInput = {
   id?: string
   userId: string
-  adminId: string
+  adminId?: string | null
   dateCreated?: Date | string
   description: string
   dateExpires?: Date | string | null
@@ -548,7 +548,7 @@ export type RecordScalarWhereInput = {
   NOT?: Prisma.RecordScalarWhereInput | Prisma.RecordScalarWhereInput[]
   id?: Prisma.StringFilter<"Record"> | string
   userId?: Prisma.StringFilter<"Record"> | string
-  adminId?: Prisma.StringFilter<"Record"> | string
+  adminId?: Prisma.StringNullableFilter<"Record"> | string | null
   userStatusId?: Prisma.StringFilter<"Record"> | string
   dateCreated?: Prisma.DateTimeFilter<"Record"> | Date | string
   description?: Prisma.StringFilter<"Record"> | string
@@ -560,13 +560,13 @@ export type RecordCreateWithoutUserInput = {
   dateCreated?: Date | string
   description: string
   dateExpires?: Date | string | null
-  admin: Prisma.AdminCreateNestedOneWithoutRecordsInput
+  admin?: Prisma.AdminCreateNestedOneWithoutRecordsInput
   userStatus: Prisma.UserStatusCreateNestedOneWithoutRecordsInput
 }
 
 export type RecordUncheckedCreateWithoutUserInput = {
   id?: string
-  adminId: string
+  adminId?: string | null
   userStatusId: string
   dateCreated?: Date | string
   description: string
@@ -644,7 +644,7 @@ export type RecordUpdateManyWithWhereWithoutAdminInput = {
 export type RecordCreateManyUserStatusInput = {
   id?: string
   userId: string
-  adminId: string
+  adminId?: string | null
   dateCreated?: Date | string
   description: string
   dateExpires?: Date | string | null
@@ -656,13 +656,13 @@ export type RecordUpdateWithoutUserStatusInput = {
   description?: Prisma.StringFieldUpdateOperationsInput | string
   dateExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   user?: Prisma.UserUpdateOneRequiredWithoutRecordsNestedInput
-  admin?: Prisma.AdminUpdateOneRequiredWithoutRecordsNestedInput
+  admin?: Prisma.AdminUpdateOneWithoutRecordsNestedInput
 }
 
 export type RecordUncheckedUpdateWithoutUserStatusInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   userId?: Prisma.StringFieldUpdateOperationsInput | string
-  adminId?: Prisma.StringFieldUpdateOperationsInput | string
+  adminId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   dateCreated?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   description?: Prisma.StringFieldUpdateOperationsInput | string
   dateExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -671,7 +671,7 @@ export type RecordUncheckedUpdateWithoutUserStatusInput = {
 export type RecordUncheckedUpdateManyWithoutUserStatusInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   userId?: Prisma.StringFieldUpdateOperationsInput | string
-  adminId?: Prisma.StringFieldUpdateOperationsInput | string
+  adminId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   dateCreated?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   description?: Prisma.StringFieldUpdateOperationsInput | string
   dateExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -679,7 +679,7 @@ export type RecordUncheckedUpdateManyWithoutUserStatusInput = {
 
 export type RecordCreateManyUserInput = {
   id?: string
-  adminId: string
+  adminId?: string | null
   userStatusId: string
   dateCreated?: Date | string
   description: string
@@ -691,13 +691,13 @@ export type RecordUpdateWithoutUserInput = {
   dateCreated?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   description?: Prisma.StringFieldUpdateOperationsInput | string
   dateExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  admin?: Prisma.AdminUpdateOneRequiredWithoutRecordsNestedInput
+  admin?: Prisma.AdminUpdateOneWithoutRecordsNestedInput
   userStatus?: Prisma.UserStatusUpdateOneRequiredWithoutRecordsNestedInput
 }
 
 export type RecordUncheckedUpdateWithoutUserInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  adminId?: Prisma.StringFieldUpdateOperationsInput | string
+  adminId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   userStatusId?: Prisma.StringFieldUpdateOperationsInput | string
   dateCreated?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   description?: Prisma.StringFieldUpdateOperationsInput | string
@@ -706,7 +706,7 @@ export type RecordUncheckedUpdateWithoutUserInput = {
 
 export type RecordUncheckedUpdateManyWithoutUserInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  adminId?: Prisma.StringFieldUpdateOperationsInput | string
+  adminId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   userStatusId?: Prisma.StringFieldUpdateOperationsInput | string
   dateCreated?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   description?: Prisma.StringFieldUpdateOperationsInput | string
@@ -760,7 +760,7 @@ export type RecordSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs =
   description?: boolean
   dateExpires?: boolean
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
-  admin?: boolean | Prisma.AdminDefaultArgs<ExtArgs>
+  admin?: boolean | Prisma.Record$adminArgs<ExtArgs>
   userStatus?: boolean | Prisma.UserStatusDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["record"]>
 
@@ -773,7 +773,7 @@ export type RecordSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extens
   description?: boolean
   dateExpires?: boolean
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
-  admin?: boolean | Prisma.AdminDefaultArgs<ExtArgs>
+  admin?: boolean | Prisma.Record$adminArgs<ExtArgs>
   userStatus?: boolean | Prisma.UserStatusDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["record"]>
 
@@ -786,7 +786,7 @@ export type RecordSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extens
   description?: boolean
   dateExpires?: boolean
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
-  admin?: boolean | Prisma.AdminDefaultArgs<ExtArgs>
+  admin?: boolean | Prisma.Record$adminArgs<ExtArgs>
   userStatus?: boolean | Prisma.UserStatusDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["record"]>
 
@@ -803,17 +803,17 @@ export type RecordSelectScalar = {
 export type RecordOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "userId" | "adminId" | "userStatusId" | "dateCreated" | "description" | "dateExpires", ExtArgs["result"]["record"]>
 export type RecordInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
-  admin?: boolean | Prisma.AdminDefaultArgs<ExtArgs>
+  admin?: boolean | Prisma.Record$adminArgs<ExtArgs>
   userStatus?: boolean | Prisma.UserStatusDefaultArgs<ExtArgs>
 }
 export type RecordIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
-  admin?: boolean | Prisma.AdminDefaultArgs<ExtArgs>
+  admin?: boolean | Prisma.Record$adminArgs<ExtArgs>
   userStatus?: boolean | Prisma.UserStatusDefaultArgs<ExtArgs>
 }
 export type RecordIncludeUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
-  admin?: boolean | Prisma.AdminDefaultArgs<ExtArgs>
+  admin?: boolean | Prisma.Record$adminArgs<ExtArgs>
   userStatus?: boolean | Prisma.UserStatusDefaultArgs<ExtArgs>
 }
 
@@ -821,13 +821,13 @@ export type $RecordPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs
   name: "Record"
   objects: {
     user: Prisma.$UserPayload<ExtArgs>
-    admin: Prisma.$AdminPayload<ExtArgs>
+    admin: Prisma.$AdminPayload<ExtArgs> | null
     userStatus: Prisma.$UserStatusPayload<ExtArgs>
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
     userId: string
-    adminId: string
+    adminId: string | null
     userStatusId: string
     dateCreated: Date
     description: string
@@ -1227,7 +1227,7 @@ readonly fields: RecordFieldRefs;
 export interface Prisma__RecordClient<T, Null = never, ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
   readonly [Symbol.toStringTag]: "PrismaPromise"
   user<T extends Prisma.UserDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.UserDefaultArgs<ExtArgs>>): Prisma.Prisma__UserClient<runtime.Types.Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
-  admin<T extends Prisma.AdminDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.AdminDefaultArgs<ExtArgs>>): Prisma.Prisma__AdminClient<runtime.Types.Result.GetResult<Prisma.$AdminPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+  admin<T extends Prisma.Record$adminArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Record$adminArgs<ExtArgs>>): Prisma.Prisma__AdminClient<runtime.Types.Result.GetResult<Prisma.$AdminPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   userStatus<T extends Prisma.UserStatusDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.UserStatusDefaultArgs<ExtArgs>>): Prisma.Prisma__UserStatusClient<runtime.Types.Result.GetResult<Prisma.$UserStatusPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
@@ -1661,6 +1661,25 @@ export type RecordDeleteManyArgs<ExtArgs extends runtime.Types.Extensions.Intern
    * Limit how many Records to delete.
    */
   limit?: number
+}
+
+/**
+ * Record.admin
+ */
+export type Record$adminArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the Admin
+   */
+  select?: Prisma.AdminSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the Admin
+   */
+  omit?: Prisma.AdminOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.AdminInclude<ExtArgs> | null
+  where?: Prisma.AdminWhereInput
 }
 
 /**

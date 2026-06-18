@@ -95,14 +95,14 @@ model User {
 model Record {
   id           String    @id @default(uuid())
   userId       String
-  adminId      String
+  adminId      String?
   userStatusId String
   dateCreated  DateTime  @default(now())
   description  String
   dateExpires  DateTime?
 
   user       User       @relation("UserRecords", fields: [userId], references: [id])
-  admin      Admin      @relation(fields: [adminId], references: [id])
+  admin      Admin?     @relation(fields: [adminId], references: [id])
   userStatus UserStatus @relation(fields: [userStatusId], references: [id])
 }
 
@@ -201,7 +201,7 @@ model Profile {
 
 model Admin {
   id           String   @id @default(uuid())
-  username     String  @unique
+  username     String   @unique
   passwordHash String
   lastLogin    DateTime @default(now())
 

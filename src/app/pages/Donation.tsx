@@ -6,7 +6,7 @@ import { toast } from 'sonner';
 import { useAuth } from '@/app/views/auth';
 import { formatCurrency } from '@/app/views/formatters';
 import { api } from '@/app/views/api';
-import { customAlphabet, nanoid } from 'nanoid';
+import { customAlphabet } from 'nanoid';
 import { z } from 'zod';
 
 export function Donation() {
@@ -47,15 +47,12 @@ export function Donation() {
 
         const nanoidRef = customAlphabet("23456789BCDFGHJKLMNPQRSTVWXYZ", 3);
         const refId = `DON-${nanoidRef()}-${nanoidRef()}`;
-        const donationId = nanoid(10);
 
         try {
             const statusRes = await api.get('/donationStatuses');
             const completedId = statusRes.data.find((s: any) => s.statusName === 'Completed')?.id;
 
             const newDonation = {
-                id: donationId,
-                donationId: donationId,
                 donationReference: refId,
                 userId: isLoggedIn ? session?.userId : null,
                 donationStatusId: completedId,
@@ -87,7 +84,6 @@ export function Donation() {
 
                 if (!ach || ach.length === 0) {
                     await api.post('/userAchievements', {
-                        id: nanoid(10),
                         userId: session?.userId,
                         achievementId: id_donate,
                         achievementTier: 1,

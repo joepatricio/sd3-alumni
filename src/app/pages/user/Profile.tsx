@@ -88,7 +88,7 @@ export function Profile() {
     useEffect(() => {
         const fetchTabContent = async () => {
             if (activeTab === 'overview' || activeTab === 'bulletins') {
-                api.get('/bulletins', { params: { 'profileId': profileId } })
+                api.get('/bulletins', { params: { 'authorId': profileId, '_sort': '-bulletinDate' } })
                     .catch(() => ({ data: [] }))
                     .then(res => {
                         const data = Array.isArray(res.data) ? res.data : (res.data?.data || []);
@@ -96,7 +96,7 @@ export function Profile() {
                     });
             }
             if (activeTab === 'overview' || activeTab === 'comments') {
-                api.get('/comments', { params: { 'profileId': profileId } })
+                api.get('/comments', { params: { 'userId': profileId, '_sort': '-commentDate' } })
                     .catch(() => ({ data: [] }))
                     .then(res => {
                         const fetchedComments = Array.isArray(res.data) ? res.data : (res.data?.data || []);
@@ -112,21 +112,10 @@ export function Profile() {
                             params: {
                                 'id:in': eventIds,
                                 'status.statusName': 'Approved',
+                                '_sort': '-eventDate'
                             }
                         }).catch(() => ({ data: [] }));
                         const attended = Array.isArray(eventRes.data) ? eventRes.data : (eventRes.data?.data || []);
-                        const now = new Date();
-                        now.setHours(0, 0, 0, 0);
-                        attended.sort((a: any, b: any) => {
-                            const dateA = new Date(a.eventDate);
-                            const dateB = new Date(b.eventDate);
-                            const isUpcomingA = dateA >= now;
-                            const isUpcomingB = dateB >= now;
-                            if (isUpcomingA && !isUpcomingB) return -1;
-                            if (!isUpcomingA && isUpcomingB) return 1;
-                            if (isUpcomingA) return dateA.getTime() - dateB.getTime();
-                            return dateB.getTime() - dateA.getTime();
-                        });
                         setEvents(attended);
                     } else {
                         setEvents([]);

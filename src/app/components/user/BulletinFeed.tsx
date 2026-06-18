@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { Clock, FileText, Calendar, Loader2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { api, type BulletinData, type ProfileData } from '@/app/views/api';
@@ -14,7 +14,8 @@ export function BulletinFeed() {
         const [bRes] = await Promise.all([
           api.get('/bulletins', {
             params: {
-              'status.statusName': 'Approved',
+              _where: JSON.stringify({ status: { statusName: 'Approved' } }),
+              _sort: '-bulletinDate',
               _page: 1,
               _per_page: 7,
             }
@@ -24,7 +25,7 @@ export function BulletinFeed() {
 
         setBulletins(bData || []);
         const pMap: Record<string, ProfileData> = {};
-        bData.forEach((b: BulletinData) => {
+        (bData || []).forEach((b: BulletinData) => {
           if (b.profile) pMap[b.authorId] = b.profile;
         });
         setProfilesMap(pMap);
@@ -37,12 +38,7 @@ export function BulletinFeed() {
     fetchData();
   }, []);
 
-  const displayBulletins = useMemo(() => {
-    const sorted = bulletins
-      .sort((a, b) => new Date(b.bulletinDate).getTime() - new Date(a.bulletinDate).getTime());
-
-    return sorted;
-  }, [bulletins]);
+  const displayBulletins = bulletins;
 
   if (loading) {
     return (

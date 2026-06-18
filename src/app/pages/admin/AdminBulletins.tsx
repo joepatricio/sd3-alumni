@@ -1,37 +1,62 @@
 import { AdminContentTable } from '@components/admin/AdminContentTable';
-import type { ContentItem } from '@components/admin/AdminContentTable';
-import { bulletins } from '@assets/mockData';
-import { useState } from 'react';
+import { api } from '@/app/views/api';
 
 export function AdminBulletins() {
-    // Map mockData bulletins to ContentItem format
-    const [bulletinsData, setBulletinsData] = useState<ContentItem[]>(() =>
-        bulletins.map(b => ({
-            id: b.id,
-            title: b.title,
-            author: b.author.name,
-            date: b.date,
-            type: 'Bulletin',
-            status: b.status || "Pending",
-            description: b.preview || '',
-            rawDate: new Date(b.date).getTime()
-        }))
-    );
-
-    const handleStatusChange = (id: string, newStatus: "Approved" | "Rejected" | "Pending") => {
-        setBulletinsData(prev => prev.map(item => item.id === id ? { ...item, status: newStatus } : item));
-        
-        // Mutate the original mock array so it persists for other components
-        const bulletinIndex = bulletins.findIndex(b => b.id === id);
-        if (bulletinIndex !== -1) {
-            bulletins[bulletinIndex].status = newStatus;
+    const fetchData = async (params: any) => {
+        const whereClause: any = {};
+        if (params.status !== 'All') {
+            whereClause.status = { statusName: params.status };
+        }
+        if (params.search) {
+            whereClause.title = { contains: params.search };
         }
 
-        // Save back to mock file physically
-        fetch('/api/update-status', {
-            method: 'POST',
-            body: JSON.stringify({ type: 'Bulletin', id, status: newStatus })
-        }).catch(err => console.error('Failed to update file:', err));
+        let sortStr = undefined;
+        if (params.sort) {
+            let sortKey = params.sort.key;
+            if (sortKey === 'author') sortKey = 'author.profile.userName';
+            else if (sortKey === 'date' || sortKey === 'rawDate') sortKey = 'bulletinDate';
+            else if (sortKey === 'status') sortKey = 'status.statusName';
+
+            sortStr = params.sort.direction === 'desc' ? `-${sortKey}` : sortKey;
+        }
+
+        const response = await api.get('/admin/bulletins', {
+            params: {
+                _page: params.page,
+                _per_page: params.perPage,
+                _sort: sortStr,
+                _where: Object.keys(whereClause).length > 0 ? JSON.stringify(whereClause) : undefined
+            },
+            headers: { Authorization: `Bearer ${sessionStorage.getItem('adminToken')}` }
+        });
+
+        const data = response.data.data || response.data;
+        const total = response.data.items || data.length;
+
+        const mappedBulletins = data.map((b: any) => ({
+            id: b.id,
+            title: b.title,
+            author: b.author?.profile?.userName || 'Unknown',
+            date: b.bulletinDate,
+            type: 'Bulletin',
+            status: b.status?.statusName || "Pending",
+            description: b.content || '',
+            rawDate: new Date(b.bulletinDate).getTime()
+        }));
+
+        return { data: mappedBulletins, total };
+    };
+
+    const handleStatusChange = async (id: string, newStatus: string) => {
+        try {
+            await api.patch(`/admin/bulletins/${id}/status`, { status: newStatus }, {
+                headers: { Authorization: `Bearer ${sessionStorage.getItem('adminToken')}` }
+            });
+            window.location.reload();
+        } catch (err) {
+            console.error('Failed to update status:', err);
+        }
     };
 
     return (
@@ -39,7 +64,7 @@ export function AdminBulletins() {
             title="Bulletins Management"
             description="Review, approve, or reject user-submitted job postings and community announcements."
             contentType="Bulletin"
-            mockData={bulletinsData}
+            fetchData={fetchData}
             primaryColorClass="bg-blue-600 hover:bg-blue-700 text-white"
             outlineColorClass="text-blue-600 border-blue-200 hover:bg-blue-50"
             onStatusChange={handleStatusChange}

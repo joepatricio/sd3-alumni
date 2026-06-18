@@ -1,11 +1,11 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Calendar, MapPin, Clock, Video, Loader2 } from 'lucide-react';
 import { Plus } from 'lucide-react';
 import { CreateEventModal } from '@components/user/CreateEventModal';
 import { Button } from '@components/ui/button';
 import { Link } from 'react-router-dom';
-import { getCategoryColor } from '@/app/views/categoryColors';
-import { isEventUpcoming } from '@/app/views/eventFilters';
+import { getCategoryColor } from '@/app/views/formatters';
+
 import { api, type EventData } from '@/app/views/api';
 import { useAuth } from '@/app/views/auth';
 
@@ -15,26 +15,40 @@ export function Events() {
     const [events, setEvents] = useState<EventData[]>([]);
     const [loading, setLoading] = useState(true);
     const { session } = useAuth();
-    const [restrictedUsers, setRestrictedUsers] = useState<string[]>([]);
     const [currentUserStatus, setCurrentUserStatus] = useState<string>('');
 
     const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
     const [timeRange, setTimeRange] = useState<string>('Upcoming');
     const [visibleCount, setVisibleCount] = useState(EVENTS_PER_PAGE);
 
+    const [allCategories, setAllCategories] = useState<string[]>([]);
+    const [totalEvents, setTotalEvents] = useState(0);
+
+    useEffect(() => {
+        const fetchCategories = async () => {
+            try {
+                const res = await api.get('/eventCategories');
+                const data = Array.isArray(res.data) ? res.data : (res.data?.data || []);
+                setAllCategories(data.map((c: any) => c.eventCategoryName));
+            } catch (err) {
+                console.error("Failed to fetch event categories", err);
+            }
+        };
+        fetchCategories();
+    }, []);
+
     useEffect(() => {
         const fetchEvents = async () => {
+            setLoading(true);
             try {
-                const [res, usersRes] = await Promise.all([
-                    api.get('/events'),
+                const [usersRes] = await Promise.all([
                     api.get('/users')
                 ]);
-                
+
                 const allUsers = Array.isArray(usersRes.data) ? usersRes.data : (usersRes.data?.data || []);
                 const restricted = allUsers
                     .filter((u: any) => u.userStatus?.statusName === 'Banned' || u.userStatus?.statusName === 'Suspended')
                     .map((u: any) => String(u.id));
-                setRestrictedUsers(restricted);
 
                 if (session?.userId) {
                     const currentU = allUsers.find((u: any) => String(u.userId) === String(session.userId));
@@ -43,9 +57,46 @@ export function Events() {
                     }
                 }
 
-                // json-server v1 with _embed might return { data: [...] } or just [...]
+                const whereClause: any = {
+                    status: { statusName: 'Approved' }
+                };
+
+                if (restricted.length > 0) {
+                    whereClause.authorId = { notIn: restricted };
+                }
+
+                if (selectedCategories.length > 0) {
+                    whereClause.category = { eventCategoryName: { in: selectedCategories } };
+                }
+
+                const now = new Date();
+                now.setHours(0, 0, 0, 0);
+
+                if (timeRange === 'Upcoming') {
+                    whereClause.eventDate = { gte: now.toISOString() };
+                } else if (timeRange === 'Past') {
+                    whereClause.eventDate = { lt: now.toISOString() };
+                } else if (timeRange === '7 days') {
+                    const next7Days = new Date(now);
+                    next7Days.setDate(next7Days.getDate() + 7);
+                    whereClause.eventDate = { gte: now.toISOString(), lte: next7Days.toISOString() };
+                } else if (timeRange === '30 days') {
+                    const next30Days = new Date(now);
+                    next30Days.setDate(next30Days.getDate() + 30);
+                    whereClause.eventDate = { gte: now.toISOString(), lte: next30Days.toISOString() };
+                }
+
+                const res = await api.get('/events', {
+                    params: {
+                        _limit: visibleCount,
+                        _sort: timeRange === 'Past' ? '-eventDate' : 'eventDate',
+                        _where: JSON.stringify(whereClause)
+                    }
+                });
+
                 const data = Array.isArray(res.data) ? res.data : (res.data?.data || []);
                 setEvents(data);
+                setTotalEvents(res.data?.items !== undefined ? res.data.items : data.length);
             } catch (error) {
                 console.error("Failed to fetch events:", error);
             } finally {
@@ -54,11 +105,9 @@ export function Events() {
         };
 
         fetchEvents();
-    }, []);
+    }, [visibleCount, selectedCategories, timeRange, session?.userId]);
 
-    const categories = useMemo(() => {
-        return Array.from(new Set(events.map(event => event.eventCategory?.eventCategoryName).filter(Boolean))) as string[];
-    }, [events]);
+    const categories = allCategories;
 
     const toggleCategory = (cat: string) => {
         setSelectedCategories(prev =>
@@ -72,37 +121,6 @@ export function Events() {
         setTimeRange('Upcoming');
         setVisibleCount(EVENTS_PER_PAGE);
     };
-
-    const filteredEvents = useMemo(() => {
-        let sorted = events
-            .filter(event => event.eventStatus?.statusName === 'Approved' && !restrictedUsers.includes(String(event.authorId)))
-            .sort((a, b) => new Date(a.eventDate).getTime() - new Date(b.eventDate).getTime());
-
-        if (selectedCategories.length > 0) {
-            sorted = sorted.filter(event => selectedCategories.includes(event.eventCategory?.eventCategoryName || ''));
-        }
-
-        sorted = sorted.filter(event => {
-            if (timeRange === 'Upcoming') return isEventUpcoming(event.eventDate);
-
-            const now = new Date();
-            now.setHours(0, 0, 0, 0); // Normalize to start of day
-            const eventDate = new Date(event.eventDate);
-            eventDate.setHours(0, 0, 0, 0);
-
-            const diffTime = eventDate.getTime() - now.getTime();
-            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-            if (timeRange === '7 days') return diffDays >= 0 && diffDays <= 7;
-            if (timeRange === '30 days') return diffDays >= 0 && diffDays <= 30;
-            else return diffDays < 0; // Past
-        });
-
-        if (timeRange === 'Past') return sorted.reverse();
-        else return sorted;
-    }, [events, selectedCategories, timeRange, restrictedUsers]);
-
-    const paginatedEvents = filteredEvents.slice(0, visibleCount);
 
     const formatLocation = (loc: any) => {
         if (!loc) return 'TBA';
@@ -199,7 +217,7 @@ export function Events() {
                 ) : (
                     <>
                         <div className="space-y-6 mb-6">
-                            {paginatedEvents.map((event) => {
+                            {events.map((event) => {
                                 const categoryName = event.eventCategory?.eventCategoryName || 'Unknown';
                                 return (
                                     <Link
@@ -271,7 +289,7 @@ export function Events() {
                         </div>
 
                         {/* Pagination */}
-                        {visibleCount < filteredEvents.length && (
+                        {events.length < totalEvents && (
                             <div className="flex justify-center items-center gap-4 mt-8 mb-12">
                                 <Button
                                     variant="outline"
@@ -284,7 +302,7 @@ export function Events() {
                         )}
 
                         {/* Empty State */}
-                        {filteredEvents.length === 0 && (
+                        {events.length === 0 && (
                             <div className="text-center py-16">
                                 <Calendar className="w-16 h-16 text-gray-300 mx-auto mb-4" />
                                 <h3 className="text-xl font-semibold text-gray-600 mb-2">

@@ -113,7 +113,7 @@ export function Register() {
                 password: values.password,
                 degreeProgram: values.degreeProgram,
                 batch: values.batch,
-                gender: values.gender === 'Custom' ? values.pronoun || '' : values.gender
+                gender: values.gender === 'Custom' ? values.pronoun : values.gender
             });
 
             toast.success("Account created successfully!", {

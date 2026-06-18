@@ -223,4 +223,14 @@ export interface UserStatusData {
     statusName: string;
 }
 
-// useSystemLookup has been refactored to use backend includes.
+export interface Donation {
+    id: string;
+    date: string;
+    donor: string;
+    amount: string;
+    status: string;
+    rawAmount: number;
+    rawDate: number;
+    bankName: string;
+    donationReference: string;
+}

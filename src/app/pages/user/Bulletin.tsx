@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import {
     Plus,
@@ -27,17 +27,16 @@ export function Bulletin() {
 
     const { session } = useAuth();
     const [bulletins, setBulletins] = useState<BulletinData[]>([]);
+    const [totalBulletins, setTotalBulletins] = useState(0);
     const [profilesMap, setProfilesMap] = useState<Record<string, ProfileData>>({});
-    const [officialUsers, setOfficialUsers] = useState<string[]>([]);
-    const [restrictedUsers, setRestrictedUsers] = useState<string[]>([]);
     const [currentUserStatus, setCurrentUserStatus] = useState<string>('');
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         const fetchData = async () => {
+            setLoading(true);
             try {
-                const [bRes, uRes, allUsersRes] = await Promise.all([
-                    api.get('/bulletins', { params: { 'status.statusName': 'Approved' } }),
+                const [uRes, allUsersRes] = await Promise.all([
                     api.get(`/users`, {
                         params: {
                             'userStatus.statusName': 'Official'
@@ -45,14 +44,12 @@ export function Bulletin() {
                     }),
                     api.get('/users')
                 ]);
-                const bData = Array.isArray(bRes.data) ? bRes.data : (bRes.data?.data || []);
                 const uData = Array.isArray(uRes.data) ? uRes.data : (uRes.data?.data || []);
                 const allUsers = Array.isArray(allUsersRes.data) ? allUsersRes.data : (allUsersRes.data?.data || []);
 
                 const restrictedProfileIds = allUsers
                     .filter((u: any) => u.userStatus?.statusName === 'Banned' || u.userStatus?.statusName === 'Suspended')
                     .map((u: any) => String(u.id));
-                setRestrictedUsers(restrictedProfileIds);
 
                 if (session?.userId) {
                     const currentU = allUsers.find((u: any) => String(u.userId) === String(session.userId));
@@ -61,8 +58,43 @@ export function Bulletin() {
                     }
                 }
 
+                const officialUserIds = uData.map((user: any) => String(user.id)) || [];
+
+                const whereClause: any = {
+                    status: { statusName: 'Approved' }
+                };
+
+                if (restrictedProfileIds.length > 0) {
+                    whereClause.authorId = { notIn: restrictedProfileIds };
+                }
+
+                if (officialOnly && officialUserIds.length > 0) {
+                    whereClause.authorId = { in: officialUserIds };
+                } else if (officialOnly) {
+                    whereClause.authorId = { in: ['__none__'] };
+                }
+
+                if (dateFrom || dateTo) {
+                    whereClause.bulletinDate = {};
+                    if (dateFrom) whereClause.bulletinDate.gte = new Date(dateFrom).toISOString();
+                    if (dateTo) {
+                        const toDate = new Date(dateTo);
+                        toDate.setHours(23, 59, 59, 999);
+                        whereClause.bulletinDate.lte = toDate.toISOString();
+                    }
+                }
+
+                const bRes = await api.get('/bulletins', {
+                    params: {
+                        _limit: visibleCount,
+                        _sort: '-bulletinDate',
+                        _where: JSON.stringify(whereClause)
+                    }
+                });
+
+                const bData = Array.isArray(bRes.data) ? bRes.data : (bRes.data?.data || []);
                 setBulletins(bData || []);
-                setOfficialUsers(uData.map((user: any) => String(user.id)) || []);
+                setTotalBulletins(bRes.data?.items !== undefined ? bRes.data.items : bData.length);
 
                 const pMap: Record<string, ProfileData> = {};
                 (bData || []).forEach((b: BulletinData) => {
@@ -76,28 +108,11 @@ export function Bulletin() {
             }
         };
         fetchData();
-    }, []);
-
-    const filteredItems = useMemo(() => {
-        let filtered = bulletins.filter(item => !restrictedUsers.includes(String(item.profile?.userId)));
-
-        if (officialOnly) {
-            filtered = filtered.filter(item => officialUsers.includes(item.authorId));
-        }
-
-        if (dateFrom) {
-            filtered = filtered.filter(item => new Date(item.bulletinDate) >= new Date(dateFrom));
-        }
-        if (dateTo) {
-            filtered = filtered.filter(item => new Date(item.bulletinDate) <= new Date(dateTo));
-        }
-
-        return filtered.sort((a, b) => new Date(b.bulletinDate).getTime() - new Date(a.bulletinDate).getTime());
-    }, [bulletins, officialOnly, dateFrom, dateTo, officialUsers, restrictedUsers]);
+    }, [visibleCount, officialOnly, dateFrom, dateTo, session?.userId]);
 
     const ITEMS_PER_PAGE = viewMode === 'article' ? ARTICLE_ITEMS_PER_PAGE : HEADLINE_ITEMS_PER_PAGE;
 
-    const paginatedItems = filteredItems.slice(0, visibleCount);
+    const paginatedItems = bulletins;
 
     return (
         <div className="min-h-screen bg-gray-50">
@@ -320,7 +335,7 @@ export function Bulletin() {
                         )}
 
                         {/* Pagination */}
-                        {!loading && visibleCount < filteredItems.length && (
+                        {!loading && bulletins.length < totalBulletins && (
                             <div className="flex justify-center items-center gap-4 mt-8 mb-4">
                                 <Button
                                     variant="outline"
@@ -332,7 +347,7 @@ export function Bulletin() {
                             </div>
                         )}
 
-                        {!loading && filteredItems.length === 0 && (
+                        {!loading && bulletins.length === 0 && (
                             <div className="bg-white rounded-lg shadow-md p-12 text-center">
                                 <FileText className="w-16 h-16 text-gray-300 mx-auto mb-4" />
                                 <h3 className="text-xl font-bold mb-2 text-gray-700">

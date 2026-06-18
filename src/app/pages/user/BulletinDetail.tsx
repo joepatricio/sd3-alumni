@@ -21,7 +21,6 @@ export function BulletinDetail() {
     const { id } = useParams();
     const { isLoggedIn, session } = useAuth();
     const [comment, setComment] = useState('');
-    const isAdmin = !!localStorage.getItem('adminToken');
 
     const [bulletin, setBulletin] = useState<BulletinData | null>(null);
     const [commentsList, setCommentsList] = useState<BulletinCommentData[]>([]);
@@ -29,17 +28,20 @@ export function BulletinDetail() {
     const [submitting, setSubmitting] = useState(false);
     const [isSuspended, setIsSuspended] = useState(false);
 
+    const COMMENTS_LIMIT = 7;
+    const [commentsLimit, setCommentsLimit] = useState(COMMENTS_LIMIT);
+
     useEffect(() => {
         const fetchBulletinAndProfiles = async () => {
             try {
                 const [bRes, cRes, usersRes] = await Promise.all([
                     api.get(`/bulletins`, { params: { id: id, } }),
-                    api.get(`/comments`, { params: { bulletinId: id, } }),
+                    api.get(`/comments`, { params: { bulletinId: id, _limit: commentsLimit, _sort: '-commentDate' } }),
                     api.get('/users')
                 ]);
 
                 const bulletinData = bRes.data[0];
-                const commentsData = cRes.data;
+                const commentsData = Array.isArray(cRes.data) ? cRes.data : (cRes.data?.data || []);
                 const allUsers = Array.isArray(usersRes.data) ? usersRes.data : (usersRes.data?.data || []);
 
                 if (bulletinData && bulletinData.profile) {
@@ -67,7 +69,7 @@ export function BulletinDetail() {
             }
         };
         fetchBulletinAndProfiles();
-    }, [id]);
+    }, [id, commentsLimit]);
 
     if (loading) {
         return (
@@ -125,8 +127,8 @@ export function BulletinDetail() {
                 await api.delete(`/commentLikes/${currentLike.id}`);
                 await api.patch(`/comments/${commentItem.id}`, { likes: newLikesCount });
                 setCommentsList(prev =>
-                    prev.map(c => c.id === commentItem.id ? { 
-                        ...c, 
+                    prev.map(c => c.id === commentItem.id ? {
+                        ...c,
                         likes: newLikesCount,
                         likesList: c.likesList?.filter(l => l.id !== currentLike.id)
                     } : c)
@@ -140,8 +142,8 @@ export function BulletinDetail() {
                 });
                 await api.patch(`/comments/${commentItem.id}`, { likes: newLikesCount });
                 setCommentsList(prev =>
-                    prev.map(c => c.id === commentItem.id ? { 
-                        ...c, 
+                    prev.map(c => c.id === commentItem.id ? {
+                        ...c,
                         likes: newLikesCount,
                         likesList: [...(c.likesList || []), res.data]
                     } : c)
@@ -153,7 +155,7 @@ export function BulletinDetail() {
     };
 
     const authorProfile = bulletin.profile;
-    const sortedComments = [...commentsList].sort((a, b) => new Date(b.commentDate).getTime() - new Date(a.commentDate).getTime());
+    const sortedComments = commentsList;
 
     return (
         <div className="min-h-screen bg-gray-50 pb-12">
@@ -183,7 +185,6 @@ export function BulletinDetail() {
                             </Button>
                         }
                         initialData={bulletin as any}
-                        isAdmin={isAdmin}
                     />
                 )}
             </div>
@@ -348,6 +349,19 @@ export function BulletinDetail() {
                             );
                         })}
                     </div>
+
+                    {/* Load More Comments */}
+                    {sortedComments.length >= commentsLimit && (
+                        <div className="flex justify-center items-center gap-4 mt-8">
+                            <Button
+                                variant="outline"
+                                onClick={() => setCommentsLimit(prev => prev + COMMENTS_LIMIT)}
+                                className="px-8"
+                            >
+                                Load More Comments
+                            </Button>
+                        </div>
+                    )}
                 </div>
             </div>
         </div>

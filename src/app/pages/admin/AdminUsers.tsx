@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@components/ui/card';
 import { Button } from '@components/ui/button';
 import { Badge } from '@components/ui/badge';
@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@components/ui/textarea';
 import { ArrowUp, ArrowDown, ArrowUpDown, ChevronLeft, ChevronRight, Search } from 'lucide-react';
 import { useSearchParams } from 'react-router-dom';
-import { adminUsersMock } from '@assets/adminMockData';
+import { api } from '@/app/views/api';
 
 interface User {
     id: string;
@@ -30,7 +30,8 @@ export function AdminUsers() {
     const ITEMS_PER_PAGE = 20;
 
     const [searchParams, setSearchParams] = useSearchParams();
-    const [users, setUsers] = useState<User[]>(adminUsersMock as User[]);
+    const [users, setUsers] = useState<User[]>([]);
+    const [totalUsers, setTotalUsers] = useState(0);
     const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'All');
 
     // Search & Filter
@@ -42,7 +43,7 @@ export function AdminUsers() {
     const [appliedSearchBatch, setAppliedSearchBatch] = useState('');
 
     // Sorting
-    const [sortConfig, setSortConfig] = useState<{ key: keyof User; direction: 'asc' | 'desc' } | null>(null);
+    const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>(null);
 
     // Pagination
     const [currentPage, setCurrentPage] = useState(1);
@@ -53,7 +54,7 @@ export function AdminUsers() {
     const [editReason, setEditReason] = useState<string>('');
     const [editExpiryDate, setEditExpiryDate] = useState<string>('');
 
-    const handleSort = (key: keyof User) => {
+    const handleSort = (key: string) => {
         let direction: 'asc' | 'desc' = 'asc';
         if (sortConfig && sortConfig.key === key && sortConfig.direction === 'asc') {
             direction = 'desc';
@@ -82,7 +83,7 @@ export function AdminUsers() {
 
     const handleExportCSV = () => {
         const headers = ['Name', 'Email', 'Batch', 'Status', 'Granted Date', 'Expiry Date', 'Reason'];
-        const csvContent = filteredUsers.map(u =>
+        const csvContent = users.map(u =>
             `"${u.name}","${u.email}","${u.batch}","${u.status}","${u.grantedDate || ''}","${u.expiryDate || ''}","${u.reason || ''}"`
         );
 
@@ -128,55 +129,68 @@ export function AdminUsers() {
         setEditingUser(null);
     };
 
-    const filteredUsers = useMemo(() => {
-        let result = users;
-
-        if (activeTab !== 'All') {
-            result = result.filter(u => u.status === activeTab);
-        }
-
-        if (appliedSearchTerm) {
-            result = result.filter(u => u.name.toLowerCase().includes(appliedSearchTerm.toLowerCase()));
-        }
-        if (appliedSearchBatch) {
-            result = result.filter(u => u.batch.includes(appliedSearchBatch));
-        }
-
-        if (sortConfig) {
-            result.sort((a, b) => {
-                if (sortConfig.key === 'grantedDate') {
-                    const valA = a.status === 'Suspended' && a.rawExpiryDate ? a.rawExpiryDate : (a.rawGrantedDate || 0);
-                    const valB = b.status === 'Suspended' && b.rawExpiryDate ? b.rawExpiryDate : (b.rawGrantedDate || 0);
-                    if (valA < valB) return sortConfig.direction === 'asc' ? -1 : 1;
-                    if (valA > valB) return sortConfig.direction === 'asc' ? 1 : -1;
-                    return 0;
+    useEffect(() => {
+        const fetchUsers = async () => {
+            try {
+                const whereClause: any = {};
+                if (activeTab !== 'All') {
+                    whereClause.userStatus = { statusName: activeTab };
                 }
-                if (sortConfig.key === 'status') {
-                    const statusOrder: Record<string, number> = {
-                        'Official': 1,
-                        'Regular': 2,
-                        'Pending': 3,
-                        'Suspended': 4,
-                        'Banned': 5
-                    };
-                    const valA = statusOrder[a.status] || 99;
-                    const valB = statusOrder[b.status] || 99;
-                    if (valA < valB) return sortConfig.direction === 'asc' ? -1 : 1;
-                    if (valA > valB) return sortConfig.direction === 'asc' ? 1 : -1;
-                    return 0;
+                if (appliedSearchTerm) {
+                    whereClause.profile = { ...(whereClause.profile || {}), userName: { contains: appliedSearchTerm } };
                 }
-                const valA = a[sortConfig.key] || '';
-                const valB = b[sortConfig.key] || '';
-                if (valA < valB) return sortConfig.direction === 'asc' ? -1 : 1;
-                if (valA > valB) return sortConfig.direction === 'asc' ? 1 : -1;
-                return 0;
-            });
-        }
-        return result;
-    }, [users, activeTab, appliedSearchTerm, appliedSearchBatch, sortConfig]);
+                if (appliedSearchBatch) {
+                    whereClause.profile = { ...(whereClause.profile || {}), batch: parseInt(appliedSearchBatch, 10) };
+                }
 
-    const totalPages = Math.ceil(filteredUsers.length / ITEMS_PER_PAGE);
-    const paginatedUsers = filteredUsers.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
+                let sortStr = undefined;
+                if (sortConfig) {
+                    let sortKey: string = sortConfig.key;
+                    if (sortKey === 'name') sortKey = 'profile.userName';
+                    else if (sortKey === 'email') sortKey = 'profile.email';
+                    else if (sortKey === 'batch') sortKey = 'profile.batch';
+                    else if (sortKey === 'status') sortKey = 'userStatus.statusName';
+                    
+                    sortStr = sortConfig.direction === 'desc' ? `-${sortKey}` : sortKey;
+                }
+
+                const res = await api.get('/users', {
+                    params: {
+                        _page: currentPage,
+                        _per_page: ITEMS_PER_PAGE,
+                        _sort: sortStr,
+                        _where: Object.keys(whereClause).length > 0 ? JSON.stringify(whereClause) : undefined
+                    }
+                });
+
+                const data = res.data.data || res.data;
+                const total = res.data.items || data.length;
+
+                const mapped = data.map((u: any) => ({
+                    id: u.id,
+                    name: u.profile?.userName || 'Unknown',
+                    email: u.profile?.email || 'N/A',
+                    batch: u.profile?.batch?.toString() || 'N/A',
+                    status: u.userStatus?.statusName || 'Unknown',
+                    reason: undefined,
+                    grantedDate: undefined,
+                    expiryDate: undefined,
+                    rawGrantedDate: 0,
+                    rawExpiryDate: 0
+                }));
+
+                setUsers(mapped);
+                setTotalUsers(total);
+            } catch (err) {
+                console.error(err);
+            }
+        };
+
+        fetchUsers();
+    }, [activeTab, appliedSearchTerm, appliedSearchBatch, sortConfig, currentPage]);
+
+    const totalPages = Math.ceil(totalUsers / ITEMS_PER_PAGE);
+    const paginatedUsers = users;
 
     const onTabChange = (val: string) => {
         setActiveTab(val);
@@ -200,7 +214,7 @@ export function AdminUsers() {
     };
 
     const renderTable = () => {
-        if (filteredUsers.length === 0) {
+        if (users.length === 0) {
             return (
                 <div className="py-8 text-center border rounded-md border-dashed text-gray-500">
                     No users found for this category or search criteria.
@@ -286,7 +300,7 @@ export function AdminUsers() {
                 {totalPages > 1 && (
                     <div className="flex items-center justify-between">
                         <div className="text-sm text-gray-500">
-                            Showing {(currentPage - 1) * ITEMS_PER_PAGE + 1} to {Math.min(currentPage * ITEMS_PER_PAGE, filteredUsers.length)} of {filteredUsers.length} users
+                            Showing {(currentPage - 1) * ITEMS_PER_PAGE + 1} to {Math.min(currentPage * ITEMS_PER_PAGE, totalUsers)} of {totalUsers} users
                         </div>
                         <div className="flex items-center space-x-2">
                             <Button variant="outline" size="sm" onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1}>

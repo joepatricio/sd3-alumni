@@ -21,9 +21,7 @@ for (let i = 0; i < USERS; i++) {
     });
 
     // RECORDS
-    const record_id = nanoid(11);
     await api.post('/RECORDS', {
-        record_id,
         user_id: mockUser.user_id,
         admin_id: "admin3",
         status_id: "401",
@@ -34,8 +32,7 @@ for (let i = 0; i < USERS; i++) {
 
     await api.post('/USER', {
         user_id: mockUser.user_id,
-        status_id: "401",
-        current_record_id: record_id
+        status_id: "401"
     })
 
     await api.post('/PROFILE', {

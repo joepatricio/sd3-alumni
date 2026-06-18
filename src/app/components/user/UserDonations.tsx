@@ -3,7 +3,6 @@ import { Heart, Search, Eye, EyeOff, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { api } from '@/app/views/api';
 import { formatCurrency, getStatusColor } from '@/app/views/formatters';
-import { nanoid } from 'nanoid';
 
 export function UserDonations({ userId, onStatsUpdate }: { userId: string, onStatsUpdate?: (newAmount: number) => void }) {
     const [loading, setLoading] = useState(true);
@@ -68,7 +67,6 @@ export function UserDonations({ userId, onStatsUpdate }: { userId: string, onSta
             const ach = achRes.data;
             if (!ach || ach.length === 0) {
                 await api.post('/userAchievements', {
-                    id: nanoid(10),
                     userId: userId,
                     achievementId: achId,
                     achievementTier: 1,
