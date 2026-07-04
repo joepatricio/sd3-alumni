@@ -88,7 +88,7 @@ export function Profile() {
     useEffect(() => {
         const fetchTabContent = async () => {
             if (activeTab === 'overview' || activeTab === 'bulletins') {
-                api.get('/bulletins', { params: { 'authorId': profileId, '_sort': '-bulletinDate' } })
+                api.get('/bulletins', { params: { 'authorId': profileId, '_sort': '-bulletinDate', '_include': 'none' } })
                     .catch(() => ({ data: [] }))
                     .then(res => {
                         const data = Array.isArray(res.data) ? res.data : (res.data?.data || []);
@@ -96,7 +96,7 @@ export function Profile() {
                     });
             }
             if (activeTab === 'overview' || activeTab === 'comments') {
-                api.get('/comments', { params: { 'userId': profileId, '_sort': '-commentDate' } })
+                api.get('/comments', { params: { 'userId': profileId, '_sort': '-commentDate', _include: 'none' } })
                     .catch(() => ({ data: [] }))
                     .then(res => {
                         const fetchedComments = Array.isArray(res.data) ? res.data : (res.data?.data || []);

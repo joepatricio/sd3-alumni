@@ -88,7 +88,8 @@ export function Bulletin() {
                     params: {
                         _limit: visibleCount,
                         _sort: '-bulletinDate',
-                        _where: JSON.stringify(whereClause)
+                        _where: JSON.stringify(whereClause),
+                        _include: 'status,author'
                     }
                 });
 

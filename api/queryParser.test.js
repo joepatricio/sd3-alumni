@@ -112,4 +112,24 @@ test('parseWhere', async (t) => {
             ]
         });
     });
+
+    await t.test('handles event model key mappings for flat keys and _where', () => {
+        const query = {
+            'eventStatus.statusName': 'Approved',
+            _where: JSON.stringify({
+                eventStatus: { statusName: 'Approved' },
+                eventDate: { gte: '2026-06-26T00:00:00.000Z' }
+            })
+        };
+        const result = parseWhere(query, 'event');
+        assert.deepEqual(result, {
+            AND: [
+                { status: { is: { statusName: 'Approved' } } },
+                {
+                    status: { statusName: 'Approved' },
+                    eventDate: { gte: '2026-06-26T00:00:00.000Z' }
+                }
+            ]
+        });
+    });
 });

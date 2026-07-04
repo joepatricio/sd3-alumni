@@ -18,6 +18,7 @@ export function BulletinFeed() {
               _sort: '-bulletinDate',
               _page: 1,
               _per_page: 7,
+              _include: 'author'
             }
           })
         ]);
@@ -25,8 +26,8 @@ export function BulletinFeed() {
 
         setBulletins(bData || []);
         const pMap: Record<string, ProfileData> = {};
-        (bData || []).forEach((b: BulletinData) => {
-          if (b.profile) pMap[b.authorId] = b.profile;
+        (bData || []).forEach((b: any) => {
+          if (b.author.profile) pMap[b.authorId] = b.author.profile;
         });
         setProfilesMap(pMap);
       } catch (err) {

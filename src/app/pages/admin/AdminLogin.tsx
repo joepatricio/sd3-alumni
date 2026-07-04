@@ -23,7 +23,7 @@ export function AdminLogin() {
         try {
             const response = await api.post('/auth/admin/login', { username, password });
             const { token } = response.data;
-            
+
             // Set simple auth token in sessionStorage
             sessionStorage.setItem('adminToken', token);
             navigate('/admin');

@@ -290,7 +290,7 @@ export function AdminContentTable({
                                             </Select>
                                             <Button variant="ghost" size="sm" className="text-gray-600 hover:text-gray-700 hover:bg-gray-50">
                                                 <FileText className="w-4 h-4 mr-1" />
-                                                Details
+                                                Edit Details
                                             </Button>
                                         </div>
                                     </td>

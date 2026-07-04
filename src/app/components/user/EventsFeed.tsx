@@ -17,6 +17,7 @@ export function EventsFeed() {
           params: {
             _limit: 4,
             _sort: 'eventDate',
+            _include: 'location,status,category',
             _where: JSON.stringify({
               eventStatus: { statusName: 'Approved' },
               eventDate: { gte: todayStr }

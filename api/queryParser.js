@@ -1,10 +1,10 @@
-const numericFields = new Set([
+export const numericFields = new Set([
     'batch', 'donationAmount', 'achievementTier', 'lat', 'lng', 'responses', 'readTimeMinutes', 'likes', 'eventsAttended', 'eventsCreated', 'bulletinsCreated', 'commentsWritten', 'achievements', 'donatedAmount', 'userConnections'
 ]);
 
-function mapWhereOperator(obj) {
+function mapKeysAndOperators(obj, modelName) {
     if (Array.isArray(obj)) {
-        return obj.map(item => mapWhereOperator(item));
+        return obj.map(item => mapKeysAndOperators(item, modelName));
     } else if (typeof obj === 'object' && obj !== null) {
         const mapped = {};
         for (const [key, value] of Object.entries(obj)) {
@@ -19,12 +19,82 @@ function mapWhereOperator(obj) {
             else if (key === 'gte') mappedKey = 'gte';
             else if (key === 'in') mappedKey = 'in';
             else if (key === 'nin') mappedKey = 'notIn';
+            else {
+                if (modelName === 'user') {
+                    if (key === 'userId') mappedKey = 'id';
+                } else if (modelName === 'bulletin') {
+                    if (key === 'profileId') mappedKey = 'authorId';
+                    else if (key === 'contentStatus') mappedKey = 'status';
+                } else if (modelName === 'comment' || modelName === 'bulletinLike') {
+                    if (key === 'profileId') mappedKey = 'userId';
+                } else if (modelName === 'event') {
+                    if (key === 'eventStatus') mappedKey = 'status';
+                    else if (key === 'eventCategory') mappedKey = 'category';
+                    else if (key === 'userRsvps') mappedKey = 'rsvps';
+                } else if (modelName === 'donation') {
+                    if (key === 'donationStatus') mappedKey = 'status';
+                }
+            }
 
-            mapped[mappedKey] = mapWhereOperator(value);
+            let nextModelName = modelName;
+            if (modelName === 'event') {
+                if (mappedKey === 'status') nextModelName = 'eventStatus';
+                else if (mappedKey === 'category') nextModelName = 'eventCategory';
+                else if (mappedKey === 'rsvps') nextModelName = 'userRsvp';
+            } else if (modelName === 'bulletin') {
+                if (mappedKey === 'status') nextModelName = 'contentStatus';
+            } else if (modelName === 'donation') {
+                if (mappedKey === 'status') nextModelName = 'donationStatus';
+            }
+
+            mapped[mappedKey] = mapKeysAndOperators(value, nextModelName);
         }
         return mapped;
     }
     return obj;
+}
+
+function mapFlatKey(key, modelName) {
+    let suffix = '';
+    let cleanKey = key;
+    if (key.endsWith(':in')) {
+        suffix = ':in';
+        cleanKey = key.slice(0, -3);
+    }
+    
+    const parts = cleanKey.split('.');
+    let currentModel = modelName;
+    const mappedParts = parts.map(part => {
+        let mappedPart = part;
+        if (currentModel === 'user') {
+            if (part === 'userId') mappedPart = 'id';
+        } else if (currentModel === 'bulletin') {
+            if (part === 'profileId') mappedPart = 'authorId';
+            else if (part === 'contentStatus') mappedPart = 'status';
+        } else if (currentModel === 'comment' || currentModel === 'bulletinLike') {
+            if (part === 'profileId') mappedPart = 'userId';
+        } else if (currentModel === 'event') {
+            if (part === 'eventStatus') mappedPart = 'status';
+            else if (part === 'eventCategory') mappedPart = 'category';
+            else if (part === 'userRsvps') mappedPart = 'rsvps';
+        } else if (currentModel === 'donation') {
+            if (part === 'donationStatus') mappedPart = 'status';
+        }
+        
+        if (currentModel === 'event') {
+            if (mappedPart === 'status') currentModel = 'eventStatus';
+            else if (mappedPart === 'category') currentModel = 'eventCategory';
+            else if (mappedPart === 'rsvps') currentModel = 'userRsvp';
+        } else if (currentModel === 'bulletin') {
+            if (mappedPart === 'status') currentModel = 'contentStatus';
+        } else if (currentModel === 'donation') {
+            if (mappedPart === 'status') currentModel = 'donationStatus';
+        }
+        
+        return mappedPart;
+    });
+    
+    return mappedParts.join('.') + suffix;
 }
 
 export function parseWhere(query, modelName) {
@@ -34,22 +104,10 @@ export function parseWhere(query, modelName) {
     for (let [key, val] of Object.entries(query)) {
         if (key.startsWith('_')) continue; // Skip pagination and internal keywords
 
-        // Dynamic mapping of query keys for specific models
-        if (modelName === 'user') {
-            if (key === 'userId') key = 'id';
-            else if (key === 'userId:in') key = 'id:in';
-        }
-        if (modelName === 'bulletin') {
-            if (key === 'profileId') key = 'authorId';
-            else if (key === 'profileId:in') key = 'authorId:in';
-        }
-        if (modelName === 'comment' || modelName === 'bulletinLike') {
-            if (key === 'profileId') key = 'userId';
-            else if (key === 'profileId:in') key = 'userId:in';
-        }
+        const mappedKey = mapFlatKey(key, modelName);
 
-        if (key.includes('.')) {
-            const parts = key.split('.');
+        if (mappedKey.includes('.')) {
+            const parts = mappedKey.split('.');
             let current = where;
             for (let i = 0; i < parts.length - 1; i++) {
                 if (!current[parts[i]]) {
@@ -79,8 +137,8 @@ export function parseWhere(query, modelName) {
                 }
                 current[lastPart] = parsedVal;
             }
-        } else if (key.endsWith(':in')) {
-            const field = key.replace(':in', '');
+        } else if (mappedKey.endsWith(':in')) {
+            const field = mappedKey.replace(':in', '');
             const values = typeof val === 'string' ? val.split(',') : (Array.isArray(val) ? val : [val]);
             const mappedValues = values.map(v => {
                 if (v === 'true') return true;
@@ -93,10 +151,10 @@ export function parseWhere(query, modelName) {
             let parsedVal = val;
             if (val === 'true') parsedVal = true;
             else if (val === 'false') parsedVal = false;
-            else if (numericFields.has(key) && !isNaN(val) && String(val).trim() !== '') {
+            else if (numericFields.has(mappedKey) && !isNaN(val) && String(val).trim() !== '') {
                 parsedVal = Number(val);
             }
-            where[key] = parsedVal;
+            where[mappedKey] = parsedVal;
         }
     }
 
@@ -104,13 +162,13 @@ export function parseWhere(query, modelName) {
     if (query._where) {
         try {
             const parsedWhere = typeof query._where === 'string' ? JSON.parse(query._where) : query._where;
-            const prismaWhere = mapWhereOperator(parsedWhere);
+            const prismaWhere = mapKeysAndOperators(parsedWhere, modelName);
             
             // Merge deep objects properly or just assign if not overlapping
             // For Prisma, we usually push these into an AND array if there's already conditions
             if (Object.keys(where).length > 0) {
                 if (!where.AND) where.AND = [];
-                // Push existing keys to AND
+                // Push existing conditions to AND
                 const existingConditions = { ...where };
                 delete existingConditions.AND;
                 where.AND.push(existingConditions);
@@ -158,3 +216,4 @@ export function parseSort(sortQuery) {
         return { [key]: direction };
     });
 }
+

@@ -1,13 +1,86 @@
-import { useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Outlet, Link, useLocation, Navigate } from 'react-router-dom';
-import { LogOut, LayoutDashboard, Users, FileText, ChevronLeft, CreditCard, Calendar } from 'lucide-react';
+import { LogOut, LayoutDashboard, Users, FileText, ChevronLeft, CreditCard, Calendar, Clock } from 'lucide-react';
 import ScrollToTop from '../ScrollToTop';
+import { api } from '@/app/views/api';
 
 export function AdminLayout() {
     const location = useLocation();
     const scrollRef = useRef<HTMLDivElement>(null);
 
     const token = sessionStorage.getItem('adminToken');
+
+    let username = 'Administrator';
+    if (token) {
+        try {
+            const payload = JSON.parse(atob(token.split('.')[1]));
+            if (payload && payload.username) {
+                username = payload.username;
+            }
+        } catch (e) {
+            console.error('Failed to parse token payload', e);
+        }
+    }
+    const avatarLetter = username.charAt(0).toUpperCase();
+
+    const [currentTime, setCurrentTime] = useState<Date | null>(null);
+    const [timeSource, setTimeSource] = useState<string>('System Time');
+
+    useEffect(() => {
+        let timer: any;
+        let syncTimer: any;
+
+        const syncTime = async () => {
+            try {
+                const res = await api.get('/server-time');
+                const serverTime = new Date(res.data.currentTime);
+                const receivedAt = Date.now();
+                setTimeSource(res.data.source || 'Database Time');
+
+                if (timer) clearInterval(timer);
+
+                const update = () => {
+                    const elapsed = Date.now() - receivedAt;
+                    setCurrentTime(new Date(serverTime.getTime() + elapsed));
+                };
+
+                update();
+                timer = setInterval(update, 1000);
+            } catch (err) {
+                console.error("Failed to sync server time, falling back to System Time", err);
+                setTimeSource('System Time');
+                if (timer) clearInterval(timer);
+
+                const update = () => {
+                    setCurrentTime(new Date());
+                };
+                update();
+                timer = setInterval(update, 1000);
+            }
+        };
+
+        syncTime();
+        syncTimer = setInterval(syncTime, 10 * 60 * 1000);
+
+        return () => {
+            if (timer) clearInterval(timer);
+            if (syncTimer) clearInterval(syncTimer);
+        };
+    }, []);
+
+    const formatTime = (date: Date | null) => {
+        if (!date) return 'Loading...';
+        return date.toLocaleDateString([], {
+            weekday: 'short',
+            month: 'short',
+            day: 'numeric',
+            year: 'numeric'
+        }) + ' ' + date.toLocaleTimeString([], {
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit'
+        });
+    };
 
     const scrollToTop = () => {
         if (scrollRef.current) {
@@ -91,13 +164,18 @@ export function AdminLayout() {
             {/* Main Content Area */}
             <main className="flex-1 flex flex-col min-w-0 overflow-hidden">
                 {/* Topbar */}
-                <header className="h-16 bg-white shadow-sm flex items-center justify-end px-8 z-0">
+                <header className="h-16 bg-white shadow-sm flex items-center justify-between px-8 z-0">
+                    <div className="flex items-center gap-2 text-sm text-gray-500 font-medium bg-gray-50 px-3 py-1.5 rounded-lg border border-gray-100 shadow-xs">
+                        <Clock size={16} className="text-gray-400" />
+                        <span>Time: {formatTime(currentTime)}</span>
+                        <span className="text-xs text-brand-primary/80 bg-brand-primary/10 px-2 py-0.5 rounded-md ml-1 font-semibold">{timeSource}</span>
+                    </div>
                     <div className="flex items-center gap-4">
                         <div className="flex items-center gap-3">
                             <div className="w-9 h-9 rounded-full bg-gray-200 flex items-center justify-center text-brand-primary font-bold">
-                                A
+                                {avatarLetter}
                             </div>
-                            <span className="text-sm font-medium text-gray-700">Administrator</span>
+                            <span className="text-sm font-medium text-gray-700">{username}</span>
                         </div>
                     </div>
                 </header>

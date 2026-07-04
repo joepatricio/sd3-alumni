@@ -9,7 +9,7 @@ import path from 'path';
 import { v4 as uuidv4 } from 'uuid';
 import { PrismaClient } from "../prisma/generated/client";
 import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
-import { parseWhere, parseSort } from './queryParser.js';
+import { parseWhere, parseSort, numericFields } from './queryParser.js';
 
 const adapter = new PrismaBetterSqlite3({
     url: process.env.DATABASE_URL || "file:./dev.db",
@@ -99,7 +99,7 @@ app.post('/api/auth/register', async (req, res) => {
 
         // Look up IDs for relations
         const pendingUserStatus = await prisma.userStatus.findFirst({ where: { statusName: 'Pending' } });
-        const privateProfileStatus = await prisma.profileStatus.findFirst({ where: { statusName: 'Private' } });
+        const defaultProfileStatus = await prisma.profileStatus.findFirst({ where: { statusName: 'Connections Only' } });
 
         let degreeId = null;
         if (degreeProgram) {
@@ -124,7 +124,7 @@ app.post('/api/auth/register', async (req, res) => {
             if (firstDegree) degreeId = firstDegree.id;
         }
 
-        if (!pendingUserStatus || !privateProfileStatus) {
+        if (!pendingUserStatus || !defaultProfileStatus) {
             return res.status(500).json({ error: 'Internal configuration error (missing statuses)' });
         }
 
@@ -142,7 +142,7 @@ app.post('/api/auth/register', async (req, res) => {
             const newUser = await tx.user.create({
                 data: {
                     id: userId,
-                    profileStatusId: privateProfileStatus.id,
+                    profileStatusId: defaultProfileStatus.id,
                     userStatusId: pendingUserStatus.id,
                     auth: {
                         create: {
@@ -272,12 +272,12 @@ app.post('/api/auth/admin/login', async (req, res) => {
         });
 
         const token = jwt.sign(
-            { id: admin.id, role: 'admin' },
+            { id: admin.id, role: 'admin', username: admin.username },
             JWT_SECRET,
             { expiresIn: '24h' }
         );
 
-        res.json({ token, admin: { id: admin.id } });
+        res.json({ token, admin: { id: admin.id, username: admin.username } });
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: 'Internal server error' });
@@ -523,7 +523,7 @@ app.patch('/api/admin/events/:id/status', authenticateAdminToken, async (req, re
     try {
         const { id } = req.params;
         const { status } = req.body;
-        
+
         const statusRecord = await prisma.eventStatus.findFirst({
             where: { statusName: status }
         });
@@ -723,6 +723,199 @@ function filterModelFields(modelName, data) {
     return filtered;
 }
 
+// Server Time API
+app.get('/api/server-time', async (req, res) => {
+    try {
+        const dbResult = await prisma.$queryRaw`SELECT datetime('now') as currentTime`;
+        const dbTimeStr = dbResult[0]?.currentTime;
+        if (!dbTimeStr) throw new Error("No database time returned");
+        const dbTime = new Date(dbTimeStr + 'Z');
+        res.json({ currentTime: dbTime.toISOString(), source: 'Database Time' });
+    } catch (e) {
+        res.json({ currentTime: new Date().toISOString(), source: 'Server Time' });
+    }
+});
+
+// Donations Summary API
+app.get('/api/donations/summary', async (req, res) => {
+    try {
+        const donations = await prisma.donation.findMany({
+            where: { status: { statusName: 'Completed' } },
+            select: {
+                donationAmount: true,
+                donationDate: true,
+                userId: true
+            }
+        });
+
+        const allDonations = await prisma.donation.findMany({
+            select: {
+                donationAmount: true,
+                status: { select: { statusName: true } },
+                bankName: true
+            }
+        });
+
+        const totalUsers = await prisma.user.count();
+
+        let totalRaised = 0;
+        let pendingClearances = 0;
+        let pendingCount = 0;
+
+        const statusCounts = {};
+        const bankCounts = {};
+        const donorMap = new Map();
+
+        let currentYearUniqueDonors = new Set();
+        let previousYearUniqueDonors = new Set();
+        let allTimeUniqueDonors = new Set();
+
+        const currentYear = new Date().getFullYear();
+
+        allDonations.forEach(d => {
+            const status = d.status?.statusName || 'Unknown';
+            const bank = d.bankName || 'N/A';
+            const amt = d.donationAmount || 0;
+
+            statusCounts[status] = (statusCounts[status] || 0) + 1;
+
+            if (status === 'Completed') {
+                bankCounts[bank] = (bankCounts[bank] || 0) + 1;
+            } else if (status === 'Processing') {
+                pendingCount++;
+                pendingClearances += amt;
+            }
+        });
+
+        donations.forEach(d => {
+            const amt = d.donationAmount || 0;
+            const date = new Date(d.donationDate);
+            const year = date.getFullYear();
+            const userId = d.userId;
+
+            totalRaised += amt;
+
+            if (userId) {
+                allTimeUniqueDonors.add(userId);
+
+                if (year === currentYear) {
+                    currentYearUniqueDonors.add(userId);
+                } else if (year < currentYear) {
+                    previousYearUniqueDonors.add(userId);
+                }
+
+                if (!donorMap.has(userId)) {
+                    donorMap.set(userId, {
+                        userId,
+                        totalAmount: 0,
+                        count: 0
+                    });
+                }
+                const donorStats = donorMap.get(userId);
+                donorStats.totalAmount += amt;
+                donorStats.count += 1;
+            }
+        });
+
+        const uniqueDonorsCount = allTimeUniqueDonors.size;
+        let donorsWithMultiple = 0;
+        const donorsArr = Array.from(donorMap.values());
+
+        donorsArr.forEach(d => {
+            if (d.count > 1) donorsWithMultiple++;
+            d.avgDonation = d.totalAmount / d.count;
+            d.frequency = d.count;
+        });
+
+        let retainedDonors = 0;
+        currentYearUniqueDonors.forEach(userId => {
+            if (previousYearUniqueDonors.has(userId)) {
+                retainedDonors++;
+            }
+        });
+
+        const stats = {
+            totalRaised,
+            pendingClearances,
+            pendingCount,
+            uniqueDonors: currentYearUniqueDonors.size,
+            allTimeUniqueDonors: uniqueDonorsCount,
+            averageLifetimeValue: uniqueDonorsCount > 0 ? (totalRaised / uniqueDonorsCount) : 0,
+            averageDonationValue: donations.length > 0 ? (totalRaised / donations.length) : 0,
+            donationFrequency: uniqueDonorsCount > 0 ? (donations.length / uniqueDonorsCount) : 0,
+            repeatDonationRate: uniqueDonorsCount > 0 ? (donorsWithMultiple / uniqueDonorsCount) : 0,
+            yoyRetention: currentYearUniqueDonors.size > 0 ? (retainedDonors / currentYearUniqueDonors.size) : 0,
+            engagementRate: totalUsers > 0 ? (uniqueDonorsCount / totalUsers) : 0,
+            updatedAt: new Date().toISOString()
+        };
+
+        // Determine top IDs
+        const topLTV_Base = [...donorsArr].sort((a, b) => b.totalAmount - a.totalAmount).slice(0, 6);
+        const topAvg_Base = [...donorsArr].sort((a, b) => b.avgDonation - a.avgDonation).slice(0, 6);
+        const topFreq_Base = [...donorsArr].sort((a, b) => b.frequency - a.frequency).slice(0, 6);
+
+        const topUserIds = Array.from(new Set([
+            ...topLTV_Base.map(d => d.userId),
+            ...topAvg_Base.map(d => d.userId),
+            ...topFreq_Base.map(d => d.userId)
+        ]));
+
+        // Fetch profiles only for top donors
+        const topUsersData = await prisma.user.findMany({
+            where: { id: { in: topUserIds } },
+            select: {
+                id: true,
+                auth: { select: { email: true } },
+                profile: { select: { userName: true, profileImage: true, currentJob: true, company: true, batch: true, location: true } }
+            }
+        });
+
+        const topUsersMap = new Map();
+        topUsersData.forEach(u => topUsersMap.set(u.id, u));
+
+        const mapToFullProfile = (baseList) => baseList.map(d => {
+            const u = topUsersMap.get(d.userId);
+            const profile = u?.profile || {};
+            const auth = u?.auth || {};
+
+            let career = 'N/A';
+            if (profile.currentJob && profile.company) career = `${profile.currentJob} at ${profile.company}`;
+            else if (profile.currentJob) career = profile.currentJob;
+            else if (profile.company) career = profile.company;
+
+            return {
+                donor: profile.userName || 'Unknown',
+                amount: d.totalAmount,
+                avgDonation: d.avgDonation,
+                frequency: d.frequency,
+                userId: d.userId,
+                profileImage: profile.profileImage || '',
+                career,
+                email: auth.email || profile.email || 'N/A',
+                location: profile.location || 'N/A',
+                batch: profile.batch ? String(profile.batch) : 'N/A'
+            };
+        });
+
+        const topLTV = mapToFullProfile(topLTV_Base);
+        const topAvgDonation = mapToFullProfile(topAvg_Base);
+        const topFrequency = mapToFullProfile(topFreq_Base);
+
+        const statusData = Object.entries(statusCounts).map(([name, value]) => ({ name, value })).sort((a, b) => b.value - a.value);
+        const bankData = Object.entries(bankCounts).map(([name, value]) => ({ name, value })).sort((a, b) => b.value - a.value);
+
+        res.json({
+            stats,
+            charts: { statusData, bankData },
+            leaderboards: { topLTV, topAvgDonation, topFrequency },
+            uniqueBanks: Object.keys(bankCounts).sort()
+        });
+    } catch (error) {
+        console.error("Summary API failed:", error);
+        res.status(500).json({ error: "Failed to fetch summary" });
+    }
+});
+
 // Generic GET all
 app.get('/api/:table', async (req, res, next) => {
     const { table } = req.params;
@@ -735,7 +928,24 @@ app.get('/api/:table', async (req, res, next) => {
 
         const where = parseWhere(req.query, modelName);
         const orderBy = parseSort(req.query._sort);
-        const includes = defaultIncludes[modelName];
+
+        let includes;
+        if (req.query._include !== undefined) {
+            includes = {};
+            const includeFields = typeof req.query._include === 'string' ? req.query._include.split(',') : [];
+            includeFields.forEach(field => {
+                const f = field.trim();
+                if (f && f !== 'none') {
+                    if (defaultIncludes[modelName] && defaultIncludes[modelName][f]) {
+                        includes[f] = defaultIncludes[modelName][f];
+                    } else {
+                        includes[f] = true;
+                    }
+                }
+            });
+        } else {
+            includes = defaultIncludes[modelName] ? { ...defaultIncludes[modelName] } : undefined;
+        }
 
         const page = req.query._page ? parseInt(req.query._page, 10) : undefined;
         const perPage = req.query._per_page ? parseInt(req.query._per_page, 10) : (req.query._limit ? parseInt(req.query._limit, 10) : undefined);
@@ -751,7 +961,7 @@ app.get('/api/:table', async (req, res, next) => {
                     orderBy,
                     skip,
                     take,
-                    ...(includes && { include: includes })
+                    ...(includes && Object.keys(includes).length > 0 && { include: includes })
                 }),
                 delegate.count({ where })
             ]);
@@ -777,7 +987,7 @@ app.get('/api/:table', async (req, res, next) => {
                 where,
                 orderBy,
                 ...(perPage !== undefined && !isNaN(perPage) && { take: perPage }),
-                ...(includes && { include: includes })
+                ...(includes && Object.keys(includes).length > 0 && { include: includes })
             });
 
             if (totalItems !== undefined) {
@@ -805,12 +1015,28 @@ app.get('/api/:table/:id', async (req, res, next) => {
         const delegate = prisma[modelName];
         if (!delegate) return res.status(404).json({ error: `Model for ${table} not found` });
 
-        const includes = defaultIncludes[modelName];
+        let includes;
+        if (req.query._include !== undefined) {
+            includes = {};
+            const includeFields = typeof req.query._include === 'string' ? req.query._include.split(',') : [];
+            includeFields.forEach(field => {
+                const f = field.trim();
+                if (f && f !== 'none') {
+                    if (defaultIncludes[modelName] && defaultIncludes[modelName][f]) {
+                        includes[f] = defaultIncludes[modelName][f];
+                    } else {
+                        includes[f] = true;
+                    }
+                }
+            });
+        } else {
+            includes = defaultIncludes[modelName] ? { ...defaultIncludes[modelName] } : undefined;
+        }
         const pkField = (modelName === 'profile' || modelName === 'userAuth' || modelName === 'userStatistic') ? 'userId' : 'id';
 
         const item = await delegate.findUnique({
             where: { [pkField]: id },
-            ...(includes && { include: includes })
+            ...(includes && Object.keys(includes).length > 0 && { include: includes })
         });
 
         if (!item) return res.status(404).json({ error: `${table} item not found` });

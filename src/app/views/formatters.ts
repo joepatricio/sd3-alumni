@@ -49,3 +49,34 @@ export function getCategoryColor(category: string): string {
             return 'bg-brand-primary-hover hover:bg-brand-primary text-white'; // default orange
     }
 }
+
+export function getBankColor(bankName: string): string {
+    const format = bankName.toLowerCase().trim();
+    if (format.includes('bdo')) return '#003B8E';
+    if (format.includes('bpi')) return '#B11116';
+    if (format.includes('metrobank')) return '#005BAC';
+    if (format.includes('land bank') || format.includes('landbank')) return '#00843D';
+    if (format.includes('pnb') || format.includes('philippine national bank')) return '#F58220';
+    if (format.includes('security bank')) return '#0055A4';
+    if (format.includes('unionbank') || format.includes('union bank')) return '#F36F21';
+    if (format.includes('rcbc')) return '#0054A6';
+    if (format.includes('china bank') || format.includes('chinabank')) return '#00843D';
+    if (format.includes('eastwest')) return '#C2185B';
+    if (format.includes('psbank')) return '#00529B';
+    if (format.includes('maybank')) return '#FFC20E';
+    if (format.includes('bank of commerce')) return '#00539F';
+    if (format.includes('robinsons')) return '#00529B';
+    if (format.includes('dbp') || format.includes('development bank')) return '#00529C';
+    if (format.includes('gcash')) return '#007DF2';
+    if (format.includes('maya')) return '#00C25A';
+    
+    // Fallback colors for banks not specified
+    const fallbacks = ['#64748b', '#78716c', '#0f766e', '#0369a1', '#6d28d9', '#be123c', '#c2410c'];
+    
+    // Generate a consistent pseudo-random color based on the string length and char codes
+    let hash = 0;
+    for (let i = 0; i < format.length; i++) {
+        hash = format.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    return fallbacks[Math.abs(hash) % fallbacks.length];
+}

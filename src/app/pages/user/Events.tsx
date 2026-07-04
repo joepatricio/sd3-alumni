@@ -90,7 +90,8 @@ export function Events() {
                     params: {
                         _limit: visibleCount,
                         _sort: timeRange === 'Past' ? '-eventDate' : 'eventDate',
-                        _where: JSON.stringify(whereClause)
+                        _where: JSON.stringify(whereClause),
+                        _include: 'location,status,category'
                     }
                 });
 
