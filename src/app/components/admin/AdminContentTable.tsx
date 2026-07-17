@@ -7,6 +7,9 @@ import { Badge } from '@components/ui/badge';
 import { ArrowUp, ArrowDown, ArrowUpDown, ChevronLeft, ChevronRight, Search, CheckCircle, XCircle, RotateCcw, Eye, Archive, FileText } from 'lucide-react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@components/ui/select';
+import { CreateEventModal } from '@components/user/CreateEventModal';
+import { CreateBulletinModal } from '@components/user/CreateBulletinModal';
+import { getCategoryColor } from '@/app/views/formatters';
 
 export interface ContentItem {
     id: string;
@@ -17,17 +20,29 @@ export interface ContentItem {
     status: string;
     description: string;
     rawDate: number;
+    category: string;
 }
 
 interface AdminContentTableProps {
     title: string;
     description: string;
     contentType: 'Event' | 'Bulletin';
-    fetchData: (params: { page: number, perPage: number, search: string, status: string, sort: { key: string, direction: 'asc' | 'desc' } | null }) => Promise<{ data: ContentItem[], total: number }>;
+    fetchData: (params: {
+        page: number,
+        perPage: number,
+        search: string,
+        searchAuthor?: string,
+        searchStartDate?: string,
+        searchEndDate?: string,
+        status: string,
+        categories?: string[],
+        sort: { key: string, direction: 'asc' | 'desc' } | null
+    }) => Promise<{ data: ContentItem[], total: number }>;
     primaryColorClass: string;
     outlineColorClass: string;
     statuses?: string[];
-    onStatusChange?: (id: string, newStatus: string) => void;
+    categories?: string[];
+    onStatusChange?: (id: string, newStatus: string) => void | Promise<void>;
 }
 
 export function AdminContentTable({
@@ -35,8 +50,8 @@ export function AdminContentTable({
     description,
     contentType,
     fetchData,
-    primaryColorClass,
     statuses = ["All", "Pending", "Approved", "Rejected"],
+    categories,
     onStatusChange
 }: AdminContentTableProps) {
     const ITEMS_PER_PAGE = 20;
@@ -50,9 +65,18 @@ export function AdminContentTable({
 
     // Search & Filter state
     const [searchName, setSearchName] = useState('');
+    const [searchAuthor, setSearchAuthor] = useState('');
+    const [searchStartDate, setSearchStartDate] = useState('');
+    const [searchEndDate, setSearchEndDate] = useState('');
+    const [datePreset, setDatePreset] = useState('all');
+    const [searchCategories, setSearchCategories] = useState<string[]>(['All']);
 
     // Explicit filter applied state
     const [appliedSearchName, setAppliedSearchName] = useState('');
+    const [appliedSearchAuthor, setAppliedSearchAuthor] = useState('');
+    const [appliedSearchStartDate, setAppliedSearchStartDate] = useState('');
+    const [appliedSearchEndDate, setAppliedSearchEndDate] = useState('');
+    const [appliedSearchCategories, setAppliedSearchCategories] = useState<string[]>(['All']);
 
     // Sorting
     const [sortConfig, setSortConfig] = useState<{ key: keyof ContentItem; direction: 'asc' | 'desc' } | null>({ key: 'rawDate', direction: 'desc' });
@@ -73,15 +97,91 @@ export function AdminContentTable({
         return sortConfig.direction === 'asc' ? <ArrowUp className="ml-1 w-4 h-4 text-gray-700" /> : <ArrowDown className="ml-1 w-4 h-4 text-gray-700" />;
     };
 
+    const applyQuickFilter = (filter: 'this_week' | 'this_month' | 'this_year' | 'all') => {
+        const now = new Date();
+        let start = '';
+        let end = '';
+
+        if (filter === 'this_week') {
+            const day = now.getDay();
+            // In JS, 0 is Sunday, 1 is Monday.
+            // If today is Sunday (0), we want to go back to last Monday (-6 days).
+            // If today is Monday (1), we go back 0 days.
+            const diffToMonday = day === 0 ? -6 : 1 - day;
+            const monday = new Date(now);
+            monday.setDate(now.getDate() + diffToMonday);
+
+            const sunday = new Date(monday);
+            sunday.setDate(monday.getDate() + 6);
+
+            start = monday.toISOString().split('T')[0];
+            end = sunday.toISOString().split('T')[0];
+        } else if (filter === 'this_month') {
+            const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
+            const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+            start = firstDay.toISOString().split('T')[0];
+            end = lastDay.toISOString().split('T')[0];
+        } else if (filter === 'this_year') {
+            const firstDay = new Date(now.getFullYear(), 0, 1);
+            const lastDay = new Date(now.getFullYear(), 11, 31);
+            start = firstDay.toISOString().split('T')[0];
+            end = lastDay.toISOString().split('T')[0];
+        } else if (filter === 'all') {
+            start = '';
+            end = '';
+        }
+
+        setSearchStartDate(start);
+        setSearchEndDate(end);
+    };
+
     const handleApplyFilters = () => {
         setAppliedSearchName(searchName);
+        setAppliedSearchAuthor(searchAuthor);
+        setAppliedSearchStartDate(searchStartDate);
+        setAppliedSearchEndDate(searchEndDate);
+        setAppliedSearchCategories(searchCategories);
         setCurrentPage(1);
     };
 
     const handleClearFilters = () => {
         setSearchName('');
+        setSearchAuthor('');
+        setSearchStartDate('');
+        setSearchEndDate('');
+        setSearchCategories(['All']);
         setAppliedSearchName('');
+        setAppliedSearchAuthor('');
+        setAppliedSearchStartDate('');
+        setAppliedSearchEndDate('');
+        setAppliedSearchCategories(['All']);
         setCurrentPage(1);
+    };
+
+    const handleStatusUpdate = async (id: string, newStatus: string) => {
+        if (onStatusChange) {
+            setIsLoading(true);
+            try {
+                await onStatusChange(id, newStatus);
+                const result = await fetchData({
+                    page: currentPage,
+                    perPage: ITEMS_PER_PAGE,
+                    search: appliedSearchName,
+                    searchAuthor: appliedSearchAuthor,
+                    searchStartDate: appliedSearchStartDate,
+                    searchEndDate: appliedSearchEndDate,
+                    status: activeTab,
+                    categories: appliedSearchCategories,
+                    sort: sortConfig
+                });
+                setData(result.data);
+                setTotalItems(result.total);
+            } catch (err) {
+                console.error("Failed to update status", err);
+            } finally {
+                setIsLoading(false);
+            }
+        }
     };
 
     const handleExportCSV = () => {
@@ -106,7 +206,11 @@ export function AdminContentTable({
                     page: currentPage,
                     perPage: ITEMS_PER_PAGE,
                     search: appliedSearchName,
+                    searchAuthor: appliedSearchAuthor,
+                    searchStartDate: appliedSearchStartDate,
+                    searchEndDate: appliedSearchEndDate,
                     status: activeTab,
+                    categories: appliedSearchCategories,
                     sort: sortConfig
                 });
                 setData(result.data);
@@ -118,7 +222,7 @@ export function AdminContentTable({
             }
         };
         load();
-    }, [currentPage, appliedSearchName, activeTab, sortConfig, fetchData]);
+    }, [currentPage, appliedSearchName, appliedSearchAuthor, appliedSearchStartDate, appliedSearchEndDate, appliedSearchCategories, activeTab, sortConfig, fetchData]);
 
     const totalPages = Math.ceil(totalItems / ITEMS_PER_PAGE);
     const paginatedContent = data;
@@ -142,17 +246,40 @@ export function AdminContentTable({
         }
     };
 
-    const getBadgeClass = (status: string) => {
-        switch (status) {
-            case "Approved": return 'bg-green-100 text-green-800';
+    const getStatusClass = (category: string) => {
+        switch (category) {
+            case "All": return 'bg-gray-100 text-gray-800';
             case "Pending": return 'bg-yellow-100 text-yellow-800';
+            case "Approved": return 'bg-green-100 text-green-800';
             case "Rejected": return 'bg-red-100 text-red-800';
             case "Cancelled": return 'bg-gray-100 text-gray-800';
             case "Archived": return 'bg-slate-200 text-slate-800';
             case "Concluded": return 'bg-blue-100 text-blue-800';
             default: return 'bg-gray-100 text-gray-800';
         }
-    };
+    }
+
+    const getStatusIndicator = (status: string) => {
+        switch (status) {
+            case "All": return 'bg-gray-400';
+            case "Pending": return 'bg-yellow-400';
+            case "Approved": return 'bg-green-500';
+            case "Rejected": return 'bg-red-500';
+            case "Cancelled": return 'bg-gray-500';
+            case "Archived": return 'bg-slate-500';
+            case "Concluded": return 'bg-blue-500';
+            default: return 'bg-gray-400';
+        }
+    }
+
+    const getCategoryClass = (category: string) => {
+        if (category === "All" || category === "Pending" || category === "Approved" || category === "Rejected" || category === "Cancelled" || category === "Archived" || category === "Concluded") {
+            return getStatusClass(category);
+        }
+        if (category === "Official") return 'bg-brand-primary text-white';
+        if (category === "Regular") return 'bg-brand-accent text-white';
+        return getCategoryColor(category);
+    }
 
     const renderTable = () => {
         if (isLoading) {
@@ -185,14 +312,8 @@ export function AdminContentTable({
                                 <th className="px-6 py-3 cursor-pointer hover:bg-gray-100 transition-colors" onClick={() => handleSort('date')}>
                                     <div className="flex items-center gap-1">Date Submitted {renderSortIcon('date')}</div>
                                 </th>
-                                {activeTab === "All" ? (
-                                    <th className="px-6 py-3 hover:bg-gray-100 transition-colors flex justify-center">
-                                        <div className="flex items-center justify-center gap-1">Status</div>
-                                    </th>
-                                ) : (
-                                    <th className="px-6 py-3 text-center">Quick Actions</th>
-                                )}
-                                <th className="px-6 py-3 text-center">Actions</th>
+                                <th className="px-9 py-3 ">Quick Actions</th>
+                                <th className="px-9 py-3">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -201,6 +322,7 @@ export function AdminContentTable({
                                     <td className="px-6 py-4">
                                         <div className="font-semibold text-gray-900 flex items-center gap-2">
                                             {item.title}
+                                            <Badge className={getCategoryClass(item.category)}>{item.category}</Badge>
                                             <Link to={`/${item.type === 'Bulletin' ? 'bulletin' : 'events'}/${item.id}`} className="text-gray-400 hover:text-brand-primary">
                                                 <Eye className="w-4 h-4" />
                                             </Link>
@@ -209,89 +331,117 @@ export function AdminContentTable({
                                     </td>
                                     <td className="px-6 py-4">{item.author}</td>
                                     <td className="px-6 py-4">{new Date(item.date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</td>
-                                    {activeTab === "All" ? (
-                                        <td className="px-6 py-4 flex justify-center">
-                                            <Badge className={getBadgeClass(item.status)}>
-                                                {item.status}
-                                            </Badge>
-                                        </td>
-                                    ) : (
-                                        <td className="px-6 py-4">
-                                            <div className="flex justify-center gap-2">
-                                                {item.status === "Pending" && (
-                                                    <>
-                                                        <Button
-                                                            variant="ghost"
-                                                            size="sm"
-                                                            className="text-green-600 hover:text-green-700 hover:bg-green-50"
-                                                            onClick={() => onStatusChange?.(item.id, "Approved")}
-                                                        >
-                                                            <CheckCircle className="w-4 h-4 mr-1" />
-                                                            Approve
-                                                        </Button>
-                                                        <Button
-                                                            variant="ghost"
-                                                            size="sm"
-                                                            className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                                                            onClick={() => onStatusChange?.(item.id, "Rejected")}
-                                                        >
-                                                            <XCircle className="w-4 h-4 mr-1" />
-                                                            Reject
-                                                        </Button>
-                                                    </>
-                                                )}
-                                                {(item.status === "Approved" || item.status === "Rejected" || item.status === "Cancelled") && (
+                                    <td className="px-6 py-4">
+                                        <div className="flex justify-left gap-2">
+                                            {item.status === "Pending" && (
+                                                <>
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="sm"
+                                                        className="text-green-600 hover:text-green-700 hover:bg-green-50"
+                                                        onClick={() => handleStatusUpdate(item.id, "Approved")}
+                                                    >
+                                                        <CheckCircle className="w-4 h-4 mr-1" />
+                                                        Approve
+                                                    </Button>
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="sm"
+                                                        className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                                                        onClick={() => handleStatusUpdate(item.id, "Rejected")}
+                                                    >
+                                                        <XCircle className="w-4 h-4 mr-1" />
+                                                        Reject
+                                                    </Button>
+                                                </>
+                                            )}
+                                            {(item.status === "Approved" || item.status === "Rejected" || item.status === "Cancelled") && (
+                                                <>
                                                     <Button
                                                         variant="ghost"
                                                         size="sm"
                                                         className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
-                                                        onClick={() => onStatusChange?.(item.id, "Pending")}
+                                                        onClick={() => handleStatusUpdate(item.id, "Pending")}
                                                     >
                                                         <RotateCcw className="w-4 h-4 mr-1" />
                                                         Reset
                                                     </Button>
-                                                )}
-                                                {item.status === "Concluded" && (
-                                                    <Button
+                                                    {item.status === "Rejected" && (<Button
                                                         variant="ghost"
                                                         size="sm"
                                                         className="text-gray-600 hover:text-gray-700 hover:bg-gray-50"
-                                                        onClick={() => onStatusChange?.(item.id, "Archived")}
+                                                        onClick={() => handleStatusUpdate(item.id, "Archived")}
                                                     >
                                                         <Archive className="w-4 h-4 mr-1" />
                                                         Archive
                                                     </Button>
-                                                )}
-                                                {item.status === "Archived" && (
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="sm"
-                                                        className="text-gray-600 hover:text-gray-700 hover:bg-gray-50"
-                                                        onClick={() => onStatusChange?.(item.id, "Concluded")}
-                                                    >
-                                                        <RotateCcw className="w-4 h-4 mr-1" />
-                                                        Unarchive
-                                                    </Button>
-                                                )}
-                                            </div>
-                                        </td>
-                                    )}
+                                                    )}
+                                                </>
+                                            )}
+                                            {item.status === "Concluded" && (
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    className="text-gray-600 hover:text-gray-700 hover:bg-gray-50"
+                                                    onClick={() => handleStatusUpdate(item.id, "Archived")}
+                                                >
+                                                    <Archive className="w-4 h-4 mr-1" />
+                                                    Archive
+                                                </Button>
+                                            )}
+                                            {item.status === "Archived" && (
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    className="text-gray-600 hover:text-gray-700 hover:bg-gray-50"
+                                                    onClick={() => handleStatusUpdate(item.id, "Concluded")}
+                                                >
+                                                    <RotateCcw className="w-4 h-4 mr-1" />
+                                                    Unarchive
+                                                </Button>
+                                            )}
+                                        </div>
+                                    </td>
                                     <td className="px-6 py-4">
                                         <div className="flex gap-2 justify-center">
-                                            <Select value={item.status} onValueChange={(val) => onStatusChange?.(item.id, val)}>
-                                                <SelectTrigger className="w-[140px] h-8 text-xs bg-white">
+                                            <Select value={item.status} onValueChange={(val) => handleStatusUpdate(item.id, val)}>
+                                                <SelectTrigger className="w-[140px] h-8 text-xs bg-white border border-gray-300">
                                                     <SelectValue placeholder="Status" />
                                                 </SelectTrigger>
                                                 <SelectContent>
                                                     {statuses.filter(s => s !== "All").map(s => (
-                                                        <SelectItem key={s} value={s}>{s}</SelectItem>
+                                                        <SelectItem key={s} value={s}>
+                                                            <div className="flex items-center gap-2">
+                                                                <span className={`w-2 h-2 rounded-full ${getStatusIndicator(s)}`}></span>
+                                                                <span>{s}</span>
+                                                            </div>
+                                                        </SelectItem>
                                                     ))}
                                                 </SelectContent>
                                             </Select>
-                                            <Button variant="ghost" size="sm" className="text-gray-600 hover:text-gray-700 hover:bg-gray-50">
-                                                <FileText className="w-4 h-4 mr-1" />
-                                                Edit Details
-                                            </Button>
+                                            {contentType === 'Event' ? (
+                                                <CreateEventModal
+                                                    isAdmin={true}
+                                                    initialData={item as any}
+                                                    trigger={
+                                                        <Button variant="ghost" size="sm" className="text-gray-600 hover:text-gray-700 hover:bg-gray-50">
+                                                            <FileText className="w-4 h-4 mr-1" />
+                                                            Edit Details
+                                                        </Button>
+                                                    }
+                                                />
+                                            ) : (
+                                                <CreateBulletinModal
+                                                    isAdmin={true}
+                                                    initialData={item as any}
+                                                    trigger={
+                                                        <Button variant="ghost" size="sm" className="text-gray-600 hover:text-gray-700 hover:bg-gray-50">
+                                                            <FileText className="w-4 h-4 mr-1" />
+                                                            Edit Details
+                                                        </Button>
+                                                    }
+                                                />
+                                            )}
                                         </div>
                                     </td>
                                 </tr>
@@ -341,49 +491,175 @@ export function AdminContentTable({
                 </div>
 
                 <div className="p-4 bg-white border rounded-md shadow-sm mb-6 flex flex-col gap-4">
-                    <div className="text-sm font-medium text-gray-700">Filters</div>
-                    <div className="flex flex-col sm:flex-row gap-4">
-                        <div className="relative flex-1">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
-                            <Input
-                                placeholder={`Search ${contentType.toLowerCase()}s...`}
-                                className="pl-9 h-10 w-full bg-white border-gray-200"
-                                value={searchName}
-                                onChange={(e) => setSearchName(e.target.value)}
-                                onKeyDown={(e) => {
-                                    if (e.key === 'Enter') {
-                                        e.preventDefault();
-                                        handleApplyFilters();
-                                    }
-                                }}
-                            />
+                    <div className="flex justify-between items-center">
+                        <div className="text-sm font-medium text-gray-700">Filters</div>
+                    </div>
+                    <div className="grid grid-cols-8 gap-4">
+                        <div className='col-span-3 flex flex-row gap-2'>
+                            <div className="relative flex items-center flex-1">
+                                <Search className="absolute left-3 text-gray-400 w-4 h-4 pointer-events-none" />
+                                <Input
+                                    placeholder="Search by Title..."
+                                    className="pl-9 h-10 w-full bg-white border border-gray-300"
+                                    value={searchName}
+                                    onChange={(e) => setSearchName(e.target.value)}
+                                    onKeyDown={(e) => {
+                                        if (e.key === 'Enter') {
+                                            e.preventDefault();
+                                            handleApplyFilters();
+                                        }
+                                    }}
+                                />
+                            </div>
+                            <div className="relative flex items-center flex-1">
+                                <Search className="absolute left-3 text-gray-400 w-4 h-4 pointer-events-none" />
+                                <Input
+                                    placeholder="Search by Author..."
+                                    className="pl-9 h-10 w-full bg-white border border-gray-300"
+                                    value={searchAuthor}
+                                    onChange={(e) => setSearchAuthor(e.target.value)}
+                                    onKeyDown={(e) => {
+                                        if (e.key === 'Enter') {
+                                            e.preventDefault();
+                                            handleApplyFilters();
+                                        }
+                                    }}
+                                />
+                            </div>
                         </div>
-                        <div className="flex gap-2">
-                            <Button variant="outline" onClick={handleClearFilters}>Clear</Button>
-                            <Button className={primaryColorClass} onClick={handleApplyFilters}>Submit</Button>
+
+                        <div className="flex items-center gap-2 flex-1 col-span-3">
+                            <span className="text-sm text-gray-500 shrink-0">Date:</span>
+                            <Select value={datePreset} onValueChange={(val: any) => {
+                                setDatePreset(val);
+                                if (val !== 'custom') applyQuickFilter(val);
+                            }}>
+                                <SelectTrigger className="w-[140px] h-10 bg-white text-gray-700 border border-gray-300 shrink-0">
+                                    <SelectValue placeholder="Preset Dates" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="all">All Time</SelectItem>
+                                    <SelectItem value="this_week">This Week</SelectItem>
+                                    <SelectItem value="this_month">This Month</SelectItem>
+                                    <SelectItem value="this_year">This Year</SelectItem>
+                                    <SelectItem value="custom">Custom Range</SelectItem>
+                                </SelectContent>
+                            </Select>
+
+                            <div className="flex items-center gap-2 flex-1">
+                                <span className={`text-xs shrink-0 ${datePreset === 'custom' ? 'text-gray-500' : 'text-gray-300'}`}>From</span>
+                                <Input
+                                    type="date"
+                                    className="h-10 w-full bg-white px-2 text-sm text-gray-700 border border-gray-300 disabled:bg-gray-100 disabled:text-gray-400"
+                                    value={searchStartDate}
+                                    disabled={datePreset !== 'custom'}
+                                    onChange={(e) => setSearchStartDate(e.target.value)}
+                                    onKeyDown={(e) => {
+                                        if (e.key === 'Enter') {
+                                            e.preventDefault();
+                                            handleApplyFilters();
+                                        }
+                                    }}
+                                />
+                                <span className={`text-xs shrink-0 ${datePreset === 'custom' ? 'text-gray-500' : 'text-gray-300'}`}>To</span>
+                                <Input
+                                    type="date"
+                                    className="h-10 w-full bg-white px-2 text-sm text-gray-700 border border-gray-300 disabled:bg-gray-100 disabled:text-gray-400"
+                                    value={searchEndDate}
+                                    disabled={datePreset !== 'custom'}
+                                    onChange={(e) => setSearchEndDate(e.target.value)}
+                                    onKeyDown={(e) => {
+                                        if (e.key === 'Enter') {
+                                            e.preventDefault();
+                                            handleApplyFilters();
+                                        }
+                                    }}
+                                />
+                            </div>
                         </div>
+
+                        <div className="flex items-center justify-end gap-2 ml-auto shrink-0 col-span-2">
+                            <Button variant="outline" onClick={handleClearFilters} className="border border-gray-300 w-24">Clear</Button>
+                            <Button className="bg-brand-primary hover:bg-brand-primary-hover text-white w-24" onClick={handleApplyFilters}>Submit</Button>
+                        </div>
+
+                        {categories && categories.length > 0 && (
+                            <div className="flex lg:col-span-8 items-center gap-2 overflow-x-auto hide-scrollbar pb-1">
+                                <span className="text-sm font-medium text-gray-700 mr-5">Categories</span>
+                                <Button
+                                    variant={searchCategories.includes('All') ? "default" : "outline"}
+                                    className={searchCategories.includes('All') ? "bg-brand-secondary hover:bg-brand-secondary-hover text-white" : ""}
+                                    onClick={() => {
+                                        setSearchCategories(['All']);
+                                        setAppliedSearchCategories(['All']);
+                                        setCurrentPage(1);
+                                    }}
+                                    size="sm"
+                                >
+                                    All
+                                </Button>
+                                {categories.map(cat => (
+                                    <Button
+                                        key={cat}
+                                        variant={searchCategories.includes(cat) ? "default" : "outline"}
+                                        className={searchCategories.includes(cat) ? getCategoryColor(cat) : ""}
+                                        onClick={() => {
+                                            let next: string[];
+                                            if (searchCategories.includes(cat)) {
+                                                next = searchCategories.filter(c => c !== cat);
+                                                if (next.length === 0) {
+                                                    next = ['All'];
+                                                }
+                                            } else {
+                                                next = [...searchCategories.filter(c => c !== 'All'), cat];
+                                            }
+                                            setSearchCategories(next);
+                                            setAppliedSearchCategories(next);
+                                            setCurrentPage(1);
+                                        }}
+                                        size="sm"
+                                    >
+                                        {cat}
+                                    </Button>
+                                ))}
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="border border-gray-300"
+                                    onClick={() => {
+                                        setSearchCategories(['All']);
+                                        setAppliedSearchCategories(['All']);
+                                        setCurrentPage(1);
+                                    }}
+                                >
+                                    Clear All
+                                </Button>
+                            </div>
+                        )}
                     </div>
                 </div>
 
-                {statuses.map(status => (
-                    <TabsContent key={status} value={status}>
-                        <Card className="border-none shadow-md">
-                            <CardHeader className="flex flex-row items-center justify-between">
-                                <div>
-                                    <CardTitle>{getStatusConfig(status).title}</CardTitle>
-                                    <CardDescription>
-                                        {getStatusConfig(status).description}
-                                    </CardDescription>
-                                </div>
-                                <Button variant="outline" onClick={handleExportCSV}>Export CSV</Button>
-                            </CardHeader>
-                            <CardContent>
-                                {renderTable()}
-                            </CardContent>
-                        </Card>
-                    </TabsContent>
-                ))}
-            </Tabs>
-        </div>
+                {
+                    statuses.map(status => (
+                        <TabsContent key={status} value={status}>
+                            <Card className="border-none shadow-md">
+                                <CardHeader className="flex flex-row items-center justify-between">
+                                    <div>
+                                        <CardTitle>{getStatusConfig(status).title}</CardTitle>
+                                        <CardDescription>
+                                            {getStatusConfig(status).description}
+                                        </CardDescription>
+                                    </div>
+                                    <Button variant="outline" onClick={handleExportCSV} className="border border-gray-300">Export CSV</Button>
+                                </CardHeader>
+                                <CardContent>
+                                    {renderTable()}
+                                </CardContent>
+                            </Card>
+                        </TabsContent>
+                    ))
+                }
+            </Tabs >
+        </div >
     );
 }

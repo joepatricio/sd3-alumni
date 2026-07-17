@@ -1,9 +1,10 @@
-import { useState, type ReactNode } from 'react';
+import { useState, type ReactNode, lazy, Suspense } from 'react';
 import { TopBar } from './TopBar';
 import { Navbar } from './Navbar';
-import { MegaMenu } from './MegaMenu';
-import { Footer } from './Footer';
 import { Outlet } from 'react-router-dom';
+
+const MegaMenu = lazy(() => import('./MegaMenu').then(m => ({ default: m.MegaMenu })));
+const Footer = lazy(() => import('./Footer').then(m => ({ default: m.Footer })));
 
 interface LayoutProps {
     children?: ReactNode;
@@ -19,11 +20,15 @@ export function MainLayout({ children }: LayoutProps) {
                     isMenuOpen={isMenuOpen}
                     setIsMenuOpen={setIsMenuOpen}
                 />
-                <MegaMenu isOpen={isMenuOpen} onClose={() => setIsMenuOpen(false)} />
+                <Suspense fallback={null}>
+                    <MegaMenu isOpen={isMenuOpen} onClose={() => setIsMenuOpen(false)} />
+                </Suspense>
                 <Navbar />
                 {children ? children : <Outlet />}
             </main>
-            <Footer />
+            <Suspense fallback={<div className="h-64 w-full bg-brand-footer animate-pulse" />}>
+                <Footer />
+            </Suspense>
         </div>
     );
 }

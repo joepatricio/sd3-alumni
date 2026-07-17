@@ -10,6 +10,7 @@ import { MapContainer, TileLayer, Marker, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { ImageUpload } from './ImageUpload';
+import { api } from '@/app/views/api';
 
 // Fix for default marker icon in react-leaflet
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -118,6 +119,7 @@ const formSchema = z.object({
 });
 
 export interface EventData {
+    id?: string;
     title: string;
     category: string;
     date: string;
@@ -178,6 +180,21 @@ export function CreateEventModal({ trigger, initialData, isAdmin }: CreateEventM
     const [isSearchingLocation, setIsSearchingLocation] = useState(false);
     const [programmaticKey, setProgrammaticKey] = useState(0);
 
+    const [categories, setCategories] = useState<{ id: string, eventCategoryName: string }[]>([]);
+    const [hydrationStep, setHydrationStep] = useState(0); // 0: idle, 1: region, 2: province, 3: city, 4: barangay, 5: done
+
+    useEffect(() => {
+        if (open && categories.length === 0) {
+            api.get('/eventCategories')
+                .then(res => {
+                    if (Array.isArray(res.data)) {
+                        setCategories(res.data);
+                    }
+                })
+                .catch(err => console.error('Failed to fetch event categories:', err));
+        }
+    }, [open, categories.length]);
+
     // Load PSGC data dynamically when modal is opened
     useEffect(() => {
         if (open && !psgcData && !isLoadingPsgc) {
@@ -193,7 +210,7 @@ export function CreateEventModal({ trigger, initialData, isAdmin }: CreateEventM
                     setIsLoadingPsgc(false);
                 })
                 .catch((err) => {
-                    console.error('Failed to load PSGC data', err);
+                    console.error('Failed to load PSGC data:', err);
                     setIsLoadingPsgc(false);
                 });
         }
@@ -227,10 +244,10 @@ export function CreateEventModal({ trigger, initialData, isAdmin }: CreateEventM
         },
     });
 
-    // Effect to update form values when initialData changes, modal opens, or psgcData is loaded
+    // Effect to update basic form values when initialData changes or modal opens
     useEffect(() => {
-        if (initialData && open && psgcData) {
-            let formattedDate = initialData.date;
+        if (initialData && open) {
+            let formattedDate = initialData.date || (initialData as any).eventDate;
             if (formattedDate) {
                 const d = new Date(formattedDate);
                 if (!isNaN(d.getTime())) {
@@ -240,7 +257,37 @@ export function CreateEventModal({ trigger, initialData, isAdmin }: CreateEventM
 
             let parsedLocation = initialData.location;
             if (typeof parsedLocation === 'string') {
-                parsedLocation = {
+                try {
+                    const parsed = JSON.parse(parsedLocation);
+                    if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+                        parsedLocation = parsed;
+                    } else {
+                        throw new Error('Not an object');
+                    }
+                } catch(e) {
+                    parsedLocation = {
+                        region: '',
+                        regionCode: '',
+                        province: '',
+                        provinceCode: '',
+                        cityMunicipality: '',
+                        cityCode: '',
+                        barangay: '',
+                        landmark: parsedLocation as any,
+                        street: '',
+                        lat: 10.2954,
+                        lng: 123.8944
+                    };
+                }
+            } 
+            if (parsedLocation && !(parsedLocation as any).lat) {
+                parsedLocation = { ...parsedLocation as any, lat: 10.2954, lng: 123.8944 };
+            }
+
+            form.reset({
+                title: initialData.title,
+                category: (initialData as any).eventCategory?.eventCategoryName || initialData.category,
+                location: {
                     region: '',
                     regionCode: '',
                     province: '',
@@ -248,19 +295,11 @@ export function CreateEventModal({ trigger, initialData, isAdmin }: CreateEventM
                     cityMunicipality: '',
                     cityCode: '',
                     barangay: '',
-                    landmark: parsedLocation,
-                    street: '',
-                    lat: 10.2954,
-                    lng: 123.8944
-                };
-            } else if (parsedLocation && !parsedLocation.lat) {
-                parsedLocation = { ...parsedLocation, lat: 10.2954, lng: 123.8944 };
-            }
-
-            form.reset({
-                title: initialData.title,
-                category: initialData.category,
-                location: parsedLocation,
+                    landmark: (parsedLocation as any)?.landmark || '',
+                    street: (parsedLocation as any)?.street || '',
+                    lat: (parsedLocation as any)?.lat || 10.2954,
+                    lng: (parsedLocation as any)?.lng || 123.8944,
+                },
                 description: initialData.description,
                 date: formattedDate,
                 startTimeHour: initialData.startTimeHour || '12',
@@ -270,35 +309,117 @@ export function CreateEventModal({ trigger, initialData, isAdmin }: CreateEventM
                 endTimeMinute: initialData.endTimeMinute || '00',
                 endTimeAmPm: initialData.endTimeAmPm || 'PM',
                 modality: initialData.modality || '',
+                image: (initialData as any).eventImage || initialData.image,
             });
 
-            if (typeof parsedLocation === 'object' && parsedLocation) {
-                if (parsedLocation.regionCode) {
-                    const provs = psgcData.psgcProvinces.filter((p: any) => p.regionCode === parsedLocation.regionCode);
-                    setProvinces(provs.length > 0 ? provs.sort((a: any, b: any) => a.name.localeCompare(b.name)) : []);
-                    if (provs.length === 0) {
-                        const fallbackCities = psgcData.psgcCities.filter((c: any) => c.provinceCode === parsedLocation.regionCode);
-                        setCities(fallbackCities.sort((a: any, b: any) => a.name.localeCompare(b.name)));
-                    }
-                }
-                if (parsedLocation.provinceCode) {
-                    const matchedCities = psgcData.psgcCities.filter((c: any) => c.provinceCode === parsedLocation.provinceCode);
-                    setCities(matchedCities.sort((a: any, b: any) => a.name.localeCompare(b.name)));
-                }
-                if (parsedLocation.cityCode) {
-                    const matchedBrgys = psgcData.psgcBarangays.filter((b: any) => b.cityCode === parsedLocation.cityCode);
-                    setBarangays(matchedBrgys.sort((a: any, b: any) => a.name.localeCompare(b.name)));
-                }
-                if (parsedLocation.lat && parsedLocation.lng) {
-                    setMapCenter([parsedLocation.lat, parsedLocation.lng]);
-                }
+            const imgData = (initialData as any).eventImage || initialData.image;
+            if (typeof imgData === 'string') {
+                setPreviewUrl(imgData);
+            } else {
+                setPreviewUrl(null);
             }
+        } else if (!initialData && open) {
+            form.reset({
+                title: '',
+                category: '',
+                description: '',
+                date: '',
+                startTimeHour: '12',
+                startTimeMinute: '00',
+                startTimeAmPm: 'AM',
+                endTimeHour: '1',
+                endTimeMinute: '00',
+                endTimeAmPm: 'PM',
+                location: {
+                    region: '',
+                    regionCode: '',
+                    province: '',
+                    provinceCode: '',
+                    cityMunicipality: '',
+                    cityCode: '',
+                    barangay: '',
+                    landmark: '',
+                    street: '',
+                },
+                modality: '',
+                image: undefined,
+            });
+            setPreviewUrl(null);
+        }
+    }, [initialData, form, open]);
 
-            if (typeof initialData.image === 'string') {
-                setPreviewUrl(initialData.image);
+    // Reactive hydration state machine
+    useEffect(() => {
+        if (!open) {
+            if (hydrationStep !== 0) setHydrationStep(0);
+            if (provinces.length > 0) setProvinces([]);
+            if (cities.length > 0) setCities([]);
+            if (barangays.length > 0) setBarangays([]);
+            return;
+        }
+
+        if (initialData && open && psgcData && hydrationStep === 0) {
+            setHydrationStep(1); // Start hydration
+            return;
+        }
+
+        if (hydrationStep === 0 || hydrationStep === 5) return;
+
+        let parsedLocation = initialData?.location;
+        if (typeof parsedLocation === 'string') {
+            try {
+                const parsed = JSON.parse(parsedLocation);
+                if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+                    parsedLocation = parsed;
+                }
+            } catch(e) {}
+        }
+        const loc = (typeof parsedLocation === 'object' && parsedLocation) ? (parsedLocation as any) : null;
+        if (!loc) {
+            setHydrationStep(5);
+            return;
+        }
+
+        if (hydrationStep === 1 && regions.length > 0) {
+            form.setValue('location.regionCode', loc.regionCode || '');
+            form.setValue('location.region', loc.region || '');
+
+            const provs = psgcData.psgcProvinces.filter((p: any) => p.regionCode === loc.regionCode);
+            if (provs.length > 0) {
+                setProvinces(provs.sort((a: any, b: any) => a.name.localeCompare(b.name)));
+                setHydrationStep(2);
+            } else {
+                const fallbackCities = psgcData.psgcCities.filter((c: any) => c.provinceCode === loc.regionCode);
+                setCities(fallbackCities.sort((a: any, b: any) => a.name.localeCompare(b.name)));
+                setHydrationStep(3); // Skip province
             }
         }
-    }, [initialData, form, open, psgcData]);
+        else if (hydrationStep === 2 && provinces.length > 0) {
+            form.setValue('location.provinceCode', loc.provinceCode || '');
+            form.setValue('location.province', loc.province || '');
+
+            const matchedCities = psgcData.psgcCities.filter((c: any) => c.provinceCode === loc.provinceCode);
+            setCities(matchedCities.sort((a: any, b: any) => a.name.localeCompare(b.name)));
+            setHydrationStep(3);
+        }
+        else if (hydrationStep === 3 && cities.length > 0) {
+            form.setValue('location.cityCode', loc.cityCode || '');
+            form.setValue('location.cityMunicipality', loc.cityMunicipality || '');
+
+            const matchedBrgys = psgcData.psgcBarangays.filter((b: any) => b.cityCode === loc.cityCode);
+            setBarangays(matchedBrgys.sort((a: any, b: any) => a.name.localeCompare(b.name)));
+            setHydrationStep(4);
+        }
+        else if (hydrationStep === 4 && barangays.length > 0) {
+            form.setValue('location.barangay', loc.barangay || '');
+            if (loc.lat && loc.lng) {
+                setMapCenter([loc.lat, loc.lng]);
+            }
+            setHydrationStep(5);
+            // Trigger key increment to force final remount of selects with options fully populated
+            setTimeout(() => setProgrammaticKey(prev => prev + 1), 100);
+        }
+    }, [initialData, open, psgcData, regions, provinces, cities, barangays, hydrationStep]);
 
     // Fetch regions when open and psgcData is loaded
     useEffect(() => {
@@ -601,22 +722,58 @@ export function CreateEventModal({ trigger, initialData, isAdmin }: CreateEventM
         </div>
     ), [mapCenter, mapZoom, currentLat, currentLng]);
 
-    function onSubmit(values: z.infer<typeof formSchema>) {
+    async function onSubmit(values: z.infer<typeof formSchema>) {
         // Construct final time strings
         const startTime = `${values.startTimeHour}:${values.startTimeMinute} ${values.startTimeAmPm}`;
         const endTime = `${values.endTimeHour}:${values.endTimeMinute} ${values.endTimeAmPm}`;
 
-        const finalValues = {
-            ...values,
+        // Prepare Location payload - Backend might expect location to be handled separately or nested if Prisma allows it.
+        // Prisma allows nested create via relation: `location: { create: { ... } }` or just sending locationId. 
+        // For simplicity and since we don't have the exact backend mapping for nested creations without seeing it,
+        // we'll format the values exactly as they are in the schema and let the backend handle it, or send it directly.
+        const payload: any = {
+            title: values.title,
+            description: values.description,
+            eventDate: values.date,
             startTime,
             endTime,
-            image: previewUrl
+            modality: values.modality,
+            eventCategoryId: values.category,
+            eventImage: previewUrl,
+            // the generic backend might not support nested create dynamically unless defined.
+            // But we will send the location nested for now. 
+            // In a real app we'd create the location first or have the backend handle it.
+            location: {
+                region: values.location.region,
+                regionCode: values.location.regionCode,
+                province: values.location.province,
+                provinceCode: values.location.provinceCode,
+                cityMunicipality: values.location.cityMunicipality,
+                cityCode: values.location.cityCode,
+                barangay: values.location.barangay,
+                landmark: values.location.landmark,
+                street: values.location.street,
+                lat: values.location.lat,
+                lng: values.location.lng,
+            }
         };
 
-        console.log(finalValues);
+        if (isAdmin && initialData) {
+            payload.reviewDate = new Date().toISOString();
+        }
 
-        setTimeout(() => {
+        try {
             const isEditMode = !!initialData;
+            if (isEditMode && initialData?.id) {
+                await api.patch(`/admin/events/${initialData.id}`, payload, {
+                    headers: { Authorization: `Bearer ${sessionStorage.getItem('adminToken') || sessionStorage.getItem('token')}` }
+                });
+            } else {
+                await api.post(`/admin/events`, payload, {
+                    headers: { Authorization: `Bearer ${sessionStorage.getItem('adminToken') || sessionStorage.getItem('token')}` }
+                });
+            }
+
             const isPending = !isAdmin && isEditMode;
             const message = initialData
                 ? (isPending ? 'Event update submitted for review!' : 'Event successfully updated!')
@@ -633,7 +790,10 @@ export function CreateEventModal({ trigger, initialData, isAdmin }: CreateEventM
                 form.reset();
                 setPreviewUrl(null);
             }
-        }, 1000);
+        } catch (error) {
+            console.error("Failed to save event", error);
+            toast.error("Failed to save event. Please try again.");
+        }
     }
 
     const handleFileSelect = (url: string) => {
@@ -645,17 +805,6 @@ export function CreateEventModal({ trigger, initialData, isAdmin }: CreateEventM
         setPreviewUrl(null);
         form.setValue('image', undefined);
     };
-
-    const categories = [
-        'Reunion',
-        'Networking',
-        'Conference',
-        'Workshop',
-        'Ceremony',
-        'Sports',
-        'Virtual',
-        'Other',
-    ];
 
     const hours = Array.from({ length: 12 }, (_, i) => (i + 1).toString());
     const minutes = Array.from({ length: 60 }, (_, i) => i.toString().padStart(2, '0'));
@@ -712,8 +861,8 @@ export function CreateEventModal({ trigger, initialData, isAdmin }: CreateEventM
                                             </FormControl>
                                             <SelectContent>
                                                 {categories.map((category) => (
-                                                    <SelectItem key={category} value={category}>
-                                                        {category}
+                                                    <SelectItem key={category.id} value={category.eventCategoryName}>
+                                                        {category.eventCategoryName}
                                                     </SelectItem>
                                                 ))}
                                             </SelectContent>

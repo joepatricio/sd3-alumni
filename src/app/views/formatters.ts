@@ -45,6 +45,10 @@ export function getCategoryColor(category: string): string {
             return 'bg-brand-primary hover:bg-orange-700 text-white';
         case 'virtual':
             return 'bg-teal-600 hover:bg-teal-700 text-white';
+        case 'official':
+            return 'bg-brand-primary hover:bg-brand-primary-hover text-white';
+        case 'regular':
+            return 'bg-brand-accent hover:bg-brand-accent-hover text-white';
         default:
             return 'bg-brand-primary-hover hover:bg-brand-primary text-white'; // default orange
     }

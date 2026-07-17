@@ -71,8 +71,8 @@ export function AdminLayout() {
     const formatTime = (date: Date | null) => {
         if (!date) return 'Loading...';
         return date.toLocaleDateString([], {
-            weekday: 'short',
-            month: 'short',
+            weekday: 'long',
+            month: 'long',
             day: 'numeric',
             year: 'numeric'
         }) + ' ' + date.toLocaleTimeString([], {
@@ -165,8 +165,8 @@ export function AdminLayout() {
             <main className="flex-1 flex flex-col min-w-0 overflow-hidden">
                 {/* Topbar */}
                 <header className="h-16 bg-white shadow-sm flex items-center justify-between px-8 z-0">
-                    <div className="flex items-center gap-2 text-sm text-gray-500 font-medium bg-gray-50 px-3 py-1.5 rounded-lg border border-gray-100 shadow-xs">
-                        <Clock size={16} className="text-gray-400" />
+                    <div className="flex items-center gap-2 text-sm text-gray-700 font-medium bg-gray-50 px-3 py-1.5 rounded-lg border border-gray-100 shadow-xs">
+                        <Clock size={16} />
                         <span>Time: {formatTime(currentTime)}</span>
                         <span className="text-xs text-brand-primary/80 bg-brand-primary/10 px-2 py-0.5 rounded-md ml-1 font-semibold">{timeSource}</span>
                     </div>

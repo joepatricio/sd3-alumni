@@ -14,6 +14,25 @@ export function AdminEvents() {
         if (params.search) {
             whereClause.title = { contains: params.search };
         }
+        if (params.searchAuthor) {
+            whereClause.author = { profile: { userName: { contains: params.searchAuthor } } };
+        }
+        if (params.categories && params.categories.length > 0 && !params.categories.includes('All')) {
+            whereClause.category = { eventCategoryName: { in: params.categories } };
+        }
+        if (params.searchStartDate || params.searchEndDate) {
+            const dateClause: any = {};
+            if (params.searchStartDate) {
+                const start = new Date(params.searchStartDate);
+                dateClause.gte = start.toISOString();
+            }
+            if (params.searchEndDate) {
+                const end = new Date(params.searchEndDate);
+                end.setDate(end.getDate() + 1); // include the end date entirely
+                dateClause.lt = end.toISOString();
+            }
+            whereClause.eventDate = dateClause;
+        }
 
         let sortStr = undefined;
         if (params.sort) {
@@ -39,6 +58,7 @@ export function AdminEvents() {
         const total = response.data.items || data.length;
 
         const mappedEvents = data.map((e: any) => ({
+            ...e,
             id: e.id,
             title: e.title,
             author: e.author?.profile?.userName || 'Unknown User',
@@ -46,6 +66,7 @@ export function AdminEvents() {
             type: 'Event',
             status: e.eventStatus?.statusName || "Pending",
             description: e.description,
+            category: e.eventCategory?.eventCategoryName || "General",
             rawDate: new Date(e.eventDate).getTime()
         }));
 
@@ -57,22 +78,20 @@ export function AdminEvents() {
             await api.patch(`/admin/events/${id}/status`, { status: newStatus }, {
                 headers: { Authorization: `Bearer ${sessionStorage.getItem('adminToken')}` }
             });
-            // We can't automatically refresh the table from here unless we pass a refresh trigger,
-            // but the optimistic UI update inside the parent is gone. We could just reload the page or add a trigger.
-            // For now, let it be.
-            window.location.reload();
         } catch (err) {
             console.error('Failed to update status:', err);
+            throw err;
         }
     };
 
     return (
         <AdminContentTable
             title="Events Management"
-            description="Review, approve, or reject user-submitted networking and community events."
+            description="Review, approve, or reject user-submitted community events."
             contentType="Event"
             fetchData={fetchData}
             statuses={EVENT_STATUSES}
+            categories={["Reunion", "Workshop", "Conference", "Networking", "Sports", "Virtual"]}
             primaryColorClass="bg-brand-primary hover:bg-brand-primary-hover text-white"
             outlineColorClass="text-brand-primary border-brand-primary hover:bg-brand-primary/10"
             onStatusChange={handleStatusChange}

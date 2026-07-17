@@ -146,7 +146,7 @@ export function Events() {
                 {/* Header */}
                 <div>
                     <div className="max-w-6xl mx-auto px-4 md:px-8 py-8">
-                        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                        <div className="flex flex-co l md:flex-row md:items-center md:justify-between gap-4">
                             <div>
                                 <h1 className="text-3xl font-bold mb-2">Upcoming Events</h1>
                                 <p className="text-gray-600">
@@ -154,7 +154,7 @@ export function Events() {
                                     events
                                 </p>
                             </div>
-                            {currentUserStatus !== 'Suspended' && currentUserStatus !== 'Banned' && (
+                            {currentUserStatus === 'Official' && (
                                 <CreateEventModal
                                     trigger={
                                         <button

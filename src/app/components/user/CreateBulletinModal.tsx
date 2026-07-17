@@ -5,6 +5,7 @@ import * as z from 'zod';
 import { Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { ImageUpload } from './ImageUpload';
+import { api } from '@/app/views/api';
 
 import { Button } from '@components/ui/button';
 import {
@@ -19,7 +20,6 @@ import {
 import {
     Form,
     FormControl,
-    FormDescription,
     FormField,
     FormItem,
     FormLabel,
@@ -32,20 +32,20 @@ const formSchema = z.object({
     title: z.string().min(2, {
         message: 'Title must be at least 2 characters.',
     }),
-    date: z.string().min(1, {
-        message: 'A date of publication is required.',
-    }),
     content: z.string().min(10, {
         message: 'Content must be at least 10 characters.',
     }),
-    heroImage: z.any().optional(),
+    bulletinImage: z.any().optional(),
+    readTimeMinutes: z.number().min(1),
 });
 
 export interface BulletinData {
+    id?: string;
     title: string;
-    date: string;
+    bulletinDate: string;
     content: string;
-    heroImage?: string | File | null;
+    bulletinImage?: string | File | null;
+    readTimeMinutes?: number;
 }
 
 interface CreateBulletinModalProps {
@@ -63,30 +63,56 @@ export function CreateBulletinModal({ trigger, initialData, isAdmin = false }: C
         defaultValues: {
             title: '',
             content: '',
-            date: '',
+            readTimeMinutes: 5,
         },
     });
 
     // Effect to update form values when initialData changes or modal opens
     useEffect(() => {
-        if (initialData) {
+        if (initialData && open) {
             form.reset({
                 title: initialData.title,
                 content: initialData.content,
-                date: initialData.date,
+                readTimeMinutes: initialData.readTimeMinutes || 5,
+                bulletinImage: initialData.bulletinImage,
             });
-            if (typeof initialData.heroImage === 'string') {
-                setPreviewUrl(initialData.heroImage);
+            if (typeof initialData.bulletinImage === 'string') {
+                setPreviewUrl(initialData.bulletinImage);
+            } else {
+                setPreviewUrl(null);
             }
+        } else if (!initialData && open) {
+            form.reset({
+                title: '',
+                content: '',
+                readTimeMinutes: 5,
+                bulletinImage: undefined,
+            });
+            setPreviewUrl(null);
         }
     }, [initialData, form, open]);
 
 
-    function onSubmit(values: z.infer<typeof formSchema>) {
-        // Simulate API call
-        console.log({ ...values, heroImage: previewUrl });
+    async function onSubmit(values: z.infer<typeof formSchema>) {
+        const payload: any = { ...values, bulletinImage: previewUrl };
 
-        setTimeout(() => {
+        if (!initialData) {
+            payload.bulletinDate = new Date().toISOString();
+        } else if (isAdmin) {
+            payload.reviewDate = new Date().toISOString();
+        }
+
+        try {
+            if (isEditMode && initialData?.id) {
+                await api.patch(`/admin/bulletins/${initialData.id}`, payload, {
+                    headers: { Authorization: `Bearer ${sessionStorage.getItem('adminToken') || sessionStorage.getItem('token')}` }
+                });
+            } else {
+                await api.post(`/admin/bulletins`, payload, {
+                    headers: { Authorization: `Bearer ${sessionStorage.getItem('adminToken') || sessionStorage.getItem('token')}` }
+                });
+            }
+
             const isPending = !isAdmin && isEditMode;
             const message = initialData
                 ? (isPending ? 'Bulletin update submitted for review!' : 'Bulletin successfully updated!')
@@ -103,17 +129,20 @@ export function CreateBulletinModal({ trigger, initialData, isAdmin = false }: C
                 form.reset();
                 setPreviewUrl(null);
             }
-        }, 1000);
+        } catch (error) {
+            console.error("Failed to save bulletin", error);
+            toast.error("Failed to save bulletin. Please try again.");
+        }
     }
 
     const handleFileSelect = (url: string) => {
         setPreviewUrl(url);
-        form.setValue('heroImage', url);
+        form.setValue('bulletinImage', url);
     };
 
     const handleClearImage = () => {
         setPreviewUrl(null);
-        form.setValue('heroImage', undefined);
+        form.setValue('bulletinImage', null);
     };
 
     const isEditMode = !!initialData;

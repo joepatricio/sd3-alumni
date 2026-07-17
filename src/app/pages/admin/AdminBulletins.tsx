@@ -10,6 +10,35 @@ export function AdminBulletins() {
         if (params.search) {
             whereClause.title = { contains: params.search };
         }
+        const hasActiveCategoryFilter = params.categories && params.categories.length > 0 && !params.categories.includes('All');
+        if (hasActiveCategoryFilter || params.searchAuthor) {
+            whereClause.author = {};
+            if (params.searchAuthor) {
+                whereClause.author.profile = { userName: { contains: params.searchAuthor } };
+            }
+            if (hasActiveCategoryFilter) {
+                const hasOfficial = params.categories.includes('Official');
+                const hasRegular = params.categories.includes('Regular');
+                if (hasOfficial && !hasRegular) {
+                    whereClause.author.userStatus = { statusName: 'Official' };
+                } else if (hasRegular && !hasOfficial) {
+                    whereClause.author.userStatus = { statusName: { not: 'Official' } };
+                }
+            }
+        }
+        if (params.searchStartDate || params.searchEndDate) {
+            const dateClause: any = {};
+            if (params.searchStartDate) {
+                const start = new Date(params.searchStartDate);
+                dateClause.gte = start.toISOString();
+            }
+            if (params.searchEndDate) {
+                const end = new Date(params.searchEndDate);
+                end.setDate(end.getDate() + 1); // include the end date entirely
+                dateClause.lt = end.toISOString();
+            }
+            whereClause.bulletinDate = dateClause;
+        }
 
         let sortStr = undefined;
         if (params.sort) {
@@ -35,13 +64,15 @@ export function AdminBulletins() {
         const total = response.data.items || data.length;
 
         const mappedBulletins = data.map((b: any) => ({
+            ...b,
             id: b.id,
             title: b.title,
             author: b.author?.profile?.userName || 'Unknown',
             date: b.bulletinDate,
             type: 'Bulletin',
-            status: b.status?.statusName || "Pending",
+            status: b.contentStatus?.statusName || "Pending",
             description: b.content || '',
+            category: b.author?.userStatus?.statusName === 'Official' ? 'Official' : 'Regular',
             rawDate: new Date(b.bulletinDate).getTime()
         }));
 
@@ -53,20 +84,21 @@ export function AdminBulletins() {
             await api.patch(`/admin/bulletins/${id}/status`, { status: newStatus }, {
                 headers: { Authorization: `Bearer ${sessionStorage.getItem('adminToken')}` }
             });
-            window.location.reload();
         } catch (err) {
             console.error('Failed to update status:', err);
+            throw err;
         }
     };
 
     return (
         <AdminContentTable
             title="Bulletins Management"
-            description="Review, approve, or reject user-submitted job postings and community announcements."
+            description="Review, approve, or reject user-submitted and community announcements."
             contentType="Bulletin"
             fetchData={fetchData}
             primaryColorClass="bg-blue-600 hover:bg-blue-700 text-white"
             outlineColorClass="text-blue-600 border-blue-200 hover:bg-blue-50"
+            categories={["Official", "Regular"]}
             onStatusChange={handleStatusChange}
         />
     );

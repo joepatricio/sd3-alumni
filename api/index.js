@@ -464,7 +464,7 @@ const setupWatchdog = () => {
 
     const scheduleNextWatchdog = () => {
         const now = new Date();
-        const nextMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 0, 0, 0);
+        const nextMidnight = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1, 0, 0, 0));
         const timeToNextMidnight = nextMidnight.getTime() - now.getTime();
         setTimeout(runWatchdog, timeToNextMidnight);
     };
@@ -489,7 +489,7 @@ app.get('/api/admin/events', authenticateAdminToken, async (req, res) => {
         let queryArgs = {
             where,
             orderBy,
-            include: { location: true, rsvps: true, status: true, category: true, author: { include: { profile: true } } }
+            include: { location: true, rsvps: true, status: true, category: true, author: { include: { profile: true, userStatus: true } } }
         };
 
         if (page !== undefined && perPage !== undefined) {
@@ -533,7 +533,7 @@ app.patch('/api/admin/events/:id/status', authenticateAdminToken, async (req, re
         const updatedEvent = await prisma.event.update({
             where: { id },
             data: { eventStatusId: statusRecord.id },
-            include: { location: true, rsvps: true, status: true, category: true, author: { include: { profile: true } } }
+            include: { location: true, rsvps: true, status: true, category: true, author: { include: { profile: true, userStatus: true } } }
         });
 
         res.json(formatOutput('event', updatedEvent));
@@ -554,7 +554,7 @@ app.get('/api/admin/bulletins', authenticateAdminToken, async (req, res) => {
         let queryArgs = {
             where,
             orderBy,
-            include: { comments: { include: { user: { include: { profile: true } }, likesList: true } }, status: true, author: { include: { profile: true } }, likes: true }
+            include: { comments: { include: { user: { include: { profile: true } }, likesList: true } }, status: true, author: { include: { profile: true, userStatus: true } }, likes: true }
         };
 
         if (page !== undefined && perPage !== undefined) {
@@ -594,7 +594,7 @@ app.patch('/api/admin/bulletins/:id/status', authenticateAdminToken, async (req,
         const updatedBulletin = await prisma.bulletin.update({
             where: { id },
             data: { contentStatusId: statusRecord.id },
-            include: { comments: { include: { user: { include: { profile: true } }, likesList: true } }, status: true, author: { include: { profile: true } }, likes: true }
+            include: { comments: { include: { user: { include: { profile: true } }, likesList: true } }, status: true, author: { include: { profile: true, userStatus: true } }, likes: true }
         });
         res.json(formatOutput('bulletin', updatedBulletin));
     } catch (error) {
@@ -639,8 +639,8 @@ const tableToModel = {
 const defaultIncludes = {
     profile: { degree: true, user: true },
     user: { profile: { include: { degree: true } }, userStatus: true, profileStatus: true },
-    bulletin: { comments: { include: { user: { include: { profile: true } }, likesList: true } }, status: true, author: { include: { profile: true } }, likes: true },
-    event: { location: true, rsvps: true, status: true, category: true, author: { include: { profile: true } } },
+    bulletin: { comments: { include: { user: { include: { profile: true } }, likesList: true } }, status: true, author: { include: { profile: true, userStatus: true } }, likes: true },
+    event: { location: true, rsvps: true, status: true, category: true, author: { include: { profile: true, userStatus: true } } },
     userConnection: { status: true, user: { include: { profile: { include: { degree: true } } } }, friend: { include: { profile: { include: { degree: true } } } } },
     comment: { user: { include: { profile: true } }, bulletin: true, likesList: true },
     userAchievement: { achievement: true },
@@ -770,7 +770,7 @@ app.get('/api/donations/summary', async (req, res) => {
         let previousYearUniqueDonors = new Set();
         let allTimeUniqueDonors = new Set();
 
-        const currentYear = new Date().getFullYear();
+        const currentYear = new Date().getUTCFullYear();
 
         allDonations.forEach(d => {
             const status = d.status?.statusName || 'Unknown';
@@ -790,7 +790,7 @@ app.get('/api/donations/summary', async (req, res) => {
         donations.forEach(d => {
             const amt = d.donationAmount || 0;
             const date = new Date(d.donationDate);
-            const year = date.getFullYear();
+            const year = date.getUTCFullYear();
             const userId = d.userId;
 
             totalRaised += amt;

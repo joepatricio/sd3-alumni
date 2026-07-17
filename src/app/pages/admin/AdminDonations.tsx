@@ -58,6 +58,8 @@ export function AdminDonations() {
 
     const [uniqueBanks, setUniqueBanks] = useState<string[]>([]);
 
+    const [dbStatuses, setDbStatuses] = useState<string[]>(['Completed', 'Processing', 'Failed']);
+
     // Interactive Legend states
     const [activeStatus, setActiveStatus] = useState<string | null>(null);
     const [activeBank, setActiveBank] = useState<string | null>(null);
@@ -86,6 +88,15 @@ export function AdminDonations() {
             setBankData(data.charts.bankData);
             setUniqueBanks(data.uniqueBanks || []);
             setLeaderboards(data.leaderboards);
+
+            try {
+                const statusesRes = await api.get('/donationStatuses');
+                if (statusesRes.data && Array.isArray(statusesRes.data)) {
+                    setDbStatuses(statusesRes.data.map((s: any) => s.statusName));
+                }
+            } catch (err) {
+                console.error("Failed to fetch donation statuses", err);
+            }
         } catch (err) {
             console.error(err);
         } finally {
@@ -107,6 +118,8 @@ export function AdminDonations() {
     const [maxAmount, setMaxAmount] = useState('');
     const [startDate, setStartDate] = useState('');
     const [endDate, setEndDate] = useState('');
+    const [datePreset, setDatePreset] = useState('all');
+    const [amountPreset, setAmountPreset] = useState('all');
     const [searchBankName, setSearchBankName] = useState('All');
 
     // Explicit filter applied state
@@ -127,6 +140,58 @@ export function AdminDonations() {
             direction = 'desc';
         }
         setSortConfig({ key, direction });
+    };
+
+    const applyQuickFilter = (filter: 'this_week' | 'this_month' | 'this_year' | 'all') => {
+        const now = new Date();
+        let start = '';
+        let end = '';
+
+        if (filter === 'this_week') {
+            const day = now.getDay();
+            const diffToMonday = day === 0 ? -6 : 1 - day;
+            const monday = new Date(now);
+            monday.setDate(now.getDate() + diffToMonday);
+
+            const sunday = new Date(monday);
+            sunday.setDate(monday.getDate() + 6);
+
+            start = monday.toISOString().split('T')[0];
+            end = sunday.toISOString().split('T')[0];
+        } else if (filter === 'this_month') {
+            const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
+            const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+            start = firstDay.toISOString().split('T')[0];
+            end = lastDay.toISOString().split('T')[0];
+        } else if (filter === 'this_year') {
+            const firstDay = new Date(now.getFullYear(), 0, 1);
+            const lastDay = new Date(now.getFullYear(), 11, 31);
+            start = firstDay.toISOString().split('T')[0];
+            end = lastDay.toISOString().split('T')[0];
+        } else if (filter === 'all') {
+            start = '';
+            end = '';
+        }
+
+        setStartDate(start);
+        setEndDate(end);
+    };
+
+    const applyAmountQuickFilter = (filter: string) => {
+        let min = '';
+        let max = '';
+
+        if (filter === 'below_1000') {
+            max = '999';
+        } else if (filter === '1000_5000') {
+            min = '1000';
+            max = '5000';
+        } else if (filter === 'above_5000') {
+            min = '5001';
+        }
+
+        setMinAmount(min);
+        setMaxAmount(max);
     };
 
     const renderSortIcon = (key: keyof Donation) => {
@@ -406,7 +471,7 @@ export function AdminDonations() {
                     {/* LEFT COLUMN: Summary & Charts */}
                     <div className="lg:col-span-1 flex flex-col gap-6">
                         {/* Summary Card Row */}
-                        <div className="bg-yellow-100 text-gray-800 p-3 rounded-md text-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3 border border-brand-gold shadow-sm">
+                        <div className="bg-white border border-gray-100 p-3 rounded-md text-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3 border border-brand-gold shadow-sm">
                             <div className="flex items-start gap-2">
                                 <Info className="w-5 h-5 shrink-0 mt-0.5" />
                                 <div>
@@ -419,12 +484,7 @@ export function AdminDonations() {
                                 </div>
                             </div>
                             <div className="flex items-center gap-2">
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    className="bg-white border-brand-gold text-brand-gold hover:bg-yellow-50"
-                                    onClick={fetchStats}
-                                >
+                                <Button variant="outline" size="sm" className="gap-2 shrink-0" onClick={fetchStats}>
                                     Generate Summary
                                 </Button>
                                 <Button variant="outline" className="gap-2 shrink-0" onClick={handlePrintReport} disabled={isExporting}>
@@ -535,6 +595,28 @@ export function AdminDonations() {
                                                 <RechartsTooltip content={(props) => renderCustomTooltip(props, 'status')} />
                                             </PieChart>
                                         </ResponsiveContainer>
+                                        {activeStatus && (
+                                            (() => {
+                                                const entry = statusData.find(d => d.name === activeStatus);
+                                                if (!entry) return null;
+                                                const sum = statusData.reduce((acc, curr) => acc + curr.value, 0);
+                                                const percent = sum > 0 ? ((entry.value / sum) * 100).toFixed(1) : '0.0';
+                                                return (
+                                                    <div className="absolute top-4 right-4 bg-white/95 backdrop-blur-sm border border-gray-200 shadow-md rounded-md p-2.5 text-xs pointer-events-none z-10 animate-in fade-in duration-200">
+                                                        <div className="font-semibold flex items-center gap-1.5">
+                                                            <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: STATUS_COLORS[entry.name] || STATUS_COLORS.Other }} />
+                                                            {entry.name}
+                                                        </div>
+                                                        <div className="mt-1 text-gray-600">
+                                                            Transactions: <span className="font-medium text-gray-900">{entry.value}</span>
+                                                        </div>
+                                                        <div className="text-gray-600">
+                                                            Percentage: <span className="font-medium text-gray-900">{percent}%</span>
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })()
+                                        )}
                                     </div>
                                 </CardContent>
                             </Card>
@@ -574,6 +656,28 @@ export function AdminDonations() {
                                                 <RechartsTooltip content={(props) => renderCustomTooltip(props, 'bank')} />
                                             </PieChart>
                                         </ResponsiveContainer>
+                                        {activeBank && (
+                                            (() => {
+                                                const entry = bankData.find(d => d.name === activeBank);
+                                                if (!entry) return null;
+                                                const sum = bankData.reduce((acc, curr) => acc + curr.value, 0);
+                                                const percent = sum > 0 ? ((entry.value / sum) * 100).toFixed(1) : '0.0';
+                                                return (
+                                                    <div className="absolute top-4 right-4 bg-white/95 backdrop-blur-sm border border-gray-200 shadow-md rounded-md p-2.5 text-xs pointer-events-none z-10 animate-in fade-in duration-200">
+                                                        <div className="font-semibold flex items-center gap-1.5">
+                                                            <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: getBankColor(entry.name) }} />
+                                                            {entry.name}
+                                                        </div>
+                                                        <div className="mt-1 text-gray-600">
+                                                            Transactions: <span className="font-medium text-gray-900">{entry.value}</span>
+                                                        </div>
+                                                        <div className="text-gray-600">
+                                                            Percentage: <span className="font-medium text-gray-900">{percent}%</span>
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })()
+                                        )}
                                     </div>
                                 </CardContent>
                             </Card>
@@ -703,9 +807,9 @@ export function AdminDonations() {
                     <Tabs value={activeTab} onValueChange={onTabChange} className="w-full">
                         <TabsList className="mb-2">
                             <TabsTrigger value="All" className="min-w-[100px]">All</TabsTrigger>
-                            <TabsTrigger value="Completed" className="min-w-[100px]">Completed</TabsTrigger>
-                            <TabsTrigger value="Processing" className="min-w-[100px]">Processing</TabsTrigger>
-                            <TabsTrigger value="Failed" className="min-w-[100px]">Failed</TabsTrigger>
+                            {dbStatuses.map((statusName) => (
+                                <TabsTrigger key={statusName} value={statusName} className="min-w-[100px]">{statusName}</TabsTrigger>
+                            ))}
                         </TabsList>
                     </Tabs>
 
@@ -719,11 +823,90 @@ export function AdminDonations() {
                             )}
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                            <div className="flex items-center justify-between lg:col-span-2 gap-2">
+                                <span className="text-sm text-gray-500 shrink-0">Date:</span>
+                                <Select value={datePreset} onValueChange={(val: any) => {
+                                    setDatePreset(val);
+                                    if (val !== 'custom') applyQuickFilter(val);
+                                }}>
+                                    <SelectTrigger className="w-[140px] h-10 bg-white text-gray-700 border border-gray-300 shrink-0">
+                                        <SelectValue placeholder="Preset Dates" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="all">All Time</SelectItem>
+                                        <SelectItem value="this_week">This Week</SelectItem>
+                                        <SelectItem value="this_month">This Month</SelectItem>
+                                        <SelectItem value="this_year">This Year</SelectItem>
+                                        <SelectItem value="custom">Custom</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                                <div className="flex items-center gap-2 flex-1">
+                                    <span className={`text-xs shrink-0 ${datePreset === 'custom' ? 'text-gray-500' : 'text-gray-300'}`}>From</span>
+                                    <Input
+                                        type="date"
+                                        className="h-10 w-full bg-white px-2 text-sm text-gray-700 border border-gray-300 disabled:bg-gray-100 disabled:text-gray-400"
+                                        value={startDate}
+                                        disabled={datePreset !== 'custom'}
+                                        onChange={(e) => setStartDate(e.target.value)}
+                                        onKeyDown={(e) => { if (e.key === 'Enter') handleApplyFilters(); }}
+                                    />
+                                    <span className={`text-xs shrink-0 ${datePreset === 'custom' ? 'text-gray-500' : 'text-gray-300'}`}>To</span>
+                                    <Input
+                                        type="date"
+                                        className="h-10 w-full bg-white px-2 text-sm text-gray-700 border border-gray-300 disabled:bg-gray-100 disabled:text-gray-400"
+                                        value={endDate}
+                                        disabled={datePreset !== 'custom'}
+                                        onChange={(e) => setEndDate(e.target.value)}
+                                        onKeyDown={(e) => { if (e.key === 'Enter') handleApplyFilters(); }}
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="flex items-center justify-between lg:col-span-2 gap-2">
+                                <span className="text-sm text-gray-500 shrink-0">Amount:</span>
+                                <Select value={amountPreset} onValueChange={(val: string) => {
+                                    setAmountPreset(val);
+                                    if (val !== 'custom') applyAmountQuickFilter(val);
+                                }}>
+                                    <SelectTrigger className="w-[140px] h-10 bg-white text-gray-700 border border-gray-300 shrink-0">
+                                        <SelectValue placeholder="Preset Amount" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="all">All</SelectItem>
+                                        <SelectItem value="below_1000">Below 1000</SelectItem>
+                                        <SelectItem value="1000_5000">1000 - 5000</SelectItem>
+                                        <SelectItem value="above_5000">5000 Above</SelectItem>
+                                        <SelectItem value="custom">Custom</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                                <div className="flex items-center gap-2 flex-1">
+                                    <Input
+                                        type="number"
+                                        placeholder="Min ₱"
+                                        className="h-10 w-full bg-white px-2 text-sm border border-gray-300 disabled:bg-gray-100 disabled:text-gray-400"
+                                        value={minAmount}
+                                        disabled={amountPreset !== 'custom'}
+                                        onChange={(e) => setMinAmount(e.target.value)}
+                                        onKeyDown={(e) => { if (e.key === 'Enter') handleApplyFilters(); }}
+                                    />
+                                    <span className={`text-sm shrink-0 ${amountPreset === 'custom' ? 'text-gray-500' : 'text-gray-300'}`}>-</span>
+                                    <Input
+                                        type="number"
+                                        placeholder="Max ₱"
+                                        className="h-10 w-full bg-white px-2 text-sm border border-gray-300 disabled:bg-gray-100 disabled:text-gray-400"
+                                        value={maxAmount}
+                                        disabled={amountPreset !== 'custom'}
+                                        onChange={(e) => setMaxAmount(e.target.value)}
+                                        onKeyDown={(e) => { if (e.key === 'Enter') handleApplyFilters(); }}
+                                    />
+                                </div>
+                            </div>
+
                             <div className="relative flex items-center">
                                 <Search className="absolute left-2.5 h-4 w-4 text-gray-500" />
                                 <Input
                                     placeholder="Search by Donor..."
-                                    className="pl-9 h-10 w-full bg-white"
+                                    className="pl-9 h-10 w-full bg-white border border-gray-300"
                                     value={searchDonor}
                                     onChange={(e) => setSearchDonor(e.target.value)}
                                     onKeyDown={(e) => { if (e.key === 'Enter') handleApplyFilters(); }}
@@ -734,7 +917,7 @@ export function AdminDonations() {
                                 <Search className="absolute left-2.5 h-4 w-4 text-gray-500" />
                                 <Input
                                     placeholder="Search Reference..."
-                                    className="pl-9 h-10 w-full bg-white"
+                                    className="pl-9 h-10 w-full bg-white border border-gray-300"
                                     value={searchRef}
                                     onChange={(e) => setSearchRef(e.target.value)}
                                     onKeyDown={(e) => { if (e.key === 'Enter') handleApplyFilters(); }}
@@ -742,7 +925,7 @@ export function AdminDonations() {
                             </div>
 
                             <Select value={searchBankName} onValueChange={setSearchBankName}>
-                                <SelectTrigger className="h-10 bg-white text-gray-700">
+                                <SelectTrigger className="h-10 bg-white text-gray-700 border border-gray-300">
                                     <SelectValue placeholder="Bank Name" />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -753,47 +936,8 @@ export function AdminDonations() {
                                 </SelectContent>
                             </Select>
 
-                            <div className="flex items-center gap-2">
-                                <Input
-                                    type="number"
-                                    placeholder="Min ₱"
-                                    className="h-10 w-full bg-white"
-                                    value={minAmount}
-                                    onChange={(e) => setMinAmount(e.target.value)}
-                                    onKeyDown={(e) => { if (e.key === 'Enter') handleApplyFilters(); }}
-                                />
-                                <span className="text-sm text-gray-500">-</span>
-                                <Input
-                                    type="number"
-                                    placeholder="Max ₱"
-                                    className="h-10 w-full bg-white"
-                                    value={maxAmount}
-                                    onChange={(e) => setMaxAmount(e.target.value)}
-                                    onKeyDown={(e) => { if (e.key === 'Enter') handleApplyFilters(); }}
-                                />
-                            </div>
-
-                            <div className="flex items-center gap-2 lg:col-span-2">
-                                <span className="text-sm text-gray-500 shrink-0">Date:</span>
-                                <Input
-                                    type="date"
-                                    className="h-10 w-full bg-white px-2 text-sm text-gray-700"
-                                    value={startDate}
-                                    onChange={(e) => setStartDate(e.target.value)}
-                                    onKeyDown={(e) => { if (e.key === 'Enter') handleApplyFilters(); }}
-                                />
-                                <span className="text-sm text-gray-500">-</span>
-                                <Input
-                                    type="date"
-                                    className="h-10 w-full bg-white px-2 text-sm text-gray-700"
-                                    value={endDate}
-                                    onChange={(e) => setEndDate(e.target.value)}
-                                    onKeyDown={(e) => { if (e.key === 'Enter') handleApplyFilters(); }}
-                                />
-                            </div>
-
-                            <div className="flex items-center gap-2 lg:col-span-2 justify-end">
-                                <Button variant="outline" onClick={handleClearFilters} className="w-24">Clear</Button>
+                            <div className="flex items-center gap-2 justify-end">
+                                <Button variant="outline" onClick={handleClearFilters} className="w-24 border border-gray-300">Clear</Button>
                                 <Button className="w-24 bg-brand-primary hover:bg-brand-primary-hover text-white" onClick={handleApplyFilters}>Submit</Button>
                             </div>
                         </div>
