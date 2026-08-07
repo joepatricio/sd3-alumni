@@ -25,6 +25,7 @@ function mapKeysAndOperators(obj, modelName) {
                 } else if (modelName === 'bulletin') {
                     if (key === 'profileId') mappedKey = 'authorId';
                     else if (key === 'contentStatus') mappedKey = 'status';
+                    else if (key === 'bulletinCategory') mappedKey = 'category';
                 } else if (modelName === 'comment' || modelName === 'bulletinLike') {
                     if (key === 'profileId') mappedKey = 'userId';
                 } else if (modelName === 'event') {
@@ -43,6 +44,7 @@ function mapKeysAndOperators(obj, modelName) {
                 else if (mappedKey === 'rsvps') nextModelName = 'userRsvp';
             } else if (modelName === 'bulletin') {
                 if (mappedKey === 'status') nextModelName = 'contentStatus';
+                else if (mappedKey === 'category') nextModelName = 'bulletinCategory';
             } else if (modelName === 'donation') {
                 if (mappedKey === 'status') nextModelName = 'donationStatus';
             }

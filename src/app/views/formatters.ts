@@ -1,3 +1,5 @@
+import { format } from 'date-fns';
+
 export function formatCurrency(value: number): string {
     return new Intl.NumberFormat('en-PH', {
         style: 'currency',
@@ -6,6 +8,34 @@ export function formatCurrency(value: number): string {
         maximumFractionDigits: 2
     }).format(value);
 }
+
+export type DateFormatPreset = 'long' | 'short' | 'full' | 'datetime' | 'iso';
+
+const DATE_FORMAT_PATTERNS: Record<DateFormatPreset, string> = {
+    long: 'MMMM d, yyyy',
+    short: 'MMM d, yyyy',
+    full: 'EEEE, MMMM d, yyyy',
+    datetime: 'MMM d, yyyy, h:mm a',
+    iso: 'yyyy-MM-dd'
+};
+
+export function formatDate(
+    dateInput: Date | string | number | null | undefined,
+    styleOrPattern: DateFormatPreset | string = 'long',
+    fallback: string = 'N/A'
+): string {
+    if (!dateInput) return fallback;
+    const date = dateInput instanceof Date ? dateInput : new Date(dateInput);
+    if (isNaN(date.getTime())) return fallback;
+
+    const pattern =
+        styleOrPattern in DATE_FORMAT_PATTERNS
+            ? DATE_FORMAT_PATTERNS[styleOrPattern as DateFormatPreset]
+            : styleOrPattern;
+
+    return format(date, pattern);
+}
+
 
 export function getStatusColor(statusName: string): string {
     const format = statusName.toLowerCase().trim();
@@ -45,6 +75,16 @@ export function getCategoryColor(category: string): string {
             return 'bg-brand-primary hover:bg-orange-700 text-white';
         case 'virtual':
             return 'bg-teal-600 hover:bg-teal-700 text-white';
+        case 'announcements':
+            return 'bg-blue-600 hover:bg-blue-700 text-white';
+        case 'careers':
+            return 'bg-emerald-600 hover:bg-emerald-700 text-white';
+        case 'success stories':
+            return 'bg-amber-600 hover:bg-amber-700 text-white';
+        case 'donations':
+            return 'bg-rose-600 hover:bg-rose-700 text-white';
+        case 'others':
+            return 'bg-slate-600 hover:bg-slate-700 text-white';
         case 'official':
             return 'bg-brand-primary hover:bg-brand-primary-hover text-white';
         case 'regular':
@@ -73,14 +113,43 @@ export function getBankColor(bankName: string): string {
     if (format.includes('dbp') || format.includes('development bank')) return '#00529C';
     if (format.includes('gcash')) return '#007DF2';
     if (format.includes('maya')) return '#00C25A';
-    
+
     // Fallback colors for banks not specified
     const fallbacks = ['#64748b', '#78716c', '#0f766e', '#0369a1', '#6d28d9', '#be123c', '#c2410c'];
-    
+
     // Generate a consistent pseudo-random color based on the string length and char codes
     let hash = 0;
     for (let i = 0; i < format.length; i++) {
         hash = format.charCodeAt(i) + ((hash << 5) - hash);
     }
     return fallbacks[Math.abs(hash) % fallbacks.length];
+}
+
+const CATEGORY_DEFAULT_IMAGES: Record<string, string> = {
+    reunion: 'https://images.unsplash.com/photo-1511632765486-a01980e01a18?auto=format&fit=crop&w=1200&q=80',
+    workshop: 'https://images.unsplash.com/photo-1531482615713-2afd69097998?auto=format&fit=crop&w=1200&q=80',
+    conference: 'https://images.unsplash.com/photo-1475721027785-f74eccf877e2?auto=format&fit=crop&w=1200&q=80',
+    networking: 'https://localhost:3000/events-networking.jpg',
+    sports: 'https://images.unsplash.com/photo-1461896836934-ffe607ba8211?auto=format&fit=crop&w=1200&q=80',
+    virtual: 'https://images.unsplash.com/photo-1588196749597-9ff075ee6b5b?auto=format&fit=crop&w=1200&q=80',
+};
+
+export function getEventImage(event: any): string {
+    const rawImage = event?.eventImage || event?.image;
+    if (
+        rawImage &&
+        typeof rawImage === 'string' &&
+        rawImage.trim() !== '' &&
+        !rawImage.includes('events-image.jpg')
+    ) {
+        return rawImage;
+    }
+
+    const category = (
+        event?.eventCategory?.eventCategoryName ||
+        event?.category ||
+        ''
+    ).toLowerCase().trim();
+
+    return CATEGORY_DEFAULT_IMAGES[category] || 'https://images.unsplash.com/photo-1511578314322-379afb476865?auto=format&fit=crop&w=1200&q=80';
 }

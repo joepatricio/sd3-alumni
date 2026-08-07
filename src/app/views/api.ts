@@ -125,11 +125,17 @@ export interface BulletinCommentData {
     likesList?: any[];
 }
 
+export interface BulletinCategoryData {
+    id: string;
+    bulletinCategoryName: string;
+}
+
 export interface BulletinData {
     id: string;
     adminId: string;
     authorId: string;
     contentStatusId: string;
+    bulletinCategoryId: string;
     bulletinDate: string;
     reviewDate: string | null;
     title: string;
@@ -139,6 +145,8 @@ export interface BulletinData {
 
     comments?: BulletinCommentData[];
     contentStatus?: ContentStatusData;
+    bulletinCategory?: BulletinCategoryData;
+    category?: BulletinCategoryData | string;
     profile?: ProfileData;
 }
 

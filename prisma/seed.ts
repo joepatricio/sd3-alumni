@@ -2,7 +2,8 @@ import fs from 'fs'
 import path from 'path'
 import { PrismaClient } from "./generated/client";
 import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
-import { randomUUID } from 'crypto';
+
+import { nanoid } from 'nanoid';
 
 const adapter = new PrismaBetterSqlite3({
   url: process.env.DATABASE_URL || "file:./dev.db",
@@ -23,7 +24,7 @@ function assignIds(items: any[], referenceLists: any[][], idField: string) {
   let idIndex = 0;
   return items.map((item: any) => {
     if (item.id) return item;
-    const assignedId = idIndex < idArray.length ? idArray[idIndex++] : randomUUID();
+    const assignedId = idIndex < idArray.length ? idArray[idIndex++] : nanoid(10);
     return { ...item, id: assignedId };
   });
 }
@@ -35,7 +36,35 @@ async function main() {
 
   console.log('Seeding Database...')
 
-  // 1. Lookup Tables
+  // Clear existing database tables in reverse dependency order
+  await prisma.commentLike.deleteMany({});
+  await prisma.bulletinLike.deleteMany({});
+  await prisma.userAchievement.deleteMany({});
+  await prisma.userConnection.deleteMany({});
+  await prisma.userRsvp.deleteMany({});
+  await prisma.comment.deleteMany({});
+  await prisma.record.deleteMany({});
+  await prisma.donation.deleteMany({});
+  await prisma.bulletin.deleteMany({});
+  await prisma.event.deleteMany({});
+  await prisma.userStatistic.deleteMany({});
+  await prisma.userAuth.deleteMany({});
+  await prisma.profile.deleteMany({});
+  await prisma.user.deleteMany({});
+  await prisma.admin.deleteMany({});
+  await prisma.location.deleteMany({});
+  await prisma.notification.deleteMany({});
+  await prisma.notificationType.deleteMany({});
+  await prisma.profileStatus.deleteMany({});
+  await prisma.bulletinCategory.deleteMany({});
+  await prisma.eventCategory.deleteMany({});
+  await prisma.donationStatus.deleteMany({});
+  await prisma.userStatus.deleteMany({});
+  await prisma.contentStatus.deleteMany({});
+  await prisma.eventStatus.deleteMany({});
+  await prisma.connectionStatus.deleteMany({});
+  await prisma.degree.deleteMany({});
+  await prisma.achievement.deleteMany({});
   const degrees = assignIds(db.degrees || [], [db.profiles], 'degreeId');
   for (const degree of degrees) {
     await prisma.degree.create({ data: degree })
@@ -69,6 +98,11 @@ async function main() {
   const eventCategories = assignIds(db.eventCategories || [], [db.events], 'eventCategoryId');
   for (const eventCategory of eventCategories) {
     await prisma.eventCategory.create({ data: eventCategory })
+  }
+
+  const bulletinCategories = assignIds(db.bulletinCategories || [], [db.bulletins], 'bulletinCategoryId');
+  for (const bulletinCategory of bulletinCategories) {
+    await prisma.bulletinCategory.create({ data: bulletinCategory })
   }
 
   const profileStatuses = assignIds(db.profileStatuses || [], [db.users], 'profileStatusId');
@@ -158,13 +192,17 @@ async function main() {
     })
   }
   const bulletins = assignIds(db.bulletins || [], [db.comments, db.bulletinLikes], 'bulletinId');
-  for (const bulletin of bulletins) {
-    const { bulletinDate, reviewDate, userId, adminId, ...rest } = bulletin
+  const defaultCategoryId = bulletinCategories[0]?.id;
+  for (let i = 0; i < bulletins.length; i++) {
+    const bulletin = bulletins[i];
+    const { bulletinDate, reviewDate, userId, adminId, bulletinCategoryId, ...rest } = bulletin;
+    const categoryId = bulletinCategoryId || bulletinCategories[i % bulletinCategories.length]?.id || defaultCategoryId;
     await prisma.bulletin.create({
       data: {
         ...rest,
         adminId: adminId ? (adminIdMap[adminId] || adminId) : null,
         authorId: userId,
+        bulletinCategoryId: categoryId,
         bulletinDate: new Date(bulletinDate),
         reviewDate: reviewDate ? new Date(reviewDate) : null
       }
@@ -174,7 +212,7 @@ async function main() {
   // 5. Relations and Engagements
   const records = assignIds(db.records || [], [db.users], 'recordId');
   for (const record of records) {
-    const { dateCreated, dateExpires, adminId, ...rest } = record
+    const { dateCreated, dateExpires, adminId, recordId, ...rest } = record
     await prisma.record.create({
       data: {
         ...rest,

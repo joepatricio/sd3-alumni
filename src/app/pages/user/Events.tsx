@@ -4,7 +4,7 @@ import { Plus } from 'lucide-react';
 import { CreateEventModal } from '@components/user/CreateEventModal';
 import { Button } from '@components/ui/button';
 import { Link } from 'react-router-dom';
-import { getCategoryColor } from '@/app/views/formatters';
+import { getCategoryColor, formatDate, getEventImage } from '@/app/views/formatters';
 
 import { api, type EventData } from '@/app/views/api';
 import { useAuth } from '@/app/views/auth';
@@ -51,7 +51,7 @@ export function Events() {
                     .map((u: any) => String(u.id));
 
                 if (session?.userId) {
-                    const currentU = allUsers.find((u: any) => String(u.userId) === String(session.userId));
+                    const currentU = allUsers.find((u: any) => String(u.id) === String(session.userId));
                     if (currentU) {
                         setCurrentUserStatus(currentU.userStatus?.statusName || '');
                     }
@@ -75,6 +75,7 @@ export function Events() {
                 if (timeRange === 'Upcoming') {
                     whereClause.eventDate = { gte: now.toISOString() };
                 } else if (timeRange === 'Past') {
+                    whereClause.status = { statusName: { in: ['Concluded', 'Archived'] } };
                     whereClause.eventDate = { lt: now.toISOString() };
                 } else if (timeRange === '7 days') {
                     const next7Days = new Date(now);
@@ -230,7 +231,7 @@ export function Events() {
                                             {/* Image */}
                                             <div className="relative w-full md:w-64 lg:w-80 h-48 md:h-full flex-shrink-0 overflow-hidden">
                                                 <img
-                                                    src={event.eventImage}
+                                                    src={getEventImage(event)}
                                                     alt={event.title}
                                                     className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
                                                 />
@@ -254,7 +255,7 @@ export function Events() {
                                                     <div className="flex flex-wrap gap-4 text-sm text-gray-600">
                                                         <div className="flex items-center gap-2">
                                                             <Calendar className="w-4 h-4 text-brand-primary" />
-                                                            <span>{new Date(event.eventDate).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</span>
+                                                            <span>{formatDate(event.eventDate, 'long')}</span>
                                                         </div>
                                                         <div className="flex items-center gap-2">
                                                             <Clock className="w-4 h-4 text-brand-primary" />

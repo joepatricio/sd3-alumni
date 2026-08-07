@@ -148,13 +148,17 @@ export interface EventData {
 }
 
 interface CreateEventModalProps {
-    trigger: React.ReactNode;
+    trigger?: React.ReactNode;
     initialData?: EventData;
     isAdmin?: boolean;
+    open?: boolean;
+    onOpenChange?: (open: boolean) => void;
 }
 
-export function CreateEventModal({ trigger, initialData, isAdmin }: CreateEventModalProps) {
-    const [open, setOpen] = useState(false);
+export function CreateEventModal({ trigger, initialData, isAdmin, open: externalOpen, onOpenChange: externalOnOpenChange }: CreateEventModalProps) {
+    const [internalOpen, setInternalOpen] = useState(false);
+    const open = externalOpen !== undefined ? externalOpen : internalOpen;
+    const setOpen = externalOnOpenChange || setInternalOpen;
     const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
     // PSGC Dynamic Load States
@@ -181,7 +185,6 @@ export function CreateEventModal({ trigger, initialData, isAdmin }: CreateEventM
     const [programmaticKey, setProgrammaticKey] = useState(0);
 
     const [categories, setCategories] = useState<{ id: string, eventCategoryName: string }[]>([]);
-    const [hydrationStep, setHydrationStep] = useState(0); // 0: idle, 1: region, 2: province, 3: city, 4: barangay, 5: done
 
     useEffect(() => {
         if (open && categories.length === 0) {
@@ -288,13 +291,13 @@ export function CreateEventModal({ trigger, initialData, isAdmin }: CreateEventM
                 title: initialData.title,
                 category: (initialData as any).eventCategory?.eventCategoryName || initialData.category,
                 location: {
-                    region: '',
-                    regionCode: '',
-                    province: '',
-                    provinceCode: '',
-                    cityMunicipality: '',
-                    cityCode: '',
-                    barangay: '',
+                    region: (parsedLocation as any)?.region || '',
+                    regionCode: (parsedLocation as any)?.regionCode || '',
+                    province: (parsedLocation as any)?.province || '',
+                    provinceCode: (parsedLocation as any)?.provinceCode || '',
+                    cityMunicipality: (parsedLocation as any)?.cityMunicipality || '',
+                    cityCode: (parsedLocation as any)?.cityCode || '',
+                    barangay: (parsedLocation as any)?.barangay || '',
                     landmark: (parsedLocation as any)?.landmark || '',
                     street: (parsedLocation as any)?.street || '',
                     lat: (parsedLocation as any)?.lat || 10.2954,
@@ -348,84 +351,175 @@ export function CreateEventModal({ trigger, initialData, isAdmin }: CreateEventM
         }
     }, [initialData, form, open]);
 
-    // Reactive hydration state machine
-    useEffect(() => {
-        if (!open) {
-            if (hydrationStep !== 0) setHydrationStep(0);
-            if (provinces.length > 0) setProvinces([]);
-            if (cities.length > 0) setCities([]);
-            if (barangays.length > 0) setBarangays([]);
-            return;
+    // Robust PSGC location resolver supporting exact codes, digit prefixes, and normalized names
+    const resolvePsgcLocation = (loc: any) => {
+        if (!psgcData || !loc) return null;
+
+        const normalize = (s?: string) =>
+            s ? s.toLowerCase().replace(/city of|city|municipality of|municipality|province of|province|region|the|district/gi, '').trim() : '';
+
+        const digitsOnly = (s?: string) => (s ? s.replace(/[^0-9]/g, '') : '');
+
+        const regDigits = digitsOnly(loc.regionCode);
+        const provDigits = digitsOnly(loc.provinceCode);
+        const cityDigits = digitsOnly(loc.cityCode);
+
+        // 1. Resolve Region
+        let matchedRegion = psgcData.psgcRegions.find((r: any) => {
+            if (loc.regionCode && r.code === loc.regionCode) return true;
+            if (regDigits && digitsOnly(r.code).startsWith(regDigits)) return true;
+            if (loc.region && normalize(r.name) === normalize(loc.region)) return true;
+            return false;
+        });
+
+        // 2. Resolve Province
+        let matchedProvince = psgcData.psgcProvinces.find((p: any) => {
+            if (loc.provinceCode && p.code === loc.provinceCode) return true;
+            if (provDigits && digitsOnly(p.code).startsWith(provDigits)) return true;
+            if (loc.province && normalize(p.name) === normalize(loc.province)) return true;
+            return false;
+        });
+
+        if (matchedProvince && !matchedRegion) {
+            matchedRegion = psgcData.psgcRegions.find((r: any) => r.code === matchedProvince.regionCode);
         }
 
-        if (initialData && open && psgcData && hydrationStep === 0) {
-            setHydrationStep(1); // Start hydration
-            return;
-        }
+        // 3. Resolve City
+        const candidateCities = matchedProvince
+            ? psgcData.psgcCities.filter((c: any) => c.provinceCode === matchedProvince.code)
+            : matchedRegion
+            ? psgcData.psgcCities.filter((c: any) => c.provinceCode === matchedRegion.code)
+            : psgcData.psgcCities;
 
-        if (hydrationStep === 0 || hydrationStep === 5) return;
+        let matchedCity = candidateCities.find((c: any) => {
+            if (loc.cityCode && c.code === loc.cityCode) return true;
+            if (cityDigits && digitsOnly(c.code).startsWith(cityDigits)) return true;
+            if (loc.cityMunicipality && normalize(c.name) === normalize(loc.cityMunicipality)) return true;
+            return false;
+        });
 
-        let parsedLocation = initialData?.location;
-        if (typeof parsedLocation === 'string') {
-            try {
-                const parsed = JSON.parse(parsedLocation);
-                if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
-                    parsedLocation = parsed;
-                }
-            } catch(e) {}
-        }
-        const loc = (typeof parsedLocation === 'object' && parsedLocation) ? (parsedLocation as any) : null;
-        if (!loc) {
-            setHydrationStep(5);
-            return;
-        }
-
-        if (hydrationStep === 1 && regions.length > 0) {
-            form.setValue('location.regionCode', loc.regionCode || '');
-            form.setValue('location.region', loc.region || '');
-
-            const provs = psgcData.psgcProvinces.filter((p: any) => p.regionCode === loc.regionCode);
-            if (provs.length > 0) {
-                setProvinces(provs.sort((a: any, b: any) => a.name.localeCompare(b.name)));
-                setHydrationStep(2);
-            } else {
-                const fallbackCities = psgcData.psgcCities.filter((c: any) => c.provinceCode === loc.regionCode);
-                setCities(fallbackCities.sort((a: any, b: any) => a.name.localeCompare(b.name)));
-                setHydrationStep(3); // Skip province
+        if (matchedCity) {
+            if (!matchedProvince && matchedCity.provinceCode) {
+                matchedProvince = psgcData.psgcProvinces.find((p: any) => p.code === matchedCity.provinceCode) || null;
+            }
+            if (!matchedRegion) {
+                const rCode = matchedProvince ? matchedProvince.regionCode : matchedCity.provinceCode;
+                matchedRegion = psgcData.psgcRegions.find((r: any) => r.code === rCode) || null;
             }
         }
-        else if (hydrationStep === 2 && provinces.length > 0) {
-            form.setValue('location.provinceCode', loc.provinceCode || '');
-            form.setValue('location.province', loc.province || '');
 
-            const matchedCities = psgcData.psgcCities.filter((c: any) => c.provinceCode === loc.provinceCode);
-            setCities(matchedCities.sort((a: any, b: any) => a.name.localeCompare(b.name)));
-            setHydrationStep(3);
+        // 4. Resolve Barangay
+        let matchedBarangay: any = null;
+        if (matchedCity && loc.barangay) {
+            const candidateBrgys = psgcData.psgcBarangays.filter((b: any) => b.cityCode === matchedCity.code);
+            const normBrgy = normalize(loc.barangay);
+            matchedBarangay = candidateBrgys.find((b: any) => {
+                const nB = normalize(b.name);
+                return nB === normBrgy || nB.includes(normBrgy) || normBrgy.includes(nB);
+            });
         }
-        else if (hydrationStep === 3 && cities.length > 0) {
-            form.setValue('location.cityCode', loc.cityCode || '');
-            form.setValue('location.cityMunicipality', loc.cityMunicipality || '');
 
-            const matchedBrgys = psgcData.psgcBarangays.filter((b: any) => b.cityCode === loc.cityCode);
-            setBarangays(matchedBrgys.sort((a: any, b: any) => a.name.localeCompare(b.name)));
-            setHydrationStep(4);
-        }
-        else if (hydrationStep === 4 && barangays.length > 0) {
-            form.setValue('location.barangay', loc.barangay || '');
-            if (loc.lat && loc.lng) {
-                setMapCenter([loc.lat, loc.lng]);
-            }
-            setHydrationStep(5);
-            // Trigger key increment to force final remount of selects with options fully populated
-            setTimeout(() => setProgrammaticKey(prev => prev + 1), 100);
-        }
-    }, [initialData, open, psgcData, regions, provinces, cities, barangays, hydrationStep]);
+        return {
+            regionCode: matchedRegion?.code || loc.regionCode || '',
+            region: matchedRegion?.name || loc.region || '',
+            provinceCode: matchedProvince?.code || loc.provinceCode || '',
+            province: matchedProvince?.name || loc.province || '',
+            cityCode: matchedCity?.code || loc.cityCode || '',
+            cityMunicipality: matchedCity?.name || loc.cityMunicipality || '',
+            barangay: matchedBarangay?.name || loc.barangay || '',
+            landmark: loc.landmark || (loc as any).address || '',
+            street: loc.street || '',
+            lat: loc.lat,
+            lng: loc.lng
+        };
+    };
 
-    // Fetch regions when open and psgcData is loaded
+    // Synchronously populate region, province, city, and barangay options and set form location values
+    const applyLocationData = (rawLoc: any) => {
+        if (!psgcData || !rawLoc) return;
+
+        const resolved = resolvePsgcLocation(rawLoc);
+        if (!resolved) return;
+
+        const sortedRegions = [...psgcData.psgcRegions].sort((a: any, b: any) => a.name.localeCompare(b.name));
+        setRegions(sortedRegions);
+
+        let provs: any[] = [];
+        let citiesList: any[] = [];
+        let brgyList: any[] = [];
+
+        if (resolved.regionCode) {
+            provs = psgcData.psgcProvinces
+                .filter((p: any) => p.regionCode === resolved.regionCode)
+                .sort((a: any, b: any) => a.name.localeCompare(b.name));
+        }
+
+        if (resolved.provinceCode) {
+            citiesList = psgcData.psgcCities
+                .filter((c: any) => c.provinceCode === resolved.provinceCode)
+                .sort((a: any, b: any) => a.name.localeCompare(b.name));
+        } else if (resolved.regionCode && provs.length === 0) {
+            citiesList = psgcData.psgcCities
+                .filter((c: any) => c.provinceCode === resolved.regionCode)
+                .sort((a: any, b: any) => a.name.localeCompare(b.name));
+        }
+
+        if (resolved.cityCode) {
+            brgyList = psgcData.psgcBarangays
+                .filter((b: any) => b.cityCode === resolved.cityCode)
+                .sort((a: any, b: any) => a.name.localeCompare(b.name));
+        }
+
+        setProvinces(provs);
+        setCities(citiesList);
+        setBarangays(brgyList);
+
+        form.setValue('location.regionCode', resolved.regionCode);
+        form.setValue('location.region', resolved.region);
+        form.setValue('location.provinceCode', resolved.provinceCode);
+        form.setValue('location.province', resolved.province);
+        form.setValue('location.cityCode', resolved.cityCode);
+        form.setValue('location.cityMunicipality', resolved.cityMunicipality);
+        form.setValue('location.barangay', resolved.barangay);
+        if (resolved.landmark) {
+            form.setValue('location.landmark', resolved.landmark);
+        }
+        if (resolved.street) {
+            form.setValue('location.street', resolved.street);
+        }
+
+        if (resolved.lat && resolved.lng) {
+            form.setValue('location.lat', resolved.lat);
+            form.setValue('location.lng', resolved.lng);
+            setMapCenter([resolved.lat, resolved.lng]);
+            setMapZoom(15);
+        }
+
+        setProgrammaticKey(prev => prev + 1);
+    };
+
+    // Populate regions and hydrate location data when modal opens and psgcData is ready
     useEffect(() => {
         if (!open || !psgcData) return;
-        setRegions([...psgcData.psgcRegions].sort((a: any, b: any) => a.name.localeCompare(b.name)));
-    }, [open, psgcData]);
+
+        const sortedRegions = [...psgcData.psgcRegions].sort((a: any, b: any) => a.name.localeCompare(b.name));
+        setRegions(sortedRegions);
+
+        if (initialData) {
+            let parsedLocation = initialData.location;
+            if (typeof parsedLocation === 'string') {
+                try {
+                    const parsed = JSON.parse(parsedLocation);
+                    if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+                        parsedLocation = parsed;
+                    }
+                } catch (e) {}
+            }
+            if (parsedLocation && typeof parsedLocation === 'object') {
+                applyLocationData(parsedLocation as any);
+            }
+        }
+    }, [open, psgcData, initialData]);
 
     // Fetch provinces when region changes
     const handleRegionChange = (regionCode: string) => {
@@ -444,12 +538,10 @@ export function CreateEventModal({ trigger, initialData, isAdmin }: CreateEventM
 
         if (!regionCode) return;
 
-        // Some regions might not have provinces (like NCR), they go straight to cities
         const provs = psgcData.psgcProvinces.filter((p: any) => p.regionCode === regionCode);
         if (provs.length > 0) {
             setProvinces(provs.sort((a: any, b: any) => a.name.localeCompare(b.name)));
         } else {
-            // Fetch cities directly if no provinces
             const fallbackCities = psgcData.psgcCities.filter((c: any) => c.provinceCode === regionCode);
             setCities(fallbackCities.sort((a: any, b: any) => a.name.localeCompare(b.name)));
         }
@@ -548,52 +640,34 @@ export function CreateEventModal({ trigger, initialData, isAdmin }: CreateEventM
             }
         }
 
-        if (matchedRegion) {
-            handleRegionChange(matchedRegion.code);
-            if (matchedProvince) {
-                setTimeout(() => {
-                    handleProvinceChange(matchedProvince.code);
-                    if (matchedCity) {
-                        setTimeout(() => {
-                            handleCityChange(matchedCity.code);
-                            const possibleBarangays = psgcData.psgcBarangays.filter(b => b.cityCode === matchedCity.code);
-                            const brgySearchTerms = [address.suburb, address.village, address.neighbourhood, address.quarter, address.residential].filter(Boolean);
-                            for (const term of brgySearchTerms) {
-                                const nTerm = normalize(term);
-                                matchedBarangay = possibleBarangays.find(b => {
-                                    const bName = normalize(b.name);
-                                    return bName === nTerm || bName.includes(nTerm) || nTerm.includes(bName);
-                                });
-                                if (matchedBarangay) break;
-                            }
-                            if (matchedBarangay) {
-                                setTimeout(() => form.setValue('location.barangay', matchedBarangay.name), 50);
-                            }
-                        }, 50);
-                    }
-                }, 50);
-            } else if (matchedCity) {
-                setTimeout(() => {
-                    handleCityChange(matchedCity.code);
-                    const possibleBarangays = psgcData.psgcBarangays.filter(b => b.cityCode === matchedCity.code);
-                    const brgySearchTerms = [address.suburb, address.village, address.neighbourhood, address.quarter, address.residential].filter(Boolean);
-                    for (const term of brgySearchTerms) {
-                        const nTerm = normalize(term);
-                        matchedBarangay = possibleBarangays.find(b => {
-                            const bName = normalize(b.name);
-                            return bName === nTerm || bName.includes(nTerm) || nTerm.includes(bName);
-                        });
-                        if (matchedBarangay) break;
-                    }
-                    if (matchedBarangay) {
-                        setTimeout(() => form.setValue('location.barangay', matchedBarangay.name), 50);
-                    }
-                }, 50);
+        if (matchedCity) {
+            const possibleBarangays = psgcData.psgcBarangays.filter(b => b.cityCode === matchedCity.code);
+            const brgySearchTerms = [address.suburb, address.village, address.neighbourhood, address.quarter, address.residential].filter(Boolean);
+            for (const term of brgySearchTerms) {
+                const nTerm = normalize(term);
+                matchedBarangay = possibleBarangays.find(b => {
+                    const bName = normalize(b.name);
+                    return bName === nTerm || bName.includes(nTerm) || nTerm.includes(bName);
+                });
+                if (matchedBarangay) break;
             }
         }
 
-        // Force react hooks selectors to update their views
-        setTimeout(() => setProgrammaticKey(prev => prev + 1), 200);
+        if (matchedRegion) {
+            const landmark = address.amenity || address.name || address.building || '';
+            const street = address.road || address.neighbourhood || address.suburb || '';
+            applyLocationData({
+                regionCode: matchedRegion.code,
+                region: matchedRegion.name,
+                provinceCode: matchedProvince?.code || '',
+                province: matchedProvince?.name || '',
+                cityCode: matchedCity?.code || '',
+                cityMunicipality: matchedCity?.name || '',
+                barangay: matchedBarangay?.name || '',
+                landmark: landmark || undefined,
+                street: street || undefined
+            });
+        }
     };
 
 
@@ -664,6 +738,7 @@ export function CreateEventModal({ trigger, initialData, isAdmin }: CreateEventM
                         form.setValue('location.lat', newLat);
                         form.setValue('location.lng', newLng);
                         setMapCenter([newLat, newLng]);
+                        setMapZoom(15);
                     }
                 } else {
                     toast.info("No specific landmark found at this pin.");
@@ -687,10 +762,12 @@ export function CreateEventModal({ trigger, initialData, isAdmin }: CreateEventM
         }, [mapCenter, mapZoom, map]);
 
         useEffect(() => {
-            map.on('dblclick', (e) => {
+            map.on('click', (e) => {
                 const { lat, lng } = e.latlng;
                 form.setValue('location.lat', lat);
                 form.setValue('location.lng', lng);
+                setMapCenter([lat, lng]);
+                setMapZoom(15);
             });
 
             return () => {
@@ -731,6 +808,7 @@ export function CreateEventModal({ trigger, initialData, isAdmin }: CreateEventM
         // Prisma allows nested create via relation: `location: { create: { ... } }` or just sending locationId. 
         // For simplicity and since we don't have the exact backend mapping for nested creations without seeing it,
         // we'll format the values exactly as they are in the schema and let the backend handle it, or send it directly.
+        const finalImage = values.image || previewUrl;
         const payload: any = {
             title: values.title,
             description: values.description,
@@ -739,7 +817,8 @@ export function CreateEventModal({ trigger, initialData, isAdmin }: CreateEventM
             endTime,
             modality: values.modality,
             eventCategoryId: values.category,
-            eventImage: previewUrl,
+            eventImage: finalImage,
+            image: finalImage,
             // the generic backend might not support nested create dynamically unless defined.
             // But we will send the location nested for now. 
             // In a real app we'd create the location first or have the backend handle it.
@@ -764,14 +843,15 @@ export function CreateEventModal({ trigger, initialData, isAdmin }: CreateEventM
 
         try {
             const isEditMode = !!initialData;
+            const endpoint = isAdmin ? `/admin/events` : `/events`;
+            const token = sessionStorage.getItem('adminToken') || sessionStorage.getItem('token');
+            const headers = token ? { Authorization: `Bearer ${token}` } : undefined;
+
             if (isEditMode && initialData?.id) {
-                await api.patch(`/admin/events/${initialData.id}`, payload, {
-                    headers: { Authorization: `Bearer ${sessionStorage.getItem('adminToken') || sessionStorage.getItem('token')}` }
-                });
+                const patchEndpoint = isAdmin ? `/admin/events/${initialData.id}` : `/events/${initialData.id}`;
+                await api.patch(patchEndpoint, payload, { headers });
             } else {
-                await api.post(`/admin/events`, payload, {
-                    headers: { Authorization: `Bearer ${sessionStorage.getItem('adminToken') || sessionStorage.getItem('token')}` }
-                });
+                await api.post(endpoint, payload, { headers });
             }
 
             const isPending = !isAdmin && isEditMode;

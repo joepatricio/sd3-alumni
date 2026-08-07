@@ -5,13 +5,13 @@ import { Badge } from '@components/ui/badge';
 import { Tabs, TabsList, TabsTrigger } from '@components/ui/tabs';
 import { Input } from '@components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@components/ui/select';
-import { formatCurrency, getBankColor } from '@/app/views/formatters';
+import { formatCurrency, getBankColor, formatDate } from '@/app/views/formatters';
 import { Printer, Download, Search, ArrowUp, ArrowDown, ArrowUpDown, ChevronLeft, ChevronRight, Loader2, Info, Mail, MapPin, GraduationCap, Briefcase } from 'lucide-react';
 import { api, type Donation } from '@/app/views/api';
-import { format } from 'date-fns';
 import { PieChart, Pie, Cell, Tooltip as RechartsTooltip, ResponsiveContainer } from 'recharts';
 import { Link } from 'react-router-dom';
 import { toPng } from 'html-to-image';
+import { LazyImage } from '@/app/components/user/LazyImage';
 
 const STATUS_COLORS: Record<string, string> = {
     Completed: '#1a5f3f', // Green
@@ -255,7 +255,7 @@ export function AdminDonations() {
 
             const headers = ['Date', 'Donor', 'Amount', 'Status', 'Bank Name', 'Reference'];
             const csvContent = data.map((d: any) => {
-                const date = format(new Date(d.donationDate), 'MMM dd, yyyy');
+                const date = formatDate(d.donationDate, 'short');
                 const donor = !d.user?.profile?.userName ? 'Anonymous' : d.user.profile.userName;
                 const status = d.donationStatus?.statusName || 'Unknown';
                 return `"${date}","${donor}","${d.donationAmount}","${status}","${d.bankName || 'N/A'}","${d.donationReference || ''}"`;
@@ -340,8 +340,8 @@ export function AdminDonations() {
 
                 const mapped = data.map((d: any) => ({
                     id: d.id,
-                    date: format(new Date(d.donationDate), 'MMM dd, yyyy'),
-                    donor: d.donationAnonymous || !d.user?.profile?.userName ? 'Anonymous' : d.user.profile.userName,
+                    date: formatDate(d.donationDate, 'short'),
+                    donor: !d.userId ? 'Anonymous' : d.user?.profile?.userName,
                     amount: formatCurrency(d.donationAmount),
                     status: d.donationStatus?.statusName || 'Unknown',
                     rawAmount: d.donationAmount,
@@ -397,7 +397,7 @@ export function AdminDonations() {
 
     const onTabChange = (val: string) => {
         setActiveTab(val);
-        setCurrentPage(1);
+        handleApplyFilters();
     };
 
     const handleStatusLegendClick = (e: any) => {
@@ -436,7 +436,7 @@ export function AdminDonations() {
                 backgroundColor: '#f9fafb'
             });
             const link = document.createElement('a');
-            link.download = `Donations_Report_${format(new Date(), 'yyyy-MM-dd')}.png`;
+            link.download = `Donations_Report_${formatDate(new Date(), 'iso')}.png`;
             link.href = dataUrl;
             link.click();
         } catch (error) {
@@ -581,7 +581,7 @@ export function AdminDonations() {
                                     <div className="w-full sm:w-2/3 h-full p-4 relative transform-gpu will-change-transform" style={{ contain: 'paint' }}>
                                         <ResponsiveContainer width="100%" height="100%">
                                             <PieChart>
-                                                <Pie data={statusData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={115} startAngle={90} endAngle={-270}>
+                                                <Pie isAnimationActive={false} data={statusData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={115} startAngle={90} endAngle={-270}>
                                                     {statusData.map((entry, index) => (
                                                         <Cell
                                                             key={`cell-${index}`}
@@ -642,7 +642,7 @@ export function AdminDonations() {
                                     <div className="w-full sm:w-2/3 h-full p-4 relative transform-gpu will-change-transform" style={{ contain: 'paint' }}>
                                         <ResponsiveContainer width="100%" height="100%">
                                             <PieChart>
-                                                <Pie data={bankData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={115} startAngle={90} endAngle={-270}>
+                                                <Pie isAnimationActive={false} data={bankData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={115} startAngle={90} endAngle={-270}>
                                                     {bankData.map((entry, index) => (
                                                         <Cell
                                                             key={`cell-${index}`}
@@ -712,7 +712,7 @@ export function AdminDonations() {
                                             >
                                                 <div className="w-26 h-26 rounded-md overflow-hidden border border-gray-200 shadow-sm transition group-hover:ring-2 group-hover:ring-brand-primary/30">
                                                     {d.profileImage ? (
-                                                        <img
+                                                        <LazyImage
                                                             src={d.profileImage}
                                                             alt={d.donor}
                                                             className="w-full h-full object-cover"

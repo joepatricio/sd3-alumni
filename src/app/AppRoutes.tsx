@@ -25,11 +25,28 @@ const Connections = lazy(() => import('@pages/user/Connections').then(m => ({ de
 const UserEvents = lazy(() => import('@/assets/UserEvents').then(m => ({ default: m.UserEvents })));
 const Achievements = lazy(() => import('@pages/user/Achievements').then(m => ({ default: m.Achievements })));
 const AlumniDirectory = lazy(() => import('@pages/user/AlumniDirectory').then(m => ({ default: m.AlumniDirectory })));
-const AdminDashboard = lazy(() => import('@pages/admin/AdminDashboard').then(m => ({ default: m.AdminDashboard })));
-const AdminUsers = lazy(() => import('@pages/admin/AdminUsers').then(m => ({ default: m.AdminUsers })));
-const AdminEvents = lazy(() => import('@pages/admin/AdminEvents').then(m => ({ default: m.AdminEvents })));
-const AdminBulletins = lazy(() => import('@pages/admin/AdminBulletins').then(m => ({ default: m.AdminBulletins })));
-const AdminDonations = lazy(() => import('@pages/admin/AdminDonations').then(m => ({ default: m.AdminDonations })));
+
+export const adminLoaders: Record<string, () => Promise<any>> = {
+    '/admin': () => import('@pages/admin/AdminDashboard').then(m => ({ default: m.AdminDashboard })),
+    '/admin/users': () => import('@pages/admin/AdminUsers').then(m => ({ default: m.AdminUsers })),
+    '/admin/events': () => import('@pages/admin/AdminEvents').then(m => ({ default: m.AdminEvents })),
+    '/admin/bulletins': () => import('@pages/admin/AdminBulletins').then(m => ({ default: m.AdminBulletins })),
+    '/admin/donations': () => import('@pages/admin/AdminDonations').then(m => ({ default: m.AdminDonations }))
+};
+
+export const prefetchAdminRoutes = () => {
+    Object.values(adminLoaders).forEach(loader => {
+        // Fire off import requests asynchronously, catching any load errors
+        loader().catch(err => console.warn('Failed to prefetch admin route', err));
+    });
+};
+
+const AdminDashboard = lazy(adminLoaders['/admin']);
+const AdminUsers = lazy(adminLoaders['/admin/users']);
+const AdminEvents = lazy(adminLoaders['/admin/events']);
+const AdminBulletins = lazy(adminLoaders['/admin/bulletins']);
+const AdminDonations = lazy(adminLoaders['/admin/donations']);
+const AdminPreviewWrapper = lazy(() => import('@pages/admin/AdminPreviewWrapper').then(m => ({ default: m.AdminPreviewWrapper })));
 const AdminLogin = lazy(() => import('@pages/admin/AdminLogin').then(m => ({ default: m.AdminLogin })));
 
 const withSuspense = (Component: ComponentType) => (
@@ -81,6 +98,7 @@ export default function AppRoutes() {
                 <Route path="events" element={withSuspense(AdminEvents)} />
                 <Route path="bulletins" element={withSuspense(AdminBulletins)} />
                 <Route path="donations" element={withSuspense(AdminDonations)} />
+                <Route path="preview/:type/:id" element={withSuspense(AdminPreviewWrapper)} />
             </Route>
             <Route path="/admin/login" element={withSuspense(AdminLogin)} />
         </Routes>

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Calendar, MapPin, Users, Video, Loader2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { getCategoryColor } from '@/app/views/formatters';
+import { getCategoryColor, formatDate, getEventImage } from '@/app/views/formatters';
 import { LazyImage } from '@components/user/LazyImage';
 import { api, type EventData } from '@/app/views/api';
 
@@ -100,7 +100,7 @@ export function EventsFeed() {
               >
                 <div className="relative h-48 overflow-hidden">
                   <LazyImage
-                    src={event.eventImage}
+                    src={getEventImage(event)}
                     alt={event.title}
                     className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
                   />
@@ -113,7 +113,7 @@ export function EventsFeed() {
                   <div className="space-y-2 text-gray-600">
                     <div className="flex items-center gap-2">
                       <Calendar className="w-4 h-4" />
-                      <span className="text-sm">{new Date(event.eventDate).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</span>
+                      <span className="text-sm">{formatDate(event.eventDate, 'long')}</span>
                     </div>
                     <div className="flex items-center gap-2">
                       {categoryName === 'Virtual' ? (

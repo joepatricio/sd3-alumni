@@ -33,6 +33,8 @@ interface Degree {
     degreeAbbr: string;
 }
 
+// College of Engineering was established in 1961 and engineering used to be a 5-year course
+const EARLIEST_BATCH = 1966;
 const registerSchema = z.object({
     fullName: z.string().min(2, {
         message: "Full name must be at least 2 characters.",
@@ -47,7 +49,7 @@ const registerSchema = z.object({
     degreeProgram: z.string().min(1, {
         message: "Please select a degree program.",
     }),
-    batch: z.coerce.number().min(1950).max(new Date().getFullYear() + 5, {
+    batch: z.coerce.number().min(EARLIEST_BATCH).max(new Date().getFullYear() + 5, {
         message: "Please enter a valid batch year.",
     }),
     terms: z.boolean().refine(val => val === true, {

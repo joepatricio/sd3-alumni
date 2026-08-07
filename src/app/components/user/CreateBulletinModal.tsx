@@ -6,6 +6,7 @@ import { Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { ImageUpload } from './ImageUpload';
 import { api } from '@/app/views/api';
+import { useAuth } from '@/app/views/auth';
 
 import { Button } from '@components/ui/button';
 import {
@@ -27,10 +28,20 @@ import {
 } from '@components/ui/form';
 import { Input } from '@components/ui/input';
 import { Textarea } from '@components/ui/textarea';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@components/ui/select';
 
 const formSchema = z.object({
     title: z.string().min(2, {
         message: 'Title must be at least 2 characters.',
+    }),
+    category: z.string().min(1, {
+        message: 'Please select a bulletin category.',
     }),
     content: z.string().min(10, {
         message: 'Content must be at least 10 characters.',
@@ -42,36 +53,82 @@ const formSchema = z.object({
 export interface BulletinData {
     id?: string;
     title: string;
-    bulletinDate: string;
+    bulletinDate?: string;
     content: string;
     bulletinImage?: string | File | null;
     readTimeMinutes?: number;
+    category?: string;
+    bulletinCategory?: { id?: string; bulletinCategoryName: string } | string;
+    bulletinCategoryId?: string;
 }
 
 interface CreateBulletinModalProps {
-    trigger: React.ReactNode;
+    trigger?: React.ReactNode;
     initialData?: BulletinData;
     isAdmin?: boolean;
+    open?: boolean;
+    onOpenChange?: (open: boolean) => void;
 }
 
-export function CreateBulletinModal({ trigger, initialData, isAdmin = false }: CreateBulletinModalProps) {
-    const [open, setOpen] = useState(false);
+const DEFAULT_BULLETIN_CATEGORIES = [
+    { id: '1', bulletinCategoryName: 'General News & Announcements' },
+    { id: '2', bulletinCategoryName: 'Career & Networking' },
+    { id: '3', bulletinCategoryName: 'Alumni Spotlight & Stories' },
+    { id: '4', bulletinCategoryName: 'Donations & Giving' },
+    { id: '5', bulletinCategoryName: 'Others' }
+];
+
+export function CreateBulletinModal({ trigger, initialData, isAdmin = false, open: externalOpen, onOpenChange: externalOnOpenChange }: CreateBulletinModalProps) {
+    const { session } = useAuth();
+    const [internalOpen, setInternalOpen] = useState(false);
+    const open = externalOpen !== undefined ? externalOpen : internalOpen;
+    const setOpen = externalOnOpenChange || setInternalOpen;
     const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+    const [categories, setCategories] = useState<{ id: string; bulletinCategoryName: string }[]>([]);
+
+    useEffect(() => {
+        if (open && categories.length === 0) {
+            api.get('/bulletinCategories')
+                .then(res => {
+                    const fetched = Array.isArray(res.data) ? res.data : (res.data?.data || []);
+                    if (fetched.length > 0) {
+                        setCategories(fetched);
+                    }
+                })
+                .catch(err => console.error('Failed to fetch bulletin categories:', err));
+        }
+    }, [open, categories.length]);
 
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
         defaultValues: {
             title: '',
+            category: '',
             content: '',
             readTimeMinutes: 5,
         },
     });
+
+    const getInitialCategory = (data?: BulletinData) => {
+        if (!data) return '';
+        if (data.category && typeof data.category === 'string') return data.category;
+        if (data.bulletinCategory) {
+            if (typeof data.bulletinCategory === 'object' && data.bulletinCategory.bulletinCategoryName) {
+                return data.bulletinCategory.bulletinCategoryName;
+            }
+            if (typeof data.bulletinCategory === 'string') {
+                return data.bulletinCategory;
+            }
+        }
+        return '';
+    };
 
     // Effect to update form values when initialData changes or modal opens
     useEffect(() => {
         if (initialData && open) {
             form.reset({
                 title: initialData.title,
+                category: getInitialCategory(initialData),
                 content: initialData.content,
                 readTimeMinutes: initialData.readTimeMinutes || 5,
                 bulletinImage: initialData.bulletinImage,
@@ -84,6 +141,7 @@ export function CreateBulletinModal({ trigger, initialData, isAdmin = false }: C
         } else if (!initialData && open) {
             form.reset({
                 title: '',
+                category: '',
                 content: '',
                 readTimeMinutes: 5,
                 bulletinImage: undefined,
@@ -98,28 +156,28 @@ export function CreateBulletinModal({ trigger, initialData, isAdmin = false }: C
 
         if (!initialData) {
             payload.bulletinDate = new Date().toISOString();
+            if (session?.userId) {
+                payload.authorId = session.userId.toString();
+            }
         } else if (isAdmin) {
             payload.reviewDate = new Date().toISOString();
         }
 
         try {
+            const endpoint = isAdmin ? `/admin/bulletins` : `/bulletins`;
+            const token = sessionStorage.getItem('adminToken') || sessionStorage.getItem('token');
+            const headers = token ? { Authorization: `Bearer ${token}` } : undefined;
+
             if (isEditMode && initialData?.id) {
-                await api.patch(`/admin/bulletins/${initialData.id}`, payload, {
-                    headers: { Authorization: `Bearer ${sessionStorage.getItem('adminToken') || sessionStorage.getItem('token')}` }
-                });
+                const patchEndpoint = isAdmin ? `/admin/bulletins/${initialData.id}` : `/bulletins/${initialData.id}`;
+                await api.patch(patchEndpoint, payload, { headers });
             } else {
-                await api.post(`/admin/bulletins`, payload, {
-                    headers: { Authorization: `Bearer ${sessionStorage.getItem('adminToken') || sessionStorage.getItem('token')}` }
-                });
+                await api.post(endpoint, payload, { headers });
             }
 
-            const isPending = !isAdmin && isEditMode;
-            const message = initialData
-                ? (isPending ? 'Bulletin update submitted for review!' : 'Bulletin successfully updated!')
-                : 'Bulletin successfully created!';
-            const description = initialData
-                ? (isPending ? 'Your changes require admin approval before they are live.' : 'Your changes have been saved.')
-                : 'Your bulletin has been submitted for review.';
+            // const isPending = !isAdmin && isEditMode;
+            const message = initialData ? 'Bulletin successfully updated!' : 'Bulletin successfully created!';
+            const description = initialData ? 'Your changes have been saved.' : 'Your bulletin has been submitted for review.';
 
             toast.success(message, {
                 description: description,
@@ -172,6 +230,32 @@ export function CreateBulletinModal({ trigger, initialData, isAdmin = false }: C
                                     <FormControl>
                                         <Input className="selection:bg-blue-500 selection:text-white" placeholder="Enter bulletin title" {...field} />
                                     </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+
+                        {/* Category */}
+                        <FormField
+                            control={form.control}
+                            name="category"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Category</FormLabel>
+                                    <Select onValueChange={field.onChange} value={field.value || ''}>
+                                        <FormControl>
+                                            <SelectTrigger>
+                                                <SelectValue placeholder="Select bulletin category" />
+                                            </SelectTrigger>
+                                        </FormControl>
+                                        <SelectContent>
+                                            {(categories.length > 0 ? categories : DEFAULT_BULLETIN_CATEGORIES).map((cat) => (
+                                                <SelectItem key={cat.id || cat.bulletinCategoryName} value={cat.bulletinCategoryName}>
+                                                    {cat.bulletinCategoryName}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
                                     <FormMessage />
                                 </FormItem>
                             )}

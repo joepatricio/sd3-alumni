@@ -1,4 +1,5 @@
 // adminStats now generated dynamically via getAdminStats function below
+import { formatDate } from '@/app/views/formatters';
 
 export const adminRecentActivity = [
     { id: '1', action: 'Registered', user: 'Juan De Cruz', time: '2 hours ago', type: 'user' },
@@ -24,7 +25,7 @@ const generateUsers = (count: number) => {
         const status = statuses[i % statuses.length];
 
         let grantedDateObj = new Date(2025, i % 12, (i % 28) + 1);
-        const grantedDate = grantedDateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+        const grantedDate = formatDate(grantedDateObj, 'short');
 
         let reason = undefined;
         let expiryDate = undefined;
@@ -35,7 +36,7 @@ const generateUsers = (count: number) => {
             grantedDateObj.setDate(grantedDateObj.getDate() + 365);
             const expiryDateObj = new Date(grantedDateObj);
             expiryDateObj.setDate(expiryDateObj.getDate() + 30);
-            expiryDate = expiryDateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+            expiryDate = formatDate(expiryDateObj, 'short');
             rawExpiryDate = expiryDateObj.getTime();
         } else if (status === 'Banned') {
             reason = 'Severe harassment of other alumni members.';
@@ -55,7 +56,7 @@ const generateDonations = (count: number) => {
         const id = (i + 1).toString();
         // Generate a random date in previous months
         const dateObj = new Date(2026, 1, 15 - (i % 30));
-        const date = dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+        const date = formatDate(dateObj, 'short');
         const donor = donors[i % donors.length];
         const amountNum = ((i % 20) + 1) * 50;
         const amount = `$${amountNum.toFixed(2)}`;

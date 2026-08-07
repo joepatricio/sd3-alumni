@@ -13,6 +13,7 @@ import { Button } from '@components/ui/button';
 import { LazyImage } from '@components/user/LazyImage';
 import { api, type BulletinData, type ProfileData } from '@/app/views/api';
 import { useAuth } from '@/app/views/auth';
+import { formatDate } from '@/app/views/formatters';
 
 type ViewMode = 'headline' | 'article';
 const ARTICLE_ITEMS_PER_PAGE = 5;
@@ -52,7 +53,7 @@ export function Bulletin() {
                     .map((u: any) => String(u.id));
 
                 if (session?.userId) {
-                    const currentU = allUsers.find((u: any) => String(u.userId) === String(session.userId));
+                    const currentU = allUsers.find((u: any) => String(u.id) === String(session.userId));
                     if (currentU) {
                         setCurrentUserStatus(currentU.userStatus?.statusName || '');
                     }
@@ -128,7 +129,7 @@ export function Bulletin() {
                                 USJ-R alumni community
                             </p>
                         </div>
-                        {currentUserStatus !== 'Suspended' && currentUserStatus !== 'Banned' && (
+                        {(currentUserStatus === 'Regular' || currentUserStatus === 'Official') && (
                             <CreateBulletinModal
                                 trigger={
                                     <button
@@ -275,7 +276,7 @@ export function Bulletin() {
                                                             <span className="text-gray-400">•</span>
                                                             <div className="flex items-center gap-1 text-sm text-gray-500">
                                                                 <Clock className="w-4 h-4" />
-                                                                <span>{new Date(item.bulletinDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</span>
+                                                                <span>{formatDate(item.bulletinDate, 'long')}</span>
                                                             </div>
                                                         </div>
                                                         <Link
@@ -321,7 +322,7 @@ export function Bulletin() {
                                                                 {authorProfile?.userName || "Unknown Author"}
                                                             </Link>
                                                             <span>•</span>
-                                                            <span>{new Date(item.bulletinDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</span>
+                                                            <span>{formatDate(item.bulletinDate, 'long')}</span>
                                                         </div>
                                                         <p className="text-gray-700 line-clamp-2">
                                                             {item.content}

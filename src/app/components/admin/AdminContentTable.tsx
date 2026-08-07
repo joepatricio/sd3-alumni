@@ -4,12 +4,13 @@ import { Button } from '@components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@components/ui/tabs';
 import { Input } from '@components/ui/input';
 import { Badge } from '@components/ui/badge';
-import { ArrowUp, ArrowDown, ArrowUpDown, ChevronLeft, ChevronRight, Search, CheckCircle, XCircle, RotateCcw, Eye, Archive, FileText } from 'lucide-react';
+import { ArrowUp, ArrowDown, ArrowUpDown, ChevronLeft, ChevronRight, Search, Eye, FileText, HardHat } from 'lucide-react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@components/ui/select';
 import { CreateEventModal } from '@components/user/CreateEventModal';
 import { CreateBulletinModal } from '@components/user/CreateBulletinModal';
-import { getCategoryColor } from '@/app/views/formatters';
+import { getCategoryColor, formatDate } from '@/app/views/formatters';
+import { startOfWeek, endOfWeek, startOfMonth, endOfMonth, startOfYear, endOfYear, format } from 'date-fns';
 
 export interface ContentItem {
     id: string;
@@ -21,6 +22,7 @@ export interface ContentItem {
     description: string;
     rawDate: number;
     category: string;
+    isOfficial: boolean;
 }
 
 interface AdminContentTableProps {
@@ -36,6 +38,7 @@ interface AdminContentTableProps {
         searchEndDate?: string,
         status: string,
         categories?: string[],
+        accountScope?: 'All' | 'Official' | 'Regular',
         sort: { key: string, direction: 'asc' | 'desc' } | null
     }) => Promise<{ data: ContentItem[], total: number }>;
     primaryColorClass: string;
@@ -59,6 +62,8 @@ export function AdminContentTable({
     const [data, setData] = useState<ContentItem[]>([]);
     const [totalItems, setTotalItems] = useState(0);
     const [isLoading, setIsLoading] = useState(false);
+    const [editingItem, setEditingItem] = useState<ContentItem | null>(null);
+
 
     const [searchParams, setSearchParams] = useSearchParams();
     const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'All');
@@ -101,39 +106,27 @@ export function AdminContentTable({
         const now = new Date();
         let start = '';
         let end = '';
-
         if (filter === 'this_week') {
-            const day = now.getDay();
-            // In JS, 0 is Sunday, 1 is Monday.
-            // If today is Sunday (0), we want to go back to last Monday (-6 days).
-            // If today is Monday (1), we go back 0 days.
-            const diffToMonday = day === 0 ? -6 : 1 - day;
-            const monday = new Date(now);
-            monday.setDate(now.getDate() + diffToMonday);
-
-            const sunday = new Date(monday);
-            sunday.setDate(monday.getDate() + 6);
-
-            start = monday.toISOString().split('T')[0];
-            end = sunday.toISOString().split('T')[0];
+            // weekStartsOn: 1 sets Monday as the first day of the week
+            start = format(startOfWeek(now, { weekStartsOn: 1 }), 'yyyy-MM-dd');
+            end = format(endOfWeek(now, { weekStartsOn: 1 }), 'yyyy-MM-dd');
         } else if (filter === 'this_month') {
-            const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
-            const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-            start = firstDay.toISOString().split('T')[0];
-            end = lastDay.toISOString().split('T')[0];
+            start = format(startOfMonth(now), 'yyyy-MM-dd');
+            end = format(endOfMonth(now), 'yyyy-MM-dd');
         } else if (filter === 'this_year') {
-            const firstDay = new Date(now.getFullYear(), 0, 1);
-            const lastDay = new Date(now.getFullYear(), 11, 31);
-            start = firstDay.toISOString().split('T')[0];
-            end = lastDay.toISOString().split('T')[0];
+            start = format(startOfYear(now), 'yyyy-MM-dd');
+            end = format(endOfYear(now), 'yyyy-MM-dd');
         } else if (filter === 'all') {
             start = '';
             end = '';
         }
-
+        setDatePreset(filter);
         setSearchStartDate(start);
         setSearchEndDate(end);
     };
+
+    const [accountScope, setAccountScope] = useState<'All' | 'Official' | 'Regular'>('All');
+    const [appliedAccountScope, setAppliedAccountScope] = useState<'All' | 'Official' | 'Regular'>('All');
 
     const handleApplyFilters = () => {
         setAppliedSearchName(searchName);
@@ -141,6 +134,7 @@ export function AdminContentTable({
         setAppliedSearchStartDate(searchStartDate);
         setAppliedSearchEndDate(searchEndDate);
         setAppliedSearchCategories(searchCategories);
+        setAppliedAccountScope(accountScope);
         setCurrentPage(1);
     };
 
@@ -150,36 +144,23 @@ export function AdminContentTable({
         setSearchStartDate('');
         setSearchEndDate('');
         setSearchCategories(['All']);
+        setAccountScope('All');
         setAppliedSearchName('');
         setAppliedSearchAuthor('');
         setAppliedSearchStartDate('');
         setAppliedSearchEndDate('');
         setAppliedSearchCategories(['All']);
+        setAppliedAccountScope('All');
         setCurrentPage(1);
     };
 
     const handleStatusUpdate = async (id: string, newStatus: string) => {
         if (onStatusChange) {
-            setIsLoading(true);
             try {
                 await onStatusChange(id, newStatus);
-                const result = await fetchData({
-                    page: currentPage,
-                    perPage: ITEMS_PER_PAGE,
-                    search: appliedSearchName,
-                    searchAuthor: appliedSearchAuthor,
-                    searchStartDate: appliedSearchStartDate,
-                    searchEndDate: appliedSearchEndDate,
-                    status: activeTab,
-                    categories: appliedSearchCategories,
-                    sort: sortConfig
-                });
-                setData(result.data);
-                setTotalItems(result.total);
+                setData(prev => prev.map(item => item.id === id ? { ...item, status: newStatus } : item));
             } catch (err) {
                 console.error("Failed to update status", err);
-            } finally {
-                setIsLoading(false);
             }
         }
     };
@@ -187,7 +168,7 @@ export function AdminContentTable({
     const handleExportCSV = () => {
         const headers = ['Title', 'Author', 'Date', 'Type', 'Status'];
         const csvContent = data.map(c =>
-            `"${c.title.replace(/"/g, '""')}","${c.author}","${new Date(c.date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}","${c.type}","${c.status}"`
+            `"${c.title.replace(/"/g, '""')}","${c.author}","${formatDate(c.date, 'long')}","${c.type}","${c.status}"`
         );
 
         const csvString = [headers.join(','), ...csvContent].join('\n');
@@ -197,6 +178,8 @@ export function AdminContentTable({
         link.download = `${contentType.toLowerCase()}s_export_${new Date().toISOString().split('T')[0]}.csv`;
         link.click();
     };
+
+    const [refreshKey, setRefreshKey] = useState(0);
 
     useEffect(() => {
         const load = async () => {
@@ -211,6 +194,7 @@ export function AdminContentTable({
                     searchEndDate: appliedSearchEndDate,
                     status: activeTab,
                     categories: appliedSearchCategories,
+                    accountScope: appliedAccountScope,
                     sort: sortConfig
                 });
                 setData(result.data);
@@ -222,7 +206,7 @@ export function AdminContentTable({
             }
         };
         load();
-    }, [currentPage, appliedSearchName, appliedSearchAuthor, appliedSearchStartDate, appliedSearchEndDate, appliedSearchCategories, activeTab, sortConfig, fetchData]);
+    }, [currentPage, appliedSearchName, appliedSearchAuthor, appliedSearchStartDate, appliedSearchEndDate, appliedSearchCategories, appliedAccountScope, activeTab, sortConfig, fetchData, refreshKey]);
 
     const totalPages = Math.ceil(totalItems / ITEMS_PER_PAGE);
     const paginatedContent = data;
@@ -240,7 +224,7 @@ export function AdminContentTable({
             case "Approved": return { title: `Published ${contentType}s`, description: 'Previously approved and currently visible to the public' };
             case "Rejected": return { title: `Rejected ${contentType}s`, description: 'Submissions that did not meet community guidelines' };
             case "Cancelled": return { title: `Cancelled ${contentType}s`, description: 'Events that were cancelled' };
-            case "Archived": return { title: `Archived ${contentType}s`, description: 'Events that are archived' };
+            case "Archived": return { title: `Archived ${contentType}s`, description: `${contentType}s that are archived` };
             case "Concluded": return { title: `Concluded ${contentType}s`, description: 'Events that have concluded successfully' };
             default: return { title: `${status} ${contentType}s`, description: `Viewing ${status.toLowerCase()} items` };
         }
@@ -312,7 +296,7 @@ export function AdminContentTable({
                                 <th className="px-6 py-3 cursor-pointer hover:bg-gray-100 transition-colors" onClick={() => handleSort('date')}>
                                     <div className="flex items-center gap-1">Date Submitted {renderSortIcon('date')}</div>
                                 </th>
-                                <th className="px-9 py-3 ">Quick Actions</th>
+                                {/* <th className="px-9 py-3 ">Quick Actions</th> */}
                                 <th className="px-9 py-3">Actions</th>
                             </tr>
                         </thead>
@@ -323,15 +307,26 @@ export function AdminContentTable({
                                         <div className="font-semibold text-gray-900 flex items-center gap-2">
                                             {item.title}
                                             <Badge className={getCategoryClass(item.category)}>{item.category}</Badge>
-                                            <Link to={`/${item.type === 'Bulletin' ? 'bulletin' : 'events'}/${item.id}`} className="text-gray-400 hover:text-brand-primary">
+                                            <Link to={`/admin/preview/${item.type === 'Bulletin' ? 'bulletin' : 'event'}/${item.id}`} className="text-gray-400 hover:text-brand-primary" title="Preview as Approved">
                                                 <Eye className="w-4 h-4" />
                                             </Link>
                                         </div>
                                         <div className="text-xs text-gray-500 line-clamp-1 max-w-sm">{item.description}</div>
                                     </td>
-                                    <td className="px-6 py-4">{item.author}</td>
-                                    <td className="px-6 py-4">{new Date(item.date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</td>
                                     <td className="px-6 py-4">
+                                        <div className="flex items-center gap-2">
+                                            {item.isOfficial && <HardHat className="w-4 h-4 text-brand-primary" />}
+                                            <span>{item.author}</span>
+                                            {(item as any).authorId ? (
+                                                <Link to={`/admin/preview/user/${(item as any).authorId}`} className="text-gray-400 hover:text-brand-primary" title="Preview Profile">
+                                                    <Eye className="w-4 h-4" />
+                                                </Link>
+                                            ) : null}
+                                        </div>
+                                    </td>
+                                    <td className="px-6 py-4">{formatDate(item.date, 'long')}</td>
+                                    {/* Quick actions, removed because of space constraints */}
+                                    {/* <td className="px-6 py-4">
                                         <div className="flex justify-left gap-2">
                                             {item.status === "Pending" && (
                                                 <>
@@ -366,7 +361,7 @@ export function AdminContentTable({
                                                         <RotateCcw className="w-4 h-4 mr-1" />
                                                         Reset
                                                     </Button>
-                                                    {item.status === "Rejected" && (<Button
+                                                    {(item.status === "Rejected" || (item.type === "Bulletin" && item.status === "Approved")) && (<Button
                                                         variant="ghost"
                                                         size="sm"
                                                         className="text-gray-600 hover:text-gray-700 hover:bg-gray-50"
@@ -394,14 +389,14 @@ export function AdminContentTable({
                                                     variant="ghost"
                                                     size="sm"
                                                     className="text-gray-600 hover:text-gray-700 hover:bg-gray-50"
-                                                    onClick={() => handleStatusUpdate(item.id, "Concluded")}
+                                                    onClick={() => handleStatusUpdate(item.id, item.type === "Bulletin" ? "Approved" : "Concluded")}
                                                 >
                                                     <RotateCcw className="w-4 h-4 mr-1" />
                                                     Unarchive
                                                 </Button>
                                             )}
                                         </div>
-                                    </td>
+                                    </td> */}
                                     <td className="px-6 py-4">
                                         <div className="flex gap-2 justify-center">
                                             <Select value={item.status} onValueChange={(val) => handleStatusUpdate(item.id, val)}>
@@ -419,29 +414,15 @@ export function AdminContentTable({
                                                     ))}
                                                 </SelectContent>
                                             </Select>
-                                            {contentType === 'Event' ? (
-                                                <CreateEventModal
-                                                    isAdmin={true}
-                                                    initialData={item as any}
-                                                    trigger={
-                                                        <Button variant="ghost" size="sm" className="text-gray-600 hover:text-gray-700 hover:bg-gray-50">
-                                                            <FileText className="w-4 h-4 mr-1" />
-                                                            Edit Details
-                                                        </Button>
-                                                    }
-                                                />
-                                            ) : (
-                                                <CreateBulletinModal
-                                                    isAdmin={true}
-                                                    initialData={item as any}
-                                                    trigger={
-                                                        <Button variant="ghost" size="sm" className="text-gray-600 hover:text-gray-700 hover:bg-gray-50">
-                                                            <FileText className="w-4 h-4 mr-1" />
-                                                            Edit Details
-                                                        </Button>
-                                                    }
-                                                />
-                                            )}
+                                            <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                className="hover:bg-gray-200"
+                                                onClick={() => setEditingItem(item)}
+                                            >
+                                                <FileText className="w-4 h-4 mr-1" />
+                                                Edit
+                                            </Button>
                                         </div>
                                     </td>
                                 </tr>
@@ -512,10 +493,9 @@ export function AdminContentTable({
                                 />
                             </div>
                             <div className="relative flex items-center flex-1">
-                                <Search className="absolute left-3 text-gray-400 w-4 h-4 pointer-events-none" />
                                 <Input
                                     placeholder="Search by Author..."
-                                    className="pl-9 h-10 w-full bg-white border border-gray-300"
+                                    className="h-10 w-full bg-white border border-gray-300"
                                     value={searchAuthor}
                                     onChange={(e) => setSearchAuthor(e.target.value)}
                                     onKeyDown={(e) => {
@@ -583,6 +563,37 @@ export function AdminContentTable({
                             <Button className="bg-brand-primary hover:bg-brand-primary-hover text-white w-24" onClick={handleApplyFilters}>Submit</Button>
                         </div>
 
+                        {contentType === 'Bulletin' && (
+                            <div className="flex lg:col-span-8 items-center gap-3 pb-1 border-b border-gray-100 mb-1">
+                                <span className="text-sm font-medium text-gray-700 mr-2 flex items-center gap-1.5">
+                                    <HardHat className="w-4 h-4 text-brand-primary" /> Account Scope
+                                </span>
+                                <div className="relative flex items-center bg-gray-100 p-1 rounded-lg shadow-inner">
+                                    {(['All', 'Official', 'Regular'] as const).map((scope) => {
+                                        const isSelected = accountScope === scope;
+                                        return (
+                                            <button
+                                                key={scope}
+                                                type="button"
+                                                onClick={() => {
+                                                    setAccountScope(scope);
+                                                    setAppliedAccountScope(scope);
+                                                    setCurrentPage(1);
+                                                }}
+                                                className={`relative z-10 px-3.5 py-1 text-xs font-semibold rounded-md transition-all duration-200 ease-in-out flex items-center gap-1.5 ${isSelected
+                                                    ? 'bg-white text-brand-primary shadow-sm scale-105 font-bold'
+                                                    : 'text-gray-600 hover:text-gray-900'
+                                                    }`}
+                                            >
+                                                {scope === 'Official' && <HardHat className="w-3.5 h-3.5 text-brand-primary" />}
+                                                {scope}
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+                        )}
+
                         {categories && categories.length > 0 && (
                             <div className="flex lg:col-span-8 items-center gap-2 overflow-x-auto hide-scrollbar pb-1">
                                 <span className="text-sm font-medium text-gray-700 mr-5">Categories</span>
@@ -627,6 +638,10 @@ export function AdminContentTable({
                                     size="sm"
                                     className="border border-gray-300"
                                     onClick={() => {
+                                        if (contentType === "Bulletin") {
+                                            setAccountScope('All');
+                                            setAppliedAccountScope('All');
+                                        }
                                         setSearchCategories(['All']);
                                         setAppliedSearchCategories(['All']);
                                         setCurrentPage(1);
@@ -660,6 +675,33 @@ export function AdminContentTable({
                     ))
                 }
             </Tabs >
+
+            {editingItem && contentType === 'Event' && (
+                <CreateEventModal
+                    isAdmin={true}
+                    initialData={editingItem as any}
+                    open={true}
+                    onOpenChange={(isOpen) => {
+                        if (!isOpen) {
+                            setEditingItem(null);
+                            setRefreshKey(k => k + 1);
+                        }
+                    }}
+                />
+            )}
+            {editingItem && contentType === 'Bulletin' && (
+                <CreateBulletinModal
+                    isAdmin={true}
+                    initialData={editingItem as any}
+                    open={true}
+                    onOpenChange={(isOpen) => {
+                        if (!isOpen) {
+                            setEditingItem(null);
+                            setRefreshKey(k => k + 1);
+                        }
+                    }}
+                />
+            )}
         </div >
     );
 }

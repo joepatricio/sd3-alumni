@@ -222,6 +222,10 @@ app.post('/api/auth/login', async (req, res) => {
             return res.status(403).json({ error: 'Your account has been banned' });
         }
 
+        if (userAuth.user?.userStatus?.statusName === 'Pending') {
+            return res.status(403).json({ error: 'Your account is pending admin approval' });
+        }
+
         await prisma.userAuth.update({
             where: { userId: userAuth.userId },
             data: { lastLogin: new Date() }
@@ -280,6 +284,41 @@ app.post('/api/auth/admin/login', async (req, res) => {
         res.json({ token, admin: { id: admin.id, username: admin.username } });
     } catch (error) {
         console.error(error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+// Get current user profile for auth validation
+app.get('/api/auth/me', authenticateToken, async (req, res) => {
+    try {
+        const user = await prisma.user.findUnique({
+            where: { id: req.user.id },
+            include: {
+                profile: true,
+                userStatus: true,
+                profileStatus: true
+            }
+        });
+
+        if (!user) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+
+        if (user.userStatus?.statusName === 'Banned' || user.userStatus?.statusName === 'Pending') {
+            return res.status(403).json({ error: 'Account is not active' });
+        }
+
+        res.json({
+            id: user.id,
+            email: req.user.email,
+            profileId: user.profile?.userId,
+            name: user.profile?.userName,
+            userStatus: user.userStatus,
+            profileStatus: user.profileStatus,
+            profile: user.profile
+        });
+    } catch (error) {
+        console.error("Error fetching current user:", error);
         res.status(500).json({ error: 'Internal server error' });
     }
 });
@@ -489,7 +528,7 @@ app.get('/api/admin/events', authenticateAdminToken, async (req, res) => {
         let queryArgs = {
             where,
             orderBy,
-            include: { location: true, rsvps: true, status: true, category: true, author: { include: { profile: true, userStatus: true } } }
+            include: { location: true, status: true, category: true, author: { include: { profile: true, userStatus: true } } }
         };
 
         if (page !== undefined && perPage !== undefined) {
@@ -518,6 +557,218 @@ app.get('/api/admin/events', authenticateAdminToken, async (req, res) => {
     }
 });
 
+// Helper function to prepare and resolve Event data for create/update
+async function resolveEventData(body, isUpdate = false, existingEvent = null, req = null) {
+    const data = { ...body };
+    // Resolve Author ID if creating
+    if (!isUpdate && !data.authorId) {
+        if (req) {
+            const authHeader = req.headers['authorization'];
+            const token = authHeader && authHeader.split(' ')[1];
+            if (token) {
+                try {
+                    const decoded = jwt.verify(token, JWT_SECRET);
+                    if (decoded && (decoded.id || decoded.userId)) {
+                        data.authorId = decoded.id || decoded.userId;
+                    }
+                } catch (e) { }
+            }
+        }
+        if (!data.authorId) {
+            const existingUser = await prisma.user.findFirst({
+                where: { userStatus: { statusName: 'Official' } }
+            }) || await prisma.user.findFirst();
+            if (existingUser) data.authorId = existingUser.id;
+        }
+    } else if (isUpdate) {
+        delete data.authorId;
+    }
+
+    // Format times and dates
+    if (data.startTime && typeof data.startTime === 'string') data.startTime = data.startTime.substring(0, 5);
+    if (data.endTime && typeof data.endTime === 'string') data.endTime = data.endTime.substring(0, 5);
+    if (data.eventDate && typeof data.eventDate === 'string') {
+        if (data.eventDate.includes('T')) {
+            data.eventDate = data.eventDate.split('T')[0] + 'T00:00:00.000Z';
+        } else {
+            data.eventDate = new Date(data.eventDate + 'T00:00:00.000Z').toISOString();
+        }
+    }
+
+    // Resolve EventCategory
+    const categoryInput = data.eventCategoryId || data.category;
+    if (categoryInput) {
+        const catRecord = await prisma.eventCategory.findFirst({
+            where: {
+                OR: [
+                    { id: String(categoryInput) },
+                    { eventCategoryName: String(categoryInput) }
+                ]
+            }
+        });
+        if (catRecord) {
+            data.eventCategoryId = catRecord.id;
+        }
+        delete data.category;
+    }
+
+    // Handle nested location
+    if (data.location && typeof data.location === 'object') {
+        const loc = data.location;
+        const locData = {
+            regionCode: loc.regionCode || null,
+            province: loc.province || null,
+            provinceCode: loc.provinceCode || null,
+            cityMunicipality: loc.cityMunicipality || null,
+            cityCode: loc.cityCode || null,
+            barangay: loc.barangay || null,
+            landmark: loc.landmark || null,
+            street: loc.street || null,
+            lat: typeof loc.lat === 'number' ? loc.lat : (loc.lat ? parseFloat(loc.lat) : null),
+            lng: typeof loc.lng === 'number' ? loc.lng : (loc.lng ? parseFloat(loc.lng) : null),
+        };
+
+        let targetLocationId = existingEvent?.locationId;
+        if (isUpdate && targetLocationId) {
+            await prisma.location.update({
+                where: { id: targetLocationId },
+                data: locData
+            });
+        } else {
+            const newLoc = await prisma.location.create({ data: locData });
+            data.locationId = newLoc.id;
+        }
+        delete data.location;
+    }
+
+    // Resolve EventStatus
+    if (data.status) {
+        const statusRecord = await prisma.eventStatus.findFirst({
+            where: {
+                OR: [
+                    { id: String(data.status) },
+                    { statusName: String(data.status) }
+                ]
+            }
+        });
+        if (statusRecord) {
+            data.eventStatusId = statusRecord.id;
+        }
+        delete data.status;
+    } else if (!isUpdate && !data.eventStatusId) {
+        const defaultStatus = await prisma.eventStatus.findFirst({ where: { statusName: 'Pending' } });
+        if (defaultStatus) data.eventStatusId = defaultStatus.id;
+    }
+
+    // Handle image mapping
+    if (data.image && !data.eventImage) {
+        data.eventImage = data.image;
+    }
+    delete data.image;
+
+    // Remove non-scalar or relation fields
+    delete data.id;
+    delete data.author;
+    delete data.rsvps;
+    delete data.admin;
+    delete data.type;
+    delete data.isOfficial;
+    delete data.rawDate;
+
+    return data;
+}
+
+// Helper function to prepare and resolve Bulletin data for create/update
+async function resolveBulletinData(body, isUpdate = false, req = null) {
+    const data = { ...body };
+    // Resolve Author ID if creating
+    if (!isUpdate && !data.authorId) {
+        if (req) {
+            const authHeader = req.headers['authorization'];
+            const token = authHeader && authHeader.split(' ')[1];
+            if (token) {
+                try {
+                    const decoded = jwt.verify(token, JWT_SECRET);
+                    if (decoded && (decoded.id || decoded.userId)) {
+                        data.authorId = decoded.id || decoded.userId;
+                    }
+                } catch (e) { }
+            }
+        }
+        if (!data.authorId) {
+            const existingUser = await prisma.user.findFirst({
+                where: { userStatus: { statusName: 'Official' } }
+            }) || await prisma.user.findFirst();
+            if (existingUser) data.authorId = existingUser.id;
+        }
+    } else if (isUpdate) {
+        delete data.authorId;
+    }
+
+    if (data.image && !data.bulletinImage) {
+        data.bulletinImage = data.image;
+    }
+    delete data.image;
+
+    // Resolve BulletinCategory
+    const categoryInput = data.bulletinCategoryId || data.category;
+    if (categoryInput) {
+        const catRecord = await prisma.bulletinCategory.findFirst({
+            where: {
+                OR: [
+                    { id: String(categoryInput) },
+                    { bulletinCategoryName: String(categoryInput) }
+                ]
+            }
+        });
+        if (catRecord) {
+            data.bulletinCategoryId = catRecord.id;
+        }
+        delete data.category;
+    }
+
+    if (!data.bulletinCategoryId && !isUpdate) {
+        const defaultCat = await prisma.bulletinCategory.findFirst({ where: { bulletinCategoryName: 'Announcements' } })
+            || await prisma.bulletinCategory.findFirst();
+        if (defaultCat) data.bulletinCategoryId = defaultCat.id;
+    }
+
+    // Resolve ContentStatus
+    if (data.status) {
+        const statusRecord = await prisma.contentStatus.findFirst({
+            where: {
+                OR: [
+                    { id: String(data.status) },
+                    { statusName: String(data.status) }
+                ]
+            }
+        });
+        if (statusRecord) {
+            data.contentStatusId = statusRecord.id;
+        }
+        delete data.status;
+    } else if (!isUpdate && !data.contentStatusId) {
+        const defaultStatus = await prisma.contentStatus.findFirst({ where: { statusName: 'Pending' } });
+        if (defaultStatus) data.contentStatusId = defaultStatus.id;
+    }
+
+    if (data.readTimeMinutes !== undefined && data.readTimeMinutes !== null) {
+        data.readTimeMinutes = parseInt(data.readTimeMinutes, 10) || 5;
+    }
+
+    // Remove non-scalar or relation fields
+    delete data.id;
+    delete data.author;
+    delete data.admin;
+    delete data.likes;
+    delete data.comments;
+    delete data.type;
+    delete data.isOfficial;
+    delete data.rawDate;
+
+    return data;
+}
+
 // Admin PATCH Event Status
 app.patch('/api/admin/events/:id/status', authenticateAdminToken, async (req, res) => {
     try {
@@ -543,6 +794,54 @@ app.patch('/api/admin/events/:id/status', authenticateAdminToken, async (req, re
     }
 });
 
+// Admin POST Event
+app.post('/api/admin/events', authenticateAdminToken, async (req, res) => {
+    try {
+        const existingUser = await prisma.user.findFirst({
+            where: { userStatus: { statusName: 'Official' } }
+        }) || await prisma.user.findFirst();
+
+        const authorId = req.body.authorId || existingUser?.id;
+        if (!authorId) return res.status(400).json({ error: 'Author user not found' });
+
+        const eventData = await resolveEventData({ ...req.body, authorId }, false);
+
+        const newEvent = await prisma.event.create({
+            data: eventData,
+            include: defaultIncludes['event']
+        });
+
+        res.status(201).json(formatOutput('event', newEvent));
+    } catch (error) {
+        console.error('Failed to create admin event:', error);
+        res.status(500).json({ error: 'Failed to create admin event' });
+    }
+});
+
+// Admin PATCH Event
+const handleAdminUpdateEvent = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const existingEvent = await prisma.event.findUnique({ where: { id } });
+        if (!existingEvent) return res.status(404).json({ error: 'Event not found' });
+
+        const eventData = await resolveEventData(req.body, true, existingEvent);
+
+        const updatedEvent = await prisma.event.update({
+            where: { id },
+            data: eventData,
+            include: defaultIncludes['event']
+        });
+
+        res.json(formatOutput('event', updatedEvent));
+    } catch (error) {
+        console.error('Failed to update admin event:', error);
+        res.status(500).json({ error: 'Failed to update admin event' });
+    }
+};
+app.patch('/api/admin/events/:id', authenticateAdminToken, handleAdminUpdateEvent);
+app.put('/api/admin/events/:id', authenticateAdminToken, handleAdminUpdateEvent);
+
 // Admin GET Bulletins
 app.get('/api/admin/bulletins', authenticateAdminToken, async (req, res) => {
     try {
@@ -554,7 +853,7 @@ app.get('/api/admin/bulletins', authenticateAdminToken, async (req, res) => {
         let queryArgs = {
             where,
             orderBy,
-            include: { comments: { include: { user: { include: { profile: true } }, likesList: true } }, status: true, author: { include: { profile: true, userStatus: true } }, likes: true }
+            include: { status: true, author: { include: { profile: true, userStatus: true } }, category: true }
         };
 
         if (page !== undefined && perPage !== undefined) {
@@ -594,12 +893,384 @@ app.patch('/api/admin/bulletins/:id/status', authenticateAdminToken, async (req,
         const updatedBulletin = await prisma.bulletin.update({
             where: { id },
             data: { contentStatusId: statusRecord.id },
-            include: { comments: { include: { user: { include: { profile: true } }, likesList: true } }, status: true, author: { include: { profile: true, userStatus: true } }, likes: true }
+            include: { status: true, author: { include: { profile: true, userStatus: true } }, category: true }
         });
         res.json(formatOutput('bulletin', updatedBulletin));
     } catch (error) {
         console.error('Failed to update bulletin status:', error);
         res.status(500).json({ error: 'Failed to update bulletin status' });
+    }
+});
+
+// Admin POST Bulletin
+app.post('/api/admin/bulletins', authenticateAdminToken, async (req, res) => {
+    try {
+        const existingUser = await prisma.user.findFirst({
+            where: { userStatus: { statusName: 'Official' } }
+        }) || await prisma.user.findFirst();
+
+        const authorId = req.body.authorId || existingUser?.id;
+        if (!authorId) return res.status(400).json({ error: 'Author user not found' });
+
+        const bulletinData = await resolveBulletinData({ ...req.body, authorId }, false);
+
+        const newBulletin = await prisma.bulletin.create({
+            data: bulletinData,
+            include: defaultIncludes['bulletin']
+        });
+
+        res.status(201).json(formatOutput('bulletin', newBulletin));
+    } catch (error) {
+        console.error('Failed to create admin bulletin:', error);
+        res.status(500).json({ error: 'Failed to create admin bulletin' });
+    }
+});
+
+// Admin PATCH/PUT Bulletin
+const handleAdminUpdateBulletin = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const existingBulletin = await prisma.bulletin.findUnique({ where: { id } });
+        if (!existingBulletin) return res.status(404).json({ error: 'Bulletin not found' });
+
+        const bulletinData = await resolveBulletinData(req.body, true);
+
+        const updatedBulletin = await prisma.bulletin.update({
+            where: { id },
+            data: bulletinData,
+            include: defaultIncludes['bulletin']
+        });
+
+        res.json(formatOutput('bulletin', updatedBulletin));
+    } catch (error) {
+        console.error('Failed to update admin bulletin:', error);
+        res.status(500).json({ error: 'Failed to update admin bulletin' });
+    }
+};
+app.patch('/api/admin/bulletins/:id', authenticateAdminToken, handleAdminUpdateBulletin);
+app.put('/api/admin/bulletins/:id', authenticateAdminToken, handleAdminUpdateBulletin);
+
+// Admin GET Dashboard Stats
+app.get('/api/admin/dashboard-stats', authenticateAdminToken, async (req, res) => {
+    const RECENT_ACTIVITY_LENGTH = 24;
+    try {
+        const [
+            pendingUsersCount,
+            officialUsersCount,
+            regularUsersCount,
+            suspendedUsersCount,
+            bannedUsersCount,
+            disabledUsersCount,
+            totalUsersCount,
+            pendingBulletinsCount,
+            approvedBulletinsCount,
+            pendingEventsCount,
+            approvedEventsCount,
+            upcomingEventsCount,
+            completedDonations,
+            recentUsers,
+            recentBulletins,
+            recentEvents,
+            recentDonations,
+            allProfiles
+        ] = await Promise.all([
+            prisma.user.count({ where: { userStatus: { statusName: 'Pending' } } }),
+            prisma.user.count({ where: { userStatus: { statusName: 'Official' } } }),
+            prisma.user.count({ where: { userStatus: { statusName: 'Regular' } } }),
+            prisma.user.count({ where: { userStatus: { statusName: 'Suspended' } } }),
+            prisma.user.count({ where: { userStatus: { statusName: 'Banned' } } }),
+            prisma.user.count({ where: { userStatus: { statusName: 'Disabled' } } }),
+            prisma.user.count(),
+            prisma.bulletin.count({ where: { status: { statusName: 'Pending' } } }),
+            prisma.bulletin.count({ where: { status: { statusName: 'Approved' } } }),
+            prisma.event.count({ where: { status: { statusName: 'Pending' } } }),
+            prisma.event.count({ where: { status: { statusName: 'Approved' } } }),
+            prisma.event.count({ where: { status: { statusName: { not: 'Rejected' } }, eventDate: { gte: new Date() } } }),
+            prisma.donation.findMany({ where: { status: { statusName: 'Completed' } } }),
+            prisma.user.findMany({
+                take: RECENT_ACTIVITY_LENGTH,
+                orderBy: { statistics: { dateRegistered: 'desc' } },
+                include: { profile: true, userStatus: true, statistics: true }
+            }),
+            prisma.bulletin.findMany({
+                take: RECENT_ACTIVITY_LENGTH,
+                orderBy: { bulletinDate: 'desc' },
+                include: { author: { include: { profile: true } }, status: true }
+            }),
+            prisma.event.findMany({
+                take: RECENT_ACTIVITY_LENGTH,
+                orderBy: { eventDate: 'desc' },
+                include: { author: { include: { profile: true } }, status: true }
+            }),
+            prisma.donation.findMany({
+                take: RECENT_ACTIVITY_LENGTH,
+                orderBy: { donationDate: 'desc' },
+                include: { status: true, user: { include: { profile: true } } }
+            }),
+            prisma.user.findMany({
+                select: {
+                    profile: { select: { birthday: true } },
+                    profileStatus: { select: { statusName: true } }
+                }
+            })
+        ]);
+
+        let babyBoomers = 0;
+        let genX = 0;
+        let millennials = 0;
+        let genZ = 0;
+
+        let profilePublic = 0;
+        let profileConnections = 0;
+        let profilePrivate = 0;
+
+        allProfiles.forEach(u => {
+            // Demographics based only on non-blank birthdays
+            if (u.profile && u.profile.birthday) {
+                const bDate = new Date(u.profile.birthday);
+                if (!isNaN(bDate.getTime())) {
+                    const birthYear = bDate.getFullYear();
+                    if (birthYear <= 1964) babyBoomers++;
+                    else if (birthYear >= 1965 && birthYear <= 1980) genX++;
+                    else if (birthYear >= 1981 && birthYear <= 1996) millennials++;
+                    else if (birthYear >= 1997) genZ++;
+                }
+            }
+
+            // Profile status counts
+            const statusName = u.profileStatus?.statusName;
+            if (statusName === 'Public') profilePublic++;
+            else if (statusName === 'Connections Only') profileConnections++;
+            else if (statusName === 'Private') profilePrivate++;
+        });
+
+        const donationsTotal = completedDonations.reduce((sum, d) => sum + (d.donationAmount || 0), 0);
+        // Only set name as Anonymous if donation is not tied to any account
+        const activeDonorsSet = new Set(
+            completedDonations.map(d => d.userId || 'Anonymous')
+        );
+
+        const activities = [];
+
+        recentUsers.forEach(u => {
+            const regDate = u.statistics?.dateRegistered ? new Date(u.statistics.dateRegistered) : new Date();
+            activities.push({
+                id: `user-${u.id}`,
+                action: 'Registered for an account',
+                user: u.profile?.userName || 'New User',
+                time: regDate.toLocaleDateString(),
+                timestamp: regDate.getTime(),
+                type: 'user'
+            });
+        });
+
+        recentBulletins.forEach(b => {
+            const dateObj = new Date(b.bulletinDate);
+            activities.push({
+                id: `bulletin-${b.id}`,
+                action: `Submitted bulletin "${b.title}"`,
+                user: b.author?.profile?.userName || 'Alumni Member',
+                time: dateObj.toLocaleDateString(),
+                timestamp: dateObj.getTime(),
+                type: 'content'
+            });
+        });
+
+        recentEvents.forEach(e => {
+            const dateObj = new Date(e.eventDate);
+            activities.push({
+                id: `event-${e.id}`,
+                action: `Proposed event "${e.title}"`,
+                user: e.author?.profile?.userName || 'Alumni Member',
+                time: dateObj.toLocaleDateString(),
+                timestamp: dateObj.getTime(),
+                type: 'event'
+            });
+        });
+
+        recentDonations.forEach(d => {
+            const donorName = d.userId === 'Anonymous' || !d.userId ? 'Anonymous' : (d.user?.profile?.userName || 'Registered user');
+            const dateObj = new Date(d.donationDate);
+            const amountFormatted = new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(d.donationAmount || 0);
+            activities.push({
+                id: `donation-${d.id}`,
+                action: `Donated ${amountFormatted}`,
+                user: donorName,
+                time: dateObj.toLocaleDateString(),
+                timestamp: dateObj.getTime(),
+                type: 'donation'
+            });
+        });
+
+        activities.sort((a, b) => b.timestamp - a.timestamp);
+
+        res.json({
+            pendingUsers: pendingUsersCount,
+            officialUsers: officialUsersCount,
+            regularUsers: regularUsersCount,
+            suspendedUsers: suspendedUsersCount,
+            bannedUsers: bannedUsersCount,
+            disabledUsers: disabledUsersCount,
+            totalUsers: totalUsersCount,
+            demographics: {
+                babyBoomers,
+                genX,
+                millennials,
+                genZ,
+                profileStatus: {
+                    public: profilePublic,
+                    connections: profileConnections,
+                    private: profilePrivate
+                }
+            },
+            pendingBulletins: pendingBulletinsCount,
+            approvedBulletins: approvedBulletinsCount,
+            pendingEvents: pendingEventsCount,
+            approvedEvents: approvedEventsCount,
+            upcomingEvents: upcomingEventsCount,
+            donationsTotal,
+            activeDonorsCount: activeDonorsSet.size,
+            recentActivity: activities.slice(0, RECENT_ACTIVITY_LENGTH)
+        });
+    } catch (error) {
+        console.error('Failed to fetch dashboard stats:', error);
+        res.status(500).json({ error: 'Failed to fetch dashboard stats' });
+    }
+});
+
+
+// Admin POST Create User
+app.post('/api/admin/users', async (req, res) => {
+    const { fullName, email, password, degreeId, batch, gender, userStatusId, reason } = req.body;
+    try {
+        if (!fullName || !email || !password || !degreeId) {
+            return res.status(400).json({ error: 'Full name, email, password, and degree program are required.' });
+        }
+
+        const existingUser = await prisma.userAuth.findUnique({ where: { email } });
+        if (existingUser) {
+            return res.status(400).json({ error: 'Email is already registered.' });
+        }
+
+        let targetStatusId = userStatusId;
+        if (!targetStatusId) {
+            const regularStatus = await prisma.userStatus.findFirst({ where: { statusName: 'Regular' } });
+            targetStatusId = regularStatus?.id;
+        }
+
+        const defaultProfileStatus = await prisma.profileStatus.findFirst({ where: { statusName: 'Connections Only' } });
+        if (!targetStatusId || !defaultProfileStatus) {
+            return res.status(500).json({ error: 'Missing configuration statuses' });
+        }
+
+        const passwordHash = bcrypt.hashSync(password, 10);
+        const userId = uuidv4();
+
+        const createdUser = await prisma.$transaction(async (tx) => {
+            const newUser = await tx.user.create({
+                data: {
+                    id: userId,
+                    profileStatusId: defaultProfileStatus.id,
+                    userStatusId: targetStatusId,
+                    auth: {
+                        create: {
+                            email,
+                            passwordHash,
+                        }
+                    },
+                    profile: {
+                        create: {
+                            userName: fullName,
+                            email,
+                            degreeId,
+                            batch: batch ? parseInt(batch, 10) : null,
+                            profileImage: "http://localhost:3000/engineer.png",
+                            gender: gender || null
+                        }
+                    },
+                    statistics: {
+                        create: {}
+                    },
+                    records: {
+                        create: {
+                            userStatusId: targetStatusId,
+                            description: reason || "Account created by Admin",
+                            adminId: null
+                        }
+                    }
+                },
+                include: {
+                    records: true
+                }
+            });
+
+            const record = newUser.records[0];
+            await tx.user.update({
+                where: { id: userId },
+                data: { currentRecordId: record.id }
+            });
+
+            return tx.user.findUnique({
+                where: { id: userId },
+                include: defaultIncludes['user']
+            });
+        });
+
+        res.status(201).json(formatOutput('user', createdUser));
+    } catch (error) {
+        console.error('Failed to create user by admin:', error);
+        res.status(500).json({ error: 'Failed to create user' });
+    }
+});
+
+// Admin Update User Status & Record
+app.post('/api/admin/users/:id/status', async (req, res) => {
+    const { id } = req.params;
+    const { userStatusId, statusName, reason, expiryDate } = req.body;
+    try {
+        let statusObj = null;
+        if (userStatusId) {
+            statusObj = await prisma.userStatus.findUnique({ where: { id: userStatusId } });
+        } else if (statusName) {
+            statusObj = await prisma.userStatus.findFirst({ where: { statusName } });
+        }
+
+        if (!statusObj) {
+            return res.status(400).json({ error: 'Invalid user status specified' });
+        }
+
+        const dateExpires = expiryDate ? new Date(expiryDate) : null;
+        const description = reason || `Status updated to ${statusObj.statusName}`;
+
+        const updatedUser = await prisma.$transaction(async (tx) => {
+            const record = await tx.record.create({
+                data: {
+                    userId: id,
+                    userStatusId: statusObj.id,
+                    description,
+                    dateExpires,
+                    adminId: null
+                }
+            });
+
+            await tx.user.update({
+                where: { id },
+                data: {
+                    userStatusId: statusObj.id,
+                    currentRecordId: record.id
+                }
+            });
+
+            return tx.user.findUnique({
+                where: { id },
+                include: defaultIncludes['user']
+            });
+        });
+
+        res.json(formatOutput('user', updatedUser));
+    } catch (error) {
+        console.error('Failed to update user status:', error);
+        res.status(500).json({ error: 'Failed to update user status' });
     }
 });
 
@@ -614,6 +1285,9 @@ const tableToModel = {
     userStatuses: 'userStatus',
     donationStatuses: 'donationStatus',
     eventCategories: 'eventCategory',
+    eventCategory: 'eventCategory',
+    bulletinCategories: 'bulletinCategory',
+    bulletinCategory: 'bulletinCategory',
     profileStatuses: 'profileStatus',
     userConnections: 'userConnection',
     userStatistics: 'userStatistic',
@@ -638,8 +1312,8 @@ const tableToModel = {
 
 const defaultIncludes = {
     profile: { degree: true, user: true },
-    user: { profile: { include: { degree: true } }, userStatus: true, profileStatus: true },
-    bulletin: { comments: { include: { user: { include: { profile: true } }, likesList: true } }, status: true, author: { include: { profile: true, userStatus: true } }, likes: true },
+    user: { profile: { include: { degree: true } }, userStatus: true, profileStatus: true, records: { include: { userStatus: true }, orderBy: { dateCreated: 'desc' } } },
+    bulletin: { comments: { include: { user: { include: { profile: true } }, likesList: true } }, status: true, category: true, author: { include: { profile: true, userStatus: true } }, likes: true },
     event: { location: true, rsvps: true, status: true, category: true, author: { include: { profile: true, userStatus: true } } },
     userConnection: { status: true, user: { include: { profile: { include: { degree: true } } } }, friend: { include: { profile: { include: { degree: true } } } } },
     comment: { user: { include: { profile: true } }, bulletin: true, likesList: true },
@@ -675,6 +1349,8 @@ function formatOutput(modelName, data) {
         if (modelName === 'bulletin' && item.status) {
             item.contentStatus = item.status;
             delete item.status;
+            item.bulletinCategory = item.category;
+            delete item.category;
             item.profile = item.author?.profile;
             if (item.comments) {
                 item.comments.forEach(c => {
@@ -793,7 +1469,9 @@ app.get('/api/donations/summary', async (req, res) => {
             const year = date.getUTCFullYear();
             const userId = d.userId;
 
-            totalRaised += amt;
+            if (year === currentYear) {
+                totalRaised += amt;
+            }
 
             if (userId) {
                 allTimeUniqueDonors.add(userId);
@@ -934,7 +1612,14 @@ app.get('/api/:table', async (req, res, next) => {
             includes = {};
             const includeFields = typeof req.query._include === 'string' ? req.query._include.split(',') : [];
             includeFields.forEach(field => {
-                const f = field.trim();
+                let f = field.trim();
+                if (modelName === 'bulletin') {
+                    if (f === 'categories' || f === 'bulletinCategory') f = 'category';
+                    else if (f === 'contentStatus') f = 'status';
+                } else if (modelName === 'event') {
+                    if (f === 'eventCategory') f = 'category';
+                    else if (f === 'eventStatus') f = 'status';
+                }
                 if (f && f !== 'none') {
                     if (defaultIncludes[modelName] && defaultIncludes[modelName][f]) {
                         includes[f] = defaultIncludes[modelName][f];
@@ -1067,20 +1752,18 @@ app.post('/api/:table', async (req, res, next) => {
             }
         }
 
-        // Strip seconds for event times
         if (modelName === 'event') {
-            if (data.startTime && typeof data.startTime === 'string') data.startTime = data.startTime.substring(0, 5);
-            if (data.endTime && typeof data.endTime === 'string') data.endTime = data.endTime.substring(0, 5);
-            if (data.eventDate && typeof data.eventDate === 'string' && data.eventDate.includes('T')) {
-                data.eventDate = data.eventDate.split('T')[0] + 'T00:00:00.000Z';
-            }
+            data = await resolveEventData(data, false, null, req);
+        } else if (modelName === 'bulletin') {
+            data = await resolveBulletinData(data, false, req);
         }
 
         // Filter schema fields to prevent unknown field errors (e.g. donationId)
         data = filterModelFields(modelName, data);
 
         const item = await delegate.create({
-            data
+            data,
+            include: defaultIncludes[modelName] ? defaultIncludes[modelName] : undefined
         });
 
         res.status(201).json(formatOutput(modelName, item));
@@ -1110,13 +1793,11 @@ app.patch('/api/:table/:id', async (req, res, next) => {
             }
         }
 
-        // Strip seconds for event times
         if (modelName === 'event') {
-            if (data.startTime && typeof data.startTime === 'string') data.startTime = data.startTime.substring(0, 5);
-            if (data.endTime && typeof data.endTime === 'string') data.endTime = data.endTime.substring(0, 5);
-            if (data.eventDate && typeof data.eventDate === 'string' && data.eventDate.includes('T')) {
-                data.eventDate = data.eventDate.split('T')[0] + 'T00:00:00.000Z';
-            }
+            const existingEvent = await prisma.event.findUnique({ where: { id } });
+            data = await resolveEventData(data, true, existingEvent);
+        } else if (modelName === 'bulletin') {
+            data = await resolveBulletinData(data, true);
         }
 
         // Filter schema fields to prevent unknown field errors
@@ -1124,7 +1805,8 @@ app.patch('/api/:table/:id', async (req, res, next) => {
 
         const item = await delegate.update({
             where: { [pkField]: id },
-            data
+            data,
+            include: defaultIncludes[modelName] ? defaultIncludes[modelName] : undefined
         });
 
         res.json(formatOutput(modelName, item));

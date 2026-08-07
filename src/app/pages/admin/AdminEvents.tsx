@@ -67,6 +67,7 @@ export function AdminEvents() {
             status: e.eventStatus?.statusName || "Pending",
             description: e.description,
             category: e.eventCategory?.eventCategoryName || "General",
+            isOfficial: e.author?.userStatus?.statusName === 'Official',
             rawDate: new Date(e.eventDate).getTime()
         }));
 

@@ -4,6 +4,7 @@ import { ProfileHeader } from '@components/user/ProfileHeader';
 import { api, AchievementIconMap, useProfileRoute, type ProfileData, type UserStatisticsData } from '@/app/views/api';
 import { NotFound } from '@pages/NotFound';
 import { Trophy, Loader2 } from 'lucide-react';
+import { formatDate } from '@/app/views/formatters';
 
 export function Achievements() {
     const navigate = useNavigate();
@@ -105,7 +106,7 @@ export function Achievements() {
                                                 {achievement.achievementDescription}
                                             </p>
                                             <div className="text-xs text-gray-400 mt-auto font-medium">
-                                                Acquired: {new Date(achv.achievedDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+                                                Acquired: {formatDate(achv.achievedDate, 'long')}
                                             </div>
                                         </div>
                                         {achv.achievementTier && (

@@ -16,6 +16,7 @@ import { NotFound } from '@pages/NotFound';
 import { LazyImage } from '@components/user/LazyImage';
 import { useAuth } from '@/app/views/auth';
 import { api, type BulletinData, type BulletinCommentData } from '@/app/views/api';
+import { formatDate } from '@/app/views/formatters';
 
 export function BulletinDetail() {
     const { id } = useParams();
@@ -82,7 +83,7 @@ export function BulletinDetail() {
 
     const currentStatusName = bulletin?.contentStatus?.statusName || null;
 
-    if (!bulletin || currentStatusName === "Rejected") {
+    if (!bulletin || currentStatusName !== "Approved") {
         return <NotFound />;
     }
 
@@ -159,13 +160,13 @@ export function BulletinDetail() {
 
     return (
         <div className="min-h-screen bg-gray-50 pb-12">
-            {currentStatusName === "Pending" && (
-                <div className="bg-yellow-50 px-4 py-3 border-b border-yellow-200 text-center">
-                    <p className="text-yellow-800 font-medium text-sm">
-                        ⚠️ This bulletin is currently under review by an administrator and is not visible to the public.
-                    </p>
-                </div>
-            )}
+            {/* TODO: If the author wants to make edits or preview before approval, this banner will show. */}
+            {/* <div className="bg-yellow-50 px-4 py-3 border-b border-yellow-200 text-center">
+                <p className="text-yellow-800 font-medium text-sm">
+                    ⚠️ This bulletin is currently under review by an administrator and is not visible to the public.
+                </p>
+            </div> */}
+
             {/* Back Button and Edit Button */}
             <div className="max-w-4xl mx-auto px-4 md:px-8 pt-6 flex justify-between items-center">
                 <Link
@@ -228,7 +229,7 @@ export function BulletinDetail() {
                             <div className="flex items-center gap-4 ml-auto text-sm text-gray-500">
                                 <div className="flex items-center gap-1">
                                     <Clock className="w-4 h-4" />
-                                    <span>{new Date(bulletin.bulletinDate).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</span>
+                                    <span>{formatDate(bulletin.bulletinDate, 'full')}</span>
                                 </div>
                                 <span>•</span>
                                 <span>{bulletin.readTimeMinutes} min read</span>
@@ -331,7 +332,7 @@ export function BulletinDetail() {
                                                     {commenterProfile?.userName || "Unknown User"}
                                                 </Link>
                                                 <span className="text-sm text-gray-500">
-                                                    {new Date(commentItem.commentDate).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}
+                                                    {formatDate(commentItem.commentDate, 'datetime')}
                                                 </span>
                                             </div>
                                             <p className="text-gray-700">{commentItem.comment}</p>

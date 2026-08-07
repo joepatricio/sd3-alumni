@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Heart, Search, Eye, EyeOff, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { api } from '@/app/views/api';
-import { formatCurrency, getStatusColor } from '@/app/views/formatters';
+import { formatCurrency, getStatusColor, formatDate } from '@/app/views/formatters';
 
 export function UserDonations({ userId, onStatsUpdate }: { userId: string, onStatsUpdate?: (newAmount: number) => void }) {
     const [loading, setLoading] = useState(true);
@@ -208,7 +208,7 @@ export function UserDonations({ userId, onStatsUpdate }: { userId: string, onSta
                                         </span>
                                     </div>
                                     <div className="text-sm text-gray-500 space-y-1">
-                                        <p>Date: {new Date(donation.donationDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
+                                        <p>Date: {formatDate(donation.donationDate, 'long')}</p>
                                         <p className="font-mono text-xs">Ref: {donation.donationReference}</p>
                                     </div>
                                 </div>

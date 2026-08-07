@@ -4,7 +4,7 @@ import { Calendar, Award, Heart, Loader2, Mail, Phone, MapPin, Briefcase, Messag
 import { ProfileHeader } from '@components/user/ProfileHeader';
 import { api, AchievementIconMap, useProfileRoute, type ProfileData, type UserStatisticsData } from '@/app/views/api';
 import { useAuth } from '@/app/views/auth';
-import { formatCurrency } from '@/app/views/formatters';
+import { formatCurrency, formatDate, getEventImage } from '@/app/views/formatters';
 import { NotFound } from '@pages/NotFound';
 import { LazyImage } from '@components/user/LazyImage';
 import { UserDonations } from '@components/user/UserDonations';
@@ -150,7 +150,7 @@ export function Profile() {
             <Link to={`/bulletin/${b.id}`}>
                 <div className="flex items-center gap-2 text-sm text-gray-500 mb-3">
                     <FileText className="w-4 h-4" />
-                    <span>Posted a bulletin • {new Date(b.bulletinDate).toLocaleDateString()}</span>
+                    <span>Posted a bulletin • {formatDate(b.bulletinDate, 'short')}</span>
                 </div>
                 {b.bulletinImage && (
                     <div className="w-full h-48 mb-3 rounded-md overflow-hidden bg-gray-100">
@@ -173,7 +173,7 @@ export function Profile() {
             <Link to={`/bulletin/${c.bulletinId}`}>
                 <div className="flex items-center gap-2 text-sm text-gray-500 mb-2">
                     <MessageSquare className="w-4 h-4" />
-                    <span>Commented on {c.bulletin?.title ? `"${c.bulletin.title}"` : 'a bulletin'} • {new Date(c.commentDate).toLocaleDateString()}</span>
+                    <span>Commented on {c.bulletin?.title ? `"${c.bulletin.title}"` : 'a bulletin'} • {formatDate(c.commentDate, 'short')}</span>
                 </div>
                 <p className="text-gray-800 text-sm">"{c.comment}"</p>
                 <p className="text-sm text-brand-accent font-medium mt-2 inline-block">View Bulletin</p>
@@ -190,13 +190,11 @@ export function Profile() {
                 className="group bg-white border rounded-xl overflow-hidden hover:shadow-lg transition-all duration-300 flex flex-col h-full"
             >
                 <div className="relative h-32 w-full overflow-hidden bg-gray-100">
-                    {event.eventImage && (
-                        <LazyImage
-                            src={event.eventImage}
-                            alt={event.title}
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                        />
-                    )}
+                    <LazyImage
+                        src={getEventImage(event)}
+                        alt={event.title}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    />
                     {isUpcoming ? (
                         <div className="absolute top-2 right-2 bg-brand-primary text-white text-xs font-bold px-2 py-1 rounded-full shadow-md">
                             Upcoming
@@ -214,7 +212,7 @@ export function Profile() {
                     <div className="space-y-1 text-xs text-gray-600 mt-auto">
                         <div className="flex items-center gap-2">
                             <Calendar className="w-3 h-3 text-brand-primary shrink-0" />
-                            <span>{new Date(event.eventDate).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}</span>
+                            <span>{formatDate(event.eventDate, 'short')}</span>
                         </div>
                         <div className="flex items-center gap-2">
                             <MapPin className="w-3 h-3 text-brand-primary shrink-0" />
@@ -262,10 +260,7 @@ export function Profile() {
         },
         {
             icon: Calendar,
-            content: isValidString(profile.birthday) ? `Born ${new Date(profile.birthday).toLocaleDateString(
-                "en-US",
-                { month: "long", day: "numeric", year: "numeric" }
-            )}` : null
+            content: isValidString(profile.birthday) ? `Born ${formatDate(profile.birthday, 'long')}` : null
         },
         {
             icon: profile.gender === 'Male' ? Mars : profile.gender === 'Female' ? Venus : NonBinary,
@@ -278,8 +273,9 @@ export function Profile() {
     let tabVisibility = false;
     const profStatus = userRecord?.profileStatus?.statusName || 'hidden';
     const isConnected = connection?.status?.connectionName === 'Accepted';
+    const isAdminPreview = location.pathname.includes('/admin/preview');
 
-    if (isOwner || profStatus === 'Public') {
+    if (isOwner || profStatus === 'Public' || isAdminPreview) {
         visibility = 'full';
         tabVisibility = true;
     } else if (profStatus === 'Connections Only' && !isConnected) {

@@ -17,6 +17,7 @@
 /build
 /dist/assets
 /prisma/generated/
+db.json
 dev.db
 prod.db
 
@@ -43,3 +44,4 @@ public/events-image.jpg
 public/main-hero.jpg
 public/upload-*
 public/edit/*
+db.json

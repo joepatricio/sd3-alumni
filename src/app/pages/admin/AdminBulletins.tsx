@@ -10,21 +10,23 @@ export function AdminBulletins() {
         if (params.search) {
             whereClause.title = { contains: params.search };
         }
-        const hasActiveCategoryFilter = params.categories && params.categories.length > 0 && !params.categories.includes('All');
-        if (hasActiveCategoryFilter || params.searchAuthor) {
+        const hasActiveAccountScope = params.accountScope && params.accountScope !== 'All';
+        if (hasActiveAccountScope || params.searchAuthor) {
             whereClause.author = {};
             if (params.searchAuthor) {
                 whereClause.author.profile = { userName: { contains: params.searchAuthor } };
             }
-            if (hasActiveCategoryFilter) {
-                const hasOfficial = params.categories.includes('Official');
-                const hasRegular = params.categories.includes('Regular');
-                if (hasOfficial && !hasRegular) {
+            if (hasActiveAccountScope) {
+                if (params.accountScope === 'Official') {
                     whereClause.author.userStatus = { statusName: 'Official' };
-                } else if (hasRegular && !hasOfficial) {
+                } else if (params.accountScope === 'Regular') {
                     whereClause.author.userStatus = { statusName: { not: 'Official' } };
                 }
             }
+        }
+
+        if (params.categories && params.categories.length > 0 && !params.categories.includes('All')) {
+            whereClause.category = { bulletinCategoryName: { in: params.categories } };
         }
         if (params.searchStartDate || params.searchEndDate) {
             const dateClause: any = {};
@@ -72,7 +74,8 @@ export function AdminBulletins() {
             type: 'Bulletin',
             status: b.contentStatus?.statusName || "Pending",
             description: b.content || '',
-            category: b.author?.userStatus?.statusName === 'Official' ? 'Official' : 'Regular',
+            category: b.bulletinCategory?.bulletinCategoryName || "Announcements",
+            isOfficial: b.author?.userStatus?.statusName === 'Official',
             rawDate: new Date(b.bulletinDate).getTime()
         }));
 
@@ -96,9 +99,16 @@ export function AdminBulletins() {
             description="Review, approve, or reject user-submitted and community announcements."
             contentType="Bulletin"
             fetchData={fetchData}
+            statuses={["All", "Pending", "Approved", "Rejected", "Archived"]}
             primaryColorClass="bg-blue-600 hover:bg-blue-700 text-white"
             outlineColorClass="text-blue-600 border-blue-200 hover:bg-blue-50"
-            categories={["Official", "Regular"]}
+            categories={[
+                "Announcements",
+                "Careers",
+                "Success Stories",
+                "Donations",
+                "Others"
+            ]}
             onStatusChange={handleStatusChange}
         />
     );

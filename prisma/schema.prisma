@@ -210,21 +210,29 @@ model Admin {
   records   Record[]
 }
 
-model Bulletin {
-  id              String    @id @default(uuid())
-  adminId         String?
-  authorId        String
-  contentStatusId String
-  bulletinDate    DateTime  @default(now())
-  reviewDate      DateTime?
-  title           String
-  readTimeMinutes Int
-  content         String
-  bulletinImage   String?
+model BulletinCategory {
+  id                   String     @id @default(uuid())
+  bulletinCategoryName String
+  bulletins            Bulletin[]
+}
 
-  admin    Admin?         @relation(fields: [adminId], references: [id])
-  author   User           @relation("AuthorBulletins", fields: [authorId], references: [id])
-  status   ContentStatus  @relation(fields: [contentStatusId], references: [id])
+model Bulletin {
+  id                 String           @id @default(uuid())
+  adminId            String?
+  authorId           String
+  contentStatusId    String
+  bulletinCategoryId String
+  bulletinDate       DateTime         @default(now())
+  reviewDate         DateTime?
+  title              String
+  readTimeMinutes    Int
+  content            String
+  bulletinImage      String?
+
+  admin    Admin?           @relation(fields: [adminId], references: [id])
+  author   User             @relation("AuthorBulletins", fields: [authorId], references: [id])
+  status   ContentStatus    @relation(fields: [contentStatusId], references: [id])
+  category BulletinCategory @relation(fields: [bulletinCategoryId], references: [id])
   comments Comment[]
   likes    BulletinLike[]
 }
@@ -246,7 +254,7 @@ model Event {
   adminId         String?
   authorId        String
   eventStatusId   String
-  locationId      String
+  locationId      String?
   eventCategoryId String
   eventDate       DateTime
   reviewDate      DateTime?
@@ -255,13 +263,13 @@ model Event {
   startTime       String?
   endTime         String?
   responses       Int       @default(0)
-  modality        String
+  modality        String?
   eventImage      String?
 
   admin    Admin?        @relation(fields: [adminId], references: [id])
   author   User          @relation("EventAuthor", fields: [authorId], references: [id])
   status   EventStatus   @relation(fields: [eventStatusId], references: [id])
-  location Location      @relation(fields: [locationId], references: [id])
+  location Location?     @relation(fields: [locationId], references: [id])
   category EventCategory @relation(fields: [eventCategoryId], references: [id])
   rsvps    UserRsvp[]
 }

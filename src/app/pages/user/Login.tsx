@@ -6,7 +6,6 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { toast } from 'sonner';
 import { api } from '@/app/views/api';
-import bcrypt from 'bcryptjs';
 import { useAuth } from '@/app/views/auth';
 
 import { Button } from '@components/ui/button';
@@ -62,10 +61,8 @@ export function Login() {
             const { token, user } = response.data;
 
             if (token) {
-                localStorage.setItem('token', token);
+                setSession(token, values.rememberMe);
             }
-
-            setSession({ userId: user.id, email: user.email }, values.rememberMe);
 
             toast.success("Welcome back!", {
                 description: "You have successfully signed in.",

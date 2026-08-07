@@ -1,16 +1,20 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, lazy, Suspense } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@components/ui/card';
 import { Button } from '@components/ui/button';
-import { Badge } from '@components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@components/ui/tabs';
 import { Input } from '@components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@components/ui/dialog';
 import { Label } from '@components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@components/ui/select';
 import { Textarea } from '@components/ui/textarea';
-import { ArrowUp, ArrowDown, ArrowUpDown, ChevronLeft, ChevronRight, Search } from 'lucide-react';
-import { useSearchParams } from 'react-router-dom';
-import { api } from '@/app/views/api';
+import { ArrowUp, ArrowDown, ArrowUpDown, ChevronLeft, ChevronRight, Search, Plus, FileText, Eye } from 'lucide-react';
+import { Link, useSearchParams } from 'react-router-dom';
+import { api, type DegreeData, type UserStatusData } from '@/app/views/api';
+import { formatDate } from '@/app/views/formatters';
+import { Badge } from '@/app/components/ui/badge';
+
+const loadCreateUserModal = () => import('@components/admin/CreateUserModal').then(m => ({ default: m.CreateUserModal }));
+const CreateUserModal = lazy(loadCreateUserModal);
 
 interface User {
     id: string;
@@ -26,10 +30,11 @@ interface User {
 }
 
 export function AdminUsers() {
-    const statuses = ['All', 'Pending', 'Official', 'Regular', 'Suspended', 'Banned'];
     const ITEMS_PER_PAGE = 20;
 
     const [searchParams, setSearchParams] = useSearchParams();
+    const [dbStatuses, setDbStatuses] = useState<UserStatusData[]>([]);
+    const [degrees, setDegrees] = useState<DegreeData[]>([]);
     const [users, setUsers] = useState<User[]>([]);
     const [totalUsers, setTotalUsers] = useState(0);
     const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'All');
@@ -37,10 +42,18 @@ export function AdminUsers() {
     // Search & Filter
     const [searchTerm, setSearchTerm] = useState('');
     const [searchBatch, setSearchBatch] = useState('');
+    const [searchReason, setSearchReason] = useState('');
+    const [batchRange, setBatchRange] = useState<string>('All Batches');
+    const [customMinBatch, setCustomMinBatch] = useState<string>('');
+    const [customMaxBatch, setCustomMaxBatch] = useState<string>('');
 
     // Explicit filter state
     const [appliedSearchTerm, setAppliedSearchTerm] = useState('');
     const [appliedSearchBatch, setAppliedSearchBatch] = useState('');
+    const [appliedSearchReason, setAppliedSearchReason] = useState('');
+    const [appliedBatchRange, setAppliedBatchRange] = useState<string>('All Batches');
+    const [appliedCustomMinBatch, setAppliedCustomMinBatch] = useState<string>('');
+    const [appliedCustomMaxBatch, setAppliedCustomMaxBatch] = useState<string>('');
 
     // Sorting
     const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>(null);
@@ -53,6 +66,30 @@ export function AdminUsers() {
     const [editStatus, setEditStatus] = useState<string>('');
     const [editReason, setEditReason] = useState<string>('');
     const [editExpiryDate, setEditExpiryDate] = useState<string>('');
+
+    // Create User Modal State
+    const [isCreateOpen, setIsCreateOpen] = useState(false);
+
+    // Load initial lookup data (statuses & degrees)
+    useEffect(() => {
+        const fetchLookups = async () => {
+            try {
+                const [statusRes, degreeRes] = await Promise.all([
+                    api.get('/userStatuses'),
+                    api.get('/degrees')
+                ]);
+                const statusData = statusRes.data.data || statusRes.data || [];
+                const degreeData = degreeRes.data.data || degreeRes.data || [];
+                setDbStatuses(statusData);
+                setDegrees(degreeData);
+            } catch (err) {
+                console.error("Failed to fetch lookups:", err);
+            }
+        };
+        fetchLookups();
+    }, []);
+
+    const statuses = ['All', ...dbStatuses.map(s => s.statusName)];
 
     const handleSort = (key: string) => {
         let direction: 'asc' | 'desc' = 'asc';
@@ -70,14 +107,26 @@ export function AdminUsers() {
     const handleApplyFilters = () => {
         setAppliedSearchTerm(searchTerm);
         setAppliedSearchBatch(searchBatch);
+        setAppliedSearchReason(searchReason);
+        setAppliedBatchRange(batchRange);
+        setAppliedCustomMinBatch(customMinBatch);
+        setAppliedCustomMaxBatch(customMaxBatch);
         setCurrentPage(1);
     };
 
     const handleClearFilters = () => {
         setSearchTerm('');
         setSearchBatch('');
+        setSearchReason('');
+        setBatchRange('All Batches');
+        setCustomMinBatch('');
+        setCustomMaxBatch('');
         setAppliedSearchTerm('');
         setAppliedSearchBatch('');
+        setAppliedSearchReason('');
+        setAppliedBatchRange('All Batches');
+        setAppliedCustomMinBatch('');
+        setAppliedCustomMaxBatch('');
         setCurrentPage(1);
     };
 
@@ -101,93 +150,141 @@ export function AdminUsers() {
         }
     };
 
-    const handleSaveEdit = () => {
+    const handleSaveEdit = async () => {
         if (!editingUser) return;
-        setUsers(users.map(u => {
-            if (u.id === editingUser.id) {
-                const now = new Date();
-                const formattedGranted = now.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 
-                let rawExpiryDateObj = undefined;
-                if (editStatus === 'Suspended' && editExpiryDate) {
-                    const d = new Date(editExpiryDate);
-                    if (!isNaN(d.getTime())) rawExpiryDateObj = d.getTime();
+        try {
+            await api.post(`/admin/users/${editingUser.id}/status`, {
+                statusName: editStatus,
+                reason: editReason,
+                expiryDate: editStatus === 'Suspended' ? editExpiryDate : null
+            });
+            setEditingUser(null);
+            fetchUsersList();
+        } catch (err) {
+            console.error("Failed to update user status:", err);
+        }
+    };
+
+    const setPresetDuration = (days: number) => {
+        const d = new Date();
+        d.setDate(d.getDate() + days);
+        setEditExpiryDate(d.toISOString().split('T')[0]);
+    };
+
+    const fetchUsersList = async () => {
+        try {
+            const whereClause: any = {};
+            if (activeTab !== 'All') {
+                whereClause.userStatus = { statusName: activeTab };
+            }
+            if (appliedSearchTerm) {
+                whereClause.profile = { ...(whereClause.profile || {}), userName: { contains: appliedSearchTerm } };
+            }
+
+            const currentYear = new Date().getFullYear();
+            let batchFilter: any = undefined;
+
+            if (appliedBatchRange === 'Past 3') {
+                batchFilter = { gte: currentYear - 3 };
+            } else if (appliedBatchRange === 'Past 5') {
+                batchFilter = { gte: currentYear - 5 };
+            } else if (appliedBatchRange === 'Past 10') {
+                batchFilter = { gte: currentYear - 10 };
+            } else if (appliedBatchRange === 'Past 30') {
+                batchFilter = { gte: currentYear - 30 };
+            } else if (appliedBatchRange === 'Custom') {
+                const min = appliedCustomMinBatch ? parseInt(appliedCustomMinBatch, 10) : undefined;
+                const max = appliedCustomMaxBatch ? parseInt(appliedCustomMaxBatch, 10) : undefined;
+                if (min !== undefined && max !== undefined) {
+                    batchFilter = { gte: min, lte: max };
+                } else if (min !== undefined) {
+                    batchFilter = { gte: min };
+                } else if (max !== undefined) {
+                    batchFilter = { lte: max };
+                }
+            } else if (appliedSearchBatch) {
+                batchFilter = parseInt(appliedSearchBatch, 10);
+            }
+
+            if (batchFilter !== undefined) {
+                whereClause.profile = { ...(whereClause.profile || {}), batch: batchFilter };
+            }
+
+            if (appliedSearchReason) {
+                whereClause.records = { some: { description: { contains: appliedSearchReason } } };
+            }
+
+            let sortStr = undefined;
+            if (sortConfig) {
+                let sortKey: string = sortConfig.key;
+                if (sortKey === 'name') sortKey = 'profile.userName';
+                else if (sortKey === 'email') sortKey = 'profile.email';
+                else if (sortKey === 'batch') sortKey = 'profile.batch';
+                else if (sortKey === 'status') sortKey = 'userStatus.statusName';
+
+                sortStr = sortConfig.direction === 'desc' ? `-${sortKey}` : sortKey;
+            }
+
+            const res = await api.get('/users', {
+                params: {
+                    _page: currentPage,
+                    _per_page: ITEMS_PER_PAGE,
+                    _sort: sortStr,
+                    _where: Object.keys(whereClause).length > 0 ? JSON.stringify(whereClause) : undefined
+                }
+            });
+
+            const data = res.data.data || res.data;
+            const total = res.data.items || data.length;
+
+            const mapped = data.map((u: any) => {
+                const currentRecord = u.records?.find((r: any) => r.id === u.currentRecordId) || u.records?.[0];
+
+                let formattedGranted = undefined;
+                let rawGranted = 0;
+                if (currentRecord?.dateCreated) {
+                    const d = new Date(currentRecord.dateCreated);
+                    if (!isNaN(d.getTime())) {
+                        formattedGranted = formatDate(d, 'short');
+                        rawGranted = d.getTime();
+                    }
+                }
+
+                let formattedExpiry = undefined;
+                let rawExpiry = 0;
+                if (currentRecord?.dateExpires) {
+                    const d = new Date(currentRecord.dateExpires);
+                    if (!isNaN(d.getTime())) {
+                        formattedExpiry = formatDate(d, 'short');
+                        rawExpiry = d.getTime();
+                    }
                 }
 
                 return {
-                    ...u,
-                    status: editStatus,
-                    reason: (editStatus === 'Suspended' || editStatus === 'Banned') ? editReason : undefined,
-                    expiryDate: editStatus === 'Suspended' ? editExpiryDate : undefined,
-                    rawExpiryDate: rawExpiryDateObj,
-                    grantedDate: formattedGranted,
-                    rawGrantedDate: now.getTime(),
-                };
-            }
-            return u;
-        }));
-        setEditingUser(null);
-    };
-
-    useEffect(() => {
-        const fetchUsers = async () => {
-            try {
-                const whereClause: any = {};
-                if (activeTab !== 'All') {
-                    whereClause.userStatus = { statusName: activeTab };
-                }
-                if (appliedSearchTerm) {
-                    whereClause.profile = { ...(whereClause.profile || {}), userName: { contains: appliedSearchTerm } };
-                }
-                if (appliedSearchBatch) {
-                    whereClause.profile = { ...(whereClause.profile || {}), batch: parseInt(appliedSearchBatch, 10) };
-                }
-
-                let sortStr = undefined;
-                if (sortConfig) {
-                    let sortKey: string = sortConfig.key;
-                    if (sortKey === 'name') sortKey = 'profile.userName';
-                    else if (sortKey === 'email') sortKey = 'profile.email';
-                    else if (sortKey === 'batch') sortKey = 'profile.batch';
-                    else if (sortKey === 'status') sortKey = 'userStatus.statusName';
-                    
-                    sortStr = sortConfig.direction === 'desc' ? `-${sortKey}` : sortKey;
-                }
-
-                const res = await api.get('/users', {
-                    params: {
-                        _page: currentPage,
-                        _per_page: ITEMS_PER_PAGE,
-                        _sort: sortStr,
-                        _where: Object.keys(whereClause).length > 0 ? JSON.stringify(whereClause) : undefined
-                    }
-                });
-
-                const data = res.data.data || res.data;
-                const total = res.data.items || data.length;
-
-                const mapped = data.map((u: any) => ({
                     id: u.id,
                     name: u.profile?.userName || 'Unknown',
                     email: u.profile?.email || 'N/A',
                     batch: u.profile?.batch?.toString() || 'N/A',
                     status: u.userStatus?.statusName || 'Unknown',
-                    reason: undefined,
-                    grantedDate: undefined,
-                    expiryDate: undefined,
-                    rawGrantedDate: 0,
-                    rawExpiryDate: 0
-                }));
+                    reason: currentRecord?.description || undefined,
+                    grantedDate: formattedGranted,
+                    expiryDate: formattedExpiry,
+                    rawGrantedDate: rawGranted,
+                    rawExpiryDate: rawExpiry
+                };
+            });
 
-                setUsers(mapped);
-                setTotalUsers(total);
-            } catch (err) {
-                console.error(err);
-            }
-        };
+            setUsers(mapped);
+            setTotalUsers(total);
+        } catch (err) {
+            console.error(err);
+        }
+    };
 
-        fetchUsers();
-    }, [activeTab, appliedSearchTerm, appliedSearchBatch, sortConfig, currentPage]);
+    useEffect(() => {
+        fetchUsersList();
+    }, [activeTab, appliedSearchTerm, appliedSearchBatch, appliedSearchReason, appliedBatchRange, appliedCustomMinBatch, appliedCustomMaxBatch, sortConfig, currentPage]);
 
     const totalPages = Math.ceil(totalUsers / ITEMS_PER_PAGE);
     const paginatedUsers = users;
@@ -211,6 +308,41 @@ export function AdminUsers() {
             }
         }
         setEditExpiryDate(initialExpiry);
+    };
+
+    const renderQuickActions = (user: User) => {
+        const showRestoreUnbanActivate = ['Suspended', 'Banned', 'Deactivated'].includes(user.status);
+        const showSuspend = user.status === 'Official' || user.status === 'Regular';
+        const showBan = user.status === 'Official' || user.status === 'Regular' || user.status === 'Suspended';
+        const showDeactivate = user.status !== 'Deactivated';
+
+        return (
+            <div className="flex justify-end gap-1">
+                {showRestoreUnbanActivate && (
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        className="text-blue-600 border-blue-200 hover:text-blue-700 hover:bg-blue-200"
+                        onClick={() => openEditModal(user, 'Regular')}
+                    >
+                        {user.status === 'Suspended' ? 'Restore' : user.status === 'Banned' ? 'Unban' : 'Activate'}
+                    </Button>
+                )}
+                {showSuspend && (
+                    <Button variant="outline" size="sm" className="text-orange-600 border-orange-200 hover:bg-orange-50" onClick={() => openEditModal(user, 'Suspended')}>Suspend</Button>
+                )}
+                {showBan && (
+                    <Button variant="outline" size="sm" className="text-red-600 border-red-200 hover:bg-red-50" onClick={() => openEditModal(user, 'Banned')}>Ban</Button>
+                )}
+                {showDeactivate && (
+                    <Button variant="outline" size="sm" className="text-gray-600 border-gray-200 hover:bg-gray-100" onClick={() => openEditModal(user, 'Deactivated')}>Deactivate</Button>
+                )}
+                <Button variant="ghost" size="sm" onClick={() => openEditModal(user)}>
+                    <FileText className="w-4 h-4 mr-1" />
+                    Edit
+                </Button>
+            </div>
+        );
     };
 
     const renderTable = () => {
@@ -237,59 +369,49 @@ export function AdminUsers() {
                                 <th className="px-6 py-3 cursor-pointer hover:bg-gray-100 transition-colors" onClick={() => handleSort('batch')}>
                                     <div className="flex items-center gap-1">Batch {renderSortIcon('batch')}</div>
                                 </th>
-                                <th className="px-6 py-3 cursor-pointer hover:bg-gray-100 transition-colors" onClick={() => handleSort('status')}>
-                                    <div className="flex items-center gap-1">Status {renderSortIcon('status')}</div>
-                                </th>
                                 <th className="px-6 py-3 cursor-pointer hover:bg-gray-100 transition-colors" onClick={() => handleSort('grantedDate')}>
                                     <div className="flex items-center gap-1">Granted/Expiry Date {renderSortIcon('grantedDate')}</div>
                                 </th>
-                                {(activeTab === 'All' || activeTab === 'Suspended' || activeTab === 'Banned') && (
-                                    <th className="px-6 py-3">Reason</th>
-                                )}
-                                <th className="px-6 py-3 text-right">Actions</th>
+                                <th className="px-6 py-3">Status</th>
+                                <th className="px-8 py-3 text-left">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
                             {paginatedUsers.map((user) => (
                                 <tr key={user.id} className="border-t">
-                                    <td className="px-6 py-4 font-medium">{user.name}</td>
+                                    <td className="px-6 py-4 font-medium">
+                                        <div className="flex items-center gap-2">
+                                            <Link to={`/profile/${user.id}`} className="text-gray-900 hover:text-brand-primary" title="Link to Profile">
+                                                <span>{user.name}</span>
+                                            </Link>
+                                            <Link to={`/admin/preview/user/${user.id}`} className="text-gray-400 hover:text-brand-primary" title="Preview Profile">
+                                                <Eye className="w-4 h-4" />
+                                            </Link>
+                                        </div>
+                                    </td>
                                     <td className="px-6 py-4">{user.email}</td>
                                     <td className="px-6 py-4">{user.batch}</td>
+                                    <td className="px-6 py-4 whitespace-nowrap">
+                                        {user.status === 'Suspended' ? (
+                                            <div className="text-orange-700">Expires: {user.expiryDate || 'N/A'}</div>
+                                        ) : (
+                                            user.grantedDate ? formatDate(user.grantedDate, "long") : 'N/A'
+                                        )}
+                                    </td>
                                     <td className="px-6 py-4">
                                         <Badge className={
                                             user.status === 'Official' ? 'bg-blue-100 text-blue-800' :
                                                 user.status === 'Regular' ? 'bg-green-100 text-green-800' :
                                                     user.status === 'Pending' ? 'bg-yellow-100 text-yellow-800' :
                                                         user.status === 'Suspended' ? 'bg-orange-100 text-orange-800' :
-                                                            'bg-red-100 text-red-800'
+                                                            user.status === 'Banned' ? 'bg-red-100 text-red-800' :
+                                                                'bg-gray-100 text-gray-800'
                                         }>
                                             {user.status}
                                         </Badge>
                                     </td>
-                                    <td className="px-6 py-4 whitespace-nowrap">
-                                        {user.status === 'Suspended' ? (
-                                            <div className="text-orange-700">Expires: {user.expiryDate || 'N/A'}</div>
-                                        ) : (
-                                            user.grantedDate ? `Granted: ${user.grantedDate}` : 'N/A'
-                                        )}
-                                    </td>
-                                    {(activeTab === 'All' || activeTab === 'Suspended' || activeTab === 'Banned') && (
-                                        <td className="px-6 py-4">
-                                            <span className="text-gray-500 line-clamp-1 max-w-[150px]" title={user.reason}>{user.reason || '-'}</span>
-                                        </td>
-                                    )}
-                                    <td className="px-6 py-4 text-right">
-                                        {user.status !== 'Pending' && (
-                                            <div className="flex justify-end gap-2">
-                                                {user.status === 'Regular' && activeTab !== 'All' && (
-                                                    <>
-                                                        <Button variant="outline" size="sm" className="text-brand-primary border-orange-200 hover:bg-orange-50" onClick={() => openEditModal(user, 'Suspended')}>Suspend</Button>
-                                                        <Button variant="outline" size="sm" className="text-red-600 border-red-200 hover:bg-red-50" onClick={() => openEditModal(user, 'Banned')}>Ban</Button>
-                                                    </>
-                                                )}
-                                                <Button variant="ghost" size="sm" onClick={() => openEditModal(user)}>Edit</Button>
-                                            </div>
-                                        )}
+                                    <td className="px-6 py-4 text-left">
+                                        {renderQuickActions(user)}
                                     </td>
                                 </tr>
                             ))}
@@ -329,19 +451,17 @@ export function AdminUsers() {
             <Tabs value={activeTab} onValueChange={onTabChange} className="w-full">
                 <div className="overflow-x-auto pb-2 flex justify-between items-center gap-4">
                     <TabsList className="mb-4 inline-flex min-w-full sm:min-w-0 flex-1">
-                        <TabsTrigger value="All">All Users</TabsTrigger>
-                        <TabsTrigger value="Official">Official Accounts</TabsTrigger>
-                        <TabsTrigger value="Regular">Regular Users</TabsTrigger>
-                        <TabsTrigger value="Pending">Pending</TabsTrigger>
-                        <TabsTrigger value="Suspended">Suspended Users</TabsTrigger>
-                        <TabsTrigger value="Banned">Banned Users</TabsTrigger>
+                        {statuses.map(status => (
+                            <TabsTrigger key={status} value={status}>
+                                {status === 'All' ? 'All Users' : status}
+                            </TabsTrigger>
+                        ))}
                     </TabsList>
                 </div>
-
                 <div className="p-4 bg-white border rounded-md shadow-sm mb-6 flex flex-col gap-4">
                     <div className="text-sm font-medium text-gray-700">Filters</div>
-                    <div className="flex flex-col sm:flex-row gap-4">
-                        <div className="relative flex-1">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-6 gap-4 items-center">
+                        <div className="col-span-2 relative">
                             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
                             <Input
                                 placeholder="Search user by name..."
@@ -351,17 +471,63 @@ export function AdminUsers() {
                                 onKeyDown={(e) => { if (e.key === 'Enter') handleApplyFilters(); }}
                             />
                         </div>
-                        <div className="w-full sm:w-48">
-                            <Input
-                                placeholder="Filter by batch..."
-                                value={searchBatch}
-                                onChange={(e) => setSearchBatch(e.target.value)}
-                                onKeyDown={(e) => { if (e.key === 'Enter') handleApplyFilters(); }}
-                            />
+                        <div>
+                            <Select value={batchRange} onValueChange={(val) => setBatchRange(val)}>
+                                <SelectTrigger>
+                                    <SelectValue placeholder="All Batches" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="All Batches">All Batches</SelectItem>
+                                    <SelectItem value="Past 3">Past 3</SelectItem>
+                                    <SelectItem value="Past 5">Past 5</SelectItem>
+                                    <SelectItem value="Past 10">Past 10</SelectItem>
+                                    <SelectItem value="Past 30">Past 30</SelectItem>
+                                    <SelectItem value="Custom">Custom</SelectItem>
+                                </SelectContent>
+                            </Select>
                         </div>
-                        <div className="flex gap-2">
+                        {batchRange === 'Custom' ? (
+                            <div className="flex gap-2 items-center">
+                                <Input
+                                    placeholder="Min Year"
+                                    type="number"
+                                    value={customMinBatch}
+                                    onChange={(e) => setCustomMinBatch(e.target.value)}
+                                    className="w-full"
+                                />
+                                <span className="text-gray-400">-</span>
+                                <Input
+                                    placeholder="Max Year"
+                                    type="number"
+                                    value={customMaxBatch}
+                                    onChange={(e) => setCustomMaxBatch(e.target.value)}
+                                    className="w-full"
+                                />
+                            </div>
+                        ) : (
+                            <div>
+                                <Input
+                                    placeholder="Batch year..."
+                                    value={searchBatch}
+                                    onChange={(e) => setSearchBatch(e.target.value)}
+                                    onKeyDown={(e) => { if (e.key === 'Enter') handleApplyFilters(); }}
+                                />
+                            </div>
+                        )}
+                        <div className="col-span-2 flex justify-end gap-2">
                             <Button variant="outline" onClick={handleClearFilters}>Clear</Button>
                             <Button className="bg-brand-primary hover:bg-brand-primary-hover" onClick={handleApplyFilters}>Submit</Button>
+                            <Button
+                                className="ml-auto bg-brand-secondary hover:bg-brand-secondary-hover hover:text-white"
+                                onMouseEnter={loadCreateUserModal}
+                                onFocus={loadCreateUserModal}
+                                onClick={() => {
+                                    loadCreateUserModal();
+                                    setIsCreateOpen(true);
+                                }}
+                            >
+                                <Plus className="mr-1 h-4 w-4" /> Create User
+                            </Button>
                         </div>
                     </div>
                 </div>
@@ -386,10 +552,11 @@ export function AdminUsers() {
                 ))}
             </Tabs>
 
+            {/* Edit / Status Change Modal */}
             <Dialog open={!!editingUser} onOpenChange={(open) => !open && setEditingUser(null)}>
                 <DialogContent>
                     <DialogHeader>
-                        <DialogTitle>Edit User: {editingUser?.name}</DialogTitle>
+                        <DialogTitle>Edit User Status: {editingUser?.name}</DialogTitle>
                     </DialogHeader>
                     <div className="space-y-4 py-4">
                         <div className="space-y-2">
@@ -399,12 +566,14 @@ export function AdminUsers() {
                                     <SelectValue placeholder="Select status" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    {statuses.filter(s => s !== 'All' && s !== 'Pending').map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                                    {dbStatuses.map(s => (
+                                        <SelectItem key={s.id} value={s.statusName}>{s.statusName}</SelectItem>
+                                    ))}
                                 </SelectContent>
                             </Select>
                         </div>
 
-                        {(editStatus === 'Suspended' || editStatus === 'Banned') && (
+                        {(editStatus === 'Suspended' || editStatus === 'Banned' || editStatus === 'Deactivated' || editStatus === 'Regular') && (
                             <div className="space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
                                 {editStatus === 'Suspended' && (
                                     <div className="space-y-2">
@@ -414,17 +583,22 @@ export function AdminUsers() {
                                             value={editExpiryDate}
                                             onChange={(e) => setEditExpiryDate(e.target.value)}
                                         />
+                                        <div className="flex gap-2 pt-1">
+                                            <Button type="button" variant="outline" size="sm" onClick={() => setPresetDuration(3)}>3 Days</Button>
+                                            <Button type="button" variant="outline" size="sm" onClick={() => setPresetDuration(7)}>1 Week</Button>
+                                            <Button type="button" variant="outline" size="sm" onClick={() => setPresetDuration(30)}>1 Month</Button>
+                                        </div>
                                     </div>
                                 )}
                                 <div className="space-y-2">
-                                    <Label>Reason for {editStatus === 'Suspended' ? 'Suspension' : 'Ban'} (Optional)</Label>
+                                    <Label>Reason / Administrative Note (Optional)</Label>
                                     <Textarea
-                                        placeholder="Provide a reasoning to the user..."
+                                        placeholder="Provide reasoning or record note..."
                                         value={editReason}
                                         onChange={(e) => setEditReason(e.target.value)}
-                                        rows={4}
+                                        rows={3}
                                     />
-                                    <p className="text-xs text-gray-500">This reason will be visible to the user.</p>
+                                    <p className="text-xs text-gray-500">This description will be recorded in the user status logs.</p>
                                 </div>
                             </div>
                         )}
@@ -435,6 +609,19 @@ export function AdminUsers() {
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
+
+            {/* Create User Modal Component (Lazyloaded on hover) */}
+            <Suspense fallback={null}>
+                {isCreateOpen && (
+                    <CreateUserModal
+                        isOpen={isCreateOpen}
+                        onClose={() => setIsCreateOpen(false)}
+                        onUserCreated={fetchUsersList}
+                        degrees={degrees}
+                        dbStatuses={dbStatuses}
+                    />
+                )}
+            </Suspense>
         </div>
     );
 }

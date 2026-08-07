@@ -21,6 +21,7 @@ import { Alert, AlertDescription, AlertTitle } from '@components/ui/alert';
 import { NotFound } from '@pages/NotFound';
 import { useAuth } from '@/app/views/auth';
 import { api, type EventData, type ProfileData } from '@/app/views/api';
+import { formatDate, getEventImage } from '@/app/views/formatters';
 
 export function EventDetail() {
     const { id } = useParams<{ id: string }>();
@@ -169,7 +170,7 @@ export function EventDetail() {
             setEventData({
                 ...eventData,
                 eventStatus: {
-                    ...eventData.eventStatus,
+                    id: eventData.eventStatus?.id || 'concluded-status',
                     statusName: 'Concluded'
                 }
             });
@@ -241,7 +242,7 @@ export function EventDetail() {
                         <div className="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-100">
                             <div className="h-64 sm:h-80 w-full relative">
                                 <img
-                                    src={eventData.eventImage}
+                                    src={getEventImage(eventData)}
                                     alt={eventData.title}
                                     className="w-full h-full object-cover"
                                 />
@@ -258,7 +259,7 @@ export function EventDetail() {
                                 <div className="flex flex-wrap gap-4 sm:gap-6 text-gray-600 mb-6">
                                     <div className="flex items-center gap-2">
                                         <Calendar className="w-5 h-5 text-brand-primary" />
-                                        <span>{new Date(eventData.eventDate).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</span>
+                                        <span>{formatDate(eventData.eventDate, 'full')}</span>
                                     </div>
                                     <div className="flex items-center gap-2">
                                         <Clock className="w-5 h-5 text-brand-primary" />

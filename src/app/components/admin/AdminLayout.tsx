@@ -1,14 +1,53 @@
 import { useState, useEffect, useRef } from 'react';
 import { Outlet, Link, useLocation, Navigate } from 'react-router-dom';
-import { LogOut, LayoutDashboard, Users, FileText, ChevronLeft, CreditCard, Calendar, Clock } from 'lucide-react';
+import { LogOut, LayoutDashboard, Users, FileText, ChevronLeft, CreditCard, Calendar, Clock, Loader2 } from 'lucide-react';
 import ScrollToTop from '../ScrollToTop';
 import { api } from '@/app/views/api';
+import { adminLoaders, prefetchAdminRoutes } from '@/app/AppRoutes';
+
+
+import { formatDate } from '@/app/views/formatters';
 
 export function AdminLayout() {
     const location = useLocation();
     const scrollRef = useRef<HTMLDivElement>(null);
 
-    const token = sessionStorage.getItem('adminToken');
+    const [token, setToken] = useState(sessionStorage.getItem('adminToken'));
+    const [isCheckingToken, setIsCheckingToken] = useState(!sessionStorage.getItem('adminToken'));
+
+    useEffect(() => {
+        let timeoutId: any;
+        const handleStorageEvent = (e: StorageEvent) => {
+            if (e.key === 'logoutAdminEvent') {
+                sessionStorage.removeItem('adminToken');
+                setToken(null);
+            } else if (e.key === 'requestAdminSession' && sessionStorage.getItem('adminToken')) {
+                localStorage.setItem('shareAdminSession', sessionStorage.getItem('adminToken')!);
+                localStorage.removeItem('shareAdminSession');
+            } else if (e.key === 'shareAdminSession' && e.newValue && !sessionStorage.getItem('adminToken')) {
+                sessionStorage.setItem('adminToken', e.newValue);
+                setToken(e.newValue);
+                setIsCheckingToken(false);
+            }
+        };
+
+        window.addEventListener('storage', handleStorageEvent);
+
+        if (!sessionStorage.getItem('adminToken')) {
+            localStorage.setItem('requestAdminSession', Date.now().toString());
+            localStorage.removeItem('requestAdminSession');
+            timeoutId = setTimeout(() => {
+                setIsCheckingToken(false);
+            }, 500); // Wait for potential broadcast
+        } else {
+            setIsCheckingToken(false);
+        }
+
+        return () => {
+            window.removeEventListener('storage', handleStorageEvent);
+            clearTimeout(timeoutId);
+        };
+    }, []);
 
     let username = 'Administrator';
     if (token) {
@@ -70,12 +109,7 @@ export function AdminLayout() {
 
     const formatTime = (date: Date | null) => {
         if (!date) return 'Loading...';
-        return date.toLocaleDateString([], {
-            weekday: 'long',
-            month: 'long',
-            day: 'numeric',
-            year: 'numeric'
-        }) + ' ' + date.toLocaleTimeString([], {
+        return formatDate(date, 'full') + ' ' + date.toLocaleTimeString([], {
             hour: '2-digit',
             minute: '2-digit',
             second: '2-digit'
@@ -92,10 +126,29 @@ export function AdminLayout() {
         scrollToTop();
     }, [location.pathname]);
 
+    // Idle-prefetch all admin page chunks after layout mounts to eliminate transition delays
+    useEffect(() => {
+        if ('requestIdleCallback' in window) {
+            (window as any).requestIdleCallback(() => {
+                prefetchAdminRoutes();
+            });
+        } else {
+            const timer = setTimeout(prefetchAdminRoutes, 1500);
+            return () => clearTimeout(timer);
+        }
+    }, []);
+
+
     const handleLogout = () => {
         sessionStorage.removeItem('adminToken');
+        localStorage.setItem('logoutAdminEvent', Date.now().toString());
+        localStorage.removeItem('logoutAdminEvent');
         window.location.href = '/admin/login'; // Hard redirect to clear session completely
     };
+
+    if (isCheckingToken) {
+        return <div className="flex h-screen items-center justify-center"><Loader2 className="animate-spin text-brand-primary h-8 w-8" /></div>;
+    }
 
     if (!token) {
         return <Navigate to="/admin/login" replace />;
@@ -135,6 +188,16 @@ export function AdminLayout() {
                                     ? 'bg-white/20 font-medium'
                                     : 'text-white/80 hover:bg-white/10 hover:text-white'
                                     }`}
+                                onMouseEnter={() => {
+                                    if (adminLoaders[item.path]) {
+                                        adminLoaders[item.path]().catch(() => {});
+                                    }
+                                }}
+                                onFocus={() => {
+                                    if (adminLoaders[item.path]) {
+                                        adminLoaders[item.path]().catch(() => {});
+                                    }
+                                }}
                             >
                                 <Icon size={20} />
                                 <span>{item.label}</span>
