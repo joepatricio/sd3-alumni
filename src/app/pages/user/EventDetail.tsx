@@ -11,7 +11,8 @@ import {
     CheckCircle2,
     XCircle,
     AlertCircle,
-    Loader2
+    Loader2,
+    Info
 } from 'lucide-react';
 import { CreateEventModal } from '@components/user/CreateEventModal';
 import { Button } from '@components/ui/button';
@@ -85,8 +86,9 @@ export function EventDetail() {
     }
 
     const currentStatusName = eventData?.eventStatus?.statusName || null;
+    const isAdminPreview = location.pathname.includes('/admin/preview') && !!sessionStorage.getItem('adminToken');
 
-    if (!eventData || currentStatusName === "Rejected") {
+    if (!eventData || (currentStatusName === "Rejected" && !isAdminPreview)) {
         return <NotFound />;
     }
 
@@ -193,10 +195,25 @@ export function EventDetail() {
 
     return (
         <div className="bg-gray-50 pb-12">
+            {isAdminPreview && (
+                <div className="bg-blue-50 px-4 py-3 border-b border-blue-200 text-center flex items-center justify-center gap-2">
+                    <Info className="w-4 h-4 text-blue-800" />
+                    <p className="text-blue-800 font-medium text-sm">
+                        Admin Preview Mode: Viewing event with status "{currentStatusName}"
+                    </p>
+                </div>
+            )}
             {currentStatusName === "Pending" && (
                 <div className="bg-yellow-50 px-4 py-3 border-b border-yellow-200 text-center">
                     <p className="text-yellow-800 font-medium text-sm">
                         ⚠️ This event is currently under review by an administrator. It is not visible to the public.
+                    </p>
+                </div>
+            )}
+            {currentStatusName === "Archived" && (
+                <div className="bg-yellow-50 px-4 py-3 border-b border-yellow-200 text-center">
+                    <p className="text-yellow-800 font-medium text-sm">
+                        ⚠️ This event has been archived. RSVPs are disabled and it is no longer actively listed.
                     </p>
                 </div>
             )}
@@ -322,12 +339,12 @@ export function EventDetail() {
                     <div className="space-y-8 sticky top-24 self-start">
                         {/* RSVP Card */}
                         <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-                            {isPastEvent ? (
+                        {isPastEvent || currentStatusName === "Archived" ? (
                                 <Alert className="bg-amber-50 border-amber-200 text-amber-800">
                                     <AlertCircle className="h-4 w-4 text-amber-600" />
                                     <AlertTitle className="font-bold">Event Passed</AlertTitle>
                                     <AlertDescription className="text-amber-700">
-                                        This event has already taken place. RSVP is no longer available.
+                                        {currentStatusName === "Archived" ? "This event has been archived. RSVP is disabled." : "This event has already taken place. RSVP is no longer available."}
                                     </AlertDescription>
                                 </Alert>
                             ) : isLoggedIn && !isSuspended ? (

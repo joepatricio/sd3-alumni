@@ -75,7 +75,7 @@ export function Events() {
                 if (timeRange === 'Upcoming') {
                     whereClause.eventDate = { gte: now.toISOString() };
                 } else if (timeRange === 'Past') {
-                    whereClause.status = { statusName: { in: ['Concluded', 'Archived'] } };
+                    whereClause.status = { statusName: 'Concluded' };
                     whereClause.eventDate = { lt: now.toISOString() };
                 } else if (timeRange === '7 days') {
                     const next7Days = new Date(now);

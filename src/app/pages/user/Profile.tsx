@@ -273,7 +273,7 @@ export function Profile() {
     let tabVisibility = false;
     const profStatus = userRecord?.profileStatus?.statusName || 'hidden';
     const isConnected = connection?.status?.connectionName === 'Accepted';
-    const isAdminPreview = location.pathname.includes('/admin/preview');
+    const isAdminPreview = location.pathname.includes('/admin/preview') && !!sessionStorage.getItem('adminToken');
 
     if (isOwner || profStatus === 'Public' || isAdminPreview) {
         visibility = 'full';

@@ -72,7 +72,11 @@ export function Login() {
         } catch (error: any) {
             console.error("Login error:", error);
             const msg = error.response?.data?.error || "An unexpected error occurred.";
-            toast.error("Login failed", { description: msg });
+            if (msg.toLowerCase().includes('disable')) {
+                toast.error("Account disabled", { description: "Please request reactivation from an admin." });
+            } else {
+                toast.error("Login failed", { description: msg });
+            }
         }
     };
 

@@ -34,15 +34,12 @@ const ScrollToTop = ({ children, scrollContainerRef }: ScrollToTopProps) => {
                 ? scrollContainerRef.current.scrollTop
                 : window.scrollY;
 
-            if (scrollTop > 300) {
-                setShowScrollTop(true);
-            } else {
-                setShowScrollTop(false);
-            }
+            const shouldShow = scrollTop > 300;
+            setShowScrollTop(prev => prev !== shouldShow ? shouldShow : prev);
         };
 
         const target = scrollContainerRef?.current || window;
-        target.addEventListener('scroll', handleScroll);
+        target.addEventListener('scroll', handleScroll, { passive: true });
 
         // Initial check
         handleScroll();

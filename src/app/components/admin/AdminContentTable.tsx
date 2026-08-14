@@ -57,7 +57,7 @@ export function AdminContentTable({
     categories,
     onStatusChange
 }: AdminContentTableProps) {
-    const ITEMS_PER_PAGE = 20;
+    const [itemsPerPage, setItemsPerPage] = useState(20);
 
     const [data, setData] = useState<ContentItem[]>([]);
     const [totalItems, setTotalItems] = useState(0);
@@ -71,16 +71,16 @@ export function AdminContentTable({
     // Search & Filter state
     const [searchName, setSearchName] = useState('');
     const [searchAuthor, setSearchAuthor] = useState('');
-    const [searchStartDate, setSearchStartDate] = useState('');
-    const [searchEndDate, setSearchEndDate] = useState('');
+    const [searchStartDate, setSearchStartDate] = useState(searchParams.get('start') || '');
+    const [searchEndDate, setSearchEndDate] = useState(searchParams.get('end') || '');
     const [datePreset, setDatePreset] = useState('all');
     const [searchCategories, setSearchCategories] = useState<string[]>(['All']);
 
     // Explicit filter applied state
     const [appliedSearchName, setAppliedSearchName] = useState('');
     const [appliedSearchAuthor, setAppliedSearchAuthor] = useState('');
-    const [appliedSearchStartDate, setAppliedSearchStartDate] = useState('');
-    const [appliedSearchEndDate, setAppliedSearchEndDate] = useState('');
+    const [appliedSearchStartDate, setAppliedSearchStartDate] = useState(searchParams.get('start') || '');
+    const [appliedSearchEndDate, setAppliedSearchEndDate] = useState(searchParams.get('end') || '');
     const [appliedSearchCategories, setAppliedSearchCategories] = useState<string[]>(['All']);
 
     // Sorting
@@ -187,7 +187,7 @@ export function AdminContentTable({
             try {
                 const result = await fetchData({
                     page: currentPage,
-                    perPage: ITEMS_PER_PAGE,
+                    perPage: itemsPerPage,
                     search: appliedSearchName,
                     searchAuthor: appliedSearchAuthor,
                     searchStartDate: appliedSearchStartDate,
@@ -208,7 +208,7 @@ export function AdminContentTable({
         load();
     }, [currentPage, appliedSearchName, appliedSearchAuthor, appliedSearchStartDate, appliedSearchEndDate, appliedSearchCategories, appliedAccountScope, activeTab, sortConfig, fetchData, refreshKey]);
 
-    const totalPages = Math.ceil(totalItems / ITEMS_PER_PAGE);
+    const totalPages = Math.ceil(totalItems / itemsPerPage);
     const paginatedContent = data;
 
     const onTabChange = (val: string) => {
@@ -283,6 +283,34 @@ export function AdminContentTable({
 
         return (
             <div className="space-y-4">
+                <div className="flex flex-col sm:flex-row items-center justify-between pt-4 gap-4">
+                    <div className="flex items-center gap-2">
+                        <span className="text-sm text-gray-500">Showing</span>
+                        <Select value={itemsPerPage.toString()} onValueChange={(val) => { setItemsPerPage(Number(val)); setCurrentPage(1); }}>
+                            <SelectTrigger className="w-20 h-8 text-xs">
+                                <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="10">10</SelectItem>
+                                <SelectItem value="20">20</SelectItem>
+                                <SelectItem value="50">50</SelectItem>
+                                <SelectItem value="100">100</SelectItem>
+                            </SelectContent>
+                        </Select>
+                        <span className="text-sm text-gray-500">entries. {(currentPage - 1) * itemsPerPage + 1} to {Math.min(currentPage * itemsPerPage, totalItems)} of {totalItems} total.</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                        <Button variant="outline" size="sm" onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1}>
+                            <ChevronLeft className="h-4 w-4" />
+                        </Button>
+                        <div className="text-sm font-medium px-2">
+                            Page {currentPage} of {Math.max(1, totalPages)}
+                        </div>
+                        <Button variant="outline" size="sm" onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage >= totalPages}>
+                            <ChevronRight className="h-4 w-4" />
+                        </Button>
+                    </div>
+                </div>
                 <div className="border rounded-md bg-white overflow-x-auto">
                     <table className="w-full text-sm text-left">
                         <thead className="bg-gray-50 text-gray-700">
@@ -305,7 +333,9 @@ export function AdminContentTable({
                                 <tr key={item.id} className="border-t">
                                     <td className="px-6 py-4">
                                         <div className="font-semibold text-gray-900 flex items-center gap-2">
-                                            {item.title}
+                                            <Link to={`/${item.type === 'Bulletin' ? 'bulletin' : 'events'}/${item.id}`} className="text-gray-900 hover:text-brand-primary hover:underline">
+                                                {item.title}
+                                            </Link>
                                             <Badge className={getCategoryClass(item.category)}>{item.category}</Badge>
                                             <Link to={`/admin/preview/${item.type === 'Bulletin' ? 'bulletin' : 'event'}/${item.id}`} className="text-gray-400 hover:text-brand-primary" title="Preview as Approved">
                                                 <Eye className="w-4 h-4" />
@@ -430,27 +460,6 @@ export function AdminContentTable({
                         </tbody>
                     </table>
                 </div>
-
-                {
-                    totalPages > 1 && (
-                        <div className="flex items-center justify-between">
-                            <div className="text-sm text-gray-500">
-                                Showing {(currentPage - 1) * ITEMS_PER_PAGE + 1} to {Math.min(currentPage * ITEMS_PER_PAGE, totalItems)} of {totalItems} items
-                            </div>
-                            <div className="flex items-center space-x-2">
-                                <Button variant="outline" size="sm" onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1}>
-                                    <ChevronLeft className="h-4 w-4" />
-                                </Button>
-                                <div className="text-sm font-medium">
-                                    Page {currentPage} of {totalPages}
-                                </div>
-                                <Button variant="outline" size="sm" onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages}>
-                                    <ChevronRight className="h-4 w-4" />
-                                </Button>
-                            </div>
-                        </div>
-                    )
-                }
             </div >
         );
     };

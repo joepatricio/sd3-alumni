@@ -1,4 +1,5 @@
 import { useState, useEffect, lazy, Suspense } from 'react';
+import { subYears, format } from 'date-fns';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@components/ui/card';
 import { Button } from '@components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@components/ui/tabs';
@@ -12,6 +13,7 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { api, type DegreeData, type UserStatusData } from '@/app/views/api';
 import { formatDate } from '@/app/views/formatters';
 import { Badge } from '@/app/components/ui/badge';
+import { toast } from 'sonner';
 
 const loadCreateUserModal = () => import('@components/admin/CreateUserModal').then(m => ({ default: m.CreateUserModal }));
 const CreateUserModal = lazy(loadCreateUserModal);
@@ -30,7 +32,7 @@ interface User {
 }
 
 export function AdminUsers() {
-    const ITEMS_PER_PAGE = 20;
+    const [itemsPerPage, setItemsPerPage] = useState(20);
 
     const [searchParams, setSearchParams] = useSearchParams();
     const [dbStatuses, setDbStatuses] = useState<UserStatusData[]>([]);
@@ -130,23 +132,103 @@ export function AdminUsers() {
         setCurrentPage(1);
     };
 
-    const handleExportCSV = () => {
-        const headers = ['Name', 'Email', 'Batch', 'Status', 'Granted Date', 'Expiry Date', 'Reason'];
-        const csvContent = users.map(u =>
-            `"${u.name}","${u.email}","${u.batch}","${u.status}","${u.grantedDate || ''}","${u.expiryDate || ''}","${u.reason || ''}"`
-        );
+    const handleExportCSV = async () => {
+        try {
+            const whereClause: any = {};
+            if (activeTab !== 'All') {
+                whereClause.userStatus = { statusName: activeTab };
+            }
+            if (appliedSearchTerm) {
+                whereClause.profile = { ...(whereClause.profile || {}), userName: { contains: appliedSearchTerm } };
+            }
 
-        const csvString = [headers.join(','), ...csvContent].join('\n');
-        const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
-        const link = document.createElement('a');
-        if (link.download !== undefined) {
-            const url = URL.createObjectURL(blob);
-            link.setAttribute('href', url);
-            link.setAttribute('download', 'users_export.csv');
-            link.style.visibility = 'hidden';
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
+            const currentYear = new Date().getFullYear();
+            let batchFilter: any = undefined;
+            if (appliedBatchRange === 'Past 3') { batchFilter = { gte: currentYear - 3 }; }
+            else if (appliedBatchRange === 'Past 5') { batchFilter = { gte: currentYear - 5 }; }
+            else if (appliedBatchRange === 'Past 10') { batchFilter = { gte: currentYear - 10 }; }
+            else if (appliedBatchRange === 'Past 30') { batchFilter = { gte: currentYear - 30 }; }
+            else if (appliedBatchRange === 'Custom') {
+                const min = appliedCustomMinBatch ? parseInt(appliedCustomMinBatch, 10) : undefined;
+                const max = appliedCustomMaxBatch ? parseInt(appliedCustomMaxBatch, 10) : undefined;
+                if (min !== undefined && max !== undefined) { batchFilter = { gte: min, lte: max }; }
+                else if (min !== undefined) { batchFilter = { gte: min }; }
+                else if (max !== undefined) { batchFilter = { lte: max }; }
+            } else if (appliedSearchBatch) {
+                batchFilter = parseInt(appliedSearchBatch, 10);
+            }
+
+            if (batchFilter !== undefined) {
+                whereClause.profile = { ...(whereClause.profile || {}), batch: batchFilter };
+            }
+
+            if (appliedSearchReason) {
+                whereClause.records = { some: { description: { contains: appliedSearchReason } } };
+            }
+
+            let sortStr = undefined;
+            if (sortConfig) {
+                let sortKey: string = sortConfig.key;
+                if (sortKey === 'name') sortKey = 'profile.userName';
+                else if (sortKey === 'email') sortKey = 'profile.email';
+                else if (sortKey === 'batch') sortKey = 'profile.batch';
+                else if (sortKey === 'status') sortKey = 'userStatus.statusName';
+
+                sortStr = sortConfig.direction === 'desc' ? `-${sortKey}` : sortKey;
+            }
+
+            const res = await api.get('/users', {
+                params: {
+                    _sort: sortStr,
+                    _where: Object.keys(whereClause).length > 0 ? JSON.stringify(whereClause) : undefined
+                }
+            });
+
+            const data = res.data.data || res.data;
+
+            const mapped = data.map((u: any) => {
+                const currentRecord = u.records?.find((r: any) => r.id === u.currentRecordId) || u.records?.[0];
+                let formattedGranted = undefined;
+                let formattedExpiry = undefined;
+                if (currentRecord?.dateCreated) {
+                    const d = new Date(currentRecord.dateCreated);
+                    if (!isNaN(d.getTime())) formattedGranted = formatDate(d, 'short');
+                }
+                if (currentRecord?.expirationDate) {
+                    const d = new Date(currentRecord.expirationDate);
+                    if (!isNaN(d.getTime())) formattedExpiry = formatDate(d, 'short');
+                }
+
+                return {
+                    name: u.profile?.userName || 'Unknown',
+                    email: u.profile?.email || 'Unknown',
+                    batch: u.profile?.batch || 'Unknown',
+                    status: u.userStatus?.statusName || 'Unknown',
+                    reason: currentRecord?.description || '',
+                    grantedDate: formattedGranted,
+                    expiryDate: formattedExpiry
+                };
+            });
+
+            const headers = ['Name', 'Email', 'Batch', 'Status', 'Granted Date', 'Expiry Date', 'Reason'];
+            const csvContent = mapped.map((u: any) =>
+                `"${u.name}","${u.email}","${u.batch}","${u.status}","${u.grantedDate || ''}","${u.expiryDate || ''}","${u.reason || ''}"`
+            );
+
+            const csvString = [headers.join(','), ...csvContent].join('\n');
+            const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            if (link.download !== undefined) {
+                const url = URL.createObjectURL(blob);
+                link.setAttribute('href', url);
+                link.setAttribute('download', 'users_export.csv');
+                link.style.visibility = 'hidden';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            }
+        } catch (error) {
+            console.error("Failed to export CSV", error);
         }
     };
 
@@ -229,7 +311,7 @@ export function AdminUsers() {
             const res = await api.get('/users', {
                 params: {
                     _page: currentPage,
-                    _per_page: ITEMS_PER_PAGE,
+                    _per_page: itemsPerPage,
                     _sort: sortStr,
                     _where: Object.keys(whereClause).length > 0 ? JSON.stringify(whereClause) : undefined
                 }
@@ -284,9 +366,9 @@ export function AdminUsers() {
 
     useEffect(() => {
         fetchUsersList();
-    }, [activeTab, appliedSearchTerm, appliedSearchBatch, appliedSearchReason, appliedBatchRange, appliedCustomMinBatch, appliedCustomMaxBatch, sortConfig, currentPage]);
+    }, [activeTab, appliedSearchTerm, appliedSearchBatch, appliedSearchReason, appliedBatchRange, appliedCustomMinBatch, appliedCustomMaxBatch, sortConfig, currentPage, itemsPerPage]);
 
-    const totalPages = Math.ceil(totalUsers / ITEMS_PER_PAGE);
+    const totalPages = Math.ceil(totalUsers / itemsPerPage);
     const paginatedUsers = users;
 
     const onTabChange = (val: string) => {
@@ -356,6 +438,34 @@ export function AdminUsers() {
 
         return (
             <div className="space-y-4">
+                <div className="flex flex-col sm:flex-row items-center justify-between pb-2 gap-4">
+                    <div className="flex items-center gap-2">
+                        <span className="text-sm text-gray-500">Showing</span>
+                        <Select value={itemsPerPage.toString()} onValueChange={(val) => { setItemsPerPage(Number(val)); setCurrentPage(1); }}>
+                            <SelectTrigger className="w-20 h-8 text-xs">
+                                <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="10">10</SelectItem>
+                                <SelectItem value="20">20</SelectItem>
+                                <SelectItem value="50">50</SelectItem>
+                                <SelectItem value="100">100</SelectItem>
+                            </SelectContent>
+                        </Select>
+                        <span className="text-sm text-gray-500">entries. {(currentPage - 1) * itemsPerPage + 1} to {Math.min(currentPage * itemsPerPage, totalUsers)} of {totalUsers} total.</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                        <Button variant="outline" size="sm" onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1}>
+                            <ChevronLeft className="h-4 w-4" />
+                        </Button>
+                        <div className="text-sm font-medium px-2">
+                            Page {currentPage} of {totalPages}
+                        </div>
+                        <Button variant="outline" size="sm" onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages}>
+                            <ChevronRight className="h-4 w-4" />
+                        </Button>
+                    </div>
+                </div>
                 <div className="border rounded-md bg-white overflow-x-auto">
                     <table className="w-full text-sm text-left">
                         <thead className="bg-gray-50 text-gray-700">
@@ -418,25 +528,6 @@ export function AdminUsers() {
                         </tbody>
                     </table>
                 </div>
-
-                {totalPages > 1 && (
-                    <div className="flex items-center justify-between">
-                        <div className="text-sm text-gray-500">
-                            Showing {(currentPage - 1) * ITEMS_PER_PAGE + 1} to {Math.min(currentPage * ITEMS_PER_PAGE, totalUsers)} of {totalUsers} users
-                        </div>
-                        <div className="flex items-center space-x-2">
-                            <Button variant="outline" size="sm" onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1}>
-                                <ChevronLeft className="h-4 w-4" />
-                            </Button>
-                            <div className="text-sm font-medium">
-                                Page {currentPage} of {totalPages}
-                            </div>
-                            <Button variant="outline" size="sm" onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages}>
-                                <ChevronRight className="h-4 w-4" />
-                            </Button>
-                        </div>
-                    </div>
-                )}
             </div>
         );
     };
@@ -472,7 +563,26 @@ export function AdminUsers() {
                             />
                         </div>
                         <div>
-                            <Select value={batchRange} onValueChange={(val) => setBatchRange(val)}>
+                            <Select value={batchRange} onValueChange={(val) => {
+                                setBatchRange(val);
+                                if (val !== 'All Batches' && val !== 'Custom Range') {
+                                    const currentYear = new Date();
+                                    let yearsToSubtract = 0;
+                                    if (val === 'Past 3') yearsToSubtract = 3;
+                                    else if (val === 'Past 5') yearsToSubtract = 5;
+                                    else if (val === 'Past 10') yearsToSubtract = 10;
+                                    else if (val === 'Past 30') yearsToSubtract = 30;
+
+                                    if (yearsToSubtract > 0) {
+                                        setCustomMaxBatch(format(currentYear, 'yyyy'));
+                                        setCustomMinBatch(format(subYears(currentYear, yearsToSubtract), 'yyyy'));
+                                    }
+                                } else if (val === 'All Batches') {
+                                    setCustomMinBatch('');
+                                    setCustomMaxBatch('');
+                                    setSearchBatch('');
+                                }
+                            }}>
                                 <SelectTrigger>
                                     <SelectValue placeholder="All Batches" />
                                 </SelectTrigger>
@@ -482,35 +592,39 @@ export function AdminUsers() {
                                     <SelectItem value="Past 5">Past 5</SelectItem>
                                     <SelectItem value="Past 10">Past 10</SelectItem>
                                     <SelectItem value="Past 30">Past 30</SelectItem>
-                                    <SelectItem value="Custom">Custom</SelectItem>
+                                    <SelectItem value="Custom Range">Custom Range</SelectItem>
                                 </SelectContent>
                             </Select>
                         </div>
-                        {batchRange === 'Custom' ? (
-                            <div className="flex gap-2 items-center">
-                                <Input
-                                    placeholder="Min Year"
-                                    type="number"
-                                    value={customMinBatch}
-                                    onChange={(e) => setCustomMinBatch(e.target.value)}
-                                    className="w-full"
-                                />
-                                <span className="text-gray-400">-</span>
-                                <Input
-                                    placeholder="Max Year"
-                                    type="number"
-                                    value={customMaxBatch}
-                                    onChange={(e) => setCustomMaxBatch(e.target.value)}
-                                    className="w-full"
-                                />
-                            </div>
-                        ) : (
+                        {batchRange === 'All Batches' ? (
                             <div>
                                 <Input
                                     placeholder="Batch year..."
                                     value={searchBatch}
                                     onChange={(e) => setSearchBatch(e.target.value)}
                                     onKeyDown={(e) => { if (e.key === 'Enter') handleApplyFilters(); }}
+                                />
+                            </div>
+                        ) : (
+                            // The earliest possible batch for Engineering is 1966.
+                            // For simplicity sake, the range entered here will not be validated.
+                            <div className="flex gap-2 items-center">
+                                <Input
+                                    placeholder="Min"
+                                    type="number"
+                                    value={customMinBatch}
+                                    onChange={(e) => setCustomMinBatch(e.target.value)}
+                                    disabled={batchRange !== 'Custom Range'}
+                                    className="w-full"
+                                />
+                                <span className="text-gray-400">-</span>
+                                <Input
+                                    placeholder="Max"
+                                    type="number"
+                                    value={customMaxBatch}
+                                    onChange={(e) => setCustomMaxBatch(e.target.value)}
+                                    disabled={batchRange !== 'Custom Range'}
+                                    className="w-full"
                                 />
                             </div>
                         )}
@@ -616,7 +730,10 @@ export function AdminUsers() {
                     <CreateUserModal
                         isOpen={isCreateOpen}
                         onClose={() => setIsCreateOpen(false)}
-                        onUserCreated={fetchUsersList}
+                        onUserCreated={() => {
+                            fetchUsersList();
+                            toast.success("User created successfully");
+                        }}
                         degrees={degrees}
                         dbStatuses={dbStatuses}
                     />

@@ -31,7 +31,6 @@ interface DashboardStats {
         };
     };
     pendingBulletins: number;
-    approvedBulletins: number;
     pendingEvents: number;
     approvedEvents: number;
     donationsTotal: number;
@@ -56,7 +55,7 @@ interface EventItem {
     locationId?: string | null;
     eventCategory?: { eventCategoryName: string };
     category?: { eventCategoryName: string };
-    status?: { statusName: string };
+    eventStatus?: { statusName: string };
     location?: {
         landmark?: string;
         street?: string;
@@ -120,6 +119,149 @@ const DEMOGRAPHIC_COLORS: Record<string, string> = {
 
 const CHART_PALETTE = ['#059669', '#2563eb', '#d97706', '#7c3aed', '#ec4899', '#06b6d4', '#8b5cf6'];
 
+const CalendarWidget = ({ events }: { events: EventItem[] }) => {
+    const [calendarDate, setCalendarDate] = useState(new Date());
+    const [selectedDateEvents, setSelectedDateEvents] = useState<EventItem[] | null>(null);
+    const [selectedDateStr, setSelectedDateStr] = useState<string | null>(null);
+
+    const year = calendarDate.getFullYear();
+    const month = calendarDate.getMonth();
+    const firstDayOfMonth = new Date(year, month, 1).getDay();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const monthName = calendarDate.toLocaleString('default', { month: 'long', year: 'numeric' });
+
+    // Filter events of the current month and map to each day
+    // TODO: Include Concluded events
+    const monthEventsMap = React.useMemo(() => {
+        const map: Record<number, EventItem[]> = {};
+        events.forEach(e => {
+            if (e.eventStatus?.statusName !== 'Approved') return;
+            if (!e.eventDate) return;
+
+            try {
+                const d = new Date(e.eventDate);
+                if (d.getFullYear() === year && d.getMonth() === month) {
+                    const day = d.getDate();
+                    if (!map[day]) map[day] = [];
+                    map[day].push(e);
+                }
+            } catch (err) {
+                // ignore invalid dates
+            }
+        });
+        return map;
+    }, [events, year, month]);
+
+    const handleDayClick = (dayNum: number) => {
+        const dayEvents = monthEventsMap[dayNum] || [];
+        const targetDateStr = `${monthName} ${dayNum}, ${year}`;
+        setSelectedDateEvents(dayEvents);
+        setSelectedDateStr(targetDateStr);
+    };
+
+    return (
+        <Card className="shadow-md border-none flex flex-col">
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <div>
+                    <CardTitle className="flex items-center gap-2 text-gray-900">
+                        <CalendarIcon className="w-5 h-5 text-brand-primary" />
+                        Event Monthly Calendar
+                    </CardTitle>
+                    <CardDescription>Browse scheduled alumni activities by date</CardDescription>
+                </div>
+                <div className="flex items-center gap-1">
+                    <button
+                        onClick={() => { setCalendarDate(new Date(year, month - 1, 1)); setSelectedDateEvents(null); setSelectedDateStr(null); }}
+                        className="p-1.5 rounded-lg border border-gray-200 hover:bg-gray-100 transition-colors text-gray-600"
+                    >
+                        <ChevronLeft size={16} />
+                    </button>
+                    <span className="text-xs font-bold text-gray-800 px-2 min-w-[110px] text-center">
+                        {monthName}
+                    </span>
+                    <button
+                        onClick={() => { setCalendarDate(new Date(year, month + 1, 1)); setSelectedDateEvents(null); setSelectedDateStr(null); }}
+                        className="p-1.5 rounded-lg border border-gray-200 hover:bg-gray-100 transition-colors text-gray-600"
+                    >
+                        <ChevronRight size={16} />
+                    </button>
+                </div>
+            </CardHeader>
+            <CardContent className="flex-1 flex flex-col justify-between">
+                <div>
+                    {/* Calendar Days Header */}
+                    <div className="grid grid-cols-7 gap-1 text-center mb-2">
+                        {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(d => (
+                            <span key={d} className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">{d}</span>
+                        ))}
+                    </div>
+
+                    {/* Calendar Days Grid */}
+                    <div className="grid grid-cols-7 gap-1.5 text-center">
+                        {Array.from({ length: firstDayOfMonth }).map((_, i) => (
+                            <div key={`empty-${i}`} className="h-9 rounded-lg bg-gray-50/30" />
+                        ))}
+                        {Array.from({ length: daysInMonth }).map((_, i) => {
+                            const dayNum = i + 1;
+                            const dayEvents = monthEventsMap[dayNum] || [];
+                            const hasEvents = dayEvents.length > 0;
+                            const isSelected = selectedDateStr === `${monthName} ${dayNum}, ${year}`;
+
+                            return (
+                                <button
+                                    key={`day-${dayNum}`}
+                                    onClick={() => handleDayClick(dayNum)}
+                                    className={`h-9 rounded-lg text-xs font-semibold flex flex-col items-center justify-center relative transition-all shadow-2xs
+                                        ${isSelected ? 'bg-brand-primary text-white ring-2 ring-brand-primary/40' :
+                                            hasEvents ? 'bg-emerald-100 text-emerald-900 border border-emerald-300 hover:bg-emerald-200' :
+                                                'bg-gray-50 text-gray-700 hover:bg-gray-100'}`}
+                                >
+                                    <span>{dayNum}</span>
+                                    {hasEvents && (
+                                        <span className={`w-1.5 h-1.5 rounded-full absolute bottom-1 ${isSelected ? 'bg-amber-300' : 'bg-emerald-600'}`} />
+                                    )}
+                                </button>
+                            );
+                        })}
+                    </div>
+                </div>
+
+                {/* Selected Day Event Inspection Details */}
+                <div className="mt-4 pt-4 border-t border-gray-100">
+                    {selectedDateStr && selectedDateEvents ? (
+                        <div className="space-y-2">
+                            <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wider">
+                                Events on {selectedDateStr}:
+                            </h4>
+                            {(selectedDateEvents && selectedDateEvents.length > 0) ? (
+                                <div className="space-y-2 max-h-32 overflow-y-auto pr-1">
+                                    {selectedDateEvents.map(evt => (
+                                        <div key={evt.id} className="p-2.5 bg-emerald-50 rounded-lg border border-emerald-200 flex items-center justify-between text-xs">
+                                            <div>
+                                                <p className="font-bold text-emerald-950">{evt.title}</p>
+                                                <p className="text-[11px] text-emerald-700">
+                                                    {evt.startTime || '09:00'} - {evt.endTime || '17:00'} • {evt.location?.landmark || evt.location?.cityMunicipality || evt.modality || 'Virtual'}
+                                                </p>
+                                            </div>
+                                            <Link to={`/admin/events?start=${new Date(evt.eventDate).toISOString()}&end=${new Date(new Date(evt.eventDate).setMonth(new Date(evt.eventDate).getMonth() + 1)).toISOString()}`} className="px-2 py-1 bg-emerald-600 text-white rounded text-[10px] font-bold">
+                                                Manage
+                                            </Link>
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <p className="text-xs text-gray-400 italic">No events scheduled for this day.</p>
+                            )}
+                        </div>
+                    ) : (
+                        <p className="text-xs text-gray-400 text-center py-2">Click any highlighted calendar date to view scheduled event proposals.</p>
+                    )}
+                </div>
+            </CardContent>
+        </Card>
+    );
+};
+
 export function AdminDashboard() {
     const dashboardRef = useRef<HTMLDivElement>(null);
     const [stats, setStats] = useState<DashboardStats | null>(null);
@@ -147,10 +289,7 @@ export function AdminDashboard() {
         totalRsvps: 0
     });
 
-    // Calendar state
-    const [calendarDate, setCalendarDate] = useState(new Date());
-    const [selectedDateEvents, setSelectedDateEvents] = useState<EventItem[] | null>(null);
-    const [selectedDateStr, setSelectedDateStr] = useState<string | null>(null);
+
 
     const fetchStats = async () => {
         setLoading(true);
@@ -161,7 +300,8 @@ export function AdminDashboard() {
             const headers = token ? { Authorization: `Bearer ${token}` } : {};
 
             // Would be better to just query the whole category or status table instead of _include
-            // This is easier in the smaller scale, but would be better to just query the whole tables in the long run
+            // Joining the tables is easier in the smaller scale, but would be better to just query the whole tables in the long run
+            // Also, would be possible to have separate queries for approved events and status/category analytics
             const [dashRes, bulletinsRes, eventsRes, userStatsRes] = await Promise.allSettled([
                 api.get('/admin/dashboard-stats', { headers }),
                 api.get('/bulletins?_include=category,status'),
@@ -264,7 +404,7 @@ export function AdminDashboard() {
         now.setHours(0, 0, 0, 0);
 
         return events.filter(evt => {
-            if (!evt.eventDate) return false;
+            if (evt.eventStatus?.statusName !== 'Approved') return false;
             const evtDate = new Date(evt.eventDate);
             if (isNaN(evtDate.getTime())) return false;
 
@@ -304,32 +444,22 @@ export function AdminDashboard() {
         }
     };
 
-    // Calendar Helper calculations
-    const year = calendarDate.getFullYear();
-    const month = calendarDate.getMonth();
-    const firstDayOfMonth = new Date(year, month, 1).getDay();
-    const daysInMonth = new Date(year, month + 1, 0).getDate();
-    const monthName = calendarDate.toLocaleString('default', { month: 'long', year: 'numeric' });
 
-    const getEventsForDay = (dayNum: number) => {
-        const targetDateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(dayNum).padStart(2, '0')}`;
-        return events.filter(e => {
-            if (!e.eventDate) return false;
-            const eDate = new Date(e.eventDate).toISOString().split('T')[0];
-            return eDate === targetDateStr;
-        });
-    };
-
-    const handleDayClick = (dayNum: number) => {
-        const dayEvents = getEventsForDay(dayNum);
-        const targetDateStr = `${monthName} ${dayNum}, ${year}`;
-        setSelectedDateEvents(dayEvents);
-        setSelectedDateStr(targetDateStr);
-    };
 
     // Sort category data in descending order for clockwise arrangement from 12 o'clock
-    const sortedBulletinCategoryData = [...bulletinCategoryData].sort((a, b) => b.value - a.value);
-    const sortedEventCategoryData = [...eventCategoryData].sort((a, b) => b.value - a.value);
+    const sortedBulletinCategoryData = React.useMemo(
+        () => [...bulletinCategoryData].sort((a, b) => b.value - a.value),
+        [bulletinCategoryData]
+    );
+    const sortedEventCategoryData = React.useMemo(
+        () => [...eventCategoryData].sort((a, b) => b.value - a.value),
+        [eventCategoryData]
+    );
+
+    const totalPendingActions = React.useMemo(
+        () => stats ? stats.pendingUsers + stats.pendingBulletins + stats.pendingEvents : 0,
+        [stats]
+    );
 
     if (loading) {
         return (
@@ -358,10 +488,8 @@ export function AdminDashboard() {
         );
     }
 
-    const totalPendingActions = stats.pendingUsers + stats.pendingBulletins + stats.pendingEvents;
-
     return (
-        <div ref={dashboardRef} className="space-y-8 animate-in fade-in duration-500 p-1">
+        <div ref={dashboardRef} className="space-y-8 p-1 [transform:translateZ(0)]">
             {/* Header */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
@@ -440,8 +568,8 @@ export function AdminDashboard() {
                 </div>
             )}
             <div className="p-6 bg-gradient-to-br from-[#1b4332] via-[#0f2e22] to-[#081c15] rounded-xl border border-emerald-800/40 flex flex-col md:flex-row md:items-center justify-between gap-6 relative overflow-hidden group shadow-lg text-white mb-8 mt-4">
-                <div className="absolute -top-24 -right-12 w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none group-hover:bg-emerald-500/20 transition-all duration-700" />
-                <div className="absolute -bottom-16 -left-16 w-48 h-48 bg-emerald-600/10 rounded-full blur-2xl pointer-events-none" />
+                <div className="absolute -top-24 -right-12 w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none group-hover:bg-emerald-500/20 transition-all duration-700 [will-change:transform] [transform:translateZ(0)]" />
+                <div className="absolute -bottom-16 -left-16 w-48 h-48 bg-emerald-600/10 rounded-full blur-2xl pointer-events-none [will-change:transform] [transform:translateZ(0)]" />
 
                 <div className="relative z-10 flex flex-col">
                     <div className="flex items-center gap-2 text-emerald-400 font-bold uppercase tracking-wider text-[11px] mb-2">
@@ -505,6 +633,7 @@ export function AdminDashboard() {
                                                     paddingAngle={4}
                                                     dataKey="value"
                                                     nameKey="name"
+                                                    isAnimationActive={false}
                                                     onClick={(entry) => setActiveUserStatus(prev => prev === entry.name ? null : entry.name)}
                                                 >
                                                     {userStatusChartData.map((entry, index) => (
@@ -519,8 +648,8 @@ export function AdminDashboard() {
                                                     ))}
                                                 </Pie>
                                                 <RechartsTooltip
+                                                    contentStyle={{ backgroundColor: 'white', color: 'black', borderRadius: '8px', borderColor: '#e2e8f0', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }}
                                                     formatter={(val: any) => [`${val} users`, 'Count']}
-                                                    contentStyle={{ backgroundColor: '#ffffff', borderRadius: '8px', borderColor: '#e2e8f0', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }}
                                                 />
                                             </PieChart>
                                         </ResponsiveContainer>
@@ -573,6 +702,7 @@ export function AdminDashboard() {
                                                     paddingAngle={4}
                                                     dataKey="value"
                                                     nameKey="name"
+                                                    isAnimationActive={false}
                                                     onClick={(entry) => setActiveDemographic(prev => prev === entry.name ? null : entry.name)}
                                                 >
                                                     {demographicsChartData.map((entry, index) => (
@@ -588,7 +718,7 @@ export function AdminDashboard() {
                                                 </Pie>
                                                 <RechartsTooltip
                                                     formatter={(val: any) => [`${val} members`, 'Count']}
-                                                    contentStyle={{ backgroundColor: '#ffffff', borderRadius: '8px', borderColor: '#e2e8f0', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }}
+                                                    contentStyle={{ backgroundColor: 'white', color: 'black', borderRadius: '8px', borderColor: '#e2e8f0', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }}
                                                 />
                                             </PieChart>
                                         </ResponsiveContainer>
@@ -640,6 +770,7 @@ export function AdminDashboard() {
                                                     paddingAngle={4}
                                                     dataKey="value"
                                                     nameKey="name"
+                                                    isAnimationActive={false}
                                                     onClick={(entry) => setActiveProfileStatus(prev => prev === entry.name ? null : entry.name)}
                                                 >
                                                     {profileStatusChartData.map((entry, index) => (
@@ -655,7 +786,7 @@ export function AdminDashboard() {
                                                 </Pie>
                                                 <RechartsTooltip
                                                     formatter={(val: any) => [`${val} profiles`, 'Count']}
-                                                    contentStyle={{ backgroundColor: '#ffffff', borderRadius: '8px', borderColor: '#e2e8f0', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }}
+                                                    contentStyle={{ backgroundColor: 'white', color: 'black', borderRadius: '8px', borderColor: '#e2e8f0', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }}
                                                 />
                                             </PieChart>
                                         </ResponsiveContainer>
@@ -718,7 +849,7 @@ export function AdminDashboard() {
                                 </div>
                                 <div>
                                     <p className="text-xs text-gray-500 font-medium">Total Bulletins Published</p>
-                                    <p className="text-base font-bold text-gray-900">{stats.approvedBulletins} Active / {platformHealth.totalBulletinsCreated || stats.approvedBulletins + stats.pendingBulletins} Total</p>
+                                    <p className="text-base font-bold text-gray-900">{platformHealth.totalBulletinsCreated} Active </p>
                                 </div>
                             </div>
                         </div>
@@ -784,6 +915,7 @@ export function AdminDashboard() {
                                                         paddingAngle={4}
                                                         dataKey="value"
                                                         nameKey="name"
+                                                        isAnimationActive={false}
                                                         onClick={(entry) => setActiveBulletinCategory(prev => prev === entry.name ? null : entry.name)}
                                                     >
                                                         {sortedBulletinCategoryData.map((entry, index) => (
@@ -853,6 +985,7 @@ export function AdminDashboard() {
                                                         paddingAngle={4}
                                                         dataKey="value"
                                                         nameKey="name"
+                                                        isAnimationActive={false}
                                                         onClick={(entry) => setActiveEventCategory(prev => prev === entry.name ? null : entry.name)}
                                                     >
                                                         {sortedEventCategoryData.map((entry, index) => (
@@ -979,109 +1112,11 @@ export function AdminDashboard() {
                 </Card>
 
                 {/* Monthly Event Calendar View Widget */}
-                <Card className="shadow-md border-none flex flex-col">
-                    <CardHeader className="flex flex-row items-center justify-between pb-2">
-                        <div>
-                            <CardTitle className="flex items-center gap-2 text-gray-900">
-                                <CalendarIcon className="w-5 h-5 text-brand-primary" />
-                                Event Monthly Calendar
-                            </CardTitle>
-                            <CardDescription>Browse scheduled alumni activities by date</CardDescription>
-                        </div>
-                        <div className="flex items-center gap-1">
-                            <button
-                                onClick={() => setCalendarDate(new Date(year, month - 1, 1))}
-                                className="p-1.5 rounded-lg border border-gray-200 hover:bg-gray-100 transition-colors text-gray-600"
-                            >
-                                <ChevronLeft size={16} />
-                            </button>
-                            <span className="text-xs font-bold text-gray-800 px-2 min-w-[110px] text-center">
-                                {monthName}
-                            </span>
-                            <button
-                                onClick={() => setCalendarDate(new Date(year, month + 1, 1))}
-                                className="p-1.5 rounded-lg border border-gray-200 hover:bg-gray-100 transition-colors text-gray-600"
-                            >
-                                <ChevronRight size={16} />
-                            </button>
-                        </div>
-                    </CardHeader>
-                    <CardContent className="flex-1 flex flex-col justify-between">
-                        <div>
-                            {/* Calendar Days Header */}
-                            <div className="grid grid-cols-7 gap-1 text-center mb-2">
-                                {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(d => (
-                                    <span key={d} className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">{d}</span>
-                                ))}
-                            </div>
-
-                            {/* Calendar Days Grid */}
-                            <div className="grid grid-cols-7 gap-1.5 text-center">
-                                {Array.from({ length: firstDayOfMonth }).map((_, i) => (
-                                    <div key={`empty-${i}`} className="h-9 rounded-lg bg-gray-50/30" />
-                                ))}
-                                {Array.from({ length: daysInMonth }).map((_, i) => {
-                                    const dayNum = i + 1;
-                                    const dayEvents = getEventsForDay(dayNum);
-                                    const hasEvents = dayEvents.length > 0;
-                                    const isSelected = selectedDateStr === `${monthName} ${dayNum}, ${year}`;
-
-                                    return (
-                                        <button
-                                            key={`day-${dayNum}`}
-                                            onClick={() => handleDayClick(dayNum)}
-                                            className={`h-9 rounded-lg text-xs font-semibold flex flex-col items-center justify-center relative transition-all shadow-2xs
-                                                ${isSelected ? 'bg-brand-primary text-white ring-2 ring-brand-primary/40' :
-                                                    hasEvents ? 'bg-emerald-100 text-emerald-900 border border-emerald-300 hover:bg-emerald-200' :
-                                                        'bg-gray-50 text-gray-700 hover:bg-gray-100'}`}
-                                        >
-                                            <span>{dayNum}</span>
-                                            {hasEvents && (
-                                                <span className={`w-1.5 h-1.5 rounded-full absolute bottom-1 ${isSelected ? 'bg-amber-300' : 'bg-emerald-600'}`} />
-                                            )}
-                                        </button>
-                                    );
-                                })}
-                            </div>
-                        </div>
-
-                        {/* Selected Day Event Inspection Details */}
-                        <div className="mt-4 pt-4 border-t border-gray-100">
-                            {selectedDateStr && selectedDateEvents ? (
-                                <div className="space-y-2">
-                                    <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wider">
-                                        Events on {selectedDateStr}:
-                                    </h4>
-                                    {(selectedDateEvents && selectedDateEvents.length > 0) ? (
-                                        <div className="space-y-2 max-h-32 overflow-y-auto pr-1">
-                                            {selectedDateEvents.map(evt => (
-                                                <div key={evt.id} className="p-2.5 bg-emerald-50 rounded-lg border border-emerald-200 flex items-center justify-between text-xs">
-                                                    <div>
-                                                        <p className="font-bold text-emerald-950">{evt.title}</p>
-                                                        <p className="text-[11px] text-emerald-700">
-                                                            {evt.startTime || '09:00'} - {evt.endTime || '17:00'} • {evt.location?.landmark || evt.location?.cityMunicipality || evt.modality || 'Virtual'}
-                                                        </p>
-                                                    </div>
-                                                    <Link to="/admin/events" className="px-2 py-1 bg-emerald-600 text-white rounded text-[10px] font-bold">
-                                                        Manage
-                                                    </Link>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    ) : (
-                                        <p className="text-xs text-gray-400 italic">No events scheduled for this day.</p>
-                                    )}
-                                </div>
-                            ) : (
-                                <p className="text-xs text-gray-400 text-center py-2">Click any highlighted calendar date to view scheduled event proposals.</p>
-                            )}
-                        </div>
-                    </CardContent>
-                </Card>
+                <CalendarWidget events={events} />
             </div>
 
-            {/* Activity Feed */}
-            <Card className="shadow-md border-none">
+            {/* Activity Feed, disabled due to feature creep */}
+            {/* <Card className="shadow-md border-none">
                 <CardHeader>
                     <CardTitle className="flex items-center gap-2 text-gray-900">
                         <Activity className="w-5 h-5 text-brand-primary" />
@@ -1126,7 +1161,7 @@ export function AdminDashboard() {
                         <p className="text-gray-500 text-sm py-4">No recent activity logged yet.</p>
                     )}
                 </CardContent>
-            </Card>
+            </Card> */}
         </div>
     );
 }

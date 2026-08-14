@@ -8,7 +8,8 @@ import {
     Send,
     ThumbsUp,
     Edit,
-    Loader2
+    Loader2,
+    Info
 } from 'lucide-react';
 import { CreateBulletinModal } from '@components/user/CreateBulletinModal';
 import { Button } from '@components/ui/button';
@@ -82,8 +83,9 @@ export function BulletinDetail() {
     }
 
     const currentStatusName = bulletin?.contentStatus?.statusName || null;
+    const isAdminPreview = location.pathname.includes('/admin/preview') && !!sessionStorage.getItem('adminToken');
 
-    if (!bulletin || currentStatusName !== "Approved") {
+    if (!bulletin || (currentStatusName !== "Approved" && !isAdminPreview)) {
         return <NotFound />;
     }
 
@@ -99,6 +101,20 @@ export function BulletinDetail() {
                 comment,
                 likes: 0
             });
+
+            // Increment user statistics commentsWritten after successful POST
+            try {
+                const statsRes = await api.get('/userStatistics', { params: { userId: session.userId } });
+                const stats = Array.isArray(statsRes.data) ? statsRes.data : (statsRes.data?.data || []);
+                if (stats && stats.length > 0) {
+                    const currentStats = stats[0];
+                    await api.patch(`/userStatistics/${currentStats.id}`, {
+                        commentsWritten: (currentStats.commentsWritten || 0) + 1
+                    });
+                }
+            } catch (statErr) {
+                console.error("Failed to update user statistics for comment:", statErr);
+            }
 
             // Re-fetch the newly created comment with embedded profile
             const newCommentRes = await api.get('/comments', { params: { id: res.data.id, } });
@@ -160,12 +176,14 @@ export function BulletinDetail() {
 
     return (
         <div className="min-h-screen bg-gray-50 pb-12">
-            {/* TODO: If the author wants to make edits or preview before approval, this banner will show. */}
-            {/* <div className="bg-yellow-50 px-4 py-3 border-b border-yellow-200 text-center">
-                <p className="text-yellow-800 font-medium text-sm">
-                    ⚠️ This bulletin is currently under review by an administrator and is not visible to the public.
-                </p>
-            </div> */}
+            {isAdminPreview && (
+                <div className="bg-blue-50 px-4 py-3 border-b border-blue-200 text-center flex items-center justify-center gap-2">
+                    <Info className="w-4 h-4 text-blue-800" />
+                    <p className="text-blue-800 font-medium text-sm">
+                        Admin Preview Mode: Viewing bulletin with status "{currentStatusName}"
+                    </p>
+                </div>
+            )}
 
             {/* Back Button and Edit Button */}
             <div className="max-w-4xl mx-auto px-4 md:px-8 pt-6 flex justify-between items-center">
@@ -192,6 +210,20 @@ export function BulletinDetail() {
 
             {/* Article */}
             <div className="max-w-4xl mx-auto px-4 md:px-8 py-8">
+                {bulletin.contentStatus?.statusName === 'Archived' && (
+                    <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6 rounded-r-md">
+                        <div className="flex">
+                            <div className="flex-shrink-0">
+                                <Clock className="h-5 w-5 text-yellow-400" aria-hidden="true" />
+                            </div>
+                            <div className="ml-3">
+                                <p className="text-sm text-yellow-700">
+                                    This bulletin has been archived. It is no longer active and comments are disabled.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                )}
                 <article className="bg-white rounded-lg shadow-md overflow-hidden">
                     {/* Hero Image */}
                     {bulletin.bulletinImage && (
@@ -255,7 +287,7 @@ export function BulletinDetail() {
                     </h2>
 
                     {/* Comment Form */}
-                    {isLoggedIn && !isSuspended ? (
+                    {isLoggedIn && !isSuspended && bulletin.contentStatus?.statusName !== 'Archived' ? (
                         <form onSubmit={handleSubmitComment} className="mb-8">
                             <div className="flex gap-3">
                                 <div className="flex-shrink-0">

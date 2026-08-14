@@ -159,8 +159,28 @@ export function CreateBulletinModal({ trigger, initialData, isAdmin = false, ope
             if (session?.userId) {
                 payload.authorId = session.userId.toString();
             }
-        } else if (isAdmin) {
+        }
+
+        if (isAdmin) {
             payload.reviewDate = new Date().toISOString();
+            let adminId: string | undefined;
+            const adminToken = sessionStorage.getItem('adminToken');
+            if (adminToken) {
+                try {
+                    const parsed = JSON.parse(atob(adminToken.split('.')[1]));
+                    if (parsed && parsed.id) {
+                        adminId = parsed.id.toString();
+                    }
+                } catch (e) {
+                    console.error("Failed to parse admin token", e);
+                }
+            }
+            if (!adminId && session?.userId) {
+                adminId = session.userId.toString();
+            }
+            if (adminId) {
+                payload.adminId = adminId;
+            }
         }
 
         try {

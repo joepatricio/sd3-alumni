@@ -142,7 +142,6 @@ export interface BulletinData {
     readTimeMinutes: number;
     content: string;
     bulletinImage: string;
-
     comments?: BulletinCommentData[];
     contentStatus?: ContentStatusData;
     bulletinCategory?: BulletinCategoryData;

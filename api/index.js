@@ -773,19 +773,15 @@ async function resolveBulletinData(body, isUpdate = false, req = null) {
 app.patch('/api/admin/events/:id/status', authenticateAdminToken, async (req, res) => {
     try {
         const { id } = req.params;
-        const { status } = req.body;
-
-        const statusRecord = await prisma.eventStatus.findFirst({
-            where: { statusName: status }
+        const { status, adminId } = req.body;
+        
+        const effectiveAdminId = req.user?.id || adminId;
+        const updatedEvent = await updateEventStatusAndStats({
+            eventId: id,
+            newStatusName: status,
+            adminId: effectiveAdminId
         });
-
-        if (!statusRecord) return res.status(400).json({ error: 'Invalid status' });
-
-        const updatedEvent = await prisma.event.update({
-            where: { id },
-            data: { eventStatusId: statusRecord.id },
-            include: { location: true, rsvps: true, status: true, category: true, author: { include: { profile: true, userStatus: true } } }
-        });
+        if (!updatedEvent) return res.status(404).json({ error: 'Event not found' });
 
         res.json(formatOutput('event', updatedEvent));
     } catch (error) {
@@ -803,13 +799,31 @@ app.post('/api/admin/events', authenticateAdminToken, async (req, res) => {
 
         const authorId = req.body.authorId || existingUser?.id;
         if (!authorId) return res.status(400).json({ error: 'Author user not found' });
-
-        const eventData = await resolveEventData({ ...req.body, authorId }, false);
+        
+        const effectiveAdminId = req.user?.id || req.body.adminId;
+        const eventData = await resolveEventData({ 
+            ...req.body, 
+            authorId,
+            adminId: effectiveAdminId,
+            reviewDate: new Date()
+        }, false);
 
         const newEvent = await prisma.event.create({
             data: eventData,
             include: defaultIncludes['event']
         });
+
+        // If newly created event is Approved or Concluded, increment author's eventsCreated stat
+        const statusRec = await prisma.eventStatus.findUnique({ where: { id: newEvent.eventStatusId } });
+        if (statusRec && ['Approved', 'Concluded'].includes(statusRec.statusName)) {
+            const userStats = await prisma.userStatistic.findFirst({ where: { userId: authorId } });
+            if (userStats) {
+                await prisma.userStatistic.update({
+                    where: { userId: userStats.userId },
+                    data: { eventsCreated: userStats.eventsCreated + 1 }
+                });
+            }
+        }
 
         res.status(201).json(formatOutput('event', newEvent));
     } catch (error) {
@@ -826,11 +840,14 @@ const handleAdminUpdateEvent = async (req, res) => {
         if (!existingEvent) return res.status(404).json({ error: 'Event not found' });
 
         const eventData = await resolveEventData(req.body, true, existingEvent);
+        const effectiveAdminId = req.user?.id || req.body.adminId;
+        const newStatusName = req.body.status || req.body.statusName;
 
-        const updatedEvent = await prisma.event.update({
-            where: { id },
-            data: eventData,
-            include: defaultIncludes['event']
+        const updatedEvent = await updateEventStatusAndStats({
+            eventId: id,
+            newStatusName,
+            adminId: effectiveAdminId,
+            additionalData: eventData
         });
 
         res.json(formatOutput('event', updatedEvent));
@@ -882,19 +899,158 @@ app.get('/api/admin/bulletins', authenticateAdminToken, async (req, res) => {
     }
 });
 
+// Helper to update event status, admin audit info (adminId, reviewDate), and userStatistics eventsCreated count
+async function updateEventStatusAndStats({ eventId, newStatusName, adminId, additionalData = {} }) {
+    const existing = await prisma.event.findUnique({
+        where: { id: eventId },
+        include: { status: true }
+    });
+    if (!existing) return null;
+
+    const previousStatus = existing.status?.statusName;
+    const authorId = existing.authorId;
+
+    const updateData = { ...additionalData };
+
+    if (adminId) {
+        updateData.adminId = adminId;
+    }
+    updateData.reviewDate = new Date();
+
+    if (newStatusName) {
+        const statusRecord = await prisma.eventStatus.findFirst({
+            where: {
+                OR: [
+                    { id: String(newStatusName) },
+                    { statusName: String(newStatusName) }
+                ]
+            }
+        });
+        if (statusRecord) {
+            updateData.eventStatusId = statusRecord.id;
+        }
+    }
+
+    const updatedEvent = await prisma.event.update({
+        where: { id: eventId },
+        data: updateData,
+        include: defaultIncludes['event']
+    });
+
+    const currentStatusRecord = await prisma.eventStatus.findUnique({
+        where: { id: updatedEvent.eventStatusId }
+    });
+    const updatedStatusName = currentStatusRecord?.statusName || newStatusName;
+
+    if (authorId && previousStatus && updatedStatusName && previousStatus !== updatedStatusName) {
+        const validStatuses = ['Approved', 'Concluded'];
+        const isNowValid = validStatuses.includes(updatedStatusName);
+        const wasValid = validStatuses.includes(previousStatus);
+
+        if (isNowValid && !wasValid) {
+            const userStats = await prisma.userStatistic.findFirst({ where: { userId: authorId } });
+            if (userStats) {
+                await prisma.userStatistic.update({
+                    where: { userId: userStats.userId },
+                    data: { eventsCreated: userStats.eventsCreated + 1 }
+                });
+            }
+        } else if (wasValid && !isNowValid) {
+            const userStats = await prisma.userStatistic.findFirst({ where: { userId: authorId } });
+            if (userStats && userStats.eventsCreated > 0) {
+                await prisma.userStatistic.update({
+                    where: { userId: userStats.userId },
+                    data: { eventsCreated: Math.max(0, userStats.eventsCreated - 1) }
+                });
+            }
+        }
+    }
+
+    return updatedEvent;
+}
+
+// Helper to update bulletin status, admin audit info (adminId, reviewDate), and userStatistics bulletinsCreated count
+async function updateBulletinStatusAndStats({ bulletinId, newStatusName, adminId, additionalData = {} }) {
+    const existing = await prisma.bulletin.findUnique({
+        where: { id: bulletinId },
+        include: { status: true }
+    });
+    if (!existing) return null;
+
+    const previousStatus = existing.status?.statusName;
+    const authorId = existing.authorId;
+
+    const updateData = { ...additionalData };
+
+    if (adminId) {
+        updateData.adminId = adminId;
+    }
+    updateData.reviewDate = new Date();
+
+    if (newStatusName) {
+        const statusRecord = await prisma.contentStatus.findFirst({
+            where: {
+                OR: [
+                    { id: String(newStatusName) },
+                    { statusName: String(newStatusName) }
+                ]
+            }
+        });
+        if (statusRecord) {
+            updateData.contentStatusId = statusRecord.id;
+        }
+    }
+
+    const updatedBulletin = await prisma.bulletin.update({
+        where: { id: bulletinId },
+        data: updateData,
+        include: defaultIncludes['bulletin']
+    });
+
+    const currentStatusRecord = await prisma.contentStatus.findUnique({
+        where: { id: updatedBulletin.contentStatusId }
+    });
+    const updatedStatusName = currentStatusRecord?.statusName || newStatusName;
+
+    if (authorId && previousStatus && updatedStatusName && previousStatus !== updatedStatusName) {
+        const isNowApproved = updatedStatusName === 'Approved';
+        const wasApproved = previousStatus === 'Approved';
+
+        if (isNowApproved && !wasApproved) {
+            const userStats = await prisma.userStatistic.findFirst({ where: { userId: authorId } });
+            if (userStats) {
+                await prisma.userStatistic.update({
+                    where: { userId: userStats.userId },
+                    data: { bulletinsCreated: userStats.bulletinsCreated + 1 }
+                });
+            }
+        } else if (wasApproved && !isNowApproved) {
+            const userStats = await prisma.userStatistic.findFirst({ where: { userId: authorId } });
+            if (userStats && userStats.bulletinsCreated > 0) {
+                await prisma.userStatistic.update({
+                    where: { userId: userStats.userId },
+                    data: { bulletinsCreated: Math.max(0, userStats.bulletinsCreated - 1) }
+                });
+            }
+        }
+    }
+
+    return updatedBulletin;
+}
+
 // Admin PATCH Bulletin Status
 app.patch('/api/admin/bulletins/:id/status', authenticateAdminToken, async (req, res) => {
     const { id } = req.params;
-    const { status } = req.body;
+    const { status, adminId } = req.body;
     try {
-        const statusRecord = await prisma.contentStatus.findFirst({ where: { statusName: status } });
-        if (!statusRecord) return res.status(400).json({ error: 'Invalid status name' });
-
-        const updatedBulletin = await prisma.bulletin.update({
-            where: { id },
-            data: { contentStatusId: statusRecord.id },
-            include: { status: true, author: { include: { profile: true, userStatus: true } }, category: true }
+        const effectiveAdminId = req.user?.id || adminId;
+        const updatedBulletin = await updateBulletinStatusAndStats({
+            bulletinId: id,
+            newStatusName: status,
+            adminId: effectiveAdminId
         });
+        if (!updatedBulletin) return res.status(404).json({ error: 'Bulletin not found' });
+
         res.json(formatOutput('bulletin', updatedBulletin));
     } catch (error) {
         console.error('Failed to update bulletin status:', error);
@@ -912,12 +1068,30 @@ app.post('/api/admin/bulletins', authenticateAdminToken, async (req, res) => {
         const authorId = req.body.authorId || existingUser?.id;
         if (!authorId) return res.status(400).json({ error: 'Author user not found' });
 
-        const bulletinData = await resolveBulletinData({ ...req.body, authorId }, false);
+        const effectiveAdminId = req.user?.id || req.body.adminId;
+        const bulletinData = await resolveBulletinData({
+            ...req.body,
+            authorId,
+            adminId: effectiveAdminId,
+            reviewDate: new Date()
+        }, false);
 
         const newBulletin = await prisma.bulletin.create({
             data: bulletinData,
             include: defaultIncludes['bulletin']
         });
+
+        // If newly created bulletin is Approved, increment author's bulletinsCreated stat
+        const statusRec = await prisma.contentStatus.findUnique({ where: { id: newBulletin.contentStatusId } });
+        if (statusRec?.statusName === 'Approved') {
+            const userStats = await prisma.userStatistic.findFirst({ where: { userId: authorId } });
+            if (userStats) {
+                await prisma.userStatistic.update({
+                    where: { userId: userStats.userId },
+                    data: { bulletinsCreated: userStats.bulletinsCreated + 1 }
+                });
+            }
+        }
 
         res.status(201).json(formatOutput('bulletin', newBulletin));
     } catch (error) {
@@ -934,11 +1108,14 @@ const handleAdminUpdateBulletin = async (req, res) => {
         if (!existingBulletin) return res.status(404).json({ error: 'Bulletin not found' });
 
         const bulletinData = await resolveBulletinData(req.body, true);
+        const effectiveAdminId = req.user?.id || req.body.adminId;
+        const newStatusName = req.body.status || req.body.statusName;
 
-        const updatedBulletin = await prisma.bulletin.update({
-            where: { id },
-            data: bulletinData,
-            include: defaultIncludes['bulletin']
+        const updatedBulletin = await updateBulletinStatusAndStats({
+            bulletinId: id,
+            newStatusName,
+            adminId: effectiveAdminId,
+            additionalData: bulletinData
         });
 
         res.json(formatOutput('bulletin', updatedBulletin));
@@ -963,10 +1140,8 @@ app.get('/api/admin/dashboard-stats', authenticateAdminToken, async (req, res) =
             disabledUsersCount,
             totalUsersCount,
             pendingBulletinsCount,
-            approvedBulletinsCount,
             pendingEventsCount,
             approvedEventsCount,
-            upcomingEventsCount,
             completedDonations,
             recentUsers,
             recentBulletins,
@@ -982,10 +1157,8 @@ app.get('/api/admin/dashboard-stats', authenticateAdminToken, async (req, res) =
             prisma.user.count({ where: { userStatus: { statusName: 'Disabled' } } }),
             prisma.user.count(),
             prisma.bulletin.count({ where: { status: { statusName: 'Pending' } } }),
-            prisma.bulletin.count({ where: { status: { statusName: 'Approved' } } }),
             prisma.event.count({ where: { status: { statusName: 'Pending' } } }),
             prisma.event.count({ where: { status: { statusName: 'Approved' } } }),
-            prisma.event.count({ where: { status: { statusName: { not: 'Rejected' } }, eventDate: { gte: new Date() } } }),
             prisma.donation.findMany({ where: { status: { statusName: 'Completed' } } }),
             prisma.user.findMany({
                 take: RECENT_ACTIVITY_LENGTH,
@@ -1124,10 +1297,8 @@ app.get('/api/admin/dashboard-stats', authenticateAdminToken, async (req, res) =
                 }
             },
             pendingBulletins: pendingBulletinsCount,
-            approvedBulletins: approvedBulletinsCount,
             pendingEvents: pendingEventsCount,
             approvedEvents: approvedEventsCount,
-            upcomingEvents: upcomingEventsCount,
             donationsTotal,
             activeDonorsCount: activeDonorsSet.size,
             recentActivity: activities.slice(0, RECENT_ACTIVITY_LENGTH)
