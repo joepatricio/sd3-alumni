@@ -3,28 +3,31 @@ import { api } from '@/app/views/api';
 export const handleConnection = async (
     action: 'add' | 'remove' | 'accept' | 'unblock' | 'block' | 'reject',
     currentUserId: string,
-    profileId: string,
-    reverseLookup: (val: string) => string | null
+    profileId: string
 ) => {
-    const [conn1Res, conn2Res] = await Promise.all([
+    const [conn1Res, conn2Res, statusesRes] = await Promise.all([
         api.get(`/userConnections`, { params: { userId: currentUserId, friendId: profileId } }),
-        api.get(`/userConnections`, { params: { userId: profileId, friendId: currentUserId } })
+        api.get(`/userConnections`, { params: { userId: profileId, friendId: currentUserId } }),
+        api.get(`/connectionStatuses`)
     ]);
+
+    const statuses = Array.isArray(statusesRes.data) ? statusesRes.data : (statusesRes.data?.data || []);
+    const getStatusId = (name: string) => statuses.find((s: any) => s.connectionName === name)?.id;
 
     const c1 = conn1Res.data[0];
     const c2 = conn2Res.data[0];
 
-    const acceptedCode = reverseLookup('Accepted');
+    const acceptedCode = getStatusId('Accepted');
     const wasAccepted = c1?.connectionStatusId === acceptedCode;
 
     if (action === 'add') {
-        const requestingCode = reverseLookup('Requesting');
-        const requestedCode = reverseLookup('Requested');
+        const requestingCode = getStatusId('Requesting');
+        const requestedCode = getStatusId('Requested');
         await Promise.all([
             api.post('/userConnections', { userId: currentUserId, friendId: profileId, connectionStatusId: requestingCode, dateUpdated: new Date().toISOString() }),
             api.post('/userConnections', { userId: profileId, friendId: currentUserId, connectionStatusId: requestedCode, dateUpdated: new Date().toISOString() })
         ]);
-        return { newStatusCode: requestingCode, statsUpdated: false };
+        return { newStatusName: 'Requesting', statsUpdated: false };
     }
     else if (action === 'accept') {
         const patches = [];
@@ -47,7 +50,7 @@ export const handleConnection = async (
         if (s2) patches.push(api.patch(`/userStatistics/${s2.id}`, { userConnections: (s2.userConnections || 0) + 1 }));
 
         await Promise.all(patches);
-        return { newStatusCode: acceptedCode, statsUpdated: true, newConnectionsCount: newCount };
+        return { newStatusName: 'Accepted', statsUpdated: true, newConnectionsCount: newCount };
     }
     else if (action === 'reject' || action === 'remove' || action === 'unblock') {
         const ops = [];
@@ -70,11 +73,11 @@ export const handleConnection = async (
             if (s2 && s2.userConnections > 0) ops.push(api.patch(`/userStatistics/${s2.id}`, { userConnections: s2.userConnections - 1 }));
         }
         await Promise.all(ops);
-        return { newStatusCode: null, statsUpdated: action === 'remove' && wasAccepted, newConnectionsCount: newCount };
+        return { newStatusName: null, statsUpdated: action === 'remove' && wasAccepted, newConnectionsCount: newCount };
     }
     else if (action === 'block') {
-        const blockingCode = reverseLookup('Blocking');
-        const blockedCode = reverseLookup('Blocked');
+        const blockingCode = getStatusId('Blocking');
+        const blockedCode = getStatusId('Blocked');
         const ops = [];
         if (c1) ops.push(api.patch(`/userConnections/${c1.id}`, { connectionStatusId: blockingCode, dateUpdated: new Date().toISOString() }));
         else ops.push(api.post('/userConnections', { userId: currentUserId, friendId: profileId, connectionStatusId: blockingCode, dateUpdated: new Date().toISOString() }));
@@ -99,6 +102,6 @@ export const handleConnection = async (
         }
 
         await Promise.all(ops);
-        return { newStatusCode: blockingCode, statsUpdated: wasAccepted, newConnectionsCount: newCount };
+        return { newStatusName: 'Blocking', statsUpdated: wasAccepted, newConnectionsCount: newCount };
     }
 };

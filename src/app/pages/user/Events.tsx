@@ -1,54 +1,104 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Calendar, MapPin, Clock, Video, Loader2 } from 'lucide-react';
 import { Plus } from 'lucide-react';
 import { CreateEventModal } from '@components/user/CreateEventModal';
 import { Button } from '@components/ui/button';
 import { Link } from 'react-router-dom';
-import { getCategoryColor } from '@/app/views/categoryColors';
-import { isEventUpcoming } from '@/app/views/eventFilters';
-import { api, useSystemLookup, type EventData } from '@/app/views/api';
+import { getCategoryColor, formatDate, getEventImage } from '@/app/views/formatters';
+
+import { api, type EventData } from '@/app/views/api';
 import { useAuth } from '@/app/views/auth';
 
 const EVENTS_PER_PAGE = 6;
 
 export function Events() {
-    const { lookup, reverseLookup } = useSystemLookup();
     const [events, setEvents] = useState<EventData[]>([]);
     const [loading, setLoading] = useState(true);
     const { session } = useAuth();
-    const [restrictedUsers, setRestrictedUsers] = useState<string[]>([]);
     const [currentUserStatus, setCurrentUserStatus] = useState<string>('');
 
     const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
     const [timeRange, setTimeRange] = useState<string>('Upcoming');
     const [visibleCount, setVisibleCount] = useState(EVENTS_PER_PAGE);
 
+    const [allCategories, setAllCategories] = useState<string[]>([]);
+    const [totalEvents, setTotalEvents] = useState(0);
+
+    useEffect(() => {
+        const fetchCategories = async () => {
+            try {
+                const res = await api.get('/eventCategories');
+                const data = Array.isArray(res.data) ? res.data : (res.data?.data || []);
+                setAllCategories(data.map((c: any) => c.eventCategoryName));
+            } catch (err) {
+                console.error("Failed to fetch event categories", err);
+            }
+        };
+        fetchCategories();
+    }, []);
+
     useEffect(() => {
         const fetchEvents = async () => {
+            setLoading(true);
             try {
-                const [res, usersRes] = await Promise.all([
-                    api.get('/events?_embed=location'),
+                const [usersRes] = await Promise.all([
                     api.get('/users')
                 ]);
-                
+
                 const allUsers = Array.isArray(usersRes.data) ? usersRes.data : (usersRes.data?.data || []);
-                const bannedId = reverseLookup('Banned');
-                const suspendedId = reverseLookup('Suspended');
                 const restricted = allUsers
-                    .filter((u: any) => u.userStatusId === bannedId || u.userStatusId === suspendedId)
+                    .filter((u: any) => u.userStatus?.statusName === 'Banned' || u.userStatus?.statusName === 'Suspended')
                     .map((u: any) => String(u.id));
-                setRestrictedUsers(restricted);
 
                 if (session?.userId) {
-                    const currentU = allUsers.find((u: any) => String(u.userId) === String(session.userId));
+                    const currentU = allUsers.find((u: any) => String(u.id) === String(session.userId));
                     if (currentU) {
-                        setCurrentUserStatus(currentU.userStatusId);
+                        setCurrentUserStatus(currentU.userStatus?.statusName || '');
                     }
                 }
 
-                // json-server v1 with _embed might return { data: [...] } or just [...]
+                const whereClause: any = {
+                    status: { statusName: 'Approved' }
+                };
+
+                if (restricted.length > 0) {
+                    whereClause.authorId = { notIn: restricted };
+                }
+
+                if (selectedCategories.length > 0) {
+                    whereClause.category = { eventCategoryName: { in: selectedCategories } };
+                }
+
+                const now = new Date();
+                now.setHours(0, 0, 0, 0);
+
+                if (timeRange === 'Upcoming') {
+                    whereClause.eventDate = { gte: now.toISOString() };
+                } else if (timeRange === 'Past') {
+                    whereClause.status = { statusName: 'Concluded' };
+                    whereClause.eventDate = { lt: now.toISOString() };
+                } else if (timeRange === '7 days') {
+                    const next7Days = new Date(now);
+                    next7Days.setDate(next7Days.getDate() + 7);
+                    whereClause.eventDate = { gte: now.toISOString(), lte: next7Days.toISOString() };
+                } else if (timeRange === '30 days') {
+                    const next30Days = new Date(now);
+                    next30Days.setDate(next30Days.getDate() + 30);
+                    whereClause.eventDate = { gte: now.toISOString(), lte: next30Days.toISOString() };
+                }
+
+                const res = await api.get('/events', {
+                    params: {
+                        _limit: visibleCount,
+                        _sort: timeRange === 'Past' ? '-eventDate' : 'eventDate',
+                        _where: JSON.stringify(whereClause),
+                        _include: 'location,status,category'
+                    }
+                });
+
                 const data = Array.isArray(res.data) ? res.data : (res.data?.data || []);
                 setEvents(data);
+                setTotalEvents(res.data?.items !== undefined ? res.data.items : data.length);
             } catch (error) {
                 console.error("Failed to fetch events:", error);
             } finally {
@@ -57,11 +107,9 @@ export function Events() {
         };
 
         fetchEvents();
-    }, []);
+    }, [visibleCount, selectedCategories, timeRange, session?.userId]);
 
-    const categories = useMemo(() => {
-        return Array.from(new Set(events.map(event => lookup(event.eventCategoryId))));
-    }, [events, lookup]);
+    const categories = allCategories;
 
     const toggleCategory = (cat: string) => {
         setSelectedCategories(prev =>
@@ -76,45 +124,21 @@ export function Events() {
         setVisibleCount(EVENTS_PER_PAGE);
     };
 
-    const filteredEvents = useMemo(() => {
-        // "Approved" status usually has a specific lookup
-        const approvedStatusId = reverseLookup('Approved');
-
-        let sorted = events
-            .filter(event => event.contentStatusId === approvedStatusId && !restrictedUsers.includes(String(event.authorId)))
-            .sort((a, b) => new Date(a.eventDate).getTime() - new Date(b.eventDate).getTime());
-
-        if (selectedCategories.length > 0) {
-            sorted = sorted.filter(event => selectedCategories.includes(lookup(event.eventCategoryId)));
-        }
-
-        sorted = sorted.filter(event => {
-            if (timeRange === 'Upcoming') return isEventUpcoming(event.eventDate);
-
-            const now = new Date();
-            now.setHours(0, 0, 0, 0); // Normalize to start of day
-            const eventDate = new Date(event.eventDate);
-            eventDate.setHours(0, 0, 0, 0);
-
-            const diffTime = eventDate.getTime() - now.getTime();
-            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-            if (timeRange === '7 days') return diffDays >= 0 && diffDays <= 7;
-            if (timeRange === '30 days') return diffDays >= 0 && diffDays <= 30;
-            else return diffDays < 0; // Past
-        });
-
-        if (timeRange === 'Past') return sorted.reverse();
-        else return sorted;
-    }, [events, selectedCategories, timeRange, lookup, reverseLookup]);
-
-    const paginatedEvents = filteredEvents.slice(0, visibleCount);
-
     const formatLocation = (loc: any) => {
         if (!loc) return 'TBA';
         if (typeof loc === 'string') return loc;
         const parts = [loc.landmark, loc.barangay, loc.cityMunicipality, loc.province].filter(Boolean);
         return parts.join(', ');
+    };
+
+    const formatTime = (timeStr: string) => {
+        if (!timeStr) return '';
+        if (timeStr.includes('AM') || timeStr.includes('PM')) return timeStr;
+        const [hours, minutes] = timeStr.split(':');
+        const h = parseInt(hours, 10);
+        const ampm = h >= 12 ? 'PM' : 'AM';
+        const displayHours = h % 12 || 12;
+        return `${displayHours}:${minutes} ${ampm}`;
     };
 
     return (
@@ -123,7 +147,7 @@ export function Events() {
                 {/* Header */}
                 <div>
                     <div className="max-w-6xl mx-auto px-4 md:px-8 py-8">
-                        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                        <div className="flex flex-co l md:flex-row md:items-center md:justify-between gap-4">
                             <div>
                                 <h1 className="text-3xl font-bold mb-2">Upcoming Events</h1>
                                 <p className="text-gray-600">
@@ -131,7 +155,7 @@ export function Events() {
                                     events
                                 </p>
                             </div>
-                            {currentUserStatus !== reverseLookup('Suspended') && currentUserStatus !== reverseLookup('Banned') && (
+                            {currentUserStatus === 'Official' && (
                                 <CreateEventModal
                                     trigger={
                                         <button
@@ -195,8 +219,8 @@ export function Events() {
                 ) : (
                     <>
                         <div className="space-y-6 mb-6">
-                            {paginatedEvents.map((event) => {
-                                const categoryName = lookup(event.eventCategoryId);
+                            {events.map((event) => {
+                                const categoryName = event.eventCategory?.eventCategoryName || 'Unknown';
                                 return (
                                     <Link
                                         key={event.id}
@@ -207,7 +231,7 @@ export function Events() {
                                             {/* Image */}
                                             <div className="relative w-full md:w-64 lg:w-80 h-48 md:h-full flex-shrink-0 overflow-hidden">
                                                 <img
-                                                    src={event.eventImage}
+                                                    src={getEventImage(event)}
                                                     alt={event.title}
                                                     className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
                                                 />
@@ -231,11 +255,11 @@ export function Events() {
                                                     <div className="flex flex-wrap gap-4 text-sm text-gray-600">
                                                         <div className="flex items-center gap-2">
                                                             <Calendar className="w-4 h-4 text-brand-primary" />
-                                                            <span>{new Date(event.eventDate).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</span>
+                                                            <span>{formatDate(event.eventDate, 'long')}</span>
                                                         </div>
                                                         <div className="flex items-center gap-2">
                                                             <Clock className="w-4 h-4 text-brand-primary" />
-                                                            <span>{event.startTime}</span>
+                                                            <span>{event.endTime ? `${formatTime(event.startTime)} - ${formatTime(event.endTime)}` : formatTime(event.startTime)}</span>
                                                         </div>
                                                         <div className="flex items-center gap-2">
                                                             {categoryName === 'Virtual' ? (
@@ -267,7 +291,7 @@ export function Events() {
                         </div>
 
                         {/* Pagination */}
-                        {visibleCount < filteredEvents.length && (
+                        {events.length < totalEvents && (
                             <div className="flex justify-center items-center gap-4 mt-8 mb-12">
                                 <Button
                                     variant="outline"
@@ -280,7 +304,7 @@ export function Events() {
                         )}
 
                         {/* Empty State */}
-                        {filteredEvents.length === 0 && (
+                        {events.length === 0 && (
                             <div className="text-center py-16">
                                 <Calendar className="w-16 h-16 text-gray-300 mx-auto mb-4" />
                                 <h3 className="text-xl font-semibold text-gray-600 mb-2">

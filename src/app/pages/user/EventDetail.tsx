@@ -11,7 +11,8 @@ import {
     CheckCircle2,
     XCircle,
     AlertCircle,
-    Loader2
+    Loader2,
+    Info
 } from 'lucide-react';
 import { CreateEventModal } from '@components/user/CreateEventModal';
 import { Button } from '@components/ui/button';
@@ -20,12 +21,11 @@ import { Avatar, AvatarFallback, AvatarImage } from '@components/ui/avatar';
 import { Alert, AlertDescription, AlertTitle } from '@components/ui/alert';
 import { NotFound } from '@pages/NotFound';
 import { useAuth } from '@/app/views/auth';
-import { api, useSystemLookup, type EventData, type ProfileData } from '@/app/views/api';
+import { api, type EventData, type ProfileData } from '@/app/views/api';
+import { formatDate, getEventImage } from '@/app/views/formatters';
 
 export function EventDetail() {
     const { id } = useParams<{ id: string }>();
-    const { lookup, reverseLookup } = useSystemLookup();
-    const isAdmin = !!localStorage.getItem('adminToken');
     const { isLoggedIn, session } = useAuth();
 
     const [eventData, setEventData] = useState<EventData | null>(null);
@@ -38,7 +38,7 @@ export function EventDetail() {
         const fetchEventAndOrganizer = async () => {
             try {
                 const [eventRes, usersRes] = await Promise.all([
-                    api.get(`/events/${id}?_embed=location&_embed=userRsvps`),
+                    api.get(`/events/${id}?_embed=userRsvps`),
                     api.get('/users')
                 ]);
                 const event = eventRes.data;
@@ -46,7 +46,7 @@ export function EventDetail() {
 
                 if (event?.authorId) {
                     const authorUser = allUsers.find((u: any) => String(u.id) === String(event.authorId));
-                    if (authorUser && authorUser.userStatusId === reverseLookup('Banned')) {
+                    if (authorUser && authorUser.userStatus?.statusName === 'Banned') {
                         setEventData(null);
                         setLoading(false);
                         return;
@@ -61,7 +61,7 @@ export function EventDetail() {
 
                 if (session?.userId) {
                     const currentU = allUsers.find((u: any) => String(u.userId) === String(session.userId));
-                    if (currentU && currentU.userStatusId === reverseLookup('Suspended')) {
+                    if (currentU && currentU.userStatus?.statusName === 'Suspended') {
                         setIsSuspended(true);
                     }
                 }
@@ -85,17 +85,19 @@ export function EventDetail() {
         );
     }
 
-    const currentStatusName = eventData ? lookup(eventData.contentStatusId) : null;
+    const currentStatusName = eventData?.eventStatus?.statusName || null;
+    const isAdminPreview = location.pathname.includes('/admin/preview') && !!sessionStorage.getItem('adminToken');
 
-    if (!eventData || currentStatusName === "Rejected") {
+    if (!eventData || (currentStatusName === "Rejected" && !isAdminPreview)) {
         return <NotFound />;
     }
 
     const isPastEvent = new Date(eventData.eventDate) < new Date();
 
     const formatTime = (timeStr: string) => {
-        // timeStr might be "16:00:00"
+        // timeStr might be "16:00:00" or "16:00"
         if (!timeStr) return '';
+        if (timeStr.includes('AM') || timeStr.includes('PM')) return timeStr;
         const [hours, minutes] = timeStr.split(':');
         const h = parseInt(hours, 10);
         const ampm = h >= 12 ? 'PM' : 'AM';
@@ -104,7 +106,7 @@ export function EventDetail() {
     };
 
     const displayTime = `${formatTime(eventData.startTime)} - ${formatTime(eventData.endTime)}`;
-    const categoryName = lookup(eventData.eventCategoryId);
+    const categoryName = eventData.eventCategory?.eventCategoryName || 'Unknown';
 
     const currentUserRsvp = eventData.userRsvps?.find(r => r.userId === session?.userId?.toString());
     const rsvpStatus = currentUserRsvp ? (currentUserRsvp.isAttending ? 'going' : 'not_going') : null;
@@ -160,6 +162,25 @@ export function EventDetail() {
         }
     };
 
+    const handleConcludeEvent = async () => {
+        if (!eventData) return;
+        try {
+            await api.post(`/events/${eventData.id}/conclude`, {});
+            // Optimistically update the local state to Concluded
+            // We know the status string won't be exactly right without refetching the object
+            // but we can just reload the page or update the status name
+            setEventData({
+                ...eventData,
+                eventStatus: {
+                    id: eventData.eventStatus?.id || 'concluded-status',
+                    statusName: 'Concluded'
+                }
+            });
+        } catch (err) {
+            console.error('Failed to conclude event:', err);
+        }
+    };
+
     const formatLocation = (event: EventData) => {
         if (categoryName === 'Virtual') return `Virtual (${event.modality || 'Online'})`;
         const loc = event.location;
@@ -174,6 +195,14 @@ export function EventDetail() {
 
     return (
         <div className="bg-gray-50 pb-12">
+            {isAdminPreview && (
+                <div className="bg-blue-50 px-4 py-3 border-b border-blue-200 text-center flex items-center justify-center gap-2">
+                    <Info className="w-4 h-4 text-blue-800" />
+                    <p className="text-blue-800 font-medium text-sm">
+                        Admin Preview Mode: Viewing event with status "{currentStatusName}"
+                    </p>
+                </div>
+            )}
             {currentStatusName === "Pending" && (
                 <div className="bg-yellow-50 px-4 py-3 border-b border-yellow-200 text-center">
                     <p className="text-yellow-800 font-medium text-sm">
@@ -181,8 +210,15 @@ export function EventDetail() {
                     </p>
                 </div>
             )}
+            {currentStatusName === "Archived" && (
+                <div className="bg-yellow-50 px-4 py-3 border-b border-yellow-200 text-center">
+                    <p className="text-yellow-800 font-medium text-sm">
+                        ⚠️ This event has been archived. RSVPs are disabled and it is no longer actively listed.
+                    </p>
+                </div>
+            )}
             {/* Header / Nav */}
-            <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 flex justify-between items-center">
+            <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 flex justify-between items-center">
                 <Link
                     to="/events"
                     className="inline-flex items-center gap-2 text-gray-600 hover:text-brand-primary transition-colors"
@@ -192,17 +228,25 @@ export function EventDetail() {
                 </Link>
 
                 <div className="flex gap-2">
-                    {isLoggedIn && (
-                        <CreateEventModal
-                            trigger={
-                                <Button variant="outline" className="gap-2 text-brand-primary border-brand-primary hover:bg-brand-primary hover:text-white transition-colors">
-                                    <Edit className="w-4 h-4" />
-                                    Edit Event
+                    {isLoggedIn && (session?.userId === eventData.authorId) && (
+                        <>
+                            <CreateEventModal
+                                trigger={
+                                    <Button variant="outline" className="gap-2 text-brand-primary border-brand-primary hover:bg-brand-primary hover:text-white transition-colors">
+                                        <Edit className="w-4 h-4" />
+                                        Edit Event
+                                    </Button>
+                                }
+                                initialData={eventData as any}
+                            />
+
+                            {currentStatusName !== "Concluded" && (
+                                <Button variant="outline" className="gap-2 text-brand-primary border-brand-primary hover:bg-brand-primary hover:text-white transition-colors" onClick={handleConcludeEvent}>
+                                    <CheckCircle2 className="w-4 h-4" />
+                                    Conclude Event
                                 </Button>
-                            }
-                            initialData={eventData as any}
-                            isAdmin={isAdmin}
-                        />
+                            )}
+                        </>
                     )}
                 </div>
             </div>
@@ -215,7 +259,7 @@ export function EventDetail() {
                         <div className="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-100">
                             <div className="h-64 sm:h-80 w-full relative">
                                 <img
-                                    src={eventData.eventImage}
+                                    src={getEventImage(eventData)}
                                     alt={eventData.title}
                                     className="w-full h-full object-cover"
                                 />
@@ -232,7 +276,7 @@ export function EventDetail() {
                                 <div className="flex flex-wrap gap-4 sm:gap-6 text-gray-600 mb-6">
                                     <div className="flex items-center gap-2">
                                         <Calendar className="w-5 h-5 text-brand-primary" />
-                                        <span>{new Date(eventData.eventDate).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</span>
+                                        <span>{formatDate(eventData.eventDate, 'full')}</span>
                                     </div>
                                     <div className="flex items-center gap-2">
                                         <Clock className="w-5 h-5 text-brand-primary" />
@@ -295,12 +339,12 @@ export function EventDetail() {
                     <div className="space-y-8 sticky top-24 self-start">
                         {/* RSVP Card */}
                         <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-                            {isPastEvent ? (
+                        {isPastEvent || currentStatusName === "Archived" ? (
                                 <Alert className="bg-amber-50 border-amber-200 text-amber-800">
                                     <AlertCircle className="h-4 w-4 text-amber-600" />
                                     <AlertTitle className="font-bold">Event Passed</AlertTitle>
                                     <AlertDescription className="text-amber-700">
-                                        This event has already taken place. RSVP is no longer available.
+                                        {currentStatusName === "Archived" ? "This event has been archived. RSVP is disabled." : "This event has already taken place. RSVP is no longer available."}
                                     </AlertDescription>
                                 </Alert>
                             ) : isLoggedIn && !isSuspended ? (

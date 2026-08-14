@@ -31,6 +31,8 @@ const profileSchema = z.object({
     bio: z.string().optional(),
     birthday: z.string().optional(),
     profileStatusId: z.string().optional(),
+    gender: z.string().optional(),
+    pronoun: z.string().optional(),
 });
 
 type ProfileFormValues = z.infer<typeof profileSchema>;
@@ -58,6 +60,8 @@ export function EditProfile() {
             bio: '',
             birthday: '',
             profileStatusId: '',
+            gender: '',
+            pronoun: '',
         },
     });
 
@@ -70,7 +74,7 @@ export function EditProfile() {
                     api.get(`/users?id=${session.userId}`),
                     api.get(`/profileStatuses`)
                 ]);
-                
+
                 if (statusRes.data) {
                     setProfileStatuses(statusRes.data);
                 }
@@ -90,6 +94,15 @@ export function EditProfile() {
                     const p = data[0];
                     setProfile(p);
                     setProfileImageUrl(p.profileImage);
+                    let genderVal = '';
+                    let pronounVal = '';
+                    if (p.gender === 'Male' || p.gender === 'Female') {
+                        genderVal = p.gender;
+                    } else if (p.gender) {
+                        genderVal = 'Custom';
+                        pronounVal = p.gender;
+                    }
+
                     form.reset({
                         name: p.userName || '',
                         email: p.email || '',
@@ -98,8 +111,10 @@ export function EditProfile() {
                         currentJob: p.currentJob || '',
                         company: p.company || '',
                         bio: p.bio || '',
-                        birthday: p.birthday ? new Date(p.birthday).toISOString().split('T')[0] : '',
+                        birthday: p.birthday ? p.birthday.split('T')[0] : '',
                         profileStatusId: defaultStatusId,
+                        gender: genderVal,
+                        pronoun: pronounVal,
                     });
 
                     if (p.degreeId) {
@@ -134,7 +149,8 @@ export function EditProfile() {
                     currentJob: values.currentJob,
                     company: values.company,
                     bio: values.bio,
-                    birthday: values.birthday ? new Date(values.birthday).toISOString() : '',
+                    birthday: values.birthday ? new Date(values.birthday).toISOString() : null,
+                    gender: values.gender === 'Custom' ? (values.pronoun || '') : values.gender,
                     profileImage: profileImageUrl,
                 }),
                 userRecord && values.profileStatusId ? api.patch(`/users/${userRecord.id}`, {
@@ -160,7 +176,7 @@ export function EditProfile() {
 
                 <ProfileHeader
                     name={watchedValues.name || 'Your Name'}
-                    degree={degreeInfo?.degreeAbbr || 'Degree'}
+                    degree={degreeInfo ? `${degreeInfo?.degreeName} (${degreeInfo?.degreeAbbr})` : ''}
                     graduationYear={profile?.batch?.toString() || 'YYYY'}
                     profileImage={profileImageUrl || 'http://localhost:3000/profile-image.jpg'}
                     bio={watchedValues.bio || ''}
@@ -295,6 +311,7 @@ export function EditProfile() {
                                         </FormItem>
                                     )}
                                 />
+
                                 <FormField
                                     control={form.control}
                                     name="profileStatusId"
@@ -319,6 +336,54 @@ export function EditProfile() {
                                         </FormItem>
                                     )}
                                 />
+
+
+                                <FormField
+                                    control={form.control}
+                                    name="gender"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <div className="flex items-center gap-2 mb-2">
+                                                <FormLabel className="!mb-0">Gender</FormLabel>
+                                                <div className="w-4 h-4 rounded-full border border-gray-400 text-gray-500 flex items-center justify-center text-[10px] font-bold cursor-help" title="You can change who sees your gender on your profile later. Select Custom to choose another gender, or if you'd rather not say.">?</div>
+                                            </div>
+                                            <Select onValueChange={field.onChange} value={field.value}>
+                                                <FormControl>
+                                                    <SelectTrigger className="selection:bg-blue-500 selection:text-white">
+                                                        <SelectValue placeholder="Select your gender" />
+                                                    </SelectTrigger>
+                                                </FormControl>
+                                                <SelectContent>
+                                                    <SelectItem value="Male">Male</SelectItem>
+                                                    <SelectItem value="Female">Female</SelectItem>
+                                                    <SelectItem value="Custom">Custom</SelectItem>
+                                                </SelectContent>
+                                            </Select>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+
+                                {form.watch("gender") === "Custom" && (
+                                    <FormField
+                                        control={form.control}
+                                        name="pronoun"
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel>Pronouns (optional)</FormLabel>
+                                                <FormControl>
+                                                    <Input
+                                                        placeholder="Gender (optional)"
+                                                        className="selection:bg-blue-500 selection:text-white"
+                                                        {...field}
+                                                    />
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+                                )}
+
                                 <div className="md:col-span-2">
                                     <FormField
                                         control={form.control}

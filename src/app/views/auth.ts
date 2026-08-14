@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react';
+import { jwtDecode } from 'jwt-decode';
+import { api } from '@/app/views/api';
 
 const AUTH_EVENT_KEY = 'usjr_alumni_auth_change';
 
@@ -8,27 +10,33 @@ export interface UserSession {
 }
 
 export const getSession = (): UserSession | null => {
-    const session = localStorage.getItem('userSession') || sessionStorage.getItem('userSession');
-    if (!session) return null;
+    const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+    if (!token) return null;
     try {
-        return JSON.parse(session);
+        const decoded: any = jwtDecode(token);
+        return {
+            userId: decoded.id,
+            email: decoded.email
+        };
     } catch {
         return null;
     }
 };
 
-export const setSession = (session: UserSession | null, rememberMe: boolean = true): void => {
-    if (session) {
+export const setSession = (token: string | null, rememberMe: boolean = true): void => {
+    if (token) {
         if (rememberMe) {
-            localStorage.setItem('userSession', JSON.stringify(session));
-            sessionStorage.removeItem('userSession');
+            localStorage.setItem('token', token);
+            sessionStorage.removeItem('token');
         } else {
-            sessionStorage.setItem('userSession', JSON.stringify(session));
-            localStorage.removeItem('userSession');
+            sessionStorage.setItem('token', token);
+            localStorage.removeItem('token');
         }
     } else {
-        localStorage.removeItem('userSession');
-        sessionStorage.removeItem('userSession');
+        localStorage.removeItem('token');
+        sessionStorage.removeItem('token');
+        localStorage.setItem('logoutEvent', Date.now().toString());
+        localStorage.removeItem('logoutEvent');
     }
     window.dispatchEvent(new Event(AUTH_EVENT_KEY));
 };
@@ -47,24 +55,71 @@ export const setIsLoggedIn = (status: boolean): void => {
 export function useAuth() {
     const [isLoggedIn, setLoggedInState] = useState<boolean>(getIsLoggedIn());
     const [session, setSessionState] = useState<UserSession | null>(getSession());
+    const [isLoading, setIsLoading] = useState<boolean>(() => !getSession());
 
     useEffect(() => {
+        let timeoutId: ReturnType<typeof setTimeout>;
+
         const handleAuthChange = () => {
             setLoggedInState(getIsLoggedIn());
             setSessionState(getSession());
+            setIsLoading(false);
         };
 
         window.addEventListener(AUTH_EVENT_KEY, handleAuthChange);
-        window.addEventListener('storage', handleAuthChange);
+        const handleStorageEvent = (e: StorageEvent) => {
+            if (e.key === 'logoutEvent') {
+                sessionStorage.removeItem('token');
+                localStorage.removeItem('token');
+                handleAuthChange();
+            } else if (e.key === 'requestSession' && sessionStorage.getItem('token')) {
+                localStorage.setItem('shareSession', sessionStorage.getItem('token')!);
+                localStorage.removeItem('shareSession');
+            } else if (e.key === 'shareSession' && e.newValue && !sessionStorage.getItem('token')) {
+                sessionStorage.setItem('token', e.newValue);
+                handleAuthChange();
+            } else if (e.key === 'token') {
+                handleAuthChange();
+            }
+        };
+
+        window.addEventListener(AUTH_EVENT_KEY, handleAuthChange);
+        window.addEventListener('storage', handleStorageEvent);
         
+        // Background API validation
+        if (getIsLoggedIn()) {
+            const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+            if (token) {
+                api.get('/auth/me', {
+                    headers: { Authorization: `Bearer ${token}` }
+                }).catch((error) => {
+                    console.error("Session validation failed:", error);
+                    setSession(null);
+                });
+            }
+        }
+        
+        if (!getSession()) {
+            localStorage.setItem('requestSession', Date.now().toString());
+            localStorage.removeItem('requestSession');
+            const waitTime = document.visibilityState === 'hidden' ? 2500 : 500;
+            timeoutId = setTimeout(() => {
+                setIsLoading(false);
+            }, waitTime);
+        } else {
+            setIsLoading(false);
+        }
+
         return () => {
             window.removeEventListener(AUTH_EVENT_KEY, handleAuthChange);
-            window.removeEventListener('storage', handleAuthChange);
+            window.removeEventListener('storage', handleStorageEvent);
+            clearTimeout(timeoutId);
         };
     }, []);
 
     return {
         isLoggedIn,
+        isLoading,
         session,
         setIsLoggedIn,
         setSession

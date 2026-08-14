@@ -1,0 +1,344 @@
+generator client {
+  provider = "prisma-client"
+  output   = "./generated"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model Degree {
+  id         String    @id @default(uuid())
+  degreeName String
+  degreeAbbr String
+  profiles   Profile[]
+}
+
+model ConnectionStatus {
+  id              String           @id @default(uuid())
+  connectionName  String
+  userConnections UserConnection[]
+}
+
+model EventStatus {
+  id         String  @id @default(uuid())
+  statusName String
+  events     Event[]
+}
+
+model ContentStatus {
+  id         String     @id @default(uuid())
+  statusName String
+  bulletins  Bulletin[]
+}
+
+model UserStatus {
+  id         String   @id @default(uuid())
+  statusName String
+  users      User[]
+  records    Record[]
+}
+
+model DonationStatus {
+  id         String     @id @default(uuid())
+  statusName String
+  donations  Donation[]
+}
+
+model EventCategory {
+  id                String  @id @default(uuid())
+  eventCategoryName String
+  events            Event[]
+}
+
+model ProfileStatus {
+  id         String @id @default(uuid())
+  statusName String
+  users      User[]
+}
+
+model NotificationType {
+  id                   String         @id @default(uuid())
+  notificationTypeName String
+  notifications        Notification[]
+}
+
+model User {
+  id              String  @id @default(uuid())
+  userStatusId    String
+  currentRecordId String?
+  profileStatusId String
+
+  userStatus    UserStatus    @relation(fields: [userStatusId], references: [id])
+  profileStatus ProfileStatus @relation(fields: [profileStatusId], references: [id])
+
+  auth       UserAuth?
+  profile    Profile?
+  statistics UserStatistic?
+
+  records   Record[]   @relation("UserRecords")
+  bulletins Bulletin[] @relation("AuthorBulletins")
+  comments  Comment[]
+  donations Donation[]
+  events    Event[]    @relation("EventAuthor")
+
+  connections1 UserConnection[] @relation("UserConnections1")
+  connections2 UserConnection[] @relation("UserConnections2")
+
+  rsvps         UserRsvp[]
+  achievements  UserAchievement[]
+  bulletinLikes BulletinLike[]
+  commentLikes  CommentLike[]
+  notifications Notification[]
+}
+
+model Record {
+  id           String    @id @default(uuid())
+  userId       String
+  adminId      String?
+  userStatusId String
+  dateCreated  DateTime  @default(now())
+  description  String
+  dateExpires  DateTime?
+
+  user       User       @relation("UserRecords", fields: [userId], references: [id])
+  admin      Admin?     @relation(fields: [adminId], references: [id])
+  userStatus UserStatus @relation(fields: [userStatusId], references: [id])
+}
+
+model UserAuth {
+  userId       String   @id
+  email        String   @unique
+  passwordHash String
+  lastLogin    DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+}
+
+model UserAchievement {
+  id              String   @id @default(uuid())
+  userId          String
+  achievementId   String
+  achievementTier Int
+  achievedDate    DateTime @default(now())
+
+  user        User        @relation(fields: [userId], references: [id])
+  achievement Achievement @relation(fields: [achievementId], references: [id])
+
+  @@unique([userId, achievementId, achievementTier])
+}
+
+model Achievement {
+  id                     String @id @default(uuid())
+  achievementCategory    Int
+  achievementTier        Int
+  achievementTitle       String
+  achievementDescription String
+  achievementIcon        String
+
+  userAchievements UserAchievement[]
+}
+
+model UserConnection {
+  id                 String   @id @default(uuid())
+  userId             String
+  friendId           String
+  connectionStatusId String
+  dateUpdated        DateTime @default(now())
+
+  user   User             @relation("UserConnections1", fields: [userId], references: [id])
+  friend User             @relation("UserConnections2", fields: [friendId], references: [id])
+  status ConnectionStatus @relation(fields: [connectionStatusId], references: [id])
+
+  @@unique([userId, friendId])
+}
+
+model UserRsvp {
+  id          String   @id @default(uuid())
+  userId      String
+  eventId     String
+  isAttending Boolean
+  isValid     Boolean?
+
+  user  User  @relation(fields: [userId], references: [id])
+  event Event @relation(fields: [eventId], references: [id])
+
+  @@unique([userId, eventId])
+}
+
+model UserStatistic {
+  userId           String   @id
+  userConnections  Int      @default(0)
+  eventsAttended   Int      @default(0)
+  eventsCreated    Int      @default(0)
+  bulletinsCreated Int      @default(0)
+  commentsWritten  Int      @default(0)
+  achievements     Int      @default(0)
+  donatedAmount    Float    @default(0)
+  dateRegistered   DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+}
+
+model Profile {
+  userId       String    @id
+  userName     String
+  gender       String?
+  bio          String?
+  email        String?
+  phone        String?
+  location     String?
+  currentJob   String?
+  company      String?
+  profileImage String?
+  degreeId     String
+  batch        Int?
+  birthday     DateTime?
+
+  user   User   @relation(fields: [userId], references: [id])
+  degree Degree @relation(fields: [degreeId], references: [id])
+}
+
+model Admin {
+  id           String   @id @default(uuid())
+  username     String   @unique
+  passwordHash String
+  lastLogin    DateTime @default(now())
+
+  bulletins Bulletin[]
+  events    Event[]
+  records   Record[]
+}
+
+model BulletinCategory {
+  id                   String     @id @default(uuid())
+  bulletinCategoryName String
+  bulletins            Bulletin[]
+}
+
+model Bulletin {
+  id                 String           @id @default(uuid())
+  adminId            String?
+  authorId           String
+  contentStatusId    String
+  bulletinCategoryId String
+  bulletinDate       DateTime         @default(now())
+  reviewDate         DateTime?
+  title              String
+  readTimeMinutes    Int
+  content            String
+  bulletinImage      String?
+
+  admin    Admin?           @relation(fields: [adminId], references: [id])
+  author   User             @relation("AuthorBulletins", fields: [authorId], references: [id])
+  status   ContentStatus    @relation(fields: [contentStatusId], references: [id])
+  category BulletinCategory @relation(fields: [bulletinCategoryId], references: [id])
+  comments Comment[]
+  likes    BulletinLike[]
+}
+
+model BulletinLike {
+  id         String  @id @default(uuid())
+  userId     String
+  bulletinId String
+  isLiked    Boolean
+
+  user     User     @relation(fields: [userId], references: [id])
+  bulletin Bulletin @relation(fields: [bulletinId], references: [id])
+
+  @@unique([userId, bulletinId])
+}
+
+model Event {
+  id              String    @id @default(uuid())
+  adminId         String?
+  authorId        String
+  eventStatusId   String
+  locationId      String?
+  eventCategoryId String
+  eventDate       DateTime
+  reviewDate      DateTime?
+  title           String
+  description     String
+  startTime       String?
+  endTime         String?
+  responses       Int       @default(0)
+  modality        String?
+  eventImage      String?
+
+  admin    Admin?        @relation(fields: [adminId], references: [id])
+  author   User          @relation("EventAuthor", fields: [authorId], references: [id])
+  status   EventStatus   @relation(fields: [eventStatusId], references: [id])
+  location Location?     @relation(fields: [locationId], references: [id])
+  category EventCategory @relation(fields: [eventCategoryId], references: [id])
+  rsvps    UserRsvp[]
+}
+
+model Location {
+  id               String  @id @default(uuid())
+  regionCode       String?
+  province         String?
+  provinceCode     String?
+  cityMunicipality String?
+  cityCode         String?
+  barangay         String?
+  landmark         String?
+  street           String?
+  lat              Float?
+  lng              Float?
+
+  events Event[]
+}
+
+model Comment {
+  id          String   @id @default(uuid())
+  userId      String
+  bulletinId  String
+  commentDate DateTime @default(now())
+  comment     String
+  likes       Int      @default(0)
+
+  user     User     @relation(fields: [userId], references: [id])
+  bulletin Bulletin @relation(fields: [bulletinId], references: [id])
+  likesList CommentLike[]
+}
+
+model CommentLike {
+  id         String  @id @default(uuid())
+  userId     String
+  commentId  String
+  isLiked    Boolean
+
+  user       User    @relation(fields: [userId], references: [id])
+  comment    Comment @relation(fields: [commentId], references: [id])
+
+  @@unique([userId, commentId])
+}
+
+model Donation {
+  id                String   @id @default(uuid())
+  userId            String?
+  donationReference String
+  bankName          String?
+  donationStatusId  String
+  donationDate      DateTime @default(now())
+  donationAmount    Float
+  donationAmountPhp String?
+  donationAnonymous Boolean
+  donationEmail     String?
+
+  user   User?          @relation(fields: [userId], references: [id])
+  status DonationStatus @relation(fields: [donationStatusId], references: [id])
+}
+
+model Notification {
+  id                  String   @id @default(uuid())
+  userId              String
+  notificationTypeId  String
+  notificationMessage String
+  notificationDate    DateTime @default(now())
+  isRead              Boolean  @default(false)
+
+  user User             @relation(fields: [userId], references: [id])
+  type NotificationType @relation(fields: [notificationTypeId], references: [id])
+}

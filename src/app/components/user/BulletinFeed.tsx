@@ -1,10 +1,10 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { Clock, FileText, Calendar, Loader2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { api, useSystemLookup, type BulletinData, type ProfileData } from '@/app/views/api';
+import { api, type BulletinData, type ProfileData } from '@/app/views/api';
+import { formatDate } from '@/app/views/formatters';
 
 export function BulletinFeed() {
-  const { reverseLookup } = useSystemLookup();
   const [bulletins, setBulletins] = useState<BulletinData[]>([]);
   const [profilesMap, setProfilesMap] = useState<Record<string, ProfileData>>({});
   const [loading, setLoading] = useState(true);
@@ -15,11 +15,11 @@ export function BulletinFeed() {
         const [bRes] = await Promise.all([
           api.get('/bulletins', {
             params: {
-              contentStatusId: reverseLookup('Approved'),
-              _embed: 'profile',
+              _where: JSON.stringify({ status: { statusName: 'Approved' } }),
+              _sort: '-bulletinDate',
               _page: 1,
               _per_page: 7,
-              _sort: '-reviewDate'
+              _include: 'author'
             }
           })
         ]);
@@ -27,8 +27,8 @@ export function BulletinFeed() {
 
         setBulletins(bData || []);
         const pMap: Record<string, ProfileData> = {};
-        bData.forEach((b: BulletinData) => {
-          if (b.profile) pMap[b.profileId] = b.profile;
+        (bData || []).forEach((b: any) => {
+          if (b.author.profile) pMap[b.authorId] = b.author.profile;
         });
         setProfilesMap(pMap);
       } catch (err) {
@@ -40,12 +40,7 @@ export function BulletinFeed() {
     fetchData();
   }, []);
 
-  const displayBulletins = useMemo(() => {
-    const sorted = bulletins
-      .sort((a, b) => new Date(b.bulletinDate).getTime() - new Date(a.bulletinDate).getTime());
-
-    return sorted;
-  }, [bulletins, reverseLookup]);
+  const displayBulletins = bulletins;
 
   if (loading) {
     return (
@@ -76,7 +71,7 @@ export function BulletinFeed() {
   }
 
   const featured = displayBulletins[0];
-  const featuredAuthor = profilesMap[featured.profileId]?.userName || "Unknown Author";
+  const featuredAuthor = profilesMap[featured.authorId]?.userName || "Unknown Author";
 
   return (
     <section id="bulletin" className="py-16 bg-gray-50">
@@ -119,7 +114,7 @@ export function BulletinFeed() {
               <div className="flex items-center gap-4 mb-4">
                 <span className="text-sm text-gray-500 flex items-center gap-1">
                   <Calendar className="w-4 h-4" />
-                  {new Date(featured.bulletinDate).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+                  {formatDate(featured.bulletinDate, 'long')}
                 </span>
                 <span className="text-sm text-gray-500 flex items-center gap-1">
                   <Clock className="w-4 h-4" />
@@ -130,7 +125,7 @@ export function BulletinFeed() {
               <p className="text-gray-600 mb-4 line-clamp-3">{featured.content}</p>
               <div className="flex items-center justify-between">
                 <div className="text-sm text-gray-500">
-                  <p>By <Link to={`/profile/${featured.profileId}`} className="hover:text-brand-primary transition-colors">{featuredAuthor}</Link></p>
+                  <p>By <Link to={`/profile/${featured.authorId}`} className="hover:text-brand-primary transition-colors">{featuredAuthor}</Link></p>
                 </div>
                 <Link to={`/bulletin/${featured.id}`} className="bg-brand-primary cursor-pointer text-white px-6 py-2 rounded-lg hover:bg-brand-primary-hover transition-colors font-semibold">
                   Read More
@@ -143,7 +138,7 @@ export function BulletinFeed() {
         {/* Grid of Articles */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {displayBulletins.slice(1).map((bulletin) => {
-            const authorName = profilesMap[bulletin.profileId]?.userName || "Unknown Author";
+            const authorName = profilesMap[bulletin.authorId]?.userName || "Unknown Author";
             return (
               <div
                 key={bulletin.id}
@@ -166,7 +161,7 @@ export function BulletinFeed() {
                   <div className="flex items-center gap-4 mb-3">
                     <span className="text-xs text-gray-500 flex items-center gap-1">
                       <Calendar className="w-3 h-3" />
-                      {new Date(bulletin.bulletinDate).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+                      {formatDate(bulletin.bulletinDate, 'long')}
                     </span>
                     <span className="text-xs text-gray-500 flex items-center gap-1">
                       <Clock className="w-3 h-3" />
@@ -180,7 +175,7 @@ export function BulletinFeed() {
                     {bulletin.content}
                   </p>
                   <div className="flex items-center justify-between text-sm text-gray-500">
-                    <span>By <Link to={`/profile/${bulletin.profileId}`} className="hover:text-brand-primary transition-colors">{authorName}</Link></span>
+                    <span>By <Link to={`/profile/${bulletin.authorId}`} className="hover:text-brand-primary transition-colors">{authorName}</Link></span>
                     <Link to={`/bulletin/${bulletin.id}`} className="text-brand-primary cursor-pointer hover:text-brand-primary-hover font-semibold">
                       Read →
                     </Link>

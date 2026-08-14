@@ -1,14 +1,14 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ProfileHeader } from '@components/user/ProfileHeader';
-import { api, AchievementIconMap, useProfileRoute, useSystemLookup, type ProfileData, type UserStatisticsData } from '@/app/views/api';
+import { api, AchievementIconMap, useProfileRoute, type ProfileData, type UserStatisticsData } from '@/app/views/api';
 import { NotFound } from '@pages/NotFound';
 import { Trophy, Loader2 } from 'lucide-react';
+import { formatDate } from '@/app/views/formatters';
 
 export function Achievements() {
     const navigate = useNavigate();
     const { profileId, isOwner } = useProfileRoute();
-    const { lookup, loading: isLookupLoading } = useSystemLookup();
 
     const [loading, setLoading] = useState(true);
     const [profile, setProfile] = useState<ProfileData | null>(null);
@@ -20,9 +20,9 @@ export function Achievements() {
             try {
                 setLoading(true);
                 const [profileRes, statsRes, achUserRes] = await Promise.all([
-                    api.get<any>('/profiles', { params: { 'userId': profileId, '_embed': 'degree' } }),
+                    api.get<any>('/profiles', { params: { 'userId': profileId, } }),
                     api.get<any>('/userStatistics', { params: { 'userId': profileId } }),
-                    api.get(`/userAchievements`, { params: { 'userId': profileId, _sort: '-achievedDate', '_embed': 'achievement' } })
+                    api.get(`/userAchievements`, { params: { 'userId': profileId, } })
                 ]);
 
                 const profile = Array.isArray(profileRes.data) ? profileRes.data[0] : profileRes.data;
@@ -42,7 +42,7 @@ export function Achievements() {
         fetchAchievementsData();
     }, [profileId]);
 
-    if (loading || isLookupLoading) {
+    if (loading) {
         return (
             <div className="min-h-screen bg-gray-50 flex items-center justify-center">
                 <Loader2 className="w-12 h-12 text-brand-primary animate-spin" />
@@ -63,8 +63,8 @@ export function Achievements() {
             <div className="max-w-6xl mx-auto px-4 md:px-8 py-12">
                 <ProfileHeader
                     name={profile.userName}
-                    degree={profile.degree ? `${profile.degree.degreeName} (${profile.degree.degreeAbbr})` : lookup(profile.degreeId)}
-                    graduationYear={profile.batch.toString()}
+                    degree={profile.degree ? `${profile.degree.degreeName} (${profile.degree.degreeAbbr})` : ''}
+                    graduationYear={profile.batch?.toString() || ''}
                     profileImage={profile.profileImage}
                     bio="Alumni of University of San Jose - Recoletos."
                     isProfilePage={false}
@@ -106,7 +106,7 @@ export function Achievements() {
                                                 {achievement.achievementDescription}
                                             </p>
                                             <div className="text-xs text-gray-400 mt-auto font-medium">
-                                                Acquired: {new Date(achv.achievedDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+                                                Acquired: {formatDate(achv.achievedDate, 'long')}
                                             </div>
                                         </div>
                                         {achv.achievementTier && (

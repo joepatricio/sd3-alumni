@@ -5,11 +5,21 @@
 /.pnp
 .pnp.js
 
+# Python venv
+/Lib
+/Scripts
+/Include
+
 # testing
 /coverage
 
 # production
 /build
+/dist/assets
+/prisma/generated/
+db.json
+dev.db
+prod.db
 
 # misc
 .DS_Store
@@ -32,6 +42,6 @@ public/cubes.png
 public/donate-hero.avif
 public/events-image.jpg
 public/main-hero.jpg
-public/profile-*
-public/profile-*
+public/upload-*
 public/edit/*
+db.json

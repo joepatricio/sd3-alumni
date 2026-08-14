@@ -1,19 +1,120 @@
-import { useEffect, useRef } from 'react';
-import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
-import { LogOut, LayoutDashboard, Users, FileText, ChevronLeft, CreditCard, Calendar } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { Outlet, Link, useLocation, Navigate } from 'react-router-dom';
+import { LogOut, LayoutDashboard, Users, FileText, ChevronLeft, CreditCard, Calendar, Clock, Loader2 } from 'lucide-react';
 import ScrollToTop from '../ScrollToTop';
+import { api } from '@/app/views/api';
+import { adminLoaders, prefetchAdminRoutes } from '@/app/AppRoutes';
+
+
+import { formatDate } from '@/app/views/formatters';
 
 export function AdminLayout() {
     const location = useLocation();
-    const navigate = useNavigate();
     const scrollRef = useRef<HTMLDivElement>(null);
 
+    const [token, setToken] = useState(sessionStorage.getItem('adminToken'));
+    const [isCheckingToken, setIsCheckingToken] = useState(!sessionStorage.getItem('adminToken'));
+
     useEffect(() => {
-        const token = localStorage.getItem('adminToken');
-        if (!token) {
-            navigate('/admin/login');
+        let timeoutId: any;
+        const handleStorageEvent = (e: StorageEvent) => {
+            if (e.key === 'logoutAdminEvent') {
+                sessionStorage.removeItem('adminToken');
+                setToken(null);
+            } else if (e.key === 'requestAdminSession' && sessionStorage.getItem('adminToken')) {
+                localStorage.setItem('shareAdminSession', sessionStorage.getItem('adminToken')!);
+                localStorage.removeItem('shareAdminSession');
+            } else if (e.key === 'shareAdminSession' && e.newValue && !sessionStorage.getItem('adminToken')) {
+                sessionStorage.setItem('adminToken', e.newValue);
+                setToken(e.newValue);
+                setIsCheckingToken(false);
+            }
+        };
+
+        window.addEventListener('storage', handleStorageEvent);
+
+        if (!sessionStorage.getItem('adminToken')) {
+            localStorage.setItem('requestAdminSession', Date.now().toString());
+            localStorage.removeItem('requestAdminSession');
+            timeoutId = setTimeout(() => {
+                setIsCheckingToken(false);
+            }, 500); // Wait for potential broadcast
+        } else {
+            setIsCheckingToken(false);
         }
-    }, [navigate, location.pathname]);
+
+        return () => {
+            window.removeEventListener('storage', handleStorageEvent);
+            clearTimeout(timeoutId);
+        };
+    }, []);
+
+    let username = 'Administrator';
+    if (token) {
+        try {
+            const payload = JSON.parse(atob(token.split('.')[1]));
+            if (payload && payload.username) {
+                username = payload.username;
+            }
+        } catch (e) {
+            console.error('Failed to parse token payload', e);
+        }
+    }
+    const avatarLetter = username.charAt(0).toUpperCase();
+
+    const [currentTime, setCurrentTime] = useState<Date | null>(null);
+    const [timeSource, setTimeSource] = useState<string>('System Time');
+
+    useEffect(() => {
+        let timer: any;
+        let syncTimer: any;
+
+        const syncTime = async () => {
+            try {
+                const res = await api.get('/server-time');
+                const serverTime = new Date(res.data.currentTime);
+                const receivedAt = Date.now();
+                setTimeSource(res.data.source || 'Database Time');
+
+                if (timer) clearInterval(timer);
+
+                const update = () => {
+                    const elapsed = Date.now() - receivedAt;
+                    setCurrentTime(new Date(serverTime.getTime() + elapsed));
+                };
+
+                update();
+                timer = setInterval(update, 1000);
+            } catch (err) {
+                console.error("Failed to sync server time, falling back to System Time", err);
+                setTimeSource('System Time');
+                if (timer) clearInterval(timer);
+
+                const update = () => {
+                    setCurrentTime(new Date());
+                };
+                update();
+                timer = setInterval(update, 1000);
+            }
+        };
+
+        syncTime();
+        syncTimer = setInterval(syncTime, 10 * 60 * 1000);
+
+        return () => {
+            if (timer) clearInterval(timer);
+            if (syncTimer) clearInterval(syncTimer);
+        };
+    }, []);
+
+    const formatTime = (date: Date | null) => {
+        if (!date) return 'Loading...';
+        return formatDate(date, 'full') + ' ' + date.toLocaleTimeString([], {
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit'
+        });
+    };
 
     const scrollToTop = () => {
         if (scrollRef.current) {
@@ -25,10 +126,33 @@ export function AdminLayout() {
         scrollToTop();
     }, [location.pathname]);
 
+    // Idle-prefetch all admin page chunks after layout mounts to eliminate transition delays
+    useEffect(() => {
+        if ('requestIdleCallback' in window) {
+            (window as any).requestIdleCallback(() => {
+                prefetchAdminRoutes();
+            });
+        } else {
+            const timer = setTimeout(prefetchAdminRoutes, 1500);
+            return () => clearTimeout(timer);
+        }
+    }, []);
+
+
     const handleLogout = () => {
-        localStorage.removeItem('adminToken');
-        navigate('/admin/login');
+        sessionStorage.removeItem('adminToken');
+        localStorage.setItem('logoutAdminEvent', Date.now().toString());
+        localStorage.removeItem('logoutAdminEvent');
+        window.location.href = '/admin/login'; // Hard redirect to clear session completely
     };
+
+    if (isCheckingToken) {
+        return <div className="flex h-screen items-center justify-center"><Loader2 className="animate-spin text-brand-primary h-8 w-8" /></div>;
+    }
+
+    if (!token) {
+        return <Navigate to="/admin/login" replace />;
+    }
 
     const navItems = [
         { path: '/admin', label: 'Dashboard', icon: LayoutDashboard },
@@ -64,6 +188,16 @@ export function AdminLayout() {
                                     ? 'bg-white/20 font-medium'
                                     : 'text-white/80 hover:bg-white/10 hover:text-white'
                                     }`}
+                                onMouseEnter={() => {
+                                    if (adminLoaders[item.path]) {
+                                        adminLoaders[item.path]().catch(() => {});
+                                    }
+                                }}
+                                onFocus={() => {
+                                    if (adminLoaders[item.path]) {
+                                        adminLoaders[item.path]().catch(() => {});
+                                    }
+                                }}
                             >
                                 <Icon size={20} />
                                 <span>{item.label}</span>
@@ -93,13 +227,18 @@ export function AdminLayout() {
             {/* Main Content Area */}
             <main className="flex-1 flex flex-col min-w-0 overflow-hidden">
                 {/* Topbar */}
-                <header className="h-16 bg-white shadow-sm flex items-center justify-end px-8 z-0">
+                <header className="h-16 bg-white shadow-sm flex items-center justify-between px-8 z-0">
+                    <div className="flex items-center gap-2 text-sm text-gray-700 font-medium bg-gray-50 px-3 py-1.5 rounded-lg border border-gray-100 shadow-xs">
+                        <Clock size={16} />
+                        <span>Time: {formatTime(currentTime)}</span>
+                        <span className="text-xs text-brand-primary/80 bg-brand-primary/10 px-2 py-0.5 rounded-md ml-1 font-semibold">{timeSource}</span>
+                    </div>
                     <div className="flex items-center gap-4">
                         <div className="flex items-center gap-3">
                             <div className="w-9 h-9 rounded-full bg-gray-200 flex items-center justify-center text-brand-primary font-bold">
-                                A
+                                {avatarLetter}
                             </div>
-                            <span className="text-sm font-medium text-gray-700">Administrator</span>
+                            <span className="text-sm font-medium text-gray-700">{username}</span>
                         </div>
                     </div>
                 </header>

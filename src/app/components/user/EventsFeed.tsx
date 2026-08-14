@@ -1,20 +1,29 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { Calendar, MapPin, Users, Video, Loader2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { getCategoryColor } from '@/app/views/categoryColors';
-import { isEventUpcoming } from '@/app/views/eventFilters';
+import { getCategoryColor, formatDate, getEventImage } from '@/app/views/formatters';
 import { LazyImage } from '@components/user/LazyImage';
-import { api, useSystemLookup, type EventData } from '@/app/views/api';
+import { api, type EventData } from '@/app/views/api';
 
 export function EventsFeed() {
-  const { lookup, reverseLookup } = useSystemLookup();
   const [events, setEvents] = useState<EventData[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchEvents = async () => {
       try {
-        const res = await api.get('/events?_embed=location');
+        const todayStr = new Date().toISOString().split('T')[0] + 'T00:00:00.000Z';
+        const res = await api.get('/events', {
+          params: {
+            _limit: 4,
+            _sort: 'eventDate',
+            _include: 'location,status,category',
+            _where: JSON.stringify({
+              eventStatus: { statusName: 'Approved' },
+              eventDate: { gte: todayStr }
+            })
+          }
+        });
         const data = Array.isArray(res.data) ? res.data : res.data.data;
         setEvents(data || []);
       } catch (error) {
@@ -26,15 +35,7 @@ export function EventsFeed() {
     fetchEvents();
   }, []);
 
-  const displayEvents = useMemo(() => {
-    const approvedStatusId = reverseLookup('Approved');
-    const sorted = events
-      .filter(event => event.contentStatusId === approvedStatusId)
-      .filter(event => isEventUpcoming(event.eventDate))
-      .sort((a, b) => new Date(a.eventDate).getTime() - new Date(b.eventDate).getTime());
-
-    return sorted.slice(0, 4);
-  }, [events, reverseLookup]);
+  const displayEvents = events;
 
   const formatLocation = (loc: any) => {
     if (!loc) return 'TBA';
@@ -91,7 +92,7 @@ export function EventsFeed() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {displayEvents.map((event) => {
-            const categoryName = lookup(event.eventCategoryId);
+            const categoryName = event.eventCategory?.eventCategoryName || 'Unknown';
             return (
               <div
                 key={event.id}
@@ -99,7 +100,7 @@ export function EventsFeed() {
               >
                 <div className="relative h-48 overflow-hidden">
                   <LazyImage
-                    src={event.eventImage}
+                    src={getEventImage(event)}
                     alt={event.title}
                     className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
                   />
@@ -112,7 +113,7 @@ export function EventsFeed() {
                   <div className="space-y-2 text-gray-600">
                     <div className="flex items-center gap-2">
                       <Calendar className="w-4 h-4" />
-                      <span className="text-sm">{new Date(event.eventDate).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</span>
+                      <span className="text-sm">{formatDate(event.eventDate, 'long')}</span>
                     </div>
                     <div className="flex items-center gap-2">
                       {categoryName === 'Virtual' ? (

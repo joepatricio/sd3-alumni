@@ -1,4 +1,3 @@
-import { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import { useParams } from 'react-router-dom';
 import { useAuth } from '@/app/views/auth';
@@ -25,9 +24,7 @@ export const useProfileRoute = () => {
     return { profileId, isOwner };
 };
 
-// Based on tests: 20ms is safe, 10ms dropped 1/2000 requests
-const API_BASE_URL = 'http://localhost:3000';
-const DELAY = 20;
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 export const api = axios.create({
     baseURL: API_BASE_URL,
@@ -36,43 +33,15 @@ export const api = axios.create({
     },
 });
 
-// Global queue for mutating requests to prevent json-server race conditions
-let requestQueue = Promise.resolve();
-
-const queueRequest = <T>(requestFn: () => Promise<T>): Promise<T> => {
-    return new Promise((resolve, reject) => {
-        requestQueue = requestQueue.then(async () => {
-            try {
-                const res = await requestFn();
-                await new Promise(r => setTimeout(r, DELAY));
-                resolve(res);
-            } catch (err) {
-                reject(err);
-            }
-        });
-    });
-};
-
-const originalPost = api.post;
-const originalPut = api.put;
-const originalPatch = api.patch;
-const originalDelete = api.delete;
-
-api.post = function (this: any, ...args: any[]) {
-    return queueRequest(() => originalPost.apply(this, args));
-} as typeof api.post;
-
-api.put = function (this: any, ...args: any[]) {
-    return queueRequest(() => originalPut.apply(this, args));
-} as typeof api.put;
-
-api.patch = function (this: any, ...args: any[]) {
-    return queueRequest(() => originalPatch.apply(this, args));
-} as typeof api.patch;
-
-api.delete = function (this: any, ...args: any[]) {
-    return queueRequest(() => originalDelete.apply(this, args));
-} as typeof api.delete;
+// Ensure that all requests correctly use the /api prefix or relative paths
+api.interceptors.request.use(config => {
+    // If the baseURL already ends with /api or /api/, and the request url starts with /,
+    // Axios will strip the /api path. To fix this, we strip the leading slash from the request url.
+    if (config.url && config.url.startsWith('/')) {
+        config.url = config.url.substring(1);
+    }
+    return config;
+});
 
 export interface DegreeData {
     id: string;
@@ -95,6 +64,7 @@ export interface ProfileData {
     degreeId: string;
     batch: number;
     birthday: string;
+    gender: string;
 
     degree?: DegreeData;
 }
@@ -124,7 +94,7 @@ export interface EventData {
     id: string;
     adminId: string;
     authorId: string;
-    contentStatusId: string;
+    eventStatusId: string;
     locationId: string;
     eventCategoryId: string;
     eventDate: string;
@@ -139,6 +109,8 @@ export interface EventData {
 
     location?: LocationData;
     userRsvps?: RSVPData[];
+    eventStatus?: { id: string, statusName: string };
+    eventCategory?: { id: string, eventCategoryName: string };
 }
 
 export interface BulletinCommentData {
@@ -150,22 +122,30 @@ export interface BulletinCommentData {
     likes: number;
 
     profile?: ProfileData;
+    likesList?: any[];
+}
+
+export interface BulletinCategoryData {
+    id: string;
+    bulletinCategoryName: string;
 }
 
 export interface BulletinData {
     id: string;
     adminId: string;
-    profileId: string;
+    authorId: string;
     contentStatusId: string;
+    bulletinCategoryId: string;
     bulletinDate: string;
     reviewDate: string | null;
     title: string;
     readTimeMinutes: number;
     content: string;
     bulletinImage: string;
-
     comments?: BulletinCommentData[];
     contentStatus?: ContentStatusData;
+    bulletinCategory?: BulletinCategoryData;
+    category?: BulletinCategoryData | string;
     profile?: ProfileData;
 }
 
@@ -200,6 +180,8 @@ export interface User {
     recordId: string;
 
     userStatus?: UserStatusData;
+    profileStatus?: ProfileStatusData;
+    profile?: ProfileData;
 }
 
 export interface ContentStatusData {
@@ -212,54 +194,50 @@ export interface UserStatusData {
     statusName: string;
 }
 
-let globalLookupMap: Record<string, string> | null = null;
-let fetchPromise: Promise<Record<string, string>> | null = null;
+export interface ProfileStatusData {
+    id: string;
+    statusName: string;
+}
 
-export const useSystemLookup = () => {
-    const [lookupMap, setLookupMap] = useState<Record<string, string>>(globalLookupMap || {});
-    const [loading, setLoading] = useState(!globalLookupMap);
+export interface EventCategoryData {
+    id: string;
+    eventCategoryName: string;
+}
 
-    useEffect(() => {
-        if (globalLookupMap) return;
+export interface ConnectionStatusData {
+    id: string;
+    connectionName: string;
+}
 
-        if (!fetchPromise) {
-            fetchPromise = Promise.all([
-                api.get('/degrees'),
-                api.get('/connectionStatuses'),
-                api.get('/contentStatuses'),
-                api.get('/userStatuses'),
-                api.get('/donationStatuses'),
-                api.get('/eventCategories'),
-                api.get('/profileStatuses')
-            ]).then(([deg, conn, cont, usr, don, evt, prof]) => {
-                const map: Record<string, string> = {};
-                if (deg.data) (deg.data).forEach((d: any) => map[d.id] = `${d.degreeName} (${d.degreeAbbr})`);
-                if (conn.data) (conn.data).forEach((d: any) => map[d.id] = d.connectionName);
-                if (cont.data) (cont.data).forEach((d: any) => map[d.id] = d.statusName);
-                if (usr.data) (usr.data).forEach((d: any) => map[d.id] = d.statusName);
-                if (don.data) (don.data).forEach((d: any) => map[d.id] = d.statusName);
-                if (evt.data) (evt.data).forEach((d: any) => map[d.id] = d.eventCategoryName);
-                if (prof.data) (prof.data).forEach((d: any) => map[d.id] = d.statusName);
-                return map;
-            }).catch(err => {
-                console.error("Failed to fetch lookup tables", err);
-                return {};
-            });
-        }
+export interface DonationStatusData {
+    id: string;
+    statusName: string;
+}
 
-        fetchPromise.then(map => {
-            globalLookupMap = map;
-            setLookupMap(map);
-            setLoading(false);
-        });
-    }, []);
+export interface UserConnectionData {
+    id: string;
+    userId: string;
+    friendId: string;
+    connectionStatusId: string;
+    dateUpdated: string;
+    status?: ConnectionStatusData;
+    user?: User;
+    friend?: User;
+}
 
-    const lookup = useCallback((id: string | null | undefined) => (id ? lookupMap[id] || 'N/A' : 'N/A'), [lookupMap]);
+export interface UserStatusData {
+    id: string;
+    statusName: string;
+}
 
-    const reverseLookup = useCallback((value: string) => {
-        const entry = Object.entries(lookupMap).find(([_, val]) => val === value);
-        return entry ? entry[0] : null;
-    }, [lookupMap]);
-
-    return { lookupMap, loading, lookup, reverseLookup };
-};
+export interface Donation {
+    id: string;
+    date: string;
+    donor: string;
+    amount: string;
+    status: string;
+    rawAmount: number;
+    rawDate: number;
+    bankName: string;
+    donationReference: string;
+}

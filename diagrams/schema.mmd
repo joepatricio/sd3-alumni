@@ -19,6 +19,8 @@ erDiagram
     user ||--o{ bulletinLikes: toggles
     bulletin ||--o{ bulletinLikes: receives
     user ||--o{ comments: creates
+    user ||--o{ commentLikes: toggles
+    comments ||--o{ commentLikes: receives
     user ||--o{ donations: creates
     user ||--o{ events: creates
     admin ||--o{ bulletin : reviews
@@ -216,6 +218,11 @@ erDiagram
     bulletinLikes {
         string userId PK,FK
         string bulletinId PK,FK
+        boolean isLiked
+    }
+    commentLikes {
+        string userId PK,FK
+        string commentId PK,FK
         boolean isLiked
     }
     donations {

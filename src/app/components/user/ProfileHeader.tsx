@@ -22,10 +22,9 @@ interface ProfileHeaderProps {
         eventsAttended: number;
     };
     isOwner?: boolean;
-    connectionCode?: string | null;
+    connectionStatus?: string | null;
     pendingRequestsCount?: number;
-    onConnectionUpdate?: (newStatusCode: string | null, newConnectionsCount?: number) => void;
-    reverseLookup?: (val: string) => string | null;
+    onConnectionUpdate?: (newStatusName: string | null, newConnectionsCount?: number) => void;
 }
 
 export function ProfileHeader({
@@ -41,10 +40,9 @@ export function ProfileHeader({
     onTabChange = () => { },
     statsData,
     isOwner = false,
-    connectionCode,
+    connectionStatus,
     pendingRequestsCount = 0,
-    onConnectionUpdate,
-    reverseLookup
+    onConnectionUpdate
 }: ProfileHeaderProps) {
     const { isLoggedIn, session, setSession } = useAuth();
     const { profileId } = useProfileRoute();
@@ -52,12 +50,12 @@ export function ProfileHeader({
     const [actionLoading, setActionLoading] = useState(false);
 
     const onAction = async (action: 'add' | 'remove' | 'accept' | 'unblock' | 'block' | 'reject') => {
-        if (!currentUserId || !profileId || !reverseLookup) return;
+        if (!currentUserId || !profileId) return;
         setActionLoading(true);
         try {
-            const result = await handleConnection(action, currentUserId, profileId, reverseLookup);
-            if (onConnectionUpdate) {
-                onConnectionUpdate(result.newStatusCode, result.newConnectionsCount);
+            const result = await handleConnection(action, currentUserId, profileId);
+            if (result && onConnectionUpdate) {
+                onConnectionUpdate(result.newStatusName, result.newConnectionsCount);
             }
         } catch (err) {
             console.error(err);
@@ -122,14 +120,13 @@ export function ProfileHeader({
                                             <Edit className="w-4 h-4" />
                                             Edit Profile
                                         </button>
-                                        <Link
-                                            to="/login"
+                                        <button
                                             onClick={() => setSession(null)}
                                             className="flex items-center justify-center p-2.5 border-2 border-red-100 text-red-500 hover:bg-red-50 hover:border-red-200 rounded-xl transition-all duration-300"
                                             title="Sign Out"
                                         >
                                             <LogOut className="w-5 h-5" />
-                                        </Link>
+                                        </button>
                                     </>
                                 ) : !isOwner && isLoggedIn ? (
                                     <>
@@ -137,7 +134,7 @@ export function ProfileHeader({
                                             <button disabled className="flex items-center justify-center p-2.5 bg-gray-100 text-brand-primary rounded-xl">
                                                 <Loader2 className="w-5 h-5 animate-spin" />
                                             </button>
-                                        ) : connectionCode === null || connectionCode === undefined ? (
+                                        ) : connectionStatus === null || connectionStatus === undefined ? (
                                             <>
                                                 <button
                                                     onClick={() => onAction('add')}
@@ -154,7 +151,7 @@ export function ProfileHeader({
                                                     Block
                                                 </button>
                                             </>
-                                        ) : connectionCode === (reverseLookup ? reverseLookup('Requesting') : '200') ? (
+                                        ) : connectionStatus === 'Requesting' ? (
                                             <button
                                                 disabled
                                                 className="flex items-center gap-2 px-6 py-2.5 bg-gray-100 text-gray-500 rounded-xl cursor-not-allowed font-bold text-sm border border-gray-200"
@@ -162,7 +159,7 @@ export function ProfileHeader({
                                                 <Clock className="w-4 h-4" />
                                                 Pending
                                             </button>
-                                        ) : connectionCode === (reverseLookup ? reverseLookup('Requested') : '201') ? (
+                                        ) : connectionStatus === 'Requested' ? (
                                             <button
                                                 onClick={() => onAction('accept')}
                                                 className="flex items-center gap-2 px-6 py-2.5 bg-brand-primary text-white rounded-xl hover:bg-brand-primary-hover hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 font-bold text-sm"
@@ -170,7 +167,7 @@ export function ProfileHeader({
                                                 <UserCheck className="w-4 h-4" />
                                                 Accept Request
                                             </button>
-                                        ) : connectionCode === (reverseLookup ? reverseLookup('Accepted') : '202') ? (
+                                        ) : connectionStatus === 'Accepted' ? (
                                             <button
                                                 onClick={() => onAction('remove')}
                                                 className="flex items-center gap-2 px-6 py-2.5 bg-red-50 text-red-600 rounded-xl hover:bg-red-100 transition-all duration-300 font-bold text-sm border border-red-200"
@@ -178,7 +175,7 @@ export function ProfileHeader({
                                                 <UserMinus className="w-4 h-4" />
                                                 Remove Connection
                                             </button>
-                                        ) : connectionCode === (reverseLookup ? reverseLookup('Blocking') : '203') ? (
+                                        ) : connectionStatus === 'Blocking' ? (
                                             <button
                                                 onClick={() => onAction('unblock')}
                                                 className="flex items-center gap-2 px-6 py-2.5 bg-gray-800 text-white rounded-xl hover:bg-gray-900 transition-all duration-300 font-bold text-sm"

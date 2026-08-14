@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Search, Users, Loader2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { api, useSystemLookup, type ProfileData, type DegreeData, type AlumniCard } from '@/app/views/api';
+import { api, type DegreeData, type AlumniCard } from '@/app/views/api';
 
 const ITEMS_PER_PAGE = 12;
 
@@ -13,7 +13,6 @@ export function AlumniDirectory() {
     const [currentPage, setCurrentPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
     const [absoluteTotalAlumni, setAbsoluteTotalAlumni] = useState(0);
-    const { reverseLookup, loading: lookupLoading } = useSystemLookup();
 
     // Form states
     const [searchName, setSearchName] = useState('');
@@ -30,42 +29,49 @@ export function AlumniDirectory() {
     });
 
     useEffect(() => {
-        if (lookupLoading) return;
         api.get<any>('/degrees').then(res => setDegrees(res.data || []));
-        const bannedStatusId = reverseLookup('Banned');
-        const url = `/profiles?_page=1&_per_page=1${bannedStatusId ? `&_embed=user&user.userStatusId:ne=${bannedStatusId}` : ''}`;
-        api.get(url).then(res => setAbsoluteTotalAlumni(res.data.items || 0));
-    }, [lookupLoading, reverseLookup]);
+        const url = `/profiles`;
+        api.get(url).then(res => setAbsoluteTotalAlumni(res.data.length || 0));
+    }, []);
 
     useEffect(() => {
-        if (degrees.length === 0 || lookupLoading) return;
+        if (degrees.length === 0) return;
 
         const fetchData = async () => {
             setLoading(true);
             try {
-                const bannedStatusId = reverseLookup('Banned');
-                const params: Record<string, string | number> = {
-                    _page: currentPage,
-                    _per_page: ITEMS_PER_PAGE,
-                    _sort: 'id'
+                const whereClause: any = {
+                    user: { userStatus: { statusName: { not: 'Banned' } } }
                 };
-
-                if (activeFilters.name) params['userName:contains'] = activeFilters.name;
-                if (activeFilters.company) params['company:contains'] = activeFilters.company;
-                if (activeFilters.year) params.batch = activeFilters.year;
-                if (activeFilters.degreeId) params.degreeId = activeFilters.degreeId;
-
-                const url = `/profiles?_embed=degree${bannedStatusId ? `&_embed=user&user.userStatusId:ne=${bannedStatusId}` : ''}`;
                 
-                // json-server v1 returns { first, prev, next, last, pages, items, data }
-                const res = await api.get<any>(url, { params });
+                if (activeFilters.name) {
+                    whereClause.userName = { contains: activeFilters.name };
+                }
+                if (activeFilters.company) {
+                    whereClause.company = { contains: activeFilters.company };
+                }
+                if (activeFilters.year) {
+                    whereClause.batch = parseInt(activeFilters.year, 10);
+                }
+                if (activeFilters.degreeId) {
+                    whereClause.degreeId = activeFilters.degreeId;
+                }
 
-                const totalCount = res.data.items || 0;
-                setTotalPages(Math.ceil(totalCount / ITEMS_PER_PAGE));
+                const res = await api.get('/profiles', {
+                    params: {
+                        _page: currentPage,
+                        _per_page: ITEMS_PER_PAGE,
+                        _where: JSON.stringify(whereClause)
+                    }
+                });
 
-                const profiles: ProfileData[] = res.data.data || [];
-                const cards: AlumniCard[] = profiles.map((profile: ProfileData) => {
-                    const deg = profile.degree;
+                const data = res.data.data || res.data;
+                const total = res.data.items || data.length;
+
+                setTotalPages(Math.ceil(total / ITEMS_PER_PAGE));
+
+                const mappedAlumni = data.map((profile: any) => {
+                    const deg = degrees.find(d => String(d.id) === String(profile.degreeId));
                     return {
                         userId: profile.userId,
                         name: profile.userName,
@@ -77,7 +83,7 @@ export function AlumniDirectory() {
                     };
                 });
 
-                setDisplayedAlumni(cards);
+                setDisplayedAlumni(mappedAlumni);
             } catch (err) {
                 console.error('Error fetching directory:', err);
             } finally {

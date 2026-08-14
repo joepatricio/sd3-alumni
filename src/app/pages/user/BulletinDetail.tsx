@@ -8,22 +8,21 @@ import {
     Send,
     ThumbsUp,
     Edit,
-    Loader2
+    Loader2,
+    Info
 } from 'lucide-react';
 import { CreateBulletinModal } from '@components/user/CreateBulletinModal';
 import { Button } from '@components/ui/button';
 import { NotFound } from '@pages/NotFound';
 import { LazyImage } from '@components/user/LazyImage';
 import { useAuth } from '@/app/views/auth';
-import { api, useSystemLookup, type BulletinData, type BulletinCommentData } from '@/app/views/api';
+import { api, type BulletinData, type BulletinCommentData } from '@/app/views/api';
+import { formatDate } from '@/app/views/formatters';
 
 export function BulletinDetail() {
     const { id } = useParams();
     const { isLoggedIn, session } = useAuth();
-    const { lookup, reverseLookup } = useSystemLookup();
     const [comment, setComment] = useState('');
-    const [likedComments, setLikedComments] = useState<string[]>([]);
-    const isAdmin = !!localStorage.getItem('adminToken');
 
     const [bulletin, setBulletin] = useState<BulletinData | null>(null);
     const [commentsList, setCommentsList] = useState<BulletinCommentData[]>([]);
@@ -31,22 +30,25 @@ export function BulletinDetail() {
     const [submitting, setSubmitting] = useState(false);
     const [isSuspended, setIsSuspended] = useState(false);
 
+    const COMMENTS_LIMIT = 7;
+    const [commentsLimit, setCommentsLimit] = useState(COMMENTS_LIMIT);
+
     useEffect(() => {
         const fetchBulletinAndProfiles = async () => {
             try {
                 const [bRes, cRes, usersRes] = await Promise.all([
-                    api.get(`/bulletins`, { params: { id: id, _embed: 'profile' } }),
-                    api.get(`/comments`, { params: { bulletinId: id, _embed: 'profile' } }),
+                    api.get(`/bulletins`, { params: { id: id, } }),
+                    api.get(`/comments`, { params: { bulletinId: id, _limit: commentsLimit, _sort: '-commentDate' } }),
                     api.get('/users')
                 ]);
 
                 const bulletinData = bRes.data[0];
-                const commentsData = cRes.data;
+                const commentsData = Array.isArray(cRes.data) ? cRes.data : (cRes.data?.data || []);
                 const allUsers = Array.isArray(usersRes.data) ? usersRes.data : (usersRes.data?.data || []);
 
                 if (bulletinData && bulletinData.profile) {
                     const authorUser = allUsers.find((u: any) => String(u.id) === String(bulletinData.profile.userId));
-                    if (authorUser && authorUser.userStatusId === lookup('Banned') || authorUser?.userStatusId === reverseLookup('Banned')) {
+                    if (authorUser && authorUser.userStatus?.statusName === 'Banned') {
                         setBulletin(null);
                         setLoading(false);
                         return;
@@ -55,7 +57,7 @@ export function BulletinDetail() {
 
                 if (session?.userId) {
                     const currentU = allUsers.find((u: any) => String(u.userId) === String(session.userId));
-                    if (currentU && currentU.userStatusId === reverseLookup('Suspended')) {
+                    if (currentU && currentU.userStatus?.statusName === 'Suspended') {
                         setIsSuspended(true);
                     }
                 }
@@ -69,7 +71,7 @@ export function BulletinDetail() {
             }
         };
         fetchBulletinAndProfiles();
-    }, [id]);
+    }, [id, commentsLimit]);
 
     if (loading) {
         return (
@@ -80,9 +82,10 @@ export function BulletinDetail() {
         );
     }
 
-    const currentStatusName = bulletin ? lookup(bulletin.contentStatusId) : null;
+    const currentStatusName = bulletin?.contentStatus?.statusName || null;
+    const isAdminPreview = location.pathname.includes('/admin/preview') && !!sessionStorage.getItem('adminToken');
 
-    if (!bulletin || currentStatusName === "Rejected") {
+    if (!bulletin || (currentStatusName !== "Approved" && !isAdminPreview)) {
         return <NotFound />;
     }
 
@@ -92,15 +95,29 @@ export function BulletinDetail() {
         setSubmitting(true);
         try {
             const res = await api.post('/comments', {
-                profileId: session.userId.toString(),
+                userId: session.userId.toString(),
                 bulletinId: bulletin.id,
                 commentDate: new Date().toISOString(),
                 comment,
                 likes: 0
             });
 
+            // Increment user statistics commentsWritten after successful POST
+            try {
+                const statsRes = await api.get('/userStatistics', { params: { userId: session.userId } });
+                const stats = Array.isArray(statsRes.data) ? statsRes.data : (statsRes.data?.data || []);
+                if (stats && stats.length > 0) {
+                    const currentStats = stats[0];
+                    await api.patch(`/userStatistics/${currentStats.id}`, {
+                        commentsWritten: (currentStats.commentsWritten || 0) + 1
+                    });
+                }
+            } catch (statErr) {
+                console.error("Failed to update user statistics for comment:", statErr);
+            }
+
             // Re-fetch the newly created comment with embedded profile
-            const newCommentRes = await api.get('/comments', { params: { id: res.data.id, _embed: 'profile' } });
+            const newCommentRes = await api.get('/comments', { params: { id: res.data.id, } });
             if (newCommentRes.data && newCommentRes.data.length > 0) {
                 setCommentsList(prev => [newCommentRes.data[0], ...prev]);
             } else {
@@ -116,39 +133,58 @@ export function BulletinDetail() {
     };
 
     const handleToggleLike = async (commentItem: BulletinCommentData) => {
-        if (!isLoggedIn) return;
-        const isLiked = likedComments.includes(commentItem.id);
-        const newLikes = isLiked ? Math.max(0, commentItem.likes - 1) : commentItem.likes + 1;
+        if (!isLoggedIn || !session?.userId) return;
+        const currentLike = commentItem.likesList?.find(l => String(l.userId) === String(session.userId));
+        const isLiked = !!currentLike;
+        const newLikesCount = isLiked ? Math.max(0, commentItem.likes - 1) : commentItem.likes + 1;
 
         try {
-            await api.patch(`/comments/${commentItem.id}`, { likes: newLikes });
-
-            setLikedComments(prev =>
-                isLiked
-                    ? prev.filter(vid => vid !== commentItem.id)
-                    : [...prev, commentItem.id]
-            );
-
-            setCommentsList(prev =>
-                prev.map(c => c.id === commentItem.id ? { ...c, likes: newLikes } : c)
-            );
+            if (isLiked) {
+                // Remove like
+                await api.delete(`/commentLikes/${currentLike.id}`);
+                await api.patch(`/comments/${commentItem.id}`, { likes: newLikesCount });
+                setCommentsList(prev =>
+                    prev.map(c => c.id === commentItem.id ? {
+                        ...c,
+                        likes: newLikesCount,
+                        likesList: c.likesList?.filter(l => l.id !== currentLike.id)
+                    } : c)
+                );
+            } else {
+                // Add like
+                const res = await api.post('/commentLikes', {
+                    userId: session.userId.toString(),
+                    commentId: commentItem.id,
+                    isLiked: true
+                });
+                await api.patch(`/comments/${commentItem.id}`, { likes: newLikesCount });
+                setCommentsList(prev =>
+                    prev.map(c => c.id === commentItem.id ? {
+                        ...c,
+                        likes: newLikesCount,
+                        likesList: [...(c.likesList || []), res.data]
+                    } : c)
+                );
+            }
         } catch (error) {
             console.error("Failed to toggle like:", error);
         }
     };
 
     const authorProfile = bulletin.profile;
-    const sortedComments = [...commentsList].sort((a, b) => new Date(b.commentDate).getTime() - new Date(a.commentDate).getTime());
+    const sortedComments = commentsList;
 
     return (
         <div className="min-h-screen bg-gray-50 pb-12">
-            {currentStatusName === "Pending" && (
-                <div className="bg-yellow-50 px-4 py-3 border-b border-yellow-200 text-center">
-                    <p className="text-yellow-800 font-medium text-sm">
-                        ⚠️ This bulletin is currently under review by an administrator and is not visible to the public.
+            {isAdminPreview && (
+                <div className="bg-blue-50 px-4 py-3 border-b border-blue-200 text-center flex items-center justify-center gap-2">
+                    <Info className="w-4 h-4 text-blue-800" />
+                    <p className="text-blue-800 font-medium text-sm">
+                        Admin Preview Mode: Viewing bulletin with status "{currentStatusName}"
                     </p>
                 </div>
             )}
+
             {/* Back Button and Edit Button */}
             <div className="max-w-4xl mx-auto px-4 md:px-8 pt-6 flex justify-between items-center">
                 <Link
@@ -168,13 +204,26 @@ export function BulletinDetail() {
                             </Button>
                         }
                         initialData={bulletin as any}
-                        isAdmin={isAdmin}
                     />
                 )}
             </div>
 
             {/* Article */}
             <div className="max-w-4xl mx-auto px-4 md:px-8 py-8">
+                {bulletin.contentStatus?.statusName === 'Archived' && (
+                    <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6 rounded-r-md">
+                        <div className="flex">
+                            <div className="flex-shrink-0">
+                                <Clock className="h-5 w-5 text-yellow-400" aria-hidden="true" />
+                            </div>
+                            <div className="ml-3">
+                                <p className="text-sm text-yellow-700">
+                                    This bulletin has been archived. It is no longer active and comments are disabled.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                )}
                 <article className="bg-white rounded-lg shadow-md overflow-hidden">
                     {/* Hero Image */}
                     {bulletin.bulletinImage && (
@@ -194,7 +243,7 @@ export function BulletinDetail() {
                         {/* Author Info */}
                         <div className="flex items-center gap-4 pb-6 mb-8 border-b border-gray-200">
                             <Link
-                                to={`/profile/${bulletin.profileId}`}
+                                to={`/profile/${bulletin.authorId}`}
                                 className="flex items-center gap-3 hover:opacity-80 transition-opacity"
                             >
                                 <img
@@ -212,7 +261,7 @@ export function BulletinDetail() {
                             <div className="flex items-center gap-4 ml-auto text-sm text-gray-500">
                                 <div className="flex items-center gap-1">
                                     <Clock className="w-4 h-4" />
-                                    <span>{new Date(bulletin.bulletinDate).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</span>
+                                    <span>{formatDate(bulletin.bulletinDate, 'full')}</span>
                                 </div>
                                 <span>•</span>
                                 <span>{bulletin.readTimeMinutes} min read</span>
@@ -238,7 +287,7 @@ export function BulletinDetail() {
                     </h2>
 
                     {/* Comment Form */}
-                    {isLoggedIn && !isSuspended ? (
+                    {isLoggedIn && !isSuspended && bulletin.contentStatus?.statusName !== 'Archived' ? (
                         <form onSubmit={handleSubmitComment} className="mb-8">
                             <div className="flex gap-3">
                                 <div className="flex-shrink-0">
@@ -291,7 +340,7 @@ export function BulletinDetail() {
                     {/* Comments List */}
                     <div className="space-y-6">
                         {sortedComments.map((commentItem) => {
-                            const isLiked = likedComments.includes(commentItem.id);
+                            const isLiked = !!commentItem.likesList?.find(l => String(l.userId) === String(session?.userId));
                             const commenterProfile = commentItem.profile;
                             return (
                                 <div key={commentItem.id} className="flex gap-3">
@@ -315,7 +364,7 @@ export function BulletinDetail() {
                                                     {commenterProfile?.userName || "Unknown User"}
                                                 </Link>
                                                 <span className="text-sm text-gray-500">
-                                                    {new Date(commentItem.commentDate).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}
+                                                    {formatDate(commentItem.commentDate, 'datetime')}
                                                 </span>
                                             </div>
                                             <p className="text-gray-700">{commentItem.comment}</p>
@@ -333,6 +382,19 @@ export function BulletinDetail() {
                             );
                         })}
                     </div>
+
+                    {/* Load More Comments */}
+                    {sortedComments.length >= commentsLimit && (
+                        <div className="flex justify-center items-center gap-4 mt-8">
+                            <Button
+                                variant="outline"
+                                onClick={() => setCommentsLimit(prev => prev + COMMENTS_LIMIT)}
+                                className="px-8"
+                            >
+                                Load More Comments
+                            </Button>
+                        </div>
+                    )}
                 </div>
             </div>
         </div>

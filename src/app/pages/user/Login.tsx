@@ -6,7 +6,6 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { toast } from 'sonner';
 import { api } from '@/app/views/api';
-import bcrypt from 'bcryptjs';
 import { useAuth } from '@/app/views/auth';
 
 import { Button } from '@components/ui/button';
@@ -55,45 +54,29 @@ export function Login() {
 
     const onSubmit = async (values: z.infer<typeof loginSchema>) => {
         try {
-            const response = await api.get(`/userAuths?email=${values.email}&_embed=user`);
-            const users = response.data;
-
-            if (users.length === 0) {
-                toast.error("Login failed", { description: "Invalid email or password." });
-                return;
-            }
-
-            const user = users[0];
-            const isValidPassword = bcrypt.compareSync(values.password, user.passwordHash);
-
-            if (!isValidPassword) {
-                toast.error("Login failed", { description: "Invalid email or password." });
-                return;
-            }
-
-            const userStatusesRes = await api.get('/userStatuses');
-            const bannedStatusId = userStatusesRes.data.find((s: any) => s.statusName === 'Banned')?.id;
-
-            if (user.user?.userStatusId === bannedStatusId) {
-                toast.error("Login restricted", { description: "Your account has been banned." });
-                return;
-            }
-
-            // Update last_login
-            await api.patch(`/userAuths/${user.id}`, {
-                lastLogin: new Date().toISOString()
+            const response = await api.post('/auth/login', {
+                email: values.email,
+                password: values.password
             });
+            const { token, user } = response.data;
 
-            setSession({ userId: user.userId, email: user.email }, values.rememberMe);
+            if (token) {
+                setSession(token, values.rememberMe);
+            }
 
             toast.success("Welcome back!", {
                 description: "You have successfully signed in.",
             });
             const from = location.state?.from || '/profile';
             navigate(from, { replace: true });
-        } catch (error) {
+        } catch (error: any) {
             console.error("Login error:", error);
-            toast.error("Login failed", { description: "An unexpected error occurred." });
+            const msg = error.response?.data?.error || "An unexpected error occurred.";
+            if (msg.toLowerCase().includes('disable')) {
+                toast.error("Account disabled", { description: "Please request reactivation from an admin." });
+            } else {
+                toast.error("Login failed", { description: msg });
+            }
         }
     };
 

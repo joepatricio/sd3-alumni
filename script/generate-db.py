@@ -32,7 +32,8 @@ for base in CONNECTION_STATUS:
 CONTENT_STATUS = [
     {"statusName": "Pending"},
     {"statusName": "Approved"},
-    {"statusName": "Rejected"}
+    {"statusName": "Rejected"},
+    {"statusName": "Archived"}
 ]
 for base in CONTENT_STATUS:
     base["id"] = generate(size=10)
@@ -53,7 +54,8 @@ USER_STATUS = [
     {"statusName": "Regular"},
     {"statusName": "Official"},
     {"statusName": "Suspended"},
-    {"statusName": "Banned"}
+    {"statusName": "Banned"},
+    {"statusName": "Deactivated"}
 ]
 for base in USER_STATUS:
     base["id"] = generate(size=10)
@@ -75,6 +77,16 @@ EVENT_CATEGORY = [
     {"eventCategoryName": "Virtual"}
 ]
 for base in EVENT_CATEGORY:
+    base["id"] = generate(size=10)
+
+BULLETIN_CATEGORY = [
+    {"bulletinCategoryName": "Announcements"},
+    {"bulletinCategoryName": "Careers"},
+    {"bulletinCategoryName": "Success Stories"},
+    {"bulletinCategoryName": "Donations"},
+    {"bulletinCategoryName": "Others"}
+]
+for base in BULLETIN_CATEGORY:
     base["id"] = generate(size=10)
 
 PROFILE_STATUS = [
@@ -141,7 +153,6 @@ def generate_phase_2():
         user_id = generate(size=10)
         
         USER.append({
-            "id": user_id,
             "userId": user_id,
             "profileStatusId": random.choices([p["id"] for p in PROFILE_STATUS], weights=[20, 40, 40])[0],
             "userStatusId": status_id,
@@ -159,7 +170,7 @@ def generate_phase_2():
             description = "Banned permanently"
 
         RECORDS.append({
-            "id": record_id,
+            "recordId": record_id,
             "userId": user_id,
             "adminId": random.choice(["admin1", "admin2", "admin3"]), # Placeholder admin
             "userStatusId": status_id,
@@ -190,8 +201,6 @@ def generate_phase_2():
 
         gender = random.choice(["Male", "Female"])
         PROFILE.append({
-            # Duplicate id required to allow prototype to use _embed
-            "id": user_id,
             "userId": user_id,
             "userName": name,
             "gender": gender,
@@ -234,7 +243,7 @@ def generate_phase_3(USER, USER_STATISTICS):
     USER_ACHIEVEMENT = []
     
     # 1. Connections (Erdős-Rényi G(n, p) bidirectional graph)
-    user_ids = [u["id"] for u in USER]
+    user_ids = [u["userId"] for u in USER]
     p_connect = 0.12
     
     for i in range(len(user_ids)):
@@ -249,6 +258,7 @@ def generate_phase_3(USER, USER_STATISTICS):
                 
                 # Bilateral connection entries
                 USER_CONNECTIONS.append({
+                    "id": generate(size=10),
                     "userId": uid1,
                     "friendId": uid2,
                     "connectionStatusId": status_id_1, 
@@ -264,6 +274,7 @@ def generate_phase_3(USER, USER_STATISTICS):
                     
                 status_id_2 = get_connection_status_id(status_name_2)
                 USER_CONNECTIONS.append({
+                    "id": generate(size=10),
                     "userId": uid2,
                     "friendId": uid1,
                     "connectionStatusId": status_id_2,
@@ -285,6 +296,7 @@ def generate_phase_3(USER, USER_STATISTICS):
             
             if today > ten_year_later:
                 USER_ACHIEVEMENT.append({
+                    "id": generate(size=10),
                     "userId": uid,
                     "achievementId": get_achievement_id(1, 3),
                     "achievementTier": 3,
@@ -292,6 +304,7 @@ def generate_phase_3(USER, USER_STATISTICS):
                 })
             elif today > three_year_later:
                 USER_ACHIEVEMENT.append({
+                    "id": generate(size=10),
                     "userId": uid,
                     "achievementId": get_achievement_id(1, 2),
                     "achievementTier": 2,
@@ -299,6 +312,7 @@ def generate_phase_3(USER, USER_STATISTICS):
                 })
             elif today > one_year_later:
                 USER_ACHIEVEMENT.append({
+                    "id": generate(size=10),
                     "userId": uid,
                     "achievementId": get_achievement_id(1, 1),
                     "achievementTier": 1,
@@ -308,6 +322,7 @@ def generate_phase_3(USER, USER_STATISTICS):
         # 5% chance to be READS Alumni
         if random.random() < 0.05:
             USER_ACHIEVEMENT.append({
+                "id": generate(size=10),
                 "userId": uid,
                 "achievementId": get_achievement_id(10000, 1),
                 "achievementTier": 1,
@@ -315,11 +330,12 @@ def generate_phase_3(USER, USER_STATISTICS):
             })
             
         # Give Verified achievement if status is Official
-        user_obj = next((u for u in USER if u["id"] == uid), None)
+        user_obj = next((u for u in USER if u["userId"] == uid), None)
         if user_obj:
             status_name = next((s["statusName"] for s in USER_STATUS if s["id"] == user_obj["userStatusId"]), "")
             if status_name == "Official":
                 USER_ACHIEVEMENT.append({
+                    "id": generate(size=10),
                     "userId": uid,
                     "achievementId": get_achievement_id(10001, 1),
                     "achievementTier": 1,
@@ -338,17 +354,17 @@ def generate_phase_4(USER):
     
     # 1. ADMIN
     ADMIN.append({
-        "id": "admin1",
+        "username": "admin1",
         "passwordHash": "$2a$10$RF01DLY3wzkMTDihPwqMZuOu9dqipFZokMMf14UutW2Zk9IauaJ4y", 
         "lastLogin": random_date(2025, 2026)
     })
     ADMIN.append({
-        "id": "admin2",
+        "username": "admin2",
         "passwordHash": "$2a$10$RF01DLY3wzkMTDihPwqMZuOu9dqipFZokMMf14UutW2Zk9IauaJ4y", 
         "lastLogin": random_date(2025, 2026)
     })
     ADMIN.append({
-        "id": "admin3",
+        "username": "admin3",
         "passwordHash": "$2a$10$RF01DLY3wzkMTDihPwqMZuOu9dqipFZokMMf14UutW2Zk9IauaJ4y", 
         "lastLogin": random_date(2025, 2026)
     })
@@ -378,7 +394,7 @@ def generate_phase_4(USER):
         
     # 3. BULLETIN
     NUM_BULLETINS = 30
-    user_ids = [u["id"] for u in USER]
+    user_ids = [u["userId"] for u in USER]
     for i in range(1, NUM_BULLETINS + 1):
         bid = generate(size=10)
         author_id = random.choice(user_ids)
@@ -394,11 +410,14 @@ def generate_phase_4(USER):
             review_dt = bulletin_date_dt + datetime.timedelta(days=random.randint(1, 30))
             review_date = review_dt.strftime("%Y-%m-%dT%H:%M:%S.000Z")
         
+        bulletin_category_id = random.choice([c["id"] for c in BULLETIN_CATEGORY])
+        
         BULLETIN.append({
             "id": bid,
             "adminId": random.choice(["admin1", "admin2", "admin3"]),
             "userId": author_id,
             "contentStatusId": content_status_id,
+            "bulletinCategoryId": bulletin_category_id,
             "bulletinDate": bulletin_date,
             "reviewDate": review_date,
             "title": f"Community Update {i}",
@@ -416,7 +435,7 @@ def generate_phase_4(USER):
     for i in range(1, NUM_EVENTS + 1):
         eid = generate(size=10)
         organizer = random.choice(official_users)
-        organizer_id = organizer["id"]
+        organizer_id = organizer["userId"]
         status = random.choice(EVENT_STATUS)
         status_id = status["id"]
         location_id = random.choice([l["id"] for l in LOCATION])
@@ -471,7 +490,7 @@ def generate_phase_5(USER, BULLETIN, EVENTS, USER_STATISTICS, USER_CONNECTIONS, 
     USER_RSVP = []
     BULLETIN_LIKES = []
     
-    user_ids = [u["id"] for u in USER]
+    user_ids = [u["userId"] for u in USER]
     
     # 1. COMMENTS
     NUM_COMMENTS = 100
@@ -512,16 +531,17 @@ def generate_phase_5(USER, BULLETIN, EVENTS, USER_STATISTICS, USER_CONNECTIONS, 
         })
         
     # 3. USER_RSVP
-    # TODO this fucking thing. The RSVP is only valid if event is accepted. 
     for event in EVENTS:
         num_rsvps = random.randint(5, 15)
         attendees = random.sample(user_ids, num_rsvps)
+        valid_status_ids = [s["id"] for s in EVENT_STATUS if s["statusName"] in ["Approved", "Concluded"]]
         for uid in attendees:
             USER_RSVP.append({
+                "id": generate(size=10),
                 "userId": uid,
                 "eventId": event["id"],
                 "isAttending": random.choice([True, False]),
-                "isValid": event["eventStatusId"] == next(s["id"] for s in EVENT_STATUS if s["statusName"] == "Approved")
+                "isValid": event["eventStatusId"] in valid_status_ids
             })
 
     # 5. BULLETIN_LIKES
@@ -530,6 +550,7 @@ def generate_phase_5(USER, BULLETIN, EVENTS, USER_STATISTICS, USER_CONNECTIONS, 
         likers = random.sample(user_ids, min(num_likes, len(user_ids)))
         for uid in likers:
             BULLETIN_LIKES.append({
+                "id": generate(size=10),
                 "userId": uid,
                 "bulletinId": bulletin["id"],
                 "isLiked": random.choice([True, True, True, False])
@@ -566,6 +587,7 @@ def generate_phase_5(USER, BULLETIN, EVENTS, USER_STATISTICS, USER_CONNECTIONS, 
 
         def award_achievement(cat_id, tier = 1):
             USER_ACHIEVEMENT.append({
+                "id": generate(size=10),
                 "userId": uid,
                 "achievementId": get_achievement_id(cat_id, tier),
                 "achievementTier": tier,
@@ -613,9 +635,11 @@ def main():
         "degrees": DEGREE,
         "connectionStatuses": CONNECTION_STATUS,
         "contentStatuses": CONTENT_STATUS,
+        "eventStatuses": EVENT_STATUS,
         "userStatuses": USER_STATUS,
         "donationStatuses": DONATION_STATUS,
         "eventCategories": EVENT_CATEGORY,
+        "bulletinCategories": BULLETIN_CATEGORY,
         "profileStatuses": PROFILE_STATUS,
         "achievements": ACHIEVEMENTS,
         "users": USER,

@@ -6,9 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { toast } from 'sonner';
 import { api } from '@/app/views/api';
-import bcrypt from 'bcryptjs';
 import { useAuth } from '@/app/views/auth';
-import { nanoid } from 'nanoid'
 
 import { Button } from '@components/ui/button';
 import { Input } from '@components/ui/input';
@@ -35,6 +33,8 @@ interface Degree {
     degreeAbbr: string;
 }
 
+// College of Engineering was established in 1961 and engineering used to be a 5-year course
+const EARLIEST_BATCH = 1966;
 const registerSchema = z.object({
     fullName: z.string().min(2, {
         message: "Full name must be at least 2 characters.",
@@ -49,12 +49,14 @@ const registerSchema = z.object({
     degreeProgram: z.string().min(1, {
         message: "Please select a degree program.",
     }),
-    batch: z.coerce.number().min(1950).max(new Date().getFullYear() + 5, {
+    batch: z.coerce.number().min(EARLIEST_BATCH).max(new Date().getFullYear() + 5, {
         message: "Please enter a valid batch year.",
     }),
     terms: z.boolean().refine(val => val === true, {
         message: "You must accept the terms and conditions.",
     }),
+    gender: z.string().min(1, { message: "Please select a gender." }),
+    pronoun: z.string().optional()
 }).refine((data) => data.password === data.confirmPassword, {
     message: "Passwords do not match",
     path: ["confirmPassword"],
@@ -97,104 +99,37 @@ export function Register() {
             degreeProgram: "",
             batch: new Date().getFullYear(),
             terms: false,
+            gender: "",
+            pronoun: ""
         },
     });
 
     const onSubmit = async (values: z.infer<typeof registerSchema>) => {
+        if (isSubmitting) return;
+        setIsSubmitting(true);
+
         try {
-            // Check user limit
-            const usersResponse = await api.get('/userAuths');
-            if (usersResponse.data.length >= 100) {
-                toast.error("Registrations are closed", {
-                    description: "The maximum number of users has been reached."
-                });
-                return;
-            }
-
-            // Check if email already exists
-            const existingUser = await api.get(`/userAuths?email=${values.email}`);
-            if (existingUser.data.length > 0) {
-                toast.error("Registration failed", {
-                    description: "Email is already registered."
-                });
-                return;
-            }
-
-            if (isSubmitting) return;
-            setIsSubmitting(true);
-
-            // Generate ID and hash password
-            const user_id = nanoid(10);
-            const password_hash = bcrypt.hashSync(values.password, 10);
-            const degree = degrees.find(d => d.degreeName === values.degreeProgram);
-
-            // Create USER_AUTH
-            await api.post('/userAuths', {
-                userId: user_id,
+            await api.post('/auth/register', {
+                fullName: values.fullName,
                 email: values.email,
-                passwordHash: password_hash,
-                lastLogin: new Date().toISOString()
-            });
-
-            // Create RECORDS
-            const recordRes = await api.post('/records', {
-                userId: user_id,
-                adminId: "admin3",
-                userStatusId: "9V8IPmXwTH",
-                dateCreated: new Date().toISOString(),
-                description: "User registered",
-                dateExpires: null
-            });
-            const actual_record_id = recordRes.data.id;
-
-            // Create USER
-            await api.post('/users', {
-                userId: user_id,
-                profileStatusId: "47NabY0Pdv",
-                userStatusId: "9V8IPmXwTH",
-                recordId: actual_record_id
-            });
-
-            // Create PROFILE
-            await api.post('/profiles', {
-                id: user_id,
-                userId: user_id,
-                userName: values.fullName,
-                email: values.email,
-                phone: "",
-                location: "",
-                currentJob: "",
-                company: "",
-                bio: "",
-                degreeId: degree ? degree.id : null,
+                password: values.password,
+                degreeProgram: values.degreeProgram,
                 batch: values.batch,
-                birthday: null,
-                dateRegistered: new Date().toISOString(),
-                profileImage: "http://localhost:3000/engineer.png"
-            });
-
-            // Create USER_STATISTICS
-            await api.post('/userStatistics', {
-                userId: user_id,
-                dateRegistered: new Date().toISOString(),
-                userConnections: 0,
-                eventsAttended: 0,
-                eventsCreated: 0,
-                bulletinsCreated: 0,
-                commentsWritten: 0,
-                achievements: 0,
-                donatedAmount: 0
+                gender: values.gender === 'Custom' ? values.pronoun : values.gender
             });
 
             toast.success("Account created successfully!", {
                 description: "Welcome to the USJ-R SEA Alumni community.",
             });
             navigate('/login');
-        } catch (error) {
+        } catch (error: any) {
             console.error("Registration error:", error);
+            const errorMessage = error.response?.data?.error || "An unexpected error occurred. Please try again.";
             toast.error("Registration failed", {
-                description: "An unexpected error occurred. Please try again."
+                description: errorMessage
             });
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
@@ -369,6 +304,53 @@ export function Register() {
                                     </FormItem>
                                 )}
                             />
+
+                            <FormField
+                                control={form.control}
+                                name="gender"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <div className="flex items-center gap-2 mb-2">
+                                            <FormLabel className="!mb-0">Gender</FormLabel>
+                                            <div className="w-4 h-4 rounded-full border border-gray-400 text-gray-500 flex items-center justify-center text-[10px] font-bold cursor-help" title="You can change who sees your gender on your profile later. Select Custom to choose another gender, or if you'd rather not say.">?</div>
+                                        </div>
+                                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                            <FormControl>
+                                                <SelectTrigger className="selection:bg-blue-500 selection:text-white">
+                                                    <SelectValue placeholder="Select your gender" />
+                                                </SelectTrigger>
+                                            </FormControl>
+                                            <SelectContent>
+                                                <SelectItem value="Male">Male</SelectItem>
+                                                <SelectItem value="Female">Female</SelectItem>
+                                                <SelectItem value="Custom">Custom</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+
+                            {form.watch("gender") === "Custom" && (
+                                <div className="space-y-4">
+                                    <FormField
+                                        control={form.control}
+                                        name="pronoun"
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormControl>
+                                                    <Input
+                                                        placeholder="Gender (optional)"
+                                                        className="selection:bg-blue-500 selection:text-white"
+                                                        {...field}
+                                                    />
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+                                </div>
+                            )}
 
                             <FormField
                                 control={form.control}

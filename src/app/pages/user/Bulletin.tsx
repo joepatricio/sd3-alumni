@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import {
     Plus,
@@ -11,15 +11,15 @@ import {
 import { CreateBulletinModal } from '@components/user/CreateBulletinModal';
 import { Button } from '@components/ui/button';
 import { LazyImage } from '@components/user/LazyImage';
-import { api, useSystemLookup, type BulletinData, type ProfileData } from '@/app/views/api';
+import { api, type BulletinData, type ProfileData } from '@/app/views/api';
 import { useAuth } from '@/app/views/auth';
+import { formatDate } from '@/app/views/formatters';
 
 type ViewMode = 'headline' | 'article';
 const ARTICLE_ITEMS_PER_PAGE = 5;
 const HEADLINE_ITEMS_PER_PAGE = 10;
 
 export function Bulletin() {
-    const { reverseLookup } = useSystemLookup();
     const [viewMode, setViewMode] = useState<ViewMode>('article');
     const [officialOnly, setOfficialOnly] = useState(false);
     const [dateFrom, setDateFrom] = useState('');
@@ -28,52 +28,79 @@ export function Bulletin() {
 
     const { session } = useAuth();
     const [bulletins, setBulletins] = useState<BulletinData[]>([]);
+    const [totalBulletins, setTotalBulletins] = useState(0);
     const [profilesMap, setProfilesMap] = useState<Record<string, ProfileData>>({});
-    const [officialUsers, setOfficialUsers] = useState<string[]>([]);
-    const [restrictedUsers, setRestrictedUsers] = useState<string[]>([]);
     const [currentUserStatus, setCurrentUserStatus] = useState<string>('');
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         const fetchData = async () => {
+            setLoading(true);
             try {
-                const [bRes, uRes, allUsersRes] = await Promise.all([
-                    // idk bro
-                    // Like, everything in Bulletin and Events is BAD code
-                    // A lot of filtering could be done server-side which would reduce response payload.
-                    // I want what's easy for now. Please if you are reading this improve the API calls.
-                    api.get('/bulletins?_embed=profile&_embed=contentStatus&contentStatus.statusName:contains=Approved'),
+                const [uRes, allUsersRes] = await Promise.all([
                     api.get(`/users`, {
                         params: {
-                            userStatusId: reverseLookup('Official')
+                            'userStatus.statusName': 'Official'
                         }
                     }),
                     api.get('/users')
                 ]);
-                const bData = Array.isArray(bRes.data) ? bRes.data : (bRes.data?.data || []);
                 const uData = Array.isArray(uRes.data) ? uRes.data : (uRes.data?.data || []);
                 const allUsers = Array.isArray(allUsersRes.data) ? allUsersRes.data : (allUsersRes.data?.data || []);
-                
-                const bannedId = reverseLookup('Banned');
-                const suspendedId = reverseLookup('Suspended');
+
                 const restrictedProfileIds = allUsers
-                    .filter((u: any) => u.userStatusId === bannedId || u.userStatusId === suspendedId)
+                    .filter((u: any) => u.userStatus?.statusName === 'Banned' || u.userStatus?.statusName === 'Suspended')
                     .map((u: any) => String(u.id));
-                setRestrictedUsers(restrictedProfileIds);
 
                 if (session?.userId) {
-                    const currentU = allUsers.find((u: any) => String(u.userId) === String(session.userId));
+                    const currentU = allUsers.find((u: any) => String(u.id) === String(session.userId));
                     if (currentU) {
-                        setCurrentUserStatus(currentU.userStatusId);
+                        setCurrentUserStatus(currentU.userStatus?.statusName || '');
                     }
                 }
 
+                const officialUserIds = uData.map((user: any) => String(user.id)) || [];
+
+                const whereClause: any = {
+                    status: { statusName: 'Approved' }
+                };
+
+                if (restrictedProfileIds.length > 0) {
+                    whereClause.authorId = { notIn: restrictedProfileIds };
+                }
+
+                if (officialOnly && officialUserIds.length > 0) {
+                    whereClause.authorId = { in: officialUserIds };
+                } else if (officialOnly) {
+                    whereClause.authorId = { in: ['__none__'] };
+                }
+
+                if (dateFrom || dateTo) {
+                    whereClause.bulletinDate = {};
+                    if (dateFrom) whereClause.bulletinDate.gte = new Date(dateFrom).toISOString();
+                    if (dateTo) {
+                        const toDate = new Date(dateTo);
+                        toDate.setHours(23, 59, 59, 999);
+                        whereClause.bulletinDate.lte = toDate.toISOString();
+                    }
+                }
+
+                const bRes = await api.get('/bulletins', {
+                    params: {
+                        _limit: visibleCount,
+                        _sort: '-bulletinDate',
+                        _where: JSON.stringify(whereClause),
+                        _include: 'status,author'
+                    }
+                });
+
+                const bData = Array.isArray(bRes.data) ? bRes.data : (bRes.data?.data || []);
                 setBulletins(bData || []);
-                setOfficialUsers(uData.map((user: any) => String(user.id)) || []);
+                setTotalBulletins(bRes.data?.items !== undefined ? bRes.data.items : bData.length);
 
                 const pMap: Record<string, ProfileData> = {};
                 (bData || []).forEach((b: BulletinData) => {
-                    if (b.profile) pMap[b.profileId] = b.profile;
+                    if (b.profile) pMap[b.authorId] = b.profile;
                 });
                 setProfilesMap(pMap);
             } catch (err) {
@@ -83,28 +110,11 @@ export function Bulletin() {
             }
         };
         fetchData();
-    }, [reverseLookup]);
-
-    const filteredItems = useMemo(() => {
-        let filtered = bulletins.filter(item => !restrictedUsers.includes(String(item.profile?.userId)));
-
-        if (officialOnly) {
-            filtered = filtered.filter(item => officialUsers.includes(item.profileId));
-        }
-
-        if (dateFrom) {
-            filtered = filtered.filter(item => new Date(item.bulletinDate) >= new Date(dateFrom));
-        }
-        if (dateTo) {
-            filtered = filtered.filter(item => new Date(item.bulletinDate) <= new Date(dateTo));
-        }
-
-        return filtered.sort((a, b) => new Date(b.bulletinDate).getTime() - new Date(a.bulletinDate).getTime());
-    }, [bulletins, officialOnly, dateFrom, dateTo, reverseLookup, officialUsers]);
+    }, [visibleCount, officialOnly, dateFrom, dateTo, session?.userId]);
 
     const ITEMS_PER_PAGE = viewMode === 'article' ? ARTICLE_ITEMS_PER_PAGE : HEADLINE_ITEMS_PER_PAGE;
 
-    const paginatedItems = filteredItems.slice(0, visibleCount);
+    const paginatedItems = bulletins;
 
     return (
         <div className="min-h-screen bg-gray-50">
@@ -119,7 +129,7 @@ export function Bulletin() {
                                 USJ-R alumni community
                             </p>
                         </div>
-                        {currentUserStatus !== reverseLookup('Suspended') && currentUserStatus !== reverseLookup('Banned') && (
+                        {(currentUserStatus === 'Regular' || currentUserStatus === 'Official') && (
                             <CreateBulletinModal
                                 trigger={
                                     <button
@@ -230,7 +240,7 @@ export function Bulletin() {
                         ) : (
                             <div className="space-y-6">
                                 {paginatedItems.map((item) => {
-                                    const authorProfile = profilesMap[item.profileId];
+                                    const authorProfile = profilesMap[item.authorId];
                                     return (
                                         <div
                                             key={item.id}
@@ -251,7 +261,7 @@ export function Bulletin() {
                                                     <div className="p-6">
                                                         <div className="flex items-center gap-3 mb-4">
                                                             <Link
-                                                                to={`/profile/${item.profileId}`}
+                                                                to={`/profile/${item.authorId}`}
                                                                 className="flex items-center gap-2 hover:opacity-80 transition-opacity relative z-10"
                                                             >
                                                                 <img
@@ -266,7 +276,7 @@ export function Bulletin() {
                                                             <span className="text-gray-400">•</span>
                                                             <div className="flex items-center gap-1 text-sm text-gray-500">
                                                                 <Clock className="w-4 h-4" />
-                                                                <span>{new Date(item.bulletinDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</span>
+                                                                <span>{formatDate(item.bulletinDate, 'long')}</span>
                                                             </div>
                                                         </div>
                                                         <Link
@@ -286,7 +296,7 @@ export function Bulletin() {
                                                 /* Headline View */
                                                 <div className="p-6 flex gap-4">
                                                     <Link
-                                                        to={`/profile/${item.profileId}`}
+                                                        to={`/profile/${item.authorId}`}
                                                         className="flex-shrink-0 hover:opacity-80 transition-opacity relative z-10"
                                                     >
                                                         <img
@@ -306,13 +316,13 @@ export function Bulletin() {
                                                         </Link>
                                                         <div className="flex items-center gap-2 mb-3 text-sm text-gray-600 relative z-10">
                                                             <Link
-                                                                to={`/profile/${item.profileId}`}
+                                                                to={`/profile/${item.authorId}`}
                                                                 className="hover:text-brand-primary transition-colors"
                                                             >
                                                                 {authorProfile?.userName || "Unknown Author"}
                                                             </Link>
                                                             <span>•</span>
-                                                            <span>{new Date(item.bulletinDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</span>
+                                                            <span>{formatDate(item.bulletinDate, 'long')}</span>
                                                         </div>
                                                         <p className="text-gray-700 line-clamp-2">
                                                             {item.content}
@@ -327,7 +337,7 @@ export function Bulletin() {
                         )}
 
                         {/* Pagination */}
-                        {!loading && visibleCount < filteredItems.length && (
+                        {!loading && bulletins.length < totalBulletins && (
                             <div className="flex justify-center items-center gap-4 mt-8 mb-4">
                                 <Button
                                     variant="outline"
@@ -339,7 +349,7 @@ export function Bulletin() {
                             </div>
                         )}
 
-                        {!loading && filteredItems.length === 0 && (
+                        {!loading && bulletins.length === 0 && (
                             <div className="bg-white rounded-lg shadow-md p-12 text-center">
                                 <FileText className="w-16 h-16 text-gray-300 mx-auto mb-4" />
                                 <h3 className="text-xl font-bold mb-2 text-gray-700">
