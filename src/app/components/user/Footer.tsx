@@ -1,5 +1,6 @@
 import { Mail, Phone, MapPin } from 'lucide-react';
-import { SiFacebook, SiX, SiInstagram, SiLinkedin } from 'react-icons/si';
+import { SiFacebook, SiX, SiInstagram } from 'react-icons/si';
+import { FaLinkedin } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
 
 export function Footer() {
@@ -63,7 +64,7 @@ export function Footer() {
                 rel="noopener noreferrer"
                 className="w-9 h-9 bg-white rounded-full flex items-center justify-center hover:bg-brand-primary hover:text-white text-brand-primary transition-colors shadow-sm"
               >
-                <SiLinkedin className="w-4 h-4" />
+                <FaLinkedin className="w-4 h-4" />
               </a>
             </div>
           </div>

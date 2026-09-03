@@ -1,9 +1,10 @@
 import { useState, useEffect, useRef } from 'react';
-import { Card, CardContent, CardHeader, CardTitle,  } from '@components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, } from '@components/ui/card';
 import { Button } from '@components/ui/button';
 import { formatCurrency, getBankColor, formatDate } from '@/app/views/formatters';
-import { Printer, Info, Mail, MapPin, GraduationCap, Briefcase } from 'lucide-react';
-import { api, type Donation } from '@/app/views/api';
+import { Printer, Info, Mail, MapPin, GraduationCap, Briefcase, Loader2 } from 'lucide-react';
+import { api } from '@/app/views/api';
+import { Tabs, TabsList, TabsTrigger } from '@components/ui/tabs';
 import { PieChart, Pie, Cell, Tooltip as RechartsTooltip, ResponsiveContainer } from 'recharts';
 import { Link } from 'react-router-dom';
 import { toPng } from 'html-to-image';
@@ -47,6 +48,9 @@ export function DonationDashboard() {
         topFrequency: any[];
     }>({ topLTV: [], topAvgDonation: [], topFrequency: [] });
     const [activeLeaderboardTab, setActiveLeaderboardTab] = useState('Top LTV');
+
+    const [, setUniqueBanks] = useState<string[]>([]);
+    const [, setDbStatuses] = useState<string[]>([]);
 
 
 
@@ -97,23 +101,6 @@ export function DonationDashboard() {
     useEffect(() => {
         fetchStats();
     }, []);
-
-    // Filter State
-
-    // Filter State
-
-    // Explicit filter applied state
-
-
-
-
-
-
-
-    useEffect(() => {
-    
-
-
 
     const handleStatusLegendClick = (e: any) => {
         setActiveStatus(prev => prev === e.value ? null : e.value);
@@ -506,6 +493,6 @@ export function DonationDashboard() {
                 </div>
             )}
 
-                    </div>
+        </div>
     );
 }

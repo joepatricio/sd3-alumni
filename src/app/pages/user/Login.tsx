@@ -58,7 +58,7 @@ export function Login() {
                 email: values.email,
                 password: values.password
             });
-            const { token, user } = response.data;
+            const { token } = response.data;
 
             if (token) {
                 setSession(token, values.rememberMe);

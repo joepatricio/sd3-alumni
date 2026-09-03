@@ -1,5 +1,6 @@
 import { Mail, Phone, MapPin, ExternalLink } from 'lucide-react';
-import { SiFacebook, SiX, SiInstagram, SiLinkedin } from 'react-icons/si';
+import { SiFacebook, SiX, SiInstagram } from 'react-icons/si';
+import { FaLinkedin } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
 
 interface MegaMenuProps {
@@ -19,7 +20,7 @@ export function MegaMenu({ isOpen, onClose }: MegaMenuProps) {
     { icon: SiFacebook, label: 'Facebook', href: 'https://www.facebook.com/usjr.official', color: 'hover:bg-blue-600' },
     { icon: SiX, label: 'X (formerly Twitter)', href: 'https://x.com/USJR_official', color: 'hover:bg-black' },
     { icon: SiInstagram, label: 'Instagram', href: 'https://www.instagram.com/usjr_official/', color: 'hover:bg-pink-600' },
-    { icon: SiLinkedin, label: 'LinkedIn', href: 'https://www.linkedin.com/school/usjrofficial/', color: 'hover:bg-blue-700' },
+    { icon: FaLinkedin, label: 'LinkedIn', href: 'https://www.linkedin.com/school/usjrofficial/', color: 'hover:bg-blue-700' },
   ];
 
   if (!isOpen) return null;

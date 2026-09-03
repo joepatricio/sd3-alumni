@@ -531,7 +531,7 @@ export function AdminContentTable({
                                     <SelectItem value="this_week">This Week</SelectItem>
                                     <SelectItem value="this_month">This Month</SelectItem>
                                     <SelectItem value="this_year">This Year</SelectItem>
-                                    <SelectItem value="custom">Custom Range</SelectItem>
+                                    <SelectItem value="custom">Custom</SelectItem>
                                 </SelectContent>
                             </Select>
 

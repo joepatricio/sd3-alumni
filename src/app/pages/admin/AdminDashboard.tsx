@@ -634,7 +634,7 @@ export function AdminDashboard() {
                                                     dataKey="value"
                                                     nameKey="name"
                                                     isAnimationActive={false}
-                                                    onClick={(entry) => setActiveUserStatus(prev => prev === entry.name ? null : entry.name)}
+                                                    onClick={(entry) => setActiveUserStatus(prev => prev === entry.name ? null : entry.name || null)}
                                                 >
                                                     {userStatusChartData.map((entry, index) => (
                                                         <Cell
@@ -703,7 +703,7 @@ export function AdminDashboard() {
                                                     dataKey="value"
                                                     nameKey="name"
                                                     isAnimationActive={false}
-                                                    onClick={(entry) => setActiveDemographic(prev => prev === entry.name ? null : entry.name)}
+                                                    onClick={(entry) => setActiveDemographic(prev => prev === entry.name ? null : entry.name || null)}
                                                 >
                                                     {demographicsChartData.map((entry, index) => (
                                                         <Cell
@@ -771,7 +771,7 @@ export function AdminDashboard() {
                                                     dataKey="value"
                                                     nameKey="name"
                                                     isAnimationActive={false}
-                                                    onClick={(entry) => setActiveProfileStatus(prev => prev === entry.name ? null : entry.name)}
+                                                    onClick={(entry) => setActiveProfileStatus(prev => prev === entry.name ? null : entry.name || null)}
                                                 >
                                                     {profileStatusChartData.map((entry, index) => (
                                                         <Cell
@@ -916,7 +916,7 @@ export function AdminDashboard() {
                                                         dataKey="value"
                                                         nameKey="name"
                                                         isAnimationActive={false}
-                                                        onClick={(entry) => setActiveBulletinCategory(prev => prev === entry.name ? null : entry.name)}
+                                                        onClick={(entry) => setActiveBulletinCategory(prev => prev === entry.name ? null : entry.name || null)}
                                                     >
                                                         {sortedBulletinCategoryData.map((entry, index) => (
                                                             <Cell
@@ -986,7 +986,7 @@ export function AdminDashboard() {
                                                         dataKey="value"
                                                         nameKey="name"
                                                         isAnimationActive={false}
-                                                        onClick={(entry) => setActiveEventCategory(prev => prev === entry.name ? null : entry.name)}
+                                                        onClick={(entry) => setActiveEventCategory(prev => prev === entry.name ? null : entry.name || null)}
                                                     >
                                                         {sortedEventCategoryData.map((entry, index) => (
                                                             <Cell

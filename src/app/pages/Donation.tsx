@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Heart, Globe, GraduationCap, Users, Mail, Phone, ArrowLeft, User } from 'lucide-react';
-import { SiFacebook, SiX, SiInstagram, SiLinkedin } from 'react-icons/si';
+import { SiFacebook, SiX, SiInstagram } from 'react-icons/si';
+import { FaLinkedin } from 'react-icons/fa';
 import { toast } from 'sonner';
 import { useAuth } from '@/app/views/auth';
 import { formatCurrency } from '@/app/views/formatters';
@@ -332,7 +333,7 @@ export function Donation() {
                                 <SiInstagram className="w-4 h-4 text-white" />
                             </a>
                             <a href="https://www.linkedin.com/school/usjrofficial/" target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center hover:bg-brand-primary transition-colors">
-                                <SiLinkedin className="w-4 h-4 text-white" />
+                                <FaLinkedin className="w-4 h-4 text-white" />
                             </a>
                         </div>
 
