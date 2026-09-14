@@ -1,4 +1,3 @@
-
 erDiagram
     user ||--|| userStatuses : lookup
     user ||--|| profileStatuses: lookup
@@ -8,29 +7,36 @@ erDiagram
     
     user ||--|| profile: contains
     userStatistics ||--|| user: contains
-    profile ||--o{ userAchievements: contains
-    userRsvp ||--|| user: contains
-    userConnections ||--|| user: contains
+    user ||--o{ userAchievements: earns
+    user ||--o{ userRsvp: submits
+    events ||--o{ userRsvp: receives
+    user ||--o{ userConnections: connects
     connectionStatuses ||--|| userConnections: lookup
     profile ||--|| degrees: lookup
     userAchievements ||--|| achievements: lookup
 
     user ||--o{ bulletin: creates
+    bulletin ||--|| contentStatuses: lookup
+    bulletin ||--|| bulletinCategories: lookup
+    bulletin ||--o{ comments: contains
     user ||--o{ bulletinLikes: toggles
     bulletin ||--o{ bulletinLikes: receives
     user ||--o{ comments: creates
     user ||--o{ commentLikes: toggles
     comments ||--o{ commentLikes: receives
     user ||--o{ donations: creates
-    user ||--o{ events: creates
-    admin ||--o{ bulletin : reviews
-    admin ||--o{ events : reviews
-    admin ||--o{ user : manages 
     donations ||--|| donationStatuses: lookup
-    bulletin ||--|| contentStatuses: lookup
+    user ||--o{ events: creates
     events ||--|| eventStatuses: lookup
     events ||--|| eventCategories: lookup
     events ||--|| location: contains
+    user ||--o{ notifications: receives
+    notifications ||--|| notificationTypes: lookup
+
+    admin ||--o{ bulletin : reviews
+    admin ||--o{ events : reviews
+    admin ||--o{ records : creates
+    admin ||--o{ user : manages 
 
     %% 1XX - Degree-related
     degrees {
@@ -47,6 +53,10 @@ erDiagram
     contentStatuses {
         string id PK
         string statusName "e.g. Pending, Approved, Rejected"
+    }
+    bulletinCategories {
+        string id PK
+        string bulletinCategoryName "e.g. Announcements, Careers, Success Stories, etc."
     }
     eventStatuses {
         string id PK
@@ -94,9 +104,9 @@ erDiagram
         string userId FK
         string adminId FK
         string userStatusId FK
-        date dateCreated "Defaults to timestamp of query, immutable"
+        datetime dateCreated "Defaults to timestamp of query, immutable"
         string description "Describes the nature of status"
-        date dateExpires "`NULL` for statuses with no expiry"
+        datetime dateExpires "`NULL` for statuses with no expiry"
     }
     userAuths {
         string userId PK,FK
@@ -106,29 +116,33 @@ erDiagram
     }
 
     userAchievements {
-        string userId PK,FK
-        string achievementId PK,FK
-        shortint achievementTier PK,FK
+        string id PK
+        string userId FK
+        string achievementId FK
+        int achievementTier
         datetime achievedDate "Defaults to timestamp of acquisition, immutable"
     }
     achievements {
         string id PK
         int achievementCategory "Internal, used for achievement categories"
-        shortint achievementTier PK
+        int achievementTier
         string achievementTitle
         string achievementDescription
         string achievementIcon
     }
     userConnections {
-        string userId PK,FK
-        string friendId PK,FK
-        string connectionStatusId
-        date dateUpdated
+        string id PK
+        string userId FK
+        string friendId FK
+        string connectionStatusId FK
+        datetime dateUpdated
     }
     userRsvp {
-        string userId PK,FK
-        string eventId PK,FK
+        string id PK
+        string userId FK
+        string eventId FK
         boolean isAttending
+        boolean isValid
     }
     userStatistics {
         string userId PK,FK
@@ -140,7 +154,7 @@ erDiagram
         int commentsWritten
         int achievements
         float donatedAmount
-        date dateRegistered
+        datetime dateRegistered
     }
     profile {
         string userId PK,FK
@@ -154,12 +168,13 @@ erDiagram
         string company
         string profileImage
         string degreeId FK
-        smallint batch
-        date birthday
+        int batch
+        datetime birthday
     }
 
     admin {
         string id PK
+        string username
         string passwordHash "Hashed password (never store plain text)"
         datetime lastLogin
     }
@@ -169,6 +184,7 @@ erDiagram
         string adminId FK
         string authorId FK
         string contentStatusId FK
+        string bulletinCategoryId FK
         datetime bulletinDate
         datetime reviewDate "NULL if not reviewed"
         string title
@@ -187,9 +203,9 @@ erDiagram
         datetime reviewDate "NULL if not reviewed"
         string title
         text description
-        time startTime
-        time endTime
-        shortint responses
+        string startTime
+        string endTime
+        int responses
         string modality
         string eventImage
     }
@@ -213,16 +229,18 @@ erDiagram
         string bulletinId FK
         datetime commentDate
         string comment
-        shortint likes
+        int likes
     }
     bulletinLikes {
-        string userId PK,FK
-        string bulletinId PK,FK
+        string id PK
+        string userId FK
+        string bulletinId FK
         boolean isLiked
     }
     commentLikes {
-        string userId PK,FK
-        string commentId PK,FK
+        string id PK
+        string userId FK
+        string commentId FK
         boolean isLiked
     }
     donations {
@@ -233,7 +251,7 @@ erDiagram
         string donationStatusId FK
         datetime donationDate
         float donationAmount
-        money donationAmountPhp "Human-readable format"
+        string donationAmountPhp "Human-readable format"
         boolean donationAnonymous 
         string donationEmail
     }

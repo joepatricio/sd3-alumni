@@ -4,7 +4,7 @@ import { Calendar, Award, Heart, Loader2, Mail, Phone, MapPin, Briefcase, Messag
 import { ProfileHeader } from '@components/user/ProfileHeader';
 import { api, AchievementIconMap, useProfileRoute, type ProfileData, type UserStatisticsData } from '@/app/views/api';
 import { useAuth } from '@/app/views/auth';
-import { formatCurrency, formatDate, getEventImage } from '@/app/views/formatters';
+import { formatCurrency, formatDate } from '@/app/views/formatters';
 import { NotFound } from '@pages/NotFound';
 import { LazyImage } from '@components/user/LazyImage';
 import { UserDonations } from '@components/user/UserDonations';
@@ -191,7 +191,7 @@ export function Profile() {
             >
                 <div className="relative h-32 w-full overflow-hidden bg-gray-100">
                     <LazyImage
-                        src={getEventImage(event)}
+                        src={event.eventImage}
                         alt={event.title}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                     />

@@ -4,7 +4,7 @@ import { Plus } from 'lucide-react';
 import { CreateEventModal } from '@components/user/CreateEventModal';
 import { Button } from '@components/ui/button';
 import { Link } from 'react-router-dom';
-import { getCategoryColor, formatDate, getEventImage } from '@/app/views/formatters';
+import { getCategoryColor, formatDate } from '@/app/views/formatters';
 
 import { api, type EventData } from '@/app/views/api';
 import { useAuth } from '@/app/views/auth';
@@ -231,7 +231,7 @@ export function Events() {
                                             {/* Image */}
                                             <div className="relative w-full md:w-64 lg:w-80 h-48 md:h-full flex-shrink-0 overflow-hidden">
                                                 <img
-                                                    src={getEventImage(event)}
+                                                    src={event.eventImage}
                                                     alt={event.title}
                                                     className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
                                                 />

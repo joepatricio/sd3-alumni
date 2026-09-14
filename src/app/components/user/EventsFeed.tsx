@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Calendar, MapPin, Users, Video, Loader2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { getCategoryColor, formatDate, getEventImage } from '@/app/views/formatters';
+import { getCategoryColor, formatDate } from '@/app/views/formatters';
 import { LazyImage } from '@components/user/LazyImage';
 import { api, type EventData } from '@/app/views/api';
 
@@ -100,7 +100,7 @@ export function EventsFeed() {
               >
                 <div className="relative h-48 overflow-hidden">
                   <LazyImage
-                    src={getEventImage(event)}
+                    src={event.eventImage}
                     alt={event.title}
                     className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
                   />

@@ -124,32 +124,3 @@ export function getBankColor(bankName: string): string {
     }
     return fallbacks[Math.abs(hash) % fallbacks.length];
 }
-
-const CATEGORY_DEFAULT_IMAGES: Record<string, string> = {
-    reunion: 'https://images.unsplash.com/photo-1511632765486-a01980e01a18?auto=format&fit=crop&w=1200&q=80',
-    workshop: 'https://images.unsplash.com/photo-1531482615713-2afd69097998?auto=format&fit=crop&w=1200&q=80',
-    conference: 'https://images.unsplash.com/photo-1475721027785-f74eccf877e2?auto=format&fit=crop&w=1200&q=80',
-    networking: 'https://localhost:3000/events-networking.jpg',
-    sports: 'https://images.unsplash.com/photo-1461896836934-ffe607ba8211?auto=format&fit=crop&w=1200&q=80',
-    virtual: 'https://images.unsplash.com/photo-1588196749597-9ff075ee6b5b?auto=format&fit=crop&w=1200&q=80',
-};
-
-export function getEventImage(event: any): string {
-    const rawImage = event?.eventImage || event?.image;
-    if (
-        rawImage &&
-        typeof rawImage === 'string' &&
-        rawImage.trim() !== '' &&
-        !rawImage.includes('events-image.jpg')
-    ) {
-        return rawImage;
-    }
-
-    const category = (
-        event?.eventCategory?.eventCategoryName ||
-        event?.category ||
-        ''
-    ).toLowerCase().trim();
-
-    return CATEGORY_DEFAULT_IMAGES[category] || 'https://images.unsplash.com/photo-1511578314322-379afb476865?auto=format&fit=crop&w=1200&q=80';
-}

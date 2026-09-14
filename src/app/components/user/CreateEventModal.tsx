@@ -808,7 +808,7 @@ export function CreateEventModal({ trigger, initialData, isAdmin, open: external
         // Prisma allows nested create via relation: `location: { create: { ... } }` or just sending locationId. 
         // For simplicity and since we don't have the exact backend mapping for nested creations without seeing it,
         // we'll format the values exactly as they are in the schema and let the backend handle it, or send it directly.
-        const finalImage = values.image || previewUrl;
+        const finalImage = values.image || previewUrl || 'http://localhost:3000/alumni-logo.jpg';
         const payload: any = {
             title: values.title,
             description: values.description,

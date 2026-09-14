@@ -4,13 +4,15 @@ import { Button } from '@components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@components/ui/tabs';
 import { Input } from '@components/ui/input';
 import { Badge } from '@components/ui/badge';
-import { ArrowUp, ArrowDown, ArrowUpDown, ChevronLeft, ChevronRight, Search, Eye, FileText, HardHat } from 'lucide-react';
+import { ArrowUp, ArrowDown, ArrowUpDown, Ban, ChevronLeft, ChevronRight, Search, Eye, FileText, HardHat } from 'lucide-react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@components/ui/select';
 import { CreateEventModal } from '@components/user/CreateEventModal';
 import { CreateBulletinModal } from '@components/user/CreateBulletinModal';
 import { getCategoryColor, formatDate } from '@/app/views/formatters';
 import { startOfWeek, endOfWeek, startOfMonth, endOfMonth, startOfYear, endOfYear, format } from 'date-fns';
+export const ACCOUNT_SCOPES = ['All', 'Regular', 'Official', 'Banned'] as const;
+export type AccountScope = typeof ACCOUNT_SCOPES[number];
 
 export interface ContentItem {
     id: string;
@@ -23,6 +25,7 @@ export interface ContentItem {
     rawDate: number;
     category: string;
     isOfficial: boolean;
+    isBanned?: boolean;
 }
 
 interface AdminContentTableProps {
@@ -38,7 +41,7 @@ interface AdminContentTableProps {
         searchEndDate?: string,
         status: string,
         categories?: string[],
-        accountScope?: 'All' | 'Official' | 'Regular',
+        accountScope?: AccountScope,
         sort: { key: string, direction: 'asc' | 'desc' } | null
     }) => Promise<{ data: ContentItem[], total: number }>;
     primaryColorClass: string;
@@ -125,8 +128,8 @@ export function AdminContentTable({
         setSearchEndDate(end);
     };
 
-    const [accountScope, setAccountScope] = useState<'All' | 'Official' | 'Regular'>('All');
-    const [appliedAccountScope, setAppliedAccountScope] = useState<'All' | 'Official' | 'Regular'>('All');
+    const [accountScope, setAccountScope] = useState<AccountScope>('All');
+    const [appliedAccountScope, setAppliedAccountScope] = useState<AccountScope>('All');
 
     const handleApplyFilters = () => {
         setAppliedSearchName(searchName);
@@ -346,6 +349,11 @@ export function AdminContentTable({
                                     <td className="px-6 py-4">
                                         <div className="flex items-center gap-2">
                                             {item.isOfficial && <HardHat className="w-4 h-4 text-brand-primary" />}
+                                            {item.isBanned && (
+                                                <span title="Banned User">
+                                                    <Ban className="w-4 h-4 text-red-600" />
+                                                </span>
+                                            )}
                                             <span>{item.author}</span>
                                             {(item as any).authorId ? (
                                                 <Link to={`/admin/preview/user/${(item as any).authorId}`} className="text-gray-400 hover:text-brand-primary" title="Preview Profile">
@@ -572,13 +580,15 @@ export function AdminContentTable({
                             <Button className="bg-brand-primary hover:bg-brand-primary-hover text-white w-24" onClick={handleApplyFilters}>Submit</Button>
                         </div>
 
-                        {contentType === 'Bulletin' && (
-                            <div className="flex lg:col-span-8 items-center gap-3 pb-1 border-b border-gray-100 mb-1">
-                                <span className="text-sm font-medium text-gray-700 mr-2 flex items-center gap-1.5">
-                                    <HardHat className="w-4 h-4 text-brand-primary" /> Account Scope
-                                </span>
-                                <div className="relative flex items-center bg-gray-100 p-1 rounded-lg shadow-inner">
-                                    {(['All', 'Official', 'Regular'] as const).map((scope) => {
+
+                        <div className="flex lg:col-span-8 items-center gap-3 pb-1 border-b border-gray-100 mb-1">
+                            <span className="text-sm font-medium text-gray-700 mr-2 flex items-center gap-1.5">
+                                Account Scope
+                            </span>
+                            <div className="relative flex items-center bg-gray-100 p-1 rounded-lg shadow-inner">
+                                {ACCOUNT_SCOPES
+                                    .filter((scope) => !(contentType === 'Event' && scope === 'Regular'))
+                                    .map((scope) => {
                                         const isSelected = accountScope === scope;
                                         return (
                                             <button
@@ -595,13 +605,14 @@ export function AdminContentTable({
                                                     }`}
                                             >
                                                 {scope === 'Official' && <HardHat className="w-3.5 h-3.5 text-brand-primary" />}
+                                                {scope === 'Banned' && <Ban className="w-3.5 h-3.5 text-red-600" />}
                                                 {scope}
                                             </button>
                                         );
                                     })}
-                                </div>
                             </div>
-                        )}
+                        </div>
+
 
                         {categories && categories.length > 0 && (
                             <div className="flex lg:col-span-8 items-center gap-2 overflow-x-auto hide-scrollbar pb-1">
@@ -647,10 +658,8 @@ export function AdminContentTable({
                                     size="sm"
                                     className="border border-gray-300"
                                     onClick={() => {
-                                        if (contentType === "Bulletin") {
-                                            setAccountScope('All');
-                                            setAppliedAccountScope('All');
-                                        }
+                                        setAccountScope('All');
+                                        setAppliedAccountScope('All');
                                         setSearchCategories(['All']);
                                         setAppliedSearchCategories(['All']);
                                         setCurrentPage(1);

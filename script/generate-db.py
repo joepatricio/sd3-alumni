@@ -131,11 +131,41 @@ FILIPINO_LAST_NAMES = [
 
 COMPANIES = ["Tech Solutions Inc.", "Innovatech", "Global Systems", "Scam Inc.", "Freelance", "Acme Corp"]
 
-def random_date(start_year=2020, end_year=2025):
-    start = datetime.datetime(start_year, 1, 1)
-    end = datetime.datetime(end_year, 12, 31)
-    dt = start + datetime.timedelta(days=random.randint(0, (end - start).days))
+NOW = datetime.datetime.now()
+
+def to_dt(val):
+    if isinstance(val, datetime.datetime):
+        return val
+    if isinstance(val, str):
+        cleaned = val.replace("Z", "")
+        if "." in cleaned:
+            return datetime.datetime.fromisoformat(cleaned)
+        return datetime.datetime.strptime(cleaned, "%Y-%m-%d %H:%M:%S") if " " in cleaned else datetime.datetime.fromisoformat(cleaned)
+    if isinstance(val, int):
+        return datetime.datetime(val, 1, 1)
+    return val
+
+def to_iso(dt):
     return dt.strftime("%Y-%m-%dT%H:%M:%S.000Z")
+
+def random_date_between(start_dt, end_dt):
+    start = to_dt(start_dt)
+    end = to_dt(end_dt)
+    if start > end:
+        start, end = end, start
+    delta_secs = max(0, int((end - start).total_seconds()))
+    rand_secs = random.randint(0, delta_secs)
+    return start + datetime.timedelta(seconds=rand_secs)
+
+def random_date(start_year=2020, end_year=2025, max_now=True):
+    start_dt = datetime.datetime(start_year, 1, 1)
+    end_dt = datetime.datetime(end_year, 12, 31, 23, 59, 59)
+    if max_now and end_dt > NOW:
+        end_dt = NOW
+    if start_dt > end_dt:
+        start_dt = end_dt - datetime.timedelta(days=1)
+    dt = random_date_between(start_dt, end_dt)
+    return to_iso(dt)
 
 def generate_phase_2():
     USER = []
@@ -145,7 +175,7 @@ def generate_phase_2():
     USER_STATISTICS = []
 
     for i in range(1, NUM_USERS + 1):
-        user_status = random.choices(USER_STATUS, weights=[10, 70, 10, 5, 5])[0]
+        user_status = random.choices(USER_STATUS, weights=[5, 70, 15, 4, 3, 3])[0]
         status_id = user_status["id"]
         status_name = user_status["statusName"]
         
@@ -159,12 +189,13 @@ def generate_phase_2():
             "recordId": record_id
         })
         
-        date_created = random_date()
+        date_created = random_date(2020, 2025)
+        date_created_dt = to_dt(date_created)
         date_expires = None
         description = "User created or status updated"
         if status_name == "Suspended":
-            expires_dt = datetime.datetime.now() + datetime.timedelta(days=30)
-            date_expires = expires_dt.strftime("%Y-%m-%dT%H:%M:%S.000Z")
+            expires_dt = NOW + datetime.timedelta(days=30)
+            date_expires = to_iso(expires_dt)
             description = "Suspended for terms violation"
         elif status_name == "Banned":
             description = "Banned permanently"
@@ -187,7 +218,7 @@ def generate_phase_2():
             "userId": user_id,
             "email": email,
             "passwordHash": "$2a$10$RF01DLY3wzkMTDihPwqMZuOu9dqipFZokMMf14UutW2Zk9IauaJ4y", 
-            "lastLogin": random_date(2025, 2026)
+            "lastLogin": to_iso(random_date_between(date_created_dt, NOW))
         })
         
         job = random.choice(["Software Engineer", "Manager", "Analyst", "Consultant", "Director", "Student"])
@@ -241,6 +272,7 @@ def get_achievement_id(category, tier=1):
 def generate_phase_3(USER, USER_STATISTICS):
     USER_CONNECTIONS = []
     USER_ACHIEVEMENT = []
+    user_reg_map = {s["userId"]: to_dt(s["dateRegistered"]) for s in USER_STATISTICS}
     
     # 1. Connections (Erdős-Rényi G(n, p) bidirectional graph)
     user_ids = [u["userId"] for u in USER]
@@ -254,7 +286,10 @@ def generate_phase_3(USER, USER_STATISTICS):
                 
                 status_name_1 = random.choices(["Requesting", "Accepted", "Blocking"], weights=[10, 70, 20])[0]
                 status_id_1 = get_connection_status_id(status_name_1)
-                date_updated = random_date(2025, 2026)
+                
+                start_connect = max(user_reg_map.get(uid1, datetime.datetime(2025, 1, 1)),
+                                    user_reg_map.get(uid2, datetime.datetime(2025, 1, 1)))
+                date_updated = to_iso(random_date_between(start_connect, NOW))
                 
                 # Bilateral connection entries
                 USER_CONNECTIONS.append({
@@ -282,51 +317,49 @@ def generate_phase_3(USER, USER_STATISTICS):
                 })
 
     # 2. Base Achievements
-    today = datetime.datetime.now()
-    
     for uid in user_ids:
         # Check 1-Year Club dynamically
         user_stats = next((s for s in USER_STATISTICS if s["userId"] == uid), None)
         if user_stats:
-            date_registered_str = user_stats["dateRegistered"]
-            date_registered = datetime.datetime.strptime(date_registered_str, "%Y-%m-%dT%H:%M:%S.000Z")
+            date_registered = to_dt(user_stats["dateRegistered"])
             one_year_later = date_registered + datetime.timedelta(days=365)
             three_year_later = date_registered + datetime.timedelta(days=365 * 3)
             ten_year_later = date_registered + datetime.timedelta(days=365 * 10)
             
-            if today > ten_year_later:
+            if NOW > ten_year_later:
                 USER_ACHIEVEMENT.append({
                     "id": generate(size=10),
                     "userId": uid,
                     "achievementId": get_achievement_id(1, 3),
                     "achievementTier": 3,
-                    "achievedDate": ten_year_later.strftime("%Y-%m-%dT%H:%M:%S.000Z")
+                    "achievedDate": to_iso(ten_year_later)
                 })
-            elif today > three_year_later:
+            elif NOW > three_year_later:
                 USER_ACHIEVEMENT.append({
                     "id": generate(size=10),
                     "userId": uid,
                     "achievementId": get_achievement_id(1, 2),
                     "achievementTier": 2,
-                    "achievedDate": three_year_later.strftime("%Y-%m-%dT%H:%M:%S.000Z")
+                    "achievedDate": to_iso(three_year_later)
                 })
-            elif today > one_year_later:
+            elif NOW > one_year_later:
                 USER_ACHIEVEMENT.append({
                     "id": generate(size=10),
                     "userId": uid,
                     "achievementId": get_achievement_id(1, 1),
                     "achievementTier": 1,
-                    "achievedDate": one_year_later.strftime("%Y-%m-%dT%H:%M:%S.000Z")
+                    "achievedDate": to_iso(one_year_later)
                 })
                 
         # 5% chance to be READS Alumni
         if random.random() < 0.05:
+            user_reg = user_reg_map.get(uid, datetime.datetime(2025, 1, 1))
             USER_ACHIEVEMENT.append({
                 "id": generate(size=10),
                 "userId": uid,
                 "achievementId": get_achievement_id(10000, 1),
                 "achievementTier": 1,
-                "achievedDate": random_date(2025, 2026)
+                "achievedDate": to_iso(random_date_between(user_reg, NOW))
             })
             
         # Give Verified achievement if status is Official
@@ -334,48 +367,50 @@ def generate_phase_3(USER, USER_STATISTICS):
         if user_obj:
             status_name = next((s["statusName"] for s in USER_STATUS if s["id"] == user_obj["userStatusId"]), "")
             if status_name == "Official":
+                user_reg = user_reg_map.get(uid, datetime.datetime(2025, 1, 1))
                 USER_ACHIEVEMENT.append({
                     "id": generate(size=10),
                     "userId": uid,
                     "achievementId": get_achievement_id(10001, 1),
                     "achievementTier": 1,
-                    "achievedDate": random_date(2025, 2026)
+                    "achievedDate": to_iso(random_date_between(user_reg, NOW))
                 })
             
     return USER_CONNECTIONS, USER_ACHIEVEMENT
 
 # ----------------- PHASE 4: Content Generation -----------------
 
-def generate_phase_4(USER):
+def generate_phase_4(USER, USER_STATISTICS):
     ADMIN = []
     LOCATION = []
     BULLETIN = []
     EVENTS = []
+    user_reg_map = {s["userId"]: to_dt(s["dateRegistered"]) for s in USER_STATISTICS}
     
     # 1. ADMIN
     ADMIN.append({
         "username": "admin1",
         "passwordHash": "$2a$10$RF01DLY3wzkMTDihPwqMZuOu9dqipFZokMMf14UutW2Zk9IauaJ4y", 
-        "lastLogin": random_date(2025, 2026)
+        "lastLogin": to_iso(random_date_between(datetime.datetime(2025, 1, 1), NOW))
     })
     ADMIN.append({
         "username": "admin2",
         "passwordHash": "$2a$10$RF01DLY3wzkMTDihPwqMZuOu9dqipFZokMMf14UutW2Zk9IauaJ4y", 
-        "lastLogin": random_date(2025, 2026)
+        "lastLogin": to_iso(random_date_between(datetime.datetime(2025, 1, 1), NOW))
     })
     ADMIN.append({
         "username": "admin3",
         "passwordHash": "$2a$10$RF01DLY3wzkMTDihPwqMZuOu9dqipFZokMMf14UutW2Zk9IauaJ4y", 
-        "lastLogin": random_date(2025, 2026)
+        "lastLogin": to_iso(random_date_between(datetime.datetime(2025, 1, 1), NOW))
     })
     
-    # 2. LOCATION (Pre-fetched real OSM nodes via reverse-geocoding to guarantee API success)
+    # 2. LOCATION (9-digit PSGC codes aligned with PSGC prefetch & auto-complete modal)
     locations_base = [
-        {"osm_id": "459927080", "region_code": "PH-07", "province": "Cebu", "province_code": "0722", "city_municipality": "Cebu City", "city_code": "072217", "barangay": "Banilad", "landmark": "University of San Carlos Talamban Campus", "street": "Prince Street", "lat": 10.3559376, "lng": 123.9071538},
-        {"osm_id": "226488304", "region_code": "PH-07", "province": "Cebu", "province_code": "0722", "city_municipality": "Cebu City", "city_code": "072217", "barangay": "Carreta", "landmark": "Cebu Technological University", "street": "M.J. Cuenco Avenue", "lat": 10.2965937, "lng": 123.9065431},
-        {"osm_id": "155927183", "region_code": "PH-07", "province": "Cebu", "province_code": "0722", "city_municipality": "Cebu City", "city_code": "072217", "barangay": "Sambag I", "landmark": "Cebu Normal University", "street": "Osmeña Boulevard", "lat": 10.3016486, "lng": 123.8967853},
-        {"osm_id": "155748501", "region_code": "PH-07", "province": "Cebu", "province_code": "0722", "city_municipality": "Cebu City", "city_code": "072217", "barangay": "Lahug", "landmark": "University of Southern Philippines Foundation", "street": "Salinas Drive", "lat": 10.3285606, "lng": 123.9008849},
-        {"osm_id": "155643436", "region_code": "PH-07", "province": "Cebu", "province_code": "0722", "city_municipality": "Cebu City", "city_code": "072217", "barangay": "Duljo Fatima", "landmark": "Cebu Institute of Technology - University", "street": "Natalio Bacalso Avenue", "lat": 10.2957783, "lng": 123.8804425}
+        {"osm_id": "459927080", "region_code": "070000000", "province": "Cebu", "province_code": "072200000", "city_municipality": "City of Cebu", "city_code": "072217000", "barangay": "Banilad", "landmark": "University of San Carlos Talamban Campus", "street": "Prince Street", "lat": 10.3559376, "lng": 123.9071538},
+        {"osm_id": "226488304", "region_code": "070000000", "province": "Cebu", "province_code": "072200000", "city_municipality": "City of Cebu", "city_code": "072217000", "barangay": "Carreta", "landmark": "Cebu Technological University", "street": "M.J. Cuenco Avenue", "lat": 10.2965937, "lng": 123.9065431},
+        {"osm_id": "155927183", "region_code": "070000000", "province": "Cebu", "province_code": "072200000", "city_municipality": "City of Cebu", "city_code": "072217000", "barangay": "Sambag I", "landmark": "Cebu Normal University", "street": "Osmeña Boulevard", "lat": 10.3016486, "lng": 123.8967853},
+        {"osm_id": "155748501", "region_code": "070000000", "province": "Cebu", "province_code": "072200000", "city_municipality": "City of Cebu", "city_code": "072217000", "barangay": "Lahug", "landmark": "University of Southern Philippines Foundation", "street": "Salinas Drive", "lat": 10.3285606, "lng": 123.9008849},
+        {"osm_id": "155643436", "region_code": "070000000", "province": "Cebu", "province_code": "072200000", "city_municipality": "City of Cebu", "city_code": "072217000", "barangay": "Duljo Fatima", "landmark": "Cebu Institute of Technology - University", "street": "Natalio Bacalso Avenue", "lat": 10.2957783, "lng": 123.8804425}
     ]
     for base in locations_base:
         LOCATION.append({
@@ -401,16 +436,35 @@ def generate_phase_4(USER):
         content_status = random.choice(CONTENT_STATUS)
         content_status_id = content_status["id"]
         
-        bulletin_date_dt = datetime.datetime.strptime(random_date(2025, 2026), "%Y-%m-%dT%H:%M:%S.000Z")
-        bulletin_date = bulletin_date_dt.strftime("%Y-%m-%dT%H:%M:%S.000Z")
+        author_reg = user_reg_map.get(author_id, datetime.datetime(2025, 1, 1))
+        # bulletinDate is between author registration and NOW (at least 1 day before NOW to allow reviews)
+        bulletin_date_dt = random_date_between(author_reg, max(author_reg, NOW - datetime.timedelta(days=1)))
+        bulletin_date = to_iso(bulletin_date_dt)
         
         review_date = None
         if content_status["statusName"] != "Pending":
-            # review happens after bulletin date
-            review_dt = bulletin_date_dt + datetime.timedelta(days=random.randint(1, 30))
-            review_date = review_dt.strftime("%Y-%m-%dT%H:%M:%S.000Z")
+            # review happens after bulletin date, but never in the future
+            review_dt = random_date_between(bulletin_date_dt, NOW)
+            review_date = to_iso(review_dt)
         
-        bulletin_category_id = random.choice([c["id"] for c in BULLETIN_CATEGORY])
+        bulletin_category = random.choice(BULLETIN_CATEGORY)
+        bulletin_category_id = bulletin_category["id"]
+        bulletin_category_name = bulletin_category["bulletinCategoryName"]
+        bulletin_image = "http://localhost:3000/bulletin-image.jpg"
+
+        match bulletin_category_name:
+            case "Announcements":
+                bulletin_image = "http://localhost:3000/bulletin-image.jpg"
+            case "Careers":
+                bulletin_image = "http://localhost:3000/bulletin-careers.jpg"
+            case "Success Stories":
+                bulletin_image = "http://localhost:3000/bulletin-success.jpg"
+            case "Donations":
+                bulletin_image = "http://localhost:3000/bulletin-donations.jpg"
+            case "Others":
+                bulletin_image = None
+            case _:
+                bulletin_image = None
         
         BULLETIN.append({
             "id": bid,
@@ -423,7 +477,7 @@ def generate_phase_4(USER):
             "title": f"Community Update {i}",
             "readTimeMinutes": random.randint(2, 10),
             "content": f"Lorem ipsum dolor sit amet. Content for bulletin {i}.",
-            "bulletinImage": "http://localhost:3000/bulletin-image.jpg"
+            "bulletinImage": bulletin_image
         })
         
     # 4. EVENTS
@@ -438,20 +492,51 @@ def generate_phase_4(USER):
         organizer_id = organizer["userId"]
         status = random.choice(EVENT_STATUS)
         status_id = status["id"]
+        status_name = status["statusName"]
         location_id = random.choice([l["id"] for l in LOCATION])
-        event_category_id = random.choice([c["id"] for c in EVENT_CATEGORY])
-        
-        event_date_dt = datetime.datetime.strptime(random_date(2026, 2027), "%Y-%m-%dT%H:%M:%S.000Z")
-        event_date = event_date_dt.strftime("%Y-%m-%dT%H:%M:%S.000Z")
-        
-        review_date = None
-        if status["statusName"] != "Pending":
-            # review happens before event date
-            review_dt = event_date_dt - datetime.timedelta(days=random.randint(10, 100))
-            review_date = review_dt.strftime("%Y-%m-%dT%H:%M:%S.000Z")
+        event_category = random.choice(EVENT_CATEGORY)
+        event_category_id = event_category["id"]
+        event_category_name = event_category["eventCategoryName"]
+        author_reg = user_reg_map.get(organizer_id, datetime.datetime(2025, 1, 1))
+        event_image = "http://localhost:3000/events-image.jpg"
+
+        match event_category_name:
+            case "Conference":
+                event_image = "http://localhost:3000/events-conference.jpg"
+            case "Networking":
+                event_image = "http://localhost:3000/events-networking.jpg"
+            case "Reunion":
+                event_image = "http://localhost:3000/events-reunion.jpg"
+            case "Sports":
+                event_image = "http://localhost:3000/events-sports.jpg"
+            case "Virtual":
+                event_image = "http://localhost:3000/events-virtual.jpg"
+            case "Workshop":
+                event_image = "http://localhost:3000/events-workshop.jpg"
+            case _:
+                event_image = "http://localhost:3000/alumni-logo.jpg"
+
+        if status_name == "Concluded":
+            # Concluded events happened in the past
+            event_date_dt = random_date_between(author_reg + datetime.timedelta(days=10), NOW - datetime.timedelta(days=1))
+            event_date = to_iso(event_date_dt)
+            # Review happened before event date and is <= NOW
+            review_dt = random_date_between(author_reg, event_date_dt)
+            review_date = to_iso(review_dt)
+        elif status_name in ["Approved", "Cancelled", "Archived"]:
+            # Events can be upcoming (or recently past)
+            event_date_dt = random_date_between(NOW - datetime.timedelta(days=30), datetime.datetime(2027, 6, 30))
+            event_date = to_iso(event_date_dt)
+            # Admin review must have happened in the past (<= NOW)
+            review_dt = random_date_between(author_reg, NOW)
+            review_date = to_iso(review_dt)
+        else: # "Pending"
+            event_date_dt = random_date_between(NOW + datetime.timedelta(days=1), datetime.datetime(2027, 12, 31))
+            event_date = to_iso(event_date_dt)
+            review_date = None
         
         modality = random.choice(["In-Person", "Hybrid", "Virtual"])
-        if next((c["eventCategoryName"] for c in EVENT_CATEGORY if c["id"] == event_category_id), "") == "Virtual":
+        if event_category_name == "Virtual":
             modality = "Virtual"
             
         start_hour = random.randint(8, 16)
@@ -477,7 +562,7 @@ def generate_phase_4(USER):
             "endTime": end_time,
             "responses": random.randint(10, 100),
             "modality": modality,
-            "eventImage": "http://localhost:3000/events-image.jpg"
+            "eventImage": event_image
         })
         
     return ADMIN, LOCATION, BULLETIN, EVENTS
@@ -486,18 +571,30 @@ def generate_phase_4(USER):
 
 def generate_phase_5(USER, BULLETIN, EVENTS, USER_STATISTICS, USER_CONNECTIONS, USER_ACHIEVEMENT):
     COMMENTS = []
+    COMMENT_LIKES = []
     DONATIONS = []
     USER_RSVP = []
     BULLETIN_LIKES = []
     
     user_ids = [u["userId"] for u in USER]
+    user_reg_map = {s["userId"]: to_dt(s["dateRegistered"]) for s in USER_STATISTICS}
     
     # 1. COMMENTS
     NUM_COMMENTS = 100
+    public_status_ids = [s["id"] for s in CONTENT_STATUS if s["statusName"] in ["Approved", "Archived"]]
+    public_bulletins = [b for b in BULLETIN if b["contentStatusId"] in public_status_ids]
+    if not public_bulletins:
+        public_bulletins = BULLETIN
+
     for i in range(1, NUM_COMMENTS + 1):
         author_id = random.choice(user_ids)
-        bulletin = random.choice(BULLETIN)
-        comment_date = random_date(2025, 2026) 
+        bulletin = random.choice(public_bulletins)
+        
+        author_reg = user_reg_map.get(author_id, datetime.datetime(2025, 1, 1))
+        bulletin_approved_dt = to_dt(bulletin.get("reviewDate") or bulletin["bulletinDate"])
+        earliest_comment = max(author_reg, bulletin_approved_dt)
+        comment_dt = random_date_between(earliest_comment, NOW)
+        comment_date = to_iso(comment_dt)
         
         COMMENTS.append({
             "id": generate(size=10),
@@ -505,43 +602,61 @@ def generate_phase_5(USER, BULLETIN, EVENTS, USER_STATISTICS, USER_CONNECTIONS, 
             "bulletinId": bulletin["id"],
             "commentDate": comment_date,
             "comment": f"This is comment {i}",
-            "likes": random.randint(0, 20)
+            "likes": 0
         })
+
+    # 2. COMMENT_LIKES
+    for comment in COMMENTS:
+        num_likes = random.randint(0, min(15, len(user_ids)))
+        likers = random.sample(user_ids, num_likes)
+        for uid in likers:
+            COMMENT_LIKES.append({
+                "id": generate(size=10),
+                "userId": uid,
+                "commentId": comment["id"],
+                "isLiked": True
+            })
+        comment["likes"] = num_likes
         
-    # 2. DONATIONS
+    # 3. DONATIONS
     NUM_DONATIONS = 50
     for i in range(1, NUM_DONATIONS + 1):
         uid = random.choice(user_ids)
+        donor_reg = user_reg_map.get(uid, datetime.datetime(2025, 1, 1))
         donation_amount = random.choice([500.0, 1000.0, 5000.0, 10000.0, 25000.0])
         status = random.choice(DONATION_STATUS)
         status_id = status["id"]
         ALPHABET = "23456789BCDFGHJKLMNPQRSTVWXYZ"
         bank_name = random.choice(["GCash", "Maya", "BDO", "BPI", "UnionBank"])
+        donation_dt = random_date_between(donor_reg, NOW)
+        
         DONATIONS.append({
             "id": generate(size=10),
             "donationReference": f"DON-{generate(ALPHABET, size=3)}-{generate(ALPHABET, size=3)}",
             "userId": uid,
             "bankName": bank_name,
             "donationStatusId": status_id,
-            "donationDate": random_date(2025, 2026),
+            "donationDate": to_iso(donation_dt),
             "donationAmount": donation_amount,
             "donationAmountPhp": f"₱{donation_amount:,.2f}",
             "donationAnonymous": random.choice([True, False]),
             "donationEmail": f"donor{i}@example.com"
         })
         
-    # 3. USER_RSVP
+    # 4. USER_RSVP
     for event in EVENTS:
         num_rsvps = random.randint(5, 15)
         attendees = random.sample(user_ids, num_rsvps)
-        valid_status_ids = [s["id"] for s in EVENT_STATUS if s["statusName"] in ["Approved", "Concluded"]]
+        valid_status_ids = [s["id"] for s in EVENT_STATUS if s["statusName"] == "Concluded"]
         for uid in attendees:
+            is_attending = random.choice([True, False])
+            is_valid = (event["eventStatusId"] in valid_status_ids) if is_attending else False
             USER_RSVP.append({
                 "id": generate(size=10),
                 "userId": uid,
                 "eventId": event["id"],
-                "isAttending": random.choice([True, False]),
-                "isValid": event["eventStatusId"] in valid_status_ids
+                "isAttending": is_attending,
+                "isValid": is_valid
             })
 
     # 5. BULLETIN_LIKES
@@ -559,16 +674,14 @@ def generate_phase_5(USER, BULLETIN, EVENTS, USER_STATISTICS, USER_CONNECTIONS, 
     # 6. Finalize USER_STATISTICS and dynamic interaction achievements
     for stat in USER_STATISTICS:
         uid = stat["userId"]
+        user_reg = to_dt(stat["dateRegistered"])
         
         # Connections count (bilateral means we just look for matching userId)
         accepted_status_id = get_connection_status_id("Accepted")
         stat["userConnections"] = sum(1 for c in USER_CONNECTIONS if c["userId"] == uid and c["connectionStatusId"] == accepted_status_id)
         
-        # TODO this is very shit. Either create a system to only count attended events
-        # OR take a more simple approach and only track affirmative RSVP responses in achievements.S
-        concluded_status_id = next(s["id"] for s in EVENT_STATUS if s["statusName"] == "Concluded")
-        rsvp_going = [r for r in USER_RSVP if r["userId"] == uid and r["isAttending"]]
-        attended_count = sum(1 for e in EVENTS if e["id"] in [r["eventId"] for r in rsvp_going] and e["eventStatusId"] == concluded_status_id)
+        # Only count valid and affirmative RSVPs
+        attended_count = sum(1 for r in USER_RSVP if r["userId"] == uid and r["isAttending"] and r.get("isValid", False))
         stat["eventsAttended"] = attended_count
         
         events_count = sum(1 for e in EVENTS if e["authorId"] == uid)
@@ -591,7 +704,7 @@ def generate_phase_5(USER, BULLETIN, EVENTS, USER_STATISTICS, USER_CONNECTIONS, 
                 "userId": uid,
                 "achievementId": get_achievement_id(cat_id, tier),
                 "achievementTier": tier,
-                "achievedDate": random_date(2026, 2026)
+                "achievedDate": to_iso(random_date_between(user_reg, NOW))
             })
         
         if total_donated_public > 0:
@@ -616,7 +729,7 @@ def generate_phase_5(USER, BULLETIN, EVENTS, USER_STATISTICS, USER_CONNECTIONS, 
             
         stat["achievements"] = sum(1 for a in USER_ACHIEVEMENT if a["userId"] == uid)
             
-    return COMMENTS, DONATIONS, USER_RSVP, BULLETIN_LIKES
+    return COMMENTS, DONATIONS, USER_RSVP, BULLETIN_LIKES, COMMENT_LIKES
 
 def main():
     if "--empty" in sys.argv:
@@ -628,8 +741,8 @@ def main():
 
     USER, USER_AUTH, RECORDS, PROFILE, USER_STATISTICS = generate_phase_2()
     USER_CONNECTIONS, USER_ACHIEVEMENT = generate_phase_3(USER, USER_STATISTICS)
-    ADMIN, LOCATION, BULLETIN, EVENTS = generate_phase_4(USER)
-    COMMENTS, DONATIONS, USER_RSVP, BULLETIN_LIKES = generate_phase_5(USER, BULLETIN, EVENTS, USER_STATISTICS, USER_CONNECTIONS, USER_ACHIEVEMENT)
+    ADMIN, LOCATION, BULLETIN, EVENTS = generate_phase_4(USER, USER_STATISTICS)
+    COMMENTS, DONATIONS, USER_RSVP, BULLETIN_LIKES, COMMENT_LIKES = generate_phase_5(USER, BULLETIN, EVENTS, USER_STATISTICS, USER_CONNECTIONS, USER_ACHIEVEMENT)
 
     db = {
         "degrees": DEGREE,
@@ -656,7 +769,8 @@ def main():
         "comments": COMMENTS,
         "donations": DONATIONS,
         "userRsvps": USER_RSVP,
-        "bulletinLikes": BULLETIN_LIKES
+        "bulletinLikes": BULLETIN_LIKES,
+        "commentLikes": COMMENT_LIKES
     }
 
     output_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "db.json")

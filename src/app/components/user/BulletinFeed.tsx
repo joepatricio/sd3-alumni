@@ -19,7 +19,7 @@ export function BulletinFeed() {
               _sort: '-bulletinDate',
               _page: 1,
               _per_page: 7,
-              _include: 'author'
+              _include: 'author, category'
             }
           })
         ]);

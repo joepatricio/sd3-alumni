@@ -20,7 +20,9 @@ export function AdminBulletins() {
                 if (params.accountScope === 'Official') {
                     whereClause.author.userStatus = { statusName: 'Official' };
                 } else if (params.accountScope === 'Regular') {
-                    whereClause.author.userStatus = { statusName: { not: 'Official' } };
+                    whereClause.author.userStatus = { statusName: 'Regular' };
+                } else if (params.accountScope === 'Banned') {
+                    whereClause.author.userStatus = { statusName: 'Banned' };
                 }
             }
         }
@@ -76,6 +78,7 @@ export function AdminBulletins() {
             description: b.content || '',
             category: b.bulletinCategory?.bulletinCategoryName || "Announcements",
             isOfficial: b.author?.userStatus?.statusName === 'Official',
+            isBanned: b.author?.userStatus?.statusName === 'Banned',
             rawDate: new Date(b.bulletinDate).getTime()
         }));
 

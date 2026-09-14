@@ -22,7 +22,7 @@ import { Alert, AlertDescription, AlertTitle } from '@components/ui/alert';
 import { NotFound } from '@pages/NotFound';
 import { useAuth } from '@/app/views/auth';
 import { api, type EventData, type ProfileData } from '@/app/views/api';
-import { formatDate, getEventImage } from '@/app/views/formatters';
+import { formatDate } from '@/app/views/formatters';
 
 export function EventDetail() {
     const { id } = useParams<{ id: string }>();
@@ -259,7 +259,7 @@ export function EventDetail() {
                         <div className="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-100">
                             <div className="h-64 sm:h-80 w-full relative">
                                 <img
-                                    src={getEventImage(eventData)}
+                                    src={eventData.eventImage}
                                     alt={eventData.title}
                                     className="w-full h-full object-cover"
                                 />
@@ -339,7 +339,7 @@ export function EventDetail() {
                     <div className="space-y-8 sticky top-24 self-start">
                         {/* RSVP Card */}
                         <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-                        {isPastEvent || currentStatusName === "Archived" ? (
+                            {isPastEvent || currentStatusName === "Archived" ? (
                                 <Alert className="bg-amber-50 border-amber-200 text-amber-800">
                                     <AlertCircle className="h-4 w-4 text-amber-600" />
                                     <AlertTitle className="font-bold">Event Passed</AlertTitle>

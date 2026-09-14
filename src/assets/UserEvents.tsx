@@ -3,7 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { ProfileHeader } from '@components/user/ProfileHeader';
 import { Calendar, MapPin, Clock, Loader2 } from 'lucide-react';
 import { LazyImage } from '@components/user/LazyImage';
-import { formatDate, getEventImage } from '@/app/views/formatters';
+import { formatDate } from '@/app/views/formatters';
 import { api, useProfileRoute, type ProfileData } from '@/app/views/api';
 
 interface EventItem {
@@ -22,7 +22,7 @@ interface EventItem {
 export function UserEvents() {
     const navigate = useNavigate();
     const { profileId } = useProfileRoute();
-    
+
     const [profile, setProfile] = useState<ProfileData | null>(null);
     const [profileLoading, setProfileLoading] = useState(true);
     const [userEvents, setUserEvents] = useState<EventItem[]>([]);
@@ -129,7 +129,7 @@ export function UserEvents() {
                                     >
                                         <div className="relative h-48 w-full overflow-hidden">
                                             <LazyImage
-                                                src={getEventImage(event)}
+                                                src={event.eventImage}
                                                 alt={event.title}
                                                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                                             />

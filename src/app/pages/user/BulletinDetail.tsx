@@ -135,19 +135,18 @@ export function BulletinDetail() {
     const handleToggleLike = async (commentItem: BulletinCommentData) => {
         if (!isLoggedIn || !session?.userId) return;
         const currentLike = commentItem.likesList?.find(l => String(l.userId) === String(session.userId));
-        const isLiked = !!currentLike;
+        const isLiked = currentLike?.isLiked;
         const newLikesCount = isLiked ? Math.max(0, commentItem.likes - 1) : commentItem.likes + 1;
 
         try {
-            if (isLiked) {
-                // Remove like
-                await api.delete(`/commentLikes/${currentLike.id}`);
+            if (currentLike) {
+                await api.patch(`/commentLikes/${currentLike.id}`, { isLiked: !isLiked });
                 await api.patch(`/comments/${commentItem.id}`, { likes: newLikesCount });
                 setCommentsList(prev =>
                     prev.map(c => c.id === commentItem.id ? {
                         ...c,
                         likes: newLikesCount,
-                        likesList: c.likesList?.filter(l => l.id !== currentLike.id)
+                        likesList: c.likesList?.map(l => l.id === currentLike.id ? { ...l, isLiked: !isLiked } : l)
                     } : c)
                 );
             } else {
@@ -340,7 +339,7 @@ export function BulletinDetail() {
                     {/* Comments List */}
                     <div className="space-y-6">
                         {sortedComments.map((commentItem) => {
-                            const isLiked = !!commentItem.likesList?.find(l => String(l.userId) === String(session?.userId));
+                            const isLiked = commentItem.likesList?.find(l => String(l.userId) === String(session?.userId))?.isLiked === true;
                             const commenterProfile = commentItem.profile;
                             return (
                                 <div key={commentItem.id} className="flex gap-3">
