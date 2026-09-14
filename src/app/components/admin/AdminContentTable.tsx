@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, lazy, Suspense } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@components/ui/card';
 import { Button } from '@components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@components/ui/tabs';
@@ -7,10 +7,14 @@ import { Badge } from '@components/ui/badge';
 import { ArrowUp, ArrowDown, ArrowUpDown, Ban, ChevronLeft, ChevronRight, Search, Eye, FileText, HardHat } from 'lucide-react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@components/ui/select';
-import { CreateEventModal } from '@components/user/CreateEventModal';
-import { CreateBulletinModal } from '@components/user/CreateBulletinModal';
 import { getCategoryColor, formatDate } from '@/app/views/formatters';
 import { startOfWeek, endOfWeek, startOfMonth, endOfMonth, startOfYear, endOfYear, format } from 'date-fns';
+
+const loadCreateEventModal = () => import('@components/user/CreateEventModal').then(m => ({ default: m.CreateEventModal }));
+const CreateEventModal = lazy(loadCreateEventModal);
+
+const loadCreateBulletinModal = () => import('@components/user/CreateBulletinModal').then(m => ({ default: m.CreateBulletinModal }));
+const CreateBulletinModal = lazy(loadCreateBulletinModal);
 export const ACCOUNT_SCOPES = ['All', 'Regular', 'Official', 'Banned'] as const;
 export type AccountScope = typeof ACCOUNT_SCOPES[number];
 
@@ -456,6 +460,14 @@ export function AdminContentTable({
                                                 variant="ghost"
                                                 size="sm"
                                                 className="hover:bg-gray-200"
+                                                onMouseEnter={() => {
+                                                    if (item.type === 'Event') loadCreateEventModal();
+                                                    else if (item.type === 'Bulletin') loadCreateBulletinModal();
+                                                }}
+                                                onFocus={() => {
+                                                    if (item.type === 'Event') loadCreateEventModal();
+                                                    else if (item.type === 'Bulletin') loadCreateBulletinModal();
+                                                }}
                                                 onClick={() => setEditingItem(item)}
                                             >
                                                 <FileText className="w-4 h-4 mr-1" />
@@ -581,36 +593,32 @@ export function AdminContentTable({
                         </div>
 
 
-                        <div className="flex lg:col-span-8 items-center gap-3 pb-1 border-b border-gray-100 mb-1">
+                        <div className="flex lg:col-span-8 items-center gap-2 overflow-x-auto hide-scrollbar pb-1">
                             <span className="text-sm font-medium text-gray-700 mr-2 flex items-center gap-1.5">
                                 Account Scope
                             </span>
-                            <div className="relative flex items-center bg-gray-100 p-1 rounded-lg shadow-inner">
-                                {ACCOUNT_SCOPES
-                                    .filter((scope) => !(contentType === 'Event' && scope === 'Regular'))
-                                    .map((scope) => {
-                                        const isSelected = accountScope === scope;
-                                        return (
-                                            <button
-                                                key={scope}
-                                                type="button"
-                                                onClick={() => {
-                                                    setAccountScope(scope);
-                                                    setAppliedAccountScope(scope);
-                                                    setCurrentPage(1);
-                                                }}
-                                                className={`relative z-10 px-3.5 py-1 text-xs font-semibold rounded-md transition-all duration-200 ease-in-out flex items-center gap-1.5 ${isSelected
-                                                    ? 'bg-white text-brand-primary shadow-sm scale-105 font-bold'
-                                                    : 'text-gray-600 hover:text-gray-900'
-                                                    }`}
-                                            >
-                                                {scope === 'Official' && <HardHat className="w-3.5 h-3.5 text-brand-primary" />}
-                                                {scope === 'Banned' && <Ban className="w-3.5 h-3.5 text-red-600" />}
-                                                {scope}
-                                            </button>
-                                        );
-                                    })}
-                            </div>
+                            {ACCOUNT_SCOPES
+                                .filter((scope) => !(contentType === 'Event' && scope === 'Regular'))
+                                .map((scope) => {
+                                    const isSelected = accountScope === scope;
+                                    return (
+                                        <Button
+                                            key={scope}
+                                            variant={isSelected ? "default" : "outline"}
+                                            size="sm"
+                                            className={isSelected ? "bg-brand-secondary hover:bg-brand-secondary-hover text-white" : "border border-gray-300"}
+                                            onClick={() => {
+                                                setAccountScope(scope);
+                                                setAppliedAccountScope(scope);
+                                                setCurrentPage(1);
+                                            }}
+                                        >
+                                            {scope === 'Official' && <HardHat className="w-3.5 h-3.5 mr-1" />}
+                                            {scope === 'Banned' && <Ban className={`w-3.5 h-3.5 mr-1 ${isSelected ? 'text-white' : 'text-red-600'}`} />}
+                                            {scope}
+                                        </Button>
+                                    );
+                                })}
                         </div>
 
 
@@ -694,32 +702,34 @@ export function AdminContentTable({
                 }
             </Tabs >
 
-            {editingItem && contentType === 'Event' && (
-                <CreateEventModal
-                    isAdmin={true}
-                    initialData={editingItem as any}
-                    open={true}
-                    onOpenChange={(isOpen) => {
-                        if (!isOpen) {
-                            setEditingItem(null);
-                            setRefreshKey(k => k + 1);
-                        }
-                    }}
-                />
-            )}
-            {editingItem && contentType === 'Bulletin' && (
-                <CreateBulletinModal
-                    isAdmin={true}
-                    initialData={editingItem as any}
-                    open={true}
-                    onOpenChange={(isOpen) => {
-                        if (!isOpen) {
-                            setEditingItem(null);
-                            setRefreshKey(k => k + 1);
-                        }
-                    }}
-                />
-            )}
+            <Suspense fallback={null}>
+                {editingItem && contentType === 'Event' && (
+                    <CreateEventModal
+                        isAdmin={true}
+                        initialData={editingItem as any}
+                        open={true}
+                        onOpenChange={(isOpen) => {
+                            if (!isOpen) {
+                                setEditingItem(null);
+                                setRefreshKey(k => k + 1);
+                            }
+                        }}
+                    />
+                )}
+                {editingItem && contentType === 'Bulletin' && (
+                    <CreateBulletinModal
+                        isAdmin={true}
+                        initialData={editingItem as any}
+                        open={true}
+                        onOpenChange={(isOpen) => {
+                            if (!isOpen) {
+                                setEditingItem(null);
+                                setRefreshKey(k => k + 1);
+                            }
+                        }}
+                    />
+                )}
+            </Suspense>
         </div >
     );
 }
