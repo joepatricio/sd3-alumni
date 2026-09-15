@@ -412,8 +412,8 @@ export function EventDetail() {
 
                                 {/* Organizer header */}
                                 <div className="flex items-center gap-4 mb-6">
-                                    <Avatar className="w-16 h-16 border-2 border-gray-100 shadow-sm">
-                                        <AvatarImage src={organizer.profileImage} />
+                                    <Avatar className="w-16 h-16 shrink-0 border-2 border-gray-100 shadow-sm">
+                                        <AvatarImage src={organizer.profileImage} className="object-cover" />
                                         <AvatarFallback className="bg-brand-primary text-white text-xl font-semibold">
                                             {organizer.userName.charAt(0)}
                                         </AvatarFallback>

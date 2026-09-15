@@ -477,7 +477,8 @@ def generate_phase_4(USER, USER_STATISTICS):
             "title": f"Community Update {i}",
             "readTimeMinutes": random.randint(2, 10),
             "content": f"Lorem ipsum dolor sit amet. Content for bulletin {i}.",
-            "bulletinImage": bulletin_image
+            "bulletinImage": bulletin_image,
+            "adminNotes": None
         })
         
     # 4. EVENTS

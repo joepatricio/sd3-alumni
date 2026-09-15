@@ -219,6 +219,7 @@ model BulletinCategory {
 model Bulletin {
   id                 String           @id @default(uuid())
   adminId            String?
+  adminNotes         String?
   authorId           String
   contentStatusId    String
   bulletinCategoryId String
@@ -253,6 +254,7 @@ model Event {
   id              String    @id @default(uuid())
   adminId         String?
   authorId        String
+  adminNotes      String?
   eventStatusId   String
   locationId      String?
   eventCategoryId String

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Clock, FileText, Calendar, Loader2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { api, type BulletinData, type ProfileData } from '@/app/views/api';
-import { formatDate } from '@/app/views/formatters';
+import { DEFAULT_PROFILE, formatDate } from '@/app/views/formatters';
 
 export function BulletinFeed() {
   const [bulletins, setBulletins] = useState<BulletinData[]>([]);
@@ -92,21 +92,27 @@ export function BulletinFeed() {
         </div>
 
         {/* Featured Article */}
-        <div className="bg-white rounded-lg overflow-hidden shadow-md hover:shadow-xl transition-shadow mb-8">
+        <div className="bg-white rounded-lg overflow-hidden shadow-md hover:shadow-xl transition-shadow mb-8 group">
           <div className="grid md:grid-cols-2 gap-0">
-            <div className="relative h-64 md:h-full max-h-[20rem] overflow-hidden bg-gray-100">
-              {featured.bulletinImage ? (
-                <img
-                  src={featured.bulletinImage}
-                  alt={featured.title}
-                  className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
-                />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center text-gray-400">
-                  <FileText className="w-12 h-12 opacity-50" />
+            <div className="relative h-64 md:h-full max-h-[20rem] overflow-hidden bg-gray-100 flex items-center justify-center">
+              {!featured.bulletinImage && (
+                <div className="absolute inset-0 overflow-hidden pointer-events-none" aria-hidden="true">
+                  <img
+                    src={featured.bulletinImage || featured.author?.profile?.profileImage || DEFAULT_PROFILE}
+                    alt=""
+                    className="w-full h-full object-cover blur-3xl scale-140 opacity-75 transition-transform duration-500 group-hover:scale-150"
+                  />
+                  <div className="absolute inset-0 bg-black/10 backdrop-blur-xs" />
                 </div>
               )}
-              <span className="absolute top-4 left-4 bg-brand-primary text-white px-3 py-1 rounded-full text-sm font-semibold">
+              <img
+                src={featured.bulletinImage || featured.author?.profile?.profileImage || DEFAULT_PROFILE}
+                alt={featured.title}
+                className={`relative z-10 w-full h-full transition-transform duration-300 group-hover:scale-105 ${featured.bulletinImage
+                  ? 'object-cover'
+                  : 'object-contain drop-shadow-xl'
+                  }`} />
+              <span className="absolute top-4 left-4 z-20 bg-brand-primary text-white px-3 py-1 rounded-full text-sm font-semibold shadow-md">
                 Featured
               </span>
             </div>
@@ -139,23 +145,31 @@ export function BulletinFeed() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {displayBulletins.slice(1).map((bulletin) => {
             const authorName = profilesMap[bulletin.authorId]?.userName || "Unknown Author";
+            const bulletinImg = bulletin.bulletinImage || bulletin.author?.profile?.profileImage || DEFAULT_PROFILE;
+            const isContain = !bulletin.bulletinImage;
             return (
               <div
                 key={bulletin.id}
-                className="bg-white rounded-lg overflow-hidden shadow-md hover:shadow-xl transition-shadow"
+                className="bg-white rounded-lg overflow-hidden shadow-md hover:shadow-xl transition-shadow group"
               >
-                <div className="relative h-48 overflow-hidden bg-gray-100">
-                  {bulletin.bulletinImage ? (
-                    <img
-                      src={bulletin.bulletinImage}
-                      alt={bulletin.title}
-                      className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-gray-400">
-                      <FileText className="w-8 h-8 opacity-50" />
+                <div className="relative h-48 overflow-hidden bg-gray-100 flex items-center justify-center">
+                  {isContain && (
+                    <div className="absolute inset-0 overflow-hidden pointer-events-none" aria-hidden="true">
+                      <img
+                        src={bulletinImg}
+                        alt=""
+                        className="w-full h-full object-cover blur-3xl scale-140 opacity-75 transition-transform duration-500 group-hover:scale-150"
+                      />
+                      <div className="absolute inset-0 bg-black/10 backdrop-blur-xs" />
                     </div>
                   )}
+                  <img
+                    src={bulletinImg}
+                    alt={bulletin.title}
+                    className={`relative z-10 w-full h-full transition-transform duration-300 group-hover:scale-105 ${isContain
+                      ? 'object-contain drop-shadow-xl'
+                      : 'object-cover'
+                      }`} />
                 </div>
                 <div className="p-6">
                   <div className="flex items-center gap-4 mb-3">

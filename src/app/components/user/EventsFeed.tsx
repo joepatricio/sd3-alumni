@@ -37,13 +37,6 @@ export function EventsFeed() {
 
   const displayEvents = events;
 
-  const formatLocation = (loc: any) => {
-    if (!loc) return 'TBA';
-    if (typeof loc === 'string') return loc;
-    const parts = [loc.landmark, loc.barangay, loc.cityMunicipality, loc.province].filter(Boolean);
-    return parts.join(', ');
-  };
-
   if (loading) {
     return (
       <section id="events" className="py-16 bg-white">
@@ -122,7 +115,9 @@ export function EventsFeed() {
                         <MapPin className="w-4 h-4" />
                       )}
                       <span className="text-sm">
-                        {categoryName === 'Virtual' ? `Virtual (${event.modality || 'Online'})` : formatLocation(event.location)}
+                        {categoryName === 'Virtual'
+                          ? `Virtual (${event.modality || 'Online'})`
+                          : event.location?.landmark || 'TBA'}
                       </span>
                     </div>
                     {event.responses > 0 && (

@@ -194,9 +194,12 @@ export function AdminUsers() {
                     const d = new Date(currentRecord.dateCreated);
                     if (!isNaN(d.getTime())) formattedGranted = formatDate(d, 'short');
                 }
-                if (currentRecord?.expirationDate) {
-                    const d = new Date(currentRecord.expirationDate);
-                    if (!isNaN(d.getTime())) formattedExpiry = formatDate(d, 'short');
+                const expiryDateRaw = currentRecord?.dateExpires || currentRecord?.expirationDate;
+                if (expiryDateRaw) {
+                    const d = new Date(expiryDateRaw);
+                    if (!isNaN(d.getTime())) {
+                        formattedExpiry = d.getFullYear() >= 3000 ? 'Indefinite' : formatDate(d, 'short');
+                    }
                 }
 
                 return {
@@ -251,6 +254,12 @@ export function AdminUsers() {
     const setPresetDuration = (days: number) => {
         const d = new Date();
         d.setDate(d.getDate() + days);
+        setEditExpiryDate(d.toISOString().split('T')[0]);
+    };
+
+    const setIndefiniteDuration = () => {
+        const d = new Date();
+        d.setFullYear(d.getFullYear() + 1000);
         setEditExpiryDate(d.toISOString().split('T')[0]);
     };
 
@@ -338,7 +347,7 @@ export function AdminUsers() {
                 if (currentRecord?.dateExpires) {
                     const d = new Date(currentRecord.dateExpires);
                     if (!isNaN(d.getTime())) {
-                        formattedExpiry = formatDate(d, 'short');
+                        formattedExpiry = d.getFullYear() >= 3000 ? 'Indefinite' : formatDate(d, 'short');
                         rawExpiry = d.getTime();
                     }
                 }
@@ -383,7 +392,12 @@ export function AdminUsers() {
         setEditReason(user.reason || '');
 
         let initialExpiry = '';
-        if (user.expiryDate) {
+        if (user.rawExpiryDate) {
+            const d = new Date(user.rawExpiryDate);
+            if (!isNaN(d.getTime())) {
+                initialExpiry = d.toISOString().split('T')[0];
+            }
+        } else if (user.expiryDate && user.expiryDate !== 'Indefinite') {
             const d = new Date(user.expiryDate);
             if (!isNaN(d.getTime())) {
                 initialExpiry = d.toISOString().split('T')[0];
@@ -691,16 +705,32 @@ export function AdminUsers() {
                             <div className="space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
                                 {editStatus === 'Suspended' && (
                                     <div className="space-y-2">
-                                        <Label>Suspension Expiry Date</Label>
+                                        <div className="flex items-center justify-between">
+                                            <Label>Suspension Expiry Date</Label>
+                                            {editExpiryDate && new Date(editExpiryDate).getFullYear() >= 3000 && (
+                                                <Badge className="bg-orange-100 text-orange-800 border-orange-200 text-xs">
+                                                    Indefinite
+                                                </Badge>
+                                            )}
+                                        </div>
                                         <Input
                                             type="date"
                                             value={editExpiryDate}
                                             onChange={(e) => setEditExpiryDate(e.target.value)}
                                         />
-                                        <div className="flex gap-2 pt-1">
+                                        <div className="flex gap-2 pt-1 flex-wrap">
                                             <Button type="button" variant="outline" size="sm" onClick={() => setPresetDuration(3)}>3 Days</Button>
                                             <Button type="button" variant="outline" size="sm" onClick={() => setPresetDuration(7)}>1 Week</Button>
                                             <Button type="button" variant="outline" size="sm" onClick={() => setPresetDuration(30)}>1 Month</Button>
+                                            <Button
+                                                type="button"
+                                                variant="outline"
+                                                size="sm"
+                                                className={editExpiryDate && new Date(editExpiryDate).getFullYear() >= 3000 ? "bg-orange-50 border-orange-300 text-orange-700 font-semibold" : ""}
+                                                onClick={setIndefiniteDuration}
+                                            >
+                                                Indefinite
+                                            </Button>
                                         </div>
                                     </div>
                                 )}

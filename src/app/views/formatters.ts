@@ -1,4 +1,5 @@
 import { format } from 'date-fns';
+export const DEFAULT_PROFILE = "http://localhost:3000/engineer.png"
 
 export function formatCurrency(value: number): string {
     return new Intl.NumberFormat('en-PH', {

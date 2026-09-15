@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, lazy, Suspense } from 'react';
 import { Link } from 'react-router-dom';
 import {
     Plus,
@@ -8,12 +8,15 @@ import {
     Clock,
     Loader2
 } from 'lucide-react';
-import { CreateBulletinModal } from '@components/user/CreateBulletinModal';
 import { Button } from '@components/ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@components/ui/select';
 import { LazyImage } from '@components/user/LazyImage';
 import { api, type BulletinData, type ProfileData } from '@/app/views/api';
 import { useAuth } from '@/app/views/auth';
 import { formatDate } from '@/app/views/formatters';
+
+const loadCreateBulletinModal = () => import('@components/user/CreateBulletinModal').then(m => ({ default: m.CreateBulletinModal }));
+const CreateBulletinModal = lazy(loadCreateBulletinModal);
 
 type ViewMode = 'headline' | 'article';
 const ARTICLE_ITEMS_PER_PAGE = 5;
@@ -33,46 +36,49 @@ export function Bulletin() {
     const [currentUserStatus, setCurrentUserStatus] = useState<string>('');
     const [loading, setLoading] = useState(true);
 
+    const [selectedCategory, setSelectedCategory] = useState<string>('All');
+    const [categories, setCategories] = useState<{ id: string; bulletinCategoryName: string }[]>([]);
+    const [isCreateOpen, setIsCreateOpen] = useState(false);
+
+    useEffect(() => {
+        api.get('/bulletinCategories')
+            .then(res => {
+                const fetched = Array.isArray(res.data) ? res.data : (res.data?.data || []);
+                if (fetched.length > 0) {
+                    setCategories(fetched);
+                }
+            })
+            .catch(err => console.error('Failed to fetch bulletin categories:', err));
+    }, []);
+
+    useEffect(() => {
+        if (!session?.userId) {
+            setCurrentUserStatus('');
+            return;
+        }
+        api.get(`/users/${session.userId}`)
+            .then(res => {
+                setCurrentUserStatus(res.data?.userStatus?.statusName || '');
+            })
+            .catch(err => console.error("Failed to fetch user status:", err));
+    }, [session?.userId]);
+
     useEffect(() => {
         const fetchData = async () => {
             setLoading(true);
             try {
-                const [uRes, allUsersRes] = await Promise.all([
-                    api.get(`/users`, {
-                        params: {
-                            'userStatus.statusName': 'Official'
-                        }
-                    }),
-                    api.get('/users')
-                ]);
-                const uData = Array.isArray(uRes.data) ? uRes.data : (uRes.data?.data || []);
-                const allUsers = Array.isArray(allUsersRes.data) ? allUsersRes.data : (allUsersRes.data?.data || []);
-
-                const restrictedProfileIds = allUsers
-                    .filter((u: any) => u.userStatus?.statusName === 'Banned' || u.userStatus?.statusName === 'Suspended')
-                    .map((u: any) => String(u.id));
-
-                if (session?.userId) {
-                    const currentU = allUsers.find((u: any) => String(u.id) === String(session.userId));
-                    if (currentU) {
-                        setCurrentUserStatus(currentU.userStatus?.statusName || '');
-                    }
-                }
-
-                const officialUserIds = uData.map((user: any) => String(user.id)) || [];
-
                 const whereClause: any = {
                     status: { statusName: 'Approved' }
                 };
 
-                if (restrictedProfileIds.length > 0) {
-                    whereClause.authorId = { notIn: restrictedProfileIds };
+                if (officialOnly) {
+                    whereClause.author = { userStatus: { statusName: 'Official' } };
+                } else {
+                    whereClause.author = { userStatus: { statusName: { not: 'Banned' } } };
                 }
 
-                if (officialOnly && officialUserIds.length > 0) {
-                    whereClause.authorId = { in: officialUserIds };
-                } else if (officialOnly) {
-                    whereClause.authorId = { in: ['__none__'] };
+                if (selectedCategory && selectedCategory !== 'All') {
+                    whereClause.category = { bulletinCategoryName: selectedCategory };
                 }
 
                 if (dateFrom || dateTo) {
@@ -100,7 +106,8 @@ export function Bulletin() {
 
                 const pMap: Record<string, ProfileData> = {};
                 (bData || []).forEach((b: BulletinData) => {
-                    if (b.profile) pMap[b.authorId] = b.profile;
+                    const prof = b.profile || b.author?.profile;
+                    if (prof) pMap[b.authorId] = prof;
                 });
                 setProfilesMap(pMap);
             } catch (err) {
@@ -110,7 +117,7 @@ export function Bulletin() {
             }
         };
         fetchData();
-    }, [visibleCount, officialOnly, dateFrom, dateTo, session?.userId]);
+    }, [visibleCount, officialOnly, dateFrom, dateTo, selectedCategory]);
 
     const ITEMS_PER_PAGE = viewMode === 'article' ? ARTICLE_ITEMS_PER_PAGE : HEADLINE_ITEMS_PER_PAGE;
 
@@ -130,16 +137,18 @@ export function Bulletin() {
                             </p>
                         </div>
                         {(currentUserStatus === 'Regular' || currentUserStatus === 'Official') && (
-                            <CreateBulletinModal
-                                trigger={
-                                    <button
-                                        className="flex items-center justify-center gap-2 bg-brand-primary text-white px-6 py-3 rounded-lg hover:bg-brand-primary-hover transition-colors font-semibold"
-                                    >
-                                        <Plus className="w-5 h-5" />
-                                        Create Bulletin
-                                    </button>
-                                }
-                            />
+                            <button
+                                onMouseEnter={loadCreateBulletinModal}
+                                onFocus={loadCreateBulletinModal}
+                                onClick={() => {
+                                    loadCreateBulletinModal();
+                                    setIsCreateOpen(true);
+                                }}
+                                className="flex items-center justify-center gap-2 bg-brand-primary text-white px-6 py-3 rounded-lg hover:bg-brand-primary-hover transition-colors font-semibold"
+                            >
+                                <Plus className="w-5 h-5" />
+                                Create Bulletin
+                            </button>
                         )}
                     </div>
                 </div>
@@ -177,6 +186,26 @@ export function Bulletin() {
                                         <span className="text-sm font-medium">Headline view</span>
                                     </button>
                                 </div>
+                            </div>
+
+                            {/* Category Filter */}
+                            <div className="mb-6 pb-6 border-b border-gray-200">
+                                <h3 className="font-bold mb-3 text-sm uppercase tracking-wide text-gray-700">
+                                    Category
+                                </h3>
+                                <Select value={selectedCategory} onValueChange={(val) => { setSelectedCategory(val); setVisibleCount(ITEMS_PER_PAGE); }}>
+                                    <SelectTrigger className="w-full bg-white text-sm">
+                                        <SelectValue placeholder="All Categories" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="All">All Categories</SelectItem>
+                                        {categories.map((cat) => (
+                                            <SelectItem key={cat.id || cat.bulletinCategoryName} value={cat.bulletinCategoryName}>
+                                                {cat.bulletinCategoryName}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
                             </div>
 
                             {/* Scope Filter */}
@@ -363,6 +392,15 @@ export function Bulletin() {
                     </div>
                 </div>
             </div>
+
+            <Suspense fallback={null}>
+                {isCreateOpen && (
+                    <CreateBulletinModal
+                        open={isCreateOpen}
+                        onOpenChange={setIsCreateOpen}
+                    />
+                )}
+            </Suspense>
         </div>
     );
 }

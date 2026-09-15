@@ -147,6 +147,7 @@ export interface BulletinData {
     bulletinCategory?: BulletinCategoryData;
     category?: BulletinCategoryData | string;
     profile?: ProfileData;
+    author?: User;
 }
 
 
@@ -225,10 +226,6 @@ export interface UserConnectionData {
     friend?: User;
 }
 
-export interface UserStatusData {
-    id: string;
-    statusName: string;
-}
 
 export interface Donation {
     id: string;

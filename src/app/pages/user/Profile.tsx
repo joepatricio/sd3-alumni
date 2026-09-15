@@ -8,6 +8,7 @@ import { formatCurrency, formatDate } from '@/app/views/formatters';
 import { NotFound } from '@pages/NotFound';
 import { LazyImage } from '@components/user/LazyImage';
 import { UserDonations } from '@components/user/UserDonations';
+export const isAdminPreview = location.pathname.includes('/admin/preview/user');
 
 export function Profile() {
     const navigate = useNavigate();
@@ -138,7 +139,7 @@ export function Profile() {
         return <NotFound />;
     }
 
-    if (userRecord.userStatus?.statusName === 'Banned') {
+    if ((userRecord.userStatus?.statusName === 'Banned' || userRecord.userStatus?.statusName === 'Deactivated') && !isAdminPreview) {
         return <NotFound />;
     }
 
@@ -273,9 +274,8 @@ export function Profile() {
     let tabVisibility = false;
     const profStatus = userRecord?.profileStatus?.statusName || 'hidden';
     const isConnected = connection?.status?.connectionName === 'Accepted';
-    const isAdminPreview = location.pathname.includes('/admin/preview') && !!sessionStorage.getItem('adminToken');
 
-    if (isOwner || profStatus === 'Public' || isAdminPreview) {
+    if (isOwner || profStatus === 'Public' || isAdminPreview || (profStatus === 'Connections Only' && isConnected)) {
         visibility = 'full';
         tabVisibility = true;
     } else if (profStatus === 'Connections Only' && !isConnected) {

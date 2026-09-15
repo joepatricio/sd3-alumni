@@ -1,10 +1,12 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, lazy, Suspense } from 'react';
 import { Calendar, MapPin, Clock, Video, Loader2 } from 'lucide-react';
 import { Plus } from 'lucide-react';
-import { CreateEventModal } from '@components/user/CreateEventModal';
 import { Button } from '@components/ui/button';
 import { Link } from 'react-router-dom';
 import { getCategoryColor, formatDate } from '@/app/views/formatters';
+
+const loadCreateEventModal = () => import('@components/user/CreateEventModal').then(m => ({ default: m.CreateEventModal }));
+const CreateEventModal = lazy(loadCreateEventModal);
 
 import { api, type EventData } from '@/app/views/api';
 import { useAuth } from '@/app/views/auth';
@@ -23,6 +25,7 @@ export function Events() {
 
     const [allCategories, setAllCategories] = useState<string[]>([]);
     const [totalEvents, setTotalEvents] = useState(0);
+    const [isCreateOpen, setIsCreateOpen] = useState(false);
 
     useEffect(() => {
         const fetchCategories = async () => {
@@ -156,16 +159,18 @@ export function Events() {
                                 </p>
                             </div>
                             {currentUserStatus === 'Official' && (
-                                <CreateEventModal
-                                    trigger={
-                                        <button
-                                            className="flex items-center justify-center gap-2 bg-brand-primary text-white px-6 py-3 rounded-lg hover:bg-brand-primary-hover transition-colors font-semibold"
-                                        >
-                                            <Plus className="w-5 h-5" />
-                                            Create Event
-                                        </button>
-                                    }
-                                />
+                                <button
+                                    onMouseEnter={loadCreateEventModal}
+                                    onFocus={loadCreateEventModal}
+                                    onClick={() => {
+                                        loadCreateEventModal();
+                                        setIsCreateOpen(true);
+                                    }}
+                                    className="flex items-center justify-center gap-2 bg-brand-primary text-white px-6 py-3 rounded-lg hover:bg-brand-primary-hover transition-colors font-semibold"
+                                >
+                                    <Plus className="w-5 h-5" />
+                                    Create Event
+                                </button>
                             )}
                         </div>
                     </div>
@@ -252,22 +257,24 @@ export function Events() {
                                                     </p>
 
                                                     {/* Event Meta Information */}
-                                                    <div className="flex flex-wrap gap-4 text-sm text-gray-600">
-                                                        <div className="flex items-center gap-2">
-                                                            <Calendar className="w-4 h-4 text-brand-primary" />
-                                                            <span>{formatDate(event.eventDate, 'long')}</span>
-                                                        </div>
-                                                        <div className="flex items-center gap-2">
-                                                            <Clock className="w-4 h-4 text-brand-primary" />
-                                                            <span>{event.endTime ? `${formatTime(event.startTime)} - ${formatTime(event.endTime)}` : formatTime(event.startTime)}</span>
+                                                    <div className="space-y-2 text-sm text-gray-600">
+                                                        <div className="flex flex-wrap gap-4">
+                                                            <div className="flex items-center gap-2">
+                                                                <Calendar className="w-4 h-4 text-brand-primary shrink-0" />
+                                                                <span>{formatDate(event.eventDate, 'long')}</span>
+                                                            </div>
+                                                            <div className="flex items-center gap-2">
+                                                                <Clock className="w-4 h-4 text-brand-primary shrink-0" />
+                                                                <span>{event.endTime ? `${formatTime(event.startTime)} - ${formatTime(event.endTime)}` : formatTime(event.startTime)}</span>
+                                                            </div>
                                                         </div>
                                                         <div className="flex items-center gap-2">
                                                             {categoryName === 'Virtual' ? (
-                                                                <Video className="w-4 h-4 text-brand-primary" />
+                                                                <Video className="w-4 h-4 text-brand-primary shrink-0" />
                                                             ) : (
-                                                                <MapPin className="w-4 h-4 text-brand-primary" />
+                                                                <MapPin className="w-4 h-4 text-brand-primary shrink-0" />
                                                             )}
-                                                            <span>
+                                                            <span className="line-clamp-1">
                                                                 {categoryName === 'Virtual'
                                                                     ? `Virtual (${event.modality || 'Online'})`
                                                                     : formatLocation(event.location)}
@@ -319,6 +326,15 @@ export function Events() {
                     </>
                 )}
             </div>
+
+            <Suspense fallback={null}>
+                {isCreateOpen && (
+                    <CreateEventModal
+                        open={isCreateOpen}
+                        onOpenChange={setIsCreateOpen}
+                    />
+                )}
+            </Suspense>
         </div>
     );
 }
