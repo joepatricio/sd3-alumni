@@ -212,7 +212,7 @@ async function main() {
   // 5. Relations and Engagements
   const records = assignIds(db.records || [], [db.users], 'recordId');
   for (const record of records) {
-    const { dateCreated, dateExpires, adminId, recordId, ...rest } = record
+    const { dateCreated, dateExpires, adminId, ...rest } = record
     await prisma.record.create({
       data: {
         ...rest,
@@ -254,7 +254,7 @@ async function main() {
     })
   }
   for (const userAchievement of db.userAchievements || []) {
-    const { id, achievedDate, ...rest } = userAchievement
+    const { achievedDate, ...rest } = userAchievement
     await prisma.userAchievement.create({
       data: {
         ...rest,

@@ -96,6 +96,7 @@ export function UserDonations({ userId, onStatsUpdate }: { userId: string, onSta
             window.dispatchEvent(new Event('storage'));
 
         } catch (err) {
+            console.error("Error in handleToggleAnonymity: ", err);
             toast.error("Failed to update donation privacy.");
         }
     };

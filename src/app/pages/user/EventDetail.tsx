@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import {
     Calendar,
     MapPin,
@@ -12,13 +12,26 @@ import {
     XCircle,
     AlertCircle,
     Loader2,
-    Info
+    Info,
+    Trash2,
+    Ban
 } from 'lucide-react';
 import { CreateEventModal } from '@components/user/CreateEventModal';
 import { Button } from '@components/ui/button';
 import { Badge } from '@components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@components/ui/avatar';
 import { Alert, AlertDescription, AlertTitle } from '@components/ui/alert';
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogTrigger,
+} from '@components/ui/alert-dialog';
 import { NotFound } from '@pages/NotFound';
 import { useAuth } from '@/app/views/auth';
 import { api, type EventData, type ProfileData } from '@/app/views/api';
@@ -26,6 +39,7 @@ import { formatDate } from '@/app/views/formatters';
 
 export function EventDetail() {
     const { id } = useParams<{ id: string }>();
+    const navigate = useNavigate();
     const { isLoggedIn, session } = useAuth();
 
     const [eventData, setEventData] = useState<EventData | null>(null);
@@ -88,7 +102,7 @@ export function EventDetail() {
     const currentStatusName = eventData?.eventStatus?.statusName || null;
     const isAdminPreview = location.pathname.includes('/admin/preview') && !!sessionStorage.getItem('adminToken');
 
-    if (!eventData || (currentStatusName === "Rejected" && !isAdminPreview)) {
+    if (!eventData || ((currentStatusName === "Rejected" || currentStatusName === "Archived") && !isAdminPreview)) {
         return <NotFound />;
     }
 
@@ -165,7 +179,9 @@ export function EventDetail() {
     const handleConcludeEvent = async () => {
         if (!eventData) return;
         try {
-            await api.post(`/events/${eventData.id}/conclude`, {});
+            const token = sessionStorage.getItem('token') || sessionStorage.getItem('adminToken');
+            const headers = token ? { Authorization: `Bearer ${token}` } : undefined;
+            await api.post(`/events/${eventData.id}/conclude`, {}, { headers });
             // Optimistically update the local state to Concluded
             // We know the status string won't be exactly right without refetching the object
             // but we can just reload the page or update the status name
@@ -178,6 +194,31 @@ export function EventDetail() {
             });
         } catch (err) {
             console.error('Failed to conclude event:', err);
+        }
+    };
+
+    const handleStatusChange = async (newStatusName: string) => {
+        if (!eventData) return;
+        try {
+            const statusRes = await api.get(`/eventStatuses?statusName=${newStatusName}`);
+            const statusData = Array.isArray(statusRes.data) ? statusRes.data : statusRes.data.data;
+            const statusObj = statusData?.[0];
+            if (statusObj) {
+                await api.patch(`/events/${eventData.id}`, { eventStatusId: statusObj.id });
+                if (newStatusName === 'Archived') {
+                    navigate('/events');
+                } else {
+                    setEventData({
+                        ...eventData,
+                        eventStatus: {
+                            id: statusObj.id,
+                            statusName: newStatusName
+                        }
+                    });
+                }
+            }
+        } catch (err) {
+            console.error(`Failed to change event status to ${newStatusName}:`, err);
         }
     };
 
@@ -203,20 +244,6 @@ export function EventDetail() {
                     </p>
                 </div>
             )}
-            {currentStatusName === "Pending" && (
-                <div className="bg-yellow-50 px-4 py-3 border-b border-yellow-200 text-center">
-                    <p className="text-yellow-800 font-medium text-sm">
-                        ⚠️ This event is currently under review by an administrator. It is not visible to the public.
-                    </p>
-                </div>
-            )}
-            {currentStatusName === "Archived" && (
-                <div className="bg-yellow-50 px-4 py-3 border-b border-yellow-200 text-center">
-                    <p className="text-yellow-800 font-medium text-sm">
-                        ⚠️ This event has been archived. RSVPs are disabled and it is no longer actively listed.
-                    </p>
-                </div>
-            )}
             {/* Header / Nav */}
             <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 flex justify-between items-center">
                 <Link
@@ -228,7 +255,7 @@ export function EventDetail() {
                 </Link>
 
                 <div className="flex gap-2">
-                    {isLoggedIn && (session?.userId === eventData.authorId) && (
+                    {isLoggedIn && (session?.userId === eventData.authorId) && eventData.eventStatus?.statusName !== "Concluded" && (
                         <>
                             <CreateEventModal
                                 trigger={
@@ -240,11 +267,71 @@ export function EventDetail() {
                                 initialData={eventData as any}
                             />
 
-                            {currentStatusName !== "Concluded" && (
-                                <Button variant="outline" className="gap-2 text-brand-primary border-brand-primary hover:bg-brand-primary hover:text-white transition-colors" onClick={handleConcludeEvent}>
-                                    <CheckCircle2 className="w-4 h-4" />
-                                    Conclude Event
-                                </Button>
+                            {currentStatusName !== "Concluded" && currentStatusName !== "Cancelled" && currentStatusName !== "Archived" && (
+                                <>
+                                    <AlertDialog>
+                                        <AlertDialogTrigger asChild>
+                                            <Button variant="outline" className="gap-2 text-yellow-600 border-yellow-600 hover:bg-yellow-600 hover:text-white transition-colors">
+                                                <Ban className="w-4 h-4" />
+                                                Cancel Event
+                                            </Button>
+                                        </AlertDialogTrigger>
+                                        <AlertDialogContent>
+                                            <AlertDialogHeader>
+                                                <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                                                <AlertDialogDescription>
+                                                    This will cancel the event. It will still be visible, but RSVPs will be disabled.
+                                                </AlertDialogDescription>
+                                            </AlertDialogHeader>
+                                            <AlertDialogFooter>
+                                                <AlertDialogCancel>Go Back</AlertDialogCancel>
+                                                <AlertDialogAction onClick={() => handleStatusChange('Cancelled')} className="bg-yellow-600 hover:bg-yellow-700">Yes, Cancel Event</AlertDialogAction>
+                                            </AlertDialogFooter>
+                                        </AlertDialogContent>
+                                    </AlertDialog>
+
+                                    <AlertDialog>
+                                        <AlertDialogTrigger asChild>
+                                            <Button variant="outline" className="gap-2 text-brand-primary border-brand-primary hover:bg-brand-primary hover:text-white transition-colors">
+                                                <CheckCircle2 className="w-4 h-4" />
+                                                Conclude Event
+                                            </Button>
+                                        </AlertDialogTrigger>
+                                        <AlertDialogContent>
+                                            <AlertDialogHeader>
+                                                <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                                                <AlertDialogDescription>
+                                                    This will conclude the event. This action cannot be undone.
+                                                </AlertDialogDescription>
+                                            </AlertDialogHeader>
+                                            <AlertDialogFooter>
+                                                <AlertDialogCancel>Go Back</AlertDialogCancel>
+                                                <AlertDialogAction onClick={handleConcludeEvent} className="bg-yellow-600 hover:bg-yellow-700">Yes, Conclude Event</AlertDialogAction>
+                                            </AlertDialogFooter>
+                                        </AlertDialogContent>
+                                    </AlertDialog>
+
+                                    <AlertDialog>
+                                        <AlertDialogTrigger asChild>
+                                            <Button variant="outline" className="gap-2 text-red-600 border-red-600 hover:bg-red-600 hover:text-white transition-colors">
+                                                <Trash2 className="w-4 h-4" />
+                                                Delete Event
+                                            </Button>
+                                        </AlertDialogTrigger>
+                                        <AlertDialogContent>
+                                            <AlertDialogHeader>
+                                                <AlertDialogTitle>Delete Event?</AlertDialogTitle>
+                                                <AlertDialogDescription>
+                                                    This will archive the event and remove it from the active events list. This action cannot be undone.
+                                                </AlertDialogDescription>
+                                            </AlertDialogHeader>
+                                            <AlertDialogFooter>
+                                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                                <AlertDialogAction onClick={() => handleStatusChange('Archived')} className="bg-red-600 hover:bg-red-700">Delete</AlertDialogAction>
+                                            </AlertDialogFooter>
+                                        </AlertDialogContent>
+                                    </AlertDialog>
+                                </>
                             )}
                         </>
                     )}
@@ -339,12 +426,14 @@ export function EventDetail() {
                     <div className="space-y-8 sticky top-24 self-start">
                         {/* RSVP Card */}
                         <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-                            {isPastEvent || currentStatusName === "Archived" ? (
+                            {isPastEvent || currentStatusName === "Archived" || currentStatusName === "Concluded" ? (
                                 <Alert className="bg-amber-50 border-amber-200 text-amber-800">
                                     <AlertCircle className="h-4 w-4 text-amber-600" />
                                     <AlertTitle className="font-bold">Event Passed</AlertTitle>
                                     <AlertDescription className="text-amber-700">
-                                        {currentStatusName === "Archived" ? "This event has been archived. RSVP is disabled." : "This event has already taken place. RSVP is no longer available."}
+                                        {currentStatusName === "Archived"
+                                            ? "This event has been archived. RSVP is disabled."
+                                            : "This event has already concluded. RSVP is no longer available."}
                                     </AlertDescription>
                                 </Alert>
                             ) : isLoggedIn && !isSuspended ? (

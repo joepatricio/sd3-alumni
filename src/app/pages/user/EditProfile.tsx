@@ -126,6 +126,7 @@ export function EditProfile() {
                 }
             } catch (error) {
                 toast.error('Failed to load profile');
+                console.error(error)
             } finally {
                 setLoading(false);
             }
@@ -161,6 +162,7 @@ export function EditProfile() {
             navigate('/profile');
         } catch (error) {
             toast.error('Failed to update profile');
+            console.error("Error in EditProfile: " + error);
         }
     };
 

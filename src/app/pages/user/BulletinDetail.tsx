@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useParams, useNavigate } from 'react-router-dom';
 import {
     ArrowLeft,
     Clock,
@@ -9,18 +9,31 @@ import {
     ThumbsUp,
     Edit,
     Loader2,
-    Info
+    Info,
+    Trash2
 } from 'lucide-react';
 import { CreateBulletinModal } from '@components/user/CreateBulletinModal';
 import { Button } from '@components/ui/button';
 import { NotFound } from '@pages/NotFound';
 import { LazyImage } from '@components/user/LazyImage';
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogTrigger,
+} from '@components/ui/alert-dialog';
 import { useAuth } from '@/app/views/auth';
-import { api, type BulletinData, type BulletinCommentData } from '@/app/views/api';
+import { api, type BulletinData, type BulletinCommentData, type ProfileData } from '@/app/views/api';
 import { formatDate } from '@/app/views/formatters';
 
 export function BulletinDetail() {
     const { id } = useParams();
+    const navigate = useNavigate();
     const { isLoggedIn, session } = useAuth();
     const [comment, setComment] = useState('');
 
@@ -29,6 +42,8 @@ export function BulletinDetail() {
     const [loading, setLoading] = useState(true);
     const [submitting, setSubmitting] = useState(false);
     const [isSuspended, setIsSuspended] = useState(false);
+    const [userCommentsCount, setUserCommentsCount] = useState<number>(0);
+    const [currentUserProfile, setCurrentUserProfile] = useState<ProfileData | null>(null);
 
     const COMMENTS_LIMIT = 7;
     const [commentsLimit, setCommentsLimit] = useState(COMMENTS_LIMIT);
@@ -59,6 +74,25 @@ export function BulletinDetail() {
                     const currentU = allUsers.find((u: any) => String(u.userId) === String(session.userId));
                     if (currentU && currentU.userStatus?.statusName === 'Suspended') {
                         setIsSuspended(true);
+                    }
+                    try {
+                        const statsRes = await api.get('/userStatistics', { params: { userId: session.userId } });
+                        const stats = Array.isArray(statsRes.data) ? statsRes.data : (statsRes.data?.data || []);
+                        if (stats && stats.length > 0) {
+                            setUserCommentsCount(stats[0].commentsWritten || 0);
+                        }
+                    } catch (statErr) {
+                        console.error("Failed to fetch user stats:", statErr);
+                    }
+
+                    try {
+                        const profileRes = await api.get('/profiles', { params: { userId: session.userId, _include: '' } });
+                        const profileData = Array.isArray(profileRes.data) ? profileRes.data : (profileRes.data?.data || []);
+                        if (profileData && profileData.length > 0) {
+                            setCurrentUserProfile(profileData[0]);
+                        }
+                    } catch (profErr) {
+                        console.error("Failed to fetch user profile:", profErr);
                     }
                 }
 
@@ -111,6 +145,7 @@ export function BulletinDetail() {
                     await api.patch(`/userStatistics/${currentStats.id}`, {
                         commentsWritten: (currentStats.commentsWritten || 0) + 1
                     });
+                    setUserCommentsCount((currentStats.commentsWritten || 0) + 1);
                 }
             } catch (statErr) {
                 console.error("Failed to update user statistics for comment:", statErr);
@@ -129,6 +164,30 @@ export function BulletinDetail() {
             console.error("Failed to post comment:", err);
         } finally {
             setSubmitting(false);
+        }
+    };
+
+    const handleDeleteBulletin = async () => {
+        if (!bulletin) return;
+        try {
+            const statusRes = await api.get(`/contentStatuses?statusName=Archived`);
+            const statusData = Array.isArray(statusRes.data) ? statusRes.data : statusRes.data.data;
+            const statusObj = statusData?.[0];
+            if (statusObj) {
+                await api.patch(`/bulletins/${bulletin.id}`, { contentStatusId: statusObj.id });
+                navigate('/bulletin');
+            }
+        } catch (err) {
+            console.error('Failed to delete bulletin:', err);
+        }
+    };
+
+    const handleDeleteComment = async (commentId: string) => {
+        try {
+            await api.delete(`/comments/${commentId}`);
+            setCommentsList(prev => prev.filter(c => c.id !== commentId));
+        } catch (err) {
+            console.error('Failed to delete comment:', err);
         }
     };
 
@@ -194,16 +253,39 @@ export function BulletinDetail() {
                     <span className='font-medium'>Back to Bulletin</span>
                 </Link>
 
-                {isLoggedIn && (
-                    <CreateBulletinModal
-                        trigger={
-                            <Button variant="outline" className="gap-2 text-brand-primary border-brand-primary hover:bg-brand-primary hover:text-white transition-colors">
-                                <Edit className="w-4 h-4" />
-                                Edit Bulletin
-                            </Button>
-                        }
-                        initialData={bulletin as any}
-                    />
+                {isLoggedIn && (session?.userId === bulletin.authorId) && (
+                    <div className="flex gap-2">
+                        <CreateBulletinModal
+                            trigger={
+                                <Button variant="outline" className="gap-2 text-brand-primary border-brand-primary hover:bg-brand-primary hover:text-white transition-colors">
+                                    <Edit className="w-4 h-4" />
+                                    Edit Bulletin
+                                </Button>
+                            }
+                            initialData={bulletin as any}
+                        />
+
+                        <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                                <Button variant="outline" className="gap-2 text-red-600 border-red-600 hover:bg-red-600 hover:text-white transition-colors">
+                                    <Trash2 className="w-4 h-4" />
+                                    Delete Bulletin
+                                </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                                <AlertDialogHeader>
+                                    <AlertDialogTitle>Delete Bulletin?</AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                        This will archive the bulletin. It will no longer be active and comments will be disabled. This action cannot be undone here.
+                                    </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                    <AlertDialogAction onClick={handleDeleteBulletin} className="bg-red-600 hover:bg-red-700">Delete</AlertDialogAction>
+                                </AlertDialogFooter>
+                            </AlertDialogContent>
+                        </AlertDialog>
+                    </div>
                 )}
             </div>
 
@@ -287,36 +369,55 @@ export function BulletinDetail() {
 
                     {/* Comment Form */}
                     {isLoggedIn && !isSuspended && bulletin.contentStatus?.statusName !== 'Archived' ? (
-                        <form onSubmit={handleSubmitComment} className="mb-8">
-                            <div className="flex gap-3">
-                                <div className="flex-shrink-0">
-                                    <div className="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center">
-                                        <User className="w-6 h-6 text-gray-600" />
-                                    </div>
-                                </div>
-                                <div className="flex-1">
-                                    <textarea
-                                        value={comment}
-                                        onChange={(e) => setComment(e.target.value)}
-                                        placeholder="Add a comment..."
-                                        rows={3}
-                                        disabled={submitting}
-                                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-primary resize-none disabled:opacity-50"
-                                        required
-                                    />
-                                    <div className="flex justify-end mt-2">
-                                        <button
-                                            type="submit"
-                                            disabled={submitting}
-                                            className="flex items-center gap-2 bg-brand-primary text-white px-6 py-2 rounded-lg hover:bg-brand-primary-hover transition-colors font-semibold disabled:opacity-50"
-                                        >
-                                            {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
-                                            Post Comment
-                                        </button>
-                                    </div>
-                                </div>
+                        userCommentsCount >= 100 ? (
+                            <div className="text-center py-6 px-4 bg-gray-50 rounded-lg border border-gray-100 mb-8">
+                                <h3 className="text-lg font-bold text-gray-900 mb-2">Comment Limit Reached</h3>
+                                <p className="text-gray-500 text-sm">You have reached the maximum limit of 100 comments for this demo.</p>
                             </div>
-                        </form>
+                        ) : (
+                            <form onSubmit={handleSubmitComment} className="mb-8">
+                                <div className="flex gap-3">
+                                    <div className="flex-shrink-0">
+                                        {currentUserProfile?.profileImage ? (
+                                            <img
+                                                src={currentUserProfile.profileImage}
+                                                alt={currentUserProfile.userName || "User"}
+                                                className="w-10 h-10 rounded-full object-cover"
+                                            />
+                                        ) : (
+                                            <div className="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center">
+                                                <User className="w-6 h-6 text-gray-600" />
+                                            </div>
+                                        )}
+                                    </div>
+                                    <div className="flex-1">
+                                        <textarea
+                                            value={comment}
+                                            onChange={(e) => setComment(e.target.value)}
+                                            placeholder="Add a comment..."
+                                            rows={3}
+                                            maxLength={140}
+                                            disabled={submitting}
+                                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-primary resize-none disabled:opacity-50"
+                                            required
+                                        />
+                                        <div className="flex justify-between items-center mt-2">
+                                            <span className={`text-xs ${comment.length >= 140 ? 'text-red-500 font-medium' : 'text-gray-500'}`}>
+                                                {comment.length}/140 characters
+                                            </span>
+                                            <button
+                                                type="submit"
+                                                disabled={submitting || comment.length > 140}
+                                                className="flex items-center gap-2 bg-brand-primary text-white px-6 py-2 rounded-lg hover:bg-brand-primary-hover transition-colors font-semibold disabled:opacity-50"
+                                            >
+                                                {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                                                Post Comment
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </form>
+                        )
                     ) : isSuspended ? (
                         <div className="text-center py-8 px-4 bg-gray-50 rounded-lg border border-gray-100 mb-8">
                             <MessageCircle className="w-10 h-10 text-brand-primary/50 mx-auto mb-3" />
@@ -344,20 +445,26 @@ export function BulletinDetail() {
                             return (
                                 <div key={commentItem.id} className="flex gap-3">
                                     <Link
-                                        to={`/profile/${commentItem.profileId}`}
+                                        to={`/profile/${commentItem.userId}`}
                                         className="flex-shrink-0 hover:opacity-80 transition-opacity"
                                     >
-                                        <img
-                                            src={commenterProfile?.profileImage || "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&q=80&w=64&h=64"}
-                                            alt={commenterProfile?.userName || "User"}
-                                            className="w-10 h-10 rounded-full object-cover"
-                                        />
+                                        {!!commenterProfile ? (
+                                            <img
+                                                src={commenterProfile?.profileImage}
+                                                alt={commenterProfile?.userName}
+                                                className="w-12 h-12 rounded-full object-cover"
+                                            />
+                                        ) : (
+                                            <div className="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center">
+                                                <User className="w-6 h-6 text-gray-600" />
+                                            </div>
+                                        )}
                                     </Link>
                                     <div className="flex-1">
                                         <div className="bg-gray-50 rounded-lg p-4">
                                             <div className="flex items-center gap-2 mb-2">
                                                 <Link
-                                                    to={`/profile/${commentItem.profileId}`}
+                                                    to={`/profile/${commentItem.userId}`}
                                                     className="font-semibold text-gray-900 hover:text-brand-primary transition-colors"
                                                 >
                                                     {commenterProfile?.userName || "Unknown User"}
@@ -368,14 +475,26 @@ export function BulletinDetail() {
                                             </div>
                                             <p className="text-gray-700">{commentItem.comment}</p>
                                         </div>
-                                        <button
-                                            onClick={() => handleToggleLike(commentItem)}
-                                            className={`flex items-center gap-1 mt-2 text-sm transition-colors ${isLiked ? 'text-brand-primary font-semibold' : 'text-gray-600 hover:text-brand-primary'
-                                                } ${!isLoggedIn ? 'cursor-default opacity-80' : ''}`}
-                                        >
-                                            <ThumbsUp className={`w-4 h-4 ${isLiked ? 'fill-brand-primary' : ''}`} />
-                                            <span>{commentItem.likes}</span>
-                                        </button>
+                                        <div className="flex items-center justify-between mt-2">
+                                            <button
+                                                onClick={() => handleToggleLike(commentItem)}
+                                                className={`flex items-center gap-1 text-sm transition-colors ${isLiked ? 'text-brand-primary font-semibold' : 'text-gray-600 hover:text-brand-primary'
+                                                    } ${!isLoggedIn ? 'cursor-default opacity-80' : ''}`}
+                                            >
+                                                <ThumbsUp className={`w-4 h-4 ${isLiked ? 'fill-brand-primary' : ''}`} />
+                                                <span>{commentItem.likes}</span>
+                                            </button>
+
+                                            {isLoggedIn && session?.userId?.toString() === commentItem.userId?.toString() && (
+                                                <button
+                                                    onClick={() => handleDeleteComment(commentItem.id)}
+                                                    className="flex items-center gap-1 text-sm text-red-500 hover:text-red-700 transition-colors"
+                                                    title="Delete Comment"
+                                                >
+                                                    <Trash2 className="w-4 h-4" />
+                                                </button>
+                                            )}
+                                        </div>
                                     </div>
                                 </div>
                             );

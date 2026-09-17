@@ -116,6 +116,24 @@ const formSchema = z.object({
             });
         }
     }
+
+    const getMinutes = (h: string, m: string, ampm: string) => {
+        let hour = parseInt(h);
+        if (ampm === 'PM' && hour !== 12) hour += 12;
+        if (ampm === 'AM' && hour === 12) hour = 0;
+        return hour * 60 + parseInt(m);
+    };
+
+    const startTotal = getMinutes(data.startTimeHour, data.startTimeMinute, data.startTimeAmPm);
+    const endTotal = getMinutes(data.endTimeHour, data.endTimeMinute, data.endTimeAmPm);
+
+    if (startTotal > endTotal) {
+        ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: "Start time cannot be after end time.",
+            path: ['startTimeHour']
+        });
+    }
 });
 
 export interface EventData {
@@ -267,7 +285,8 @@ export function CreateEventModal({ trigger, initialData, isAdmin, open: external
                     } else {
                         throw new Error('Not an object');
                     }
-                } catch(e) {
+                } catch (e) {
+                    console.error("Error in parsing initial JSON data: " + e);
                     parsedLocation = {
                         region: '',
                         regionCode: '',
@@ -282,7 +301,7 @@ export function CreateEventModal({ trigger, initialData, isAdmin, open: external
                         lng: 123.8944
                     };
                 }
-            } 
+            }
             if (parsedLocation && !(parsedLocation as any).lat) {
                 parsedLocation = { ...parsedLocation as any, lat: 10.2954, lng: 123.8944 };
             }
@@ -388,10 +407,10 @@ export function CreateEventModal({ trigger, initialData, isAdmin, open: external
         const candidateCities = matchedProvince
             ? psgcData.psgcCities.filter((c: any) => c.provinceCode === matchedProvince.code)
             : matchedRegion
-            ? psgcData.psgcCities.filter((c: any) => c.provinceCode === matchedRegion.code)
-            : psgcData.psgcCities;
+                ? psgcData.psgcCities.filter((c: any) => c.provinceCode === matchedRegion.code)
+                : psgcData.psgcCities;
 
-        let matchedCity = candidateCities.find((c: any) => {
+        const matchedCity = candidateCities.find((c: any) => {
             if (loc.cityCode && c.code === loc.cityCode) return true;
             if (cityDigits && digitsOnly(c.code).startsWith(cityDigits)) return true;
             if (loc.cityMunicipality && normalize(c.name) === normalize(loc.cityMunicipality)) return true;
@@ -513,7 +532,9 @@ export function CreateEventModal({ trigger, initialData, isAdmin, open: external
                     if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
                         parsedLocation = parsed;
                     }
-                } catch (e) {}
+                } catch (e) {
+                    console.error("Invalid JSON data. Consider re-running fetch-psgc.cjs in the script directory: ", e);
+                }
             }
             if (parsedLocation && typeof parsedLocation === 'object') {
                 applyLocationData(parsedLocation as any);
@@ -704,6 +725,7 @@ export function CreateEventModal({ trigger, initialData, isAdmin, open: external
             }
         } catch (error) {
             toast.error("Failed to search location.");
+            console.error("Error in searchLocation: " + error)
             setSearchResults([]);
             setShowSuggestions(false);
         } finally {
@@ -749,6 +771,7 @@ export function CreateEventModal({ trigger, initialData, isAdmin, open: external
             }
         } catch (error) {
             toast.error("Failed to reverse geocode.");
+            console.error("Error in reverseGeocode: " + error);
         } finally {
             setIsSearchingLocation(false);
         }
@@ -849,6 +872,20 @@ export function CreateEventModal({ trigger, initialData, isAdmin, open: external
 
             if (isEditMode && initialData?.id) {
                 const patchEndpoint = isAdmin ? `/admin/events/${initialData.id}` : `/events/${initialData.id}`;
+                
+                if (!isAdmin) {
+                    try {
+                        const statusRes = await api.get('/eventStatuses?statusName=Pending');
+                        const statusData = Array.isArray(statusRes.data) ? statusRes.data : statusRes.data.data;
+                        const pendingStatus = statusData?.[0];
+                        if (pendingStatus) {
+                            payload.eventStatusId = pendingStatus.id;
+                        }
+                    } catch (e) {
+                        console.error('Failed to fetch Pending status ID', e);
+                    }
+                }
+
                 await api.patch(patchEndpoint, payload, { headers });
             } else {
                 await api.post(endpoint, payload, { headers });
@@ -1023,6 +1060,11 @@ export function CreateEventModal({ trigger, initialData, isAdmin, open: external
                                         )}
                                     />
                                 </div>
+                                {form.formState.errors.startTimeHour && (
+                                    <p className="text-[0.8rem] font-medium text-destructive mt-1">
+                                        {form.formState.errors.startTimeHour.message as string}
+                                    </p>
+                                )}
                             </FormItem>
 
                             {/* End Time Picker */}
@@ -1078,6 +1120,11 @@ export function CreateEventModal({ trigger, initialData, isAdmin, open: external
                                         )}
                                     />
                                 </div>
+                                {form.formState.errors.startTimeHour && (
+                                    <div className="h-[0.8rem] font-medium text-destructive mt-1">
+                                        {/* Hack to align input form*/}
+                                    </div>
+                                )}
                             </FormItem>
 
                             {selectedCategory !== 'Virtual' ? (
@@ -1139,7 +1186,7 @@ export function CreateEventModal({ trigger, initialData, isAdmin, open: external
                                         </Button>
 
                                         <Button
-                                            className="cursor-pointer text-brand-primary border-brand-primary"
+                                            className="cursor-pointer hover:text-brand-primary text-brand-primary border-brand-primary"
                                             type="button"
                                             variant="outline"
                                             onClick={reverseGeocode}

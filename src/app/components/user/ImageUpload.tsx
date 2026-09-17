@@ -32,6 +32,7 @@ export function ImageUpload({ previewUrl, onFileSelect, onClear, placeholderText
             }
         } catch (error) {
             toast.error('Error uploading image.');
+            console.error('Error in uploadFile: ' + error);
         } finally {
             setIsUploading(false);
         }

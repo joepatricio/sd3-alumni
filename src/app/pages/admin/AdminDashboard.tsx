@@ -135,7 +135,7 @@ const CalendarWidget = ({ events }: { events: EventItem[] }) => {
     const monthEventsMap = React.useMemo(() => {
         const map: Record<number, EventItem[]> = {};
         events.forEach(e => {
-            if (e.eventStatus?.statusName !== 'Approved') return;
+            if (e.eventStatus?.statusName !== 'Approved' && e.eventStatus?.statusName !== 'Concluded') return;
             if (!e.eventDate) return;
 
             try {
@@ -145,8 +145,8 @@ const CalendarWidget = ({ events }: { events: EventItem[] }) => {
                     if (!map[day]) map[day] = [];
                     map[day].push(e);
                 }
-            } catch (err) {
-                // ignore invalid dates
+            } catch {
+                // Ignore invalid dates
             }
         });
         return map;

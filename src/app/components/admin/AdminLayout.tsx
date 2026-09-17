@@ -67,8 +67,6 @@ export function AdminLayout() {
 
     useEffect(() => {
         let timer: any;
-        let syncTimer: any;
-
         const syncTime = async () => {
             try {
                 const res = await api.get('/server-time');
@@ -99,7 +97,7 @@ export function AdminLayout() {
         };
 
         syncTime();
-        syncTimer = setInterval(syncTime, 10 * 60 * 1000);
+        const syncTimer = setInterval(syncTime, 10 * 60 * 1000);
 
         return () => {
             if (timer) clearInterval(timer);

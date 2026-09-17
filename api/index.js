@@ -80,7 +80,7 @@ const authenticateAdminToken = (req, res, next) => {
 
 // User limits check and registration
 app.post('/api/auth/register', async (req, res) => {
-    const { fullName, email, password, degreeProgram, batch, gender } = req.body;
+    let { fullName, email, password, degreeProgram, batch, gender } = req.body;
 
     try {
         // Check user limit
@@ -470,6 +470,7 @@ app.post('/api/events/:id/conclude', authenticateToken, async (req, res) => {
         await concludeEvent(id);
         res.json({ message: 'Event concluded successfully.' });
     } catch (error) {
+        console.error("Error in concluding event: " + error);
         res.status(500).json({ error: 'Failed to conclude event' });
     }
 });
@@ -571,7 +572,9 @@ async function resolveEventData(body, isUpdate = false, existingEvent = null, re
                     if (decoded && (decoded.id || decoded.userId)) {
                         data.authorId = decoded.id || decoded.userId;
                     }
-                } catch (e) { }
+                } catch (err) {
+                    console.error('Failed to verify token in resolveEventData: ', err);
+                }
             }
         }
         if (!data.authorId) {
@@ -692,7 +695,9 @@ async function resolveBulletinData(body, isUpdate = false, req = null) {
                     if (decoded && (decoded.id || decoded.userId)) {
                         data.authorId = decoded.id || decoded.userId;
                     }
-                } catch (e) { }
+                } catch (err) {
+                    console.error('Failed to verify token in resolveBulletinData: ', err);
+                }
             }
         }
         if (!data.authorId) {
@@ -774,7 +779,7 @@ app.patch('/api/admin/events/:id/status', authenticateAdminToken, async (req, re
     try {
         const { id } = req.params;
         const { status, adminId } = req.body;
-        
+
         const effectiveAdminId = req.user?.id || adminId;
         const updatedEvent = await updateEventStatusAndStats({
             eventId: id,
@@ -799,10 +804,10 @@ app.post('/api/admin/events', authenticateAdminToken, async (req, res) => {
 
         const authorId = req.body.authorId || existingUser?.id;
         if (!authorId) return res.status(400).json({ error: 'Author user not found' });
-        
+
         const effectiveAdminId = req.user?.id || req.body.adminId;
-        const eventData = await resolveEventData({ 
-            ...req.body, 
+        const eventData = await resolveEventData({
+            ...req.body,
             authorId,
             adminId: effectiveAdminId,
             reviewDate: new Date()
@@ -1453,8 +1458,11 @@ const tableToModel = {
     degrees: 'degree',
     connectionStatuses: 'connectionStatus',
     contentStatuses: 'contentStatus',
+    contentStatus: 'contentStatus',
     userStatuses: 'userStatus',
     donationStatuses: 'donationStatus',
+    eventStatuses: 'eventStatus',
+    eventStatus: 'eventStatus',
     eventCategories: 'eventCategory',
     eventCategory: 'eventCategory',
     bulletinCategories: 'bulletinCategory',
@@ -1475,10 +1483,7 @@ const tableToModel = {
     locations: 'location',
     achievements: 'achievement',
     bulletinLikes: 'bulletinLike',
-    commentLikes: 'commentLike',
-    userRsvps: 'userRsvp',
-    profiles: 'profile',
-    users: 'user'
+    commentLikes: 'commentLike'
 };
 
 const defaultIncludes = {
@@ -1579,6 +1584,7 @@ app.get('/api/server-time', async (req, res) => {
         const dbTime = new Date(dbTimeStr + 'Z');
         res.json({ currentTime: dbTime.toISOString(), source: 'Database Time' });
     } catch (e) {
+        console.error("Error in server time: " + e);
         res.json({ currentTime: new Date().toISOString(), source: 'Server Time' });
     }
 });

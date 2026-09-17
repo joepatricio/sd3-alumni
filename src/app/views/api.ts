@@ -115,7 +115,7 @@ export interface EventData {
 
 export interface BulletinCommentData {
     id: string;
-    profileId: string;
+    userId: string;
     bulletinId: string;
     commentDate: string;
     comment: string;

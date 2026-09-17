@@ -400,9 +400,9 @@ export function AdminDonations() {
     const renderCustomTooltip = ({ active, payload }: any, totalKey: string) => {
         if (active && payload && payload.length) {
             const data = payload[0].payload;
-            let sum = 0;
-            if (totalKey === 'status') sum = statusData.reduce((acc, curr) => acc + curr.value, 0);
-            else sum = bankData.reduce((acc, curr) => acc + curr.value, 0);
+            const sum = totalKey === 'status' 
+                ? statusData.reduce((acc, curr) => acc + curr.value, 0)
+                : bankData.reduce((acc, curr) => acc + curr.value, 0);
 
             const percent = sum > 0 ? ((data.value / sum) * 100).toFixed(1) : '0.0';
 

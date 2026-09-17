@@ -24,7 +24,7 @@ const generateUsers = (count: number) => {
         const batch = (2000 + (i % 25)).toString();
         const status = statuses[i % statuses.length];
 
-        let grantedDateObj = new Date(2025, i % 12, (i % 28) + 1);
+        const grantedDateObj = new Date(2025, i % 12, (i % 28) + 1);
         const grantedDate = formatDate(grantedDateObj, 'short');
 
         let reason = undefined;
