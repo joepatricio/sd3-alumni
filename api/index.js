@@ -159,6 +159,33 @@ app.post('/api/auth/check-email', async (req, res) => {
     }
 });
 
+app.post('/api/auth/reset-password', async (req, res) => {
+    try {
+        const { email, password } = req.body;
+        if (!email || !password) return res.status(400).json({ error: 'Email and password are required' });
+
+        const userAuth = await prisma.userAuth.findUnique({
+            where: { email }
+        });
+
+        if (!userAuth) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+
+        const passwordHash = bcrypt.hashSync(password, 10);
+
+        await prisma.userAuth.update({
+            where: { email },
+            data: { passwordHash }
+        });
+
+        res.json({ message: 'Password updated successfully' });
+    } catch (error) {
+        console.error("Reset password failed:", error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
 // User limits check and registration
 app.post('/api/auth/register', async (req, res) => {
     let { fullName, email, password, degreeProgram, batch, gender } = req.body;

@@ -1,6 +1,8 @@
 
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { useAuth } from '@/app/views/auth';
 import { Mail, Loader2, ArrowLeft } from 'lucide-react';
+import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -26,6 +28,15 @@ const forgotPasswordSchema = z.object({
 
 export function ForgotPassword() {
     const navigate = useNavigate();
+    const location = useLocation();
+    const { isLoggedIn } = useAuth();
+
+    useEffect(() => {
+        if (isLoggedIn) {
+            const from = location.state?.from || '/profile';
+            navigate(from, { replace: true });
+        }
+    }, [isLoggedIn, navigate]);
 
     const form = useForm<z.infer<typeof forgotPasswordSchema>>({
         resolver: zodResolver(forgotPasswordSchema) as any,

@@ -1,10 +1,12 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Lock, CheckCircle2 } from 'lucide-react';
+import { useAuth } from '@/app/views/auth';
+import { Lock, Eye, EyeOff, CheckCircle2 } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { toast } from 'sonner';
+import { api } from '@/app/views/api';
 
 import { Button } from '@components/ui/button';
 import { Input } from '@components/ui/input';
@@ -29,11 +31,22 @@ const resetPasswordSchema = z.object({
 
 export function ResetPassword() {
     const [isSubmitted, setIsSubmitted] = useState(false);
+    const [showPassword, setShowPassword] = useState(false);
     const [countdown, setCountdown] = useState(3);
     const navigate = useNavigate();
     const location = useLocation();
+    const { isLoggedIn } = useAuth();
 
-    const email = location.state?.email || "your email address";
+    useEffect(() => {
+        if (isLoggedIn) {
+            const from = location.state?.from || '/profile';
+            navigate(from, { replace: true });
+        } else if (!location.state?.email) {
+            navigate('/forgot-password', { replace: true });
+        }
+    }, [isLoggedIn, navigate, location.state]);
+
+    const email = location.state?.email;
 
     const form = useForm<z.infer<typeof resetPasswordSchema>>({
         resolver: zodResolver(resetPasswordSchema) as any,
@@ -43,24 +56,28 @@ export function ResetPassword() {
         },
     });
 
-    const onSubmit = (_values: z.infer<typeof resetPasswordSchema>) => {
-        // Mock API call to reset password
-        console.log('Reset password attempt for:', email);
+    const onSubmit = async (_values: z.infer<typeof resetPasswordSchema>) => {
+        try {
+            await api.post('/auth/reset-password', { email, password: _values.password });
 
-        setIsSubmitted(true);
-        toast.success("Password reset successfully!");
+            setIsSubmitted(true);
+            toast.success("Password reset successfully!");
 
-        // Countdown timer
-        const timer = setInterval(() => {
-            setCountdown((prev) => {
-                if (prev <= 1) {
-                    clearInterval(timer);
-                    navigate('/login');
-                    return 0;
-                }
-                return prev - 1;
-            });
-        }, 1000);
+            // Countdown timer
+            const timer = setInterval(() => {
+                setCountdown((prev) => {
+                    if (prev <= 1) {
+                        clearInterval(timer);
+                        navigate('/login');
+                        return 0;
+                    }
+                    return prev - 1;
+                });
+            }, 1000);
+        } catch (error) {
+            console.error('Reset password failed:', error);
+            toast.error("Failed to reset password. Please try again.");
+        }
     };
 
     if (isSubmitted) {
@@ -109,6 +126,7 @@ export function ResetPassword() {
                 <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
                     <Form {...form}>
                         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                            {/* The two fields share very similar code, it should be a shared component ideally... */}
                             <FormField
                                 control={form.control}
                                 name="password"
@@ -116,11 +134,26 @@ export function ResetPassword() {
                                     <FormItem>
                                         <FormLabel>New Password</FormLabel>
                                         <FormControl>
-                                            <Input 
-                                                type="password" 
-                                                placeholder="Enter your new password" 
-                                                {...field} 
-                                            />
+                                            <div className="relative">
+                                                <Lock className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
+                                                <Input
+                                                    type={showPassword ? "text" : "password"}
+                                                    placeholder="Enter your password"
+                                                    className="pl-10 pr-10 selection:bg-blue-500 selection:text-white"
+                                                    {...field}
+                                                />
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setShowPassword(!showPassword)}
+                                                    className="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600"
+                                                >
+                                                    {showPassword ? (
+                                                        <EyeOff className="h-5 w-5" />
+                                                    ) : (
+                                                        <Eye className="h-5 w-5" />
+                                                    )}
+                                                </button>
+                                            </div>
                                         </FormControl>
                                         <FormMessage />
                                     </FormItem>
@@ -134,19 +167,34 @@ export function ResetPassword() {
                                     <FormItem>
                                         <FormLabel>Confirm New Password</FormLabel>
                                         <FormControl>
-                                            <Input 
-                                                type="password" 
-                                                placeholder="Confirm your new password" 
-                                                {...field} 
-                                            />
+                                            <div className="relative">
+                                                <Lock className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
+                                                <Input
+                                                    type={showPassword ? "text" : "password"}
+                                                    placeholder="Enter your password"
+                                                    className="pl-10 pr-10 selection:bg-blue-500 selection:text-white"
+                                                    {...field}
+                                                />
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setShowPassword(!showPassword)}
+                                                    className="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600"
+                                                >
+                                                    {showPassword ? (
+                                                        <EyeOff className="h-5 w-5" />
+                                                    ) : (
+                                                        <Eye className="h-5 w-5" />
+                                                    )}
+                                                </button>
+                                            </div>
                                         </FormControl>
                                         <FormMessage />
                                     </FormItem>
                                 )}
                             />
 
-                            <Button 
-                                type="submit" 
+                            <Button
+                                type="submit"
                                 className="w-full bg-brand-primary hover:bg-brand-primary-hover"
                             >
                                 Reset Password
