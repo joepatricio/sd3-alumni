@@ -106,7 +106,7 @@ ACHIEVEMENTS = [
     {"achievementCategory": 3, "achievementTier": 2, "achievementTitle": "Event Enthusiast II", "achievementDescription": "Attended 5 events.", "achievementIcon": "Calendar"},
     {"achievementCategory": 3, "achievementTier": 3, "achievementTitle": "Event Enthusiast III", "achievementDescription": "Attended 15 events.", "achievementIcon": "CalendarHeart"},
     {"achievementCategory": 4, "achievementTier": 1, "achievementTitle": "Conversation Starter I", "achievementDescription": "Created 1 bulletin.", "achievementIcon": "Newspaper"},
-    {"achievementCategory": 4, "achievementTier": 2, "achievementTitle": "Conversation Starter II", "achievementDescription": "Created 5 bulletins.", "achievementIcon": "Newspaper"},
+    {"achievementCategory": 4, "achievementTier": 2, "achievementTitle": "Conversation Starter II", "achievementDescription": "Created 5 bulletins.", "achievementIcon": "Landmark"},
     {"achievementCategory": 5, "achievementTier": 1, "achievementTitle": "Contributor I", "achievementDescription": "Written 10 comments.", "achievementIcon": "MessageSquare"},
     {"achievementCategory": 5, "achievementTier": 2, "achievementTitle": "Contributor II", "achievementDescription": "Written 50 comments.", "achievementIcon": "MessageCircle"},
     {"achievementCategory": 10000, "achievementTier": 1, "achievementTitle": "READS Alumni", "achievementDescription": "Part of the Recoletos Educational Assistance for Deserving Students.", "achievementIcon": "BookOpen"},
@@ -334,7 +334,7 @@ def generate_phase_3(USER, USER_STATISTICS):
                     "achievementTier": 3,
                     "achievedDate": to_iso(ten_year_later)
                 })
-            elif NOW > three_year_later:
+            if NOW > three_year_later:
                 USER_ACHIEVEMENT.append({
                     "id": generate(size=10),
                     "userId": uid,
@@ -342,7 +342,7 @@ def generate_phase_3(USER, USER_STATISTICS):
                     "achievementTier": 2,
                     "achievedDate": to_iso(three_year_later)
                 })
-            elif NOW > one_year_later:
+            if NOW > one_year_later:
                 USER_ACHIEVEMENT.append({
                     "id": generate(size=10),
                     "userId": uid,
@@ -713,19 +713,19 @@ def generate_phase_5(USER, BULLETIN, EVENTS, USER_STATISTICS, USER_CONNECTIONS, 
                 
         if attended_count >= 15:
             award_achievement(3, 3)
-        elif attended_count >= 5:
+        if attended_count >= 5:
             award_achievement(3, 2)
-        elif attended_count >= 1:
+        if attended_count >= 1:
             award_achievement(3, 1)
             
         if bulletin_count >= 5:
             award_achievement(4, 2)
-        elif bulletin_count >= 1:
+        if bulletin_count >= 1:
             award_achievement(4, 1)
             
         if comment_count >= 50:
             award_achievement(5, 2)
-        elif comment_count >= 10:
+        if comment_count >= 10:
             award_achievement(5, 1)
             
         stat["achievements"] = sum(1 for a in USER_ACHIEVEMENT if a["userId"] == uid)

@@ -1,10 +1,11 @@
-import { useState } from 'react';
+
 import { Link, useNavigate } from 'react-router-dom';
-import { Mail, Loader2, ArrowLeft, CheckCircle2 } from 'lucide-react';
+import { Mail, Loader2, ArrowLeft } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { toast } from 'sonner';
+import { api } from '@/app/views/api';
 
 import { Button } from '@components/ui/button';
 import { Input } from '@components/ui/input';
@@ -24,8 +25,6 @@ const forgotPasswordSchema = z.object({
 });
 
 export function ForgotPassword() {
-    const [isSubmitted, setIsSubmitted] = useState(false);
-    const [countdown, setCountdown] = useState(5);
     const navigate = useNavigate();
 
     const form = useForm<z.infer<typeof forgotPasswordSchema>>({
@@ -35,56 +34,19 @@ export function ForgotPassword() {
         },
     });
 
-    const onSubmit = (values: z.infer<typeof forgotPasswordSchema>) => {
-        // Mock API call
-        console.log('Forgot password attempt:', values);
-
-        setIsSubmitted(true);
-        toast.success("Password reset link sent!");
-
-        // Countdown timer
-        const timer = setInterval(() => {
-            setCountdown((prev) => {
-                if (prev <= 1) {
-                    clearInterval(timer);
-                    navigate('/');
-                    return 0;
-                }
-                return prev - 1;
-            });
-        }, 1000);
+    const onSubmit = async (values: z.infer<typeof forgotPasswordSchema>) => {
+        try {
+            const res = await api.post('/auth/check-email', { email: values.email });
+            if (res.data.exists) {
+                navigate('/reset-password', { state: { email: values.email } });
+            } else {
+                toast.error("This email is not registered.");
+            }
+        } catch (error) {
+            console.error(error);
+            toast.error("An error occurred. Please try again.");
+        }
     };
-
-    if (isSubmitted) {
-        return (
-            <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
-                <div className="sm:mx-auto sm:w-full sm:max-w-md">
-                    <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10 text-center">
-                        <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-green-100 mb-4">
-                            <CheckCircle2 className="h-6 w-6 text-green-600" />
-                        </div>
-                        <h2 className="text-2xl font-bold text-gray-900 mb-2">Check your email</h2>
-                        <p className="text-gray-600 mb-6">
-                            We've sent a password reset link to <br />
-                            <span className="font-semibold text-gray-900">{form.getValues().email}</span>
-                        </p>
-                        <p className="text-sm text-gray-500">
-                            Redirecting to homepage in {countdown} seconds...
-                        </p>
-                        <div className="mt-6">
-                            <Button
-                                variant="outline"
-                                className="w-full"
-                                onClick={() => navigate('/')}
-                            >
-                                Return to Homepage Now
-                            </Button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        );
-    }
 
     return (
         <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">

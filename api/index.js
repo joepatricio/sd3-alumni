@@ -15,7 +15,72 @@ const adapter = new PrismaBetterSqlite3({
     url: process.env.DATABASE_URL || "file:./dev.db",
 });
 
-export const prisma = new PrismaClient({ adapter });
+const basePrisma = new PrismaClient({ adapter });
+
+const checkAndAwardAchievements = async (userId, stats) => {
+    try {
+        const achievements = await basePrisma.achievement.findMany();
+        const getAch = (cat, tier) => achievements.find(a => a.achievementCategory === cat && a.achievementTier === tier);
+
+        const award = async (ach) => {
+            if (!ach) return;
+            const existing = await basePrisma.userAchievement.findFirst({
+                where: { userId: userId, achievementId: ach.id }
+            });
+            if (!existing) {
+                await basePrisma.userAchievement.create({
+                    data: {
+                        userId: userId,
+                        achievementId: ach.id,
+                        achievementTier: ach.achievementTier,
+                        achievedDate: new Date().toISOString()
+                    }
+                });
+                console.log(`Awarded ${ach.achievementTitle} to ${userId}`);
+            }
+        };
+
+        // The donatedAmount field is only a tally of public donations.
+        // This logic still passes because there's an additional check in award() that 
+        // checks if the achievement has already been awarded.
+        if (stats.donatedAmount > 0) await award(getAch(2, 1));
+
+        if (stats.eventsAttended >= 15) await award(getAch(3, 3));
+        if (stats.eventsAttended >= 5) await award(getAch(3, 2));
+        if (stats.eventsAttended >= 1) await award(getAch(3, 1));
+
+        if (stats.bulletinsCreated >= 5) await award(getAch(4, 2));
+        if (stats.bulletinsCreated >= 1) await award(getAch(4, 1));
+
+        if (stats.commentsWritten >= 50) await award(getAch(5, 2));
+        if (stats.commentsWritten >= 10) await award(getAch(5, 1));
+
+        // Update achievements count in stats
+        const userAchs = await basePrisma.userAchievement.count({ where: { userId: userId } });
+        if (userAchs !== stats.achievements) {
+            await basePrisma.userStatistic.update({
+                where: { userId: userId },
+                data: { achievements: userAchs }
+            });
+        }
+    } catch (e) {
+        console.error("Failed to check/award achievements:", e);
+    }
+};
+
+export const prisma = basePrisma.$extends({
+    query: {
+        userStatistic: {
+            async update({ args, query }) {
+                const result = await query(args);
+                if (result) {
+                    checkAndAwardAchievements(result.userId, result).catch(console.error);
+                }
+                return result;
+            }
+        }
+    }
+});
 
 const app = express();
 
@@ -77,6 +142,22 @@ const authenticateAdminToken = (req, res, next) => {
 // =======================
 // AUTH ROUTES & CUSTOM OVERRIDES
 // =======================
+
+app.post('/api/auth/check-email', async (req, res) => {
+    try {
+        const { email } = req.body;
+        if (!email) return res.status(400).json({ error: 'Email is required' });
+
+        const existingUser = await prisma.userAuth.findUnique({
+            where: { email }
+        });
+
+        res.json({ exists: !!existingUser });
+    } catch (error) {
+        console.error("Check email failed:", error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
 
 // User limits check and registration
 app.post('/api/auth/register', async (req, res) => {
@@ -230,6 +311,38 @@ app.post('/api/auth/login', async (req, res) => {
             where: { userId: userAuth.userId },
             data: { lastLogin: new Date() }
         });
+
+        // X-Year Club Check
+        const userStats = await prisma.userStatistic.findFirst({ where: { userId: userAuth.userId } });
+        if (userStats && userStats.dateRegistered) {
+            const dateRegistered = new Date(userStats.dateRegistered);
+            const now = new Date();
+            const diffYears = (now - dateRegistered) / (1000 * 60 * 60 * 24 * 365.25);
+
+            const achievements = await prisma.achievement.findMany();
+            const getAch = (cat, tier) => achievements.find(a => a.achievementCategory === cat && a.achievementTier === tier);
+
+            const award = async (ach) => {
+                if (!ach) return;
+                const existing = await prisma.userAchievement.findFirst({
+                    where: { userId: userAuth.userId, achievementId: ach.id }
+                });
+                if (!existing) {
+                    await prisma.userAchievement.create({
+                        data: {
+                            userId: userAuth.userId,
+                            achievementId: ach.id,
+                            achievementTier: ach.achievementTier,
+                            achievedDate: new Date().toISOString()
+                        }
+                    });
+                }
+            };
+
+            if (diffYears >= 10) await award(getAch(1, 3));
+            if (diffYears >= 3) await award(getAch(1, 2));
+            if (diffYears >= 1) await award(getAch(1, 1));
+        }
 
         const token = jwt.sign(
             { id: userAuth.user.id, email: userAuth.email },
@@ -447,8 +560,24 @@ const concludeEvent = async (eventId) => {
                 data: { eventStatusId: concludedStatus.id }
             });
 
-            const attendees = event.rsvps.filter(r => r.isAttending);
-            for (const rsvp of attendees) {
+            await tx.userRsvp.updateMany({
+                where: {
+                    eventId: eventId,
+                    isAttending: true
+                },
+                data: {
+                    isValid: true
+                }
+            });
+
+            const validRsvps = await tx.userRsvp.findMany({
+                where: {
+                    eventId: eventId,
+                    isValid: true
+                }
+            });
+
+            for (const rsvp of validRsvps) {
                 const stat = await tx.userStatistic.findFirst({ where: { userId: rsvp.userId } });
                 if (stat) {
                     await tx.userStatistic.update({
@@ -818,14 +947,13 @@ app.post('/api/admin/events', authenticateAdminToken, async (req, res) => {
             include: defaultIncludes['event']
         });
 
-        // If newly created event is Approved or Concluded, increment author's eventsCreated stat
         const statusRec = await prisma.eventStatus.findUnique({ where: { id: newEvent.eventStatusId } });
         if (statusRec && ['Approved', 'Concluded'].includes(statusRec.statusName)) {
             const userStats = await prisma.userStatistic.findFirst({ where: { userId: authorId } });
             if (userStats) {
                 await prisma.userStatistic.update({
                     where: { userId: userStats.userId },
-                    data: { eventsCreated: userStats.eventsCreated + 1 }
+                    data: { eventsCreated: { increment: 1 } }
                 });
             }
         }
@@ -906,141 +1034,145 @@ app.get('/api/admin/bulletins', authenticateAdminToken, async (req, res) => {
 
 // Helper to update event status, admin audit info (adminId, reviewDate), and userStatistics eventsCreated count
 async function updateEventStatusAndStats({ eventId, newStatusName, adminId, additionalData = {} }) {
-    const existing = await prisma.event.findUnique({
-        where: { id: eventId },
-        include: { status: true }
-    });
-    if (!existing) return null;
-
-    const previousStatus = existing.status?.statusName;
-    const authorId = existing.authorId;
-
-    const updateData = { ...additionalData };
-
-    if (adminId) {
-        updateData.adminId = adminId;
-    }
-    updateData.reviewDate = new Date();
-
-    if (newStatusName) {
-        const statusRecord = await prisma.eventStatus.findFirst({
-            where: {
-                OR: [
-                    { id: String(newStatusName) },
-                    { statusName: String(newStatusName) }
-                ]
-            }
+    return await prisma.$transaction(async (tx) => {
+        const existing = await tx.event.findUnique({
+            where: { id: eventId },
+            include: { status: true }
         });
-        if (statusRecord) {
-            updateData.eventStatusId = statusRecord.id;
+        if (!existing) return null;
+
+        const previousStatus = existing.status?.statusName;
+        const authorId = existing.authorId;
+
+        const updateData = { ...additionalData };
+
+        if (adminId) {
+            updateData.adminId = adminId;
         }
-    }
+        updateData.reviewDate = new Date();
 
-    const updatedEvent = await prisma.event.update({
-        where: { id: eventId },
-        data: updateData,
-        include: defaultIncludes['event']
-    });
-
-    const currentStatusRecord = await prisma.eventStatus.findUnique({
-        where: { id: updatedEvent.eventStatusId }
-    });
-    const updatedStatusName = currentStatusRecord?.statusName || newStatusName;
-
-    if (authorId && previousStatus && updatedStatusName && previousStatus !== updatedStatusName) {
-        const validStatuses = ['Approved', 'Concluded'];
-        const isNowValid = validStatuses.includes(updatedStatusName);
-        const wasValid = validStatuses.includes(previousStatus);
-
-        if (isNowValid && !wasValid) {
-            const userStats = await prisma.userStatistic.findFirst({ where: { userId: authorId } });
-            if (userStats) {
-                await prisma.userStatistic.update({
-                    where: { userId: userStats.userId },
-                    data: { eventsCreated: userStats.eventsCreated + 1 }
-                });
-            }
-        } else if (wasValid && !isNowValid) {
-            const userStats = await prisma.userStatistic.findFirst({ where: { userId: authorId } });
-            if (userStats && userStats.eventsCreated > 0) {
-                await prisma.userStatistic.update({
-                    where: { userId: userStats.userId },
-                    data: { eventsCreated: Math.max(0, userStats.eventsCreated - 1) }
-                });
+        if (newStatusName) {
+            const statusRecord = await tx.eventStatus.findFirst({
+                where: {
+                    OR: [
+                        { id: String(newStatusName) },
+                        { statusName: String(newStatusName) }
+                    ]
+                }
+            });
+            if (statusRecord) {
+                updateData.eventStatusId = statusRecord.id;
             }
         }
-    }
 
-    return updatedEvent;
+        const updatedEvent = await tx.event.update({
+            where: { id: eventId },
+            data: updateData,
+            include: defaultIncludes['event']
+        });
+
+        const currentStatusRecord = await tx.eventStatus.findUnique({
+            where: { id: updatedEvent.eventStatusId }
+        });
+        const updatedStatusName = currentStatusRecord?.statusName || newStatusName;
+
+        if (authorId && previousStatus && updatedStatusName && previousStatus !== updatedStatusName) {
+            const validStatuses = ['Approved', 'Concluded'];
+            const isNowValid = validStatuses.includes(updatedStatusName);
+            const wasValid = validStatuses.includes(previousStatus);
+
+            if (isNowValid && !wasValid) {
+                const userStats = await tx.userStatistic.findFirst({ where: { userId: authorId } });
+                if (userStats) {
+                    await tx.userStatistic.update({
+                        where: { userId: userStats.userId },
+                        data: { eventsCreated: { increment: 1 } }
+                    });
+                }
+            } else if (wasValid && !isNowValid) {
+                const userStats = await tx.userStatistic.findFirst({ where: { userId: authorId } });
+                if (userStats && userStats.eventsCreated > 0) {
+                    await tx.userStatistic.update({
+                        where: { userId: userStats.userId },
+                        data: { eventsCreated: { decrement: 1 } }
+                    });
+                }
+            }
+        }
+
+        return updatedEvent;
+    });
 }
 
 // Helper to update bulletin status, admin audit info (adminId, reviewDate), and userStatistics bulletinsCreated count
 async function updateBulletinStatusAndStats({ bulletinId, newStatusName, adminId, additionalData = {} }) {
-    const existing = await prisma.bulletin.findUnique({
-        where: { id: bulletinId },
-        include: { status: true }
-    });
-    if (!existing) return null;
-
-    const previousStatus = existing.status?.statusName;
-    const authorId = existing.authorId;
-
-    const updateData = { ...additionalData };
-
-    if (adminId) {
-        updateData.adminId = adminId;
-    }
-    updateData.reviewDate = new Date();
-
-    if (newStatusName) {
-        const statusRecord = await prisma.contentStatus.findFirst({
-            where: {
-                OR: [
-                    { id: String(newStatusName) },
-                    { statusName: String(newStatusName) }
-                ]
-            }
+    return await prisma.$transaction(async (tx) => {
+        const existing = await tx.bulletin.findUnique({
+            where: { id: bulletinId },
+            include: { status: true }
         });
-        if (statusRecord) {
-            updateData.contentStatusId = statusRecord.id;
+        if (!existing) return null;
+
+        const previousStatus = existing.status?.statusName;
+        const authorId = existing.authorId;
+
+        const updateData = { ...additionalData };
+
+        if (adminId) {
+            updateData.adminId = adminId;
         }
-    }
+        updateData.reviewDate = new Date();
 
-    const updatedBulletin = await prisma.bulletin.update({
-        where: { id: bulletinId },
-        data: updateData,
-        include: defaultIncludes['bulletin']
-    });
-
-    const currentStatusRecord = await prisma.contentStatus.findUnique({
-        where: { id: updatedBulletin.contentStatusId }
-    });
-    const updatedStatusName = currentStatusRecord?.statusName || newStatusName;
-
-    if (authorId && previousStatus && updatedStatusName && previousStatus !== updatedStatusName) {
-        const isNowApproved = updatedStatusName === 'Approved';
-        const wasApproved = previousStatus === 'Approved';
-
-        if (isNowApproved && !wasApproved) {
-            const userStats = await prisma.userStatistic.findFirst({ where: { userId: authorId } });
-            if (userStats) {
-                await prisma.userStatistic.update({
-                    where: { userId: userStats.userId },
-                    data: { bulletinsCreated: userStats.bulletinsCreated + 1 }
-                });
-            }
-        } else if (wasApproved && !isNowApproved) {
-            const userStats = await prisma.userStatistic.findFirst({ where: { userId: authorId } });
-            if (userStats && userStats.bulletinsCreated > 0) {
-                await prisma.userStatistic.update({
-                    where: { userId: userStats.userId },
-                    data: { bulletinsCreated: Math.max(0, userStats.bulletinsCreated - 1) }
-                });
+        if (newStatusName) {
+            const statusRecord = await tx.contentStatus.findFirst({
+                where: {
+                    OR: [
+                        { id: String(newStatusName) },
+                        { statusName: String(newStatusName) }
+                    ]
+                }
+            });
+            if (statusRecord) {
+                updateData.contentStatusId = statusRecord.id;
             }
         }
-    }
 
-    return updatedBulletin;
+        const updatedBulletin = await tx.bulletin.update({
+            where: { id: bulletinId },
+            data: updateData,
+            include: defaultIncludes['bulletin']
+        });
+
+        const currentStatusRecord = await tx.contentStatus.findUnique({
+            where: { id: updatedBulletin.contentStatusId }
+        });
+        const updatedStatusName = currentStatusRecord?.statusName || newStatusName;
+
+        if (authorId && previousStatus && updatedStatusName && previousStatus !== updatedStatusName) {
+            const isNowApproved = updatedStatusName === 'Approved';
+            const wasApproved = previousStatus === 'Approved';
+
+            if (isNowApproved && !wasApproved) {
+                const userStats = await tx.userStatistic.findFirst({ where: { userId: authorId } });
+                if (userStats) {
+                    await tx.userStatistic.update({
+                        where: { userId: userStats.userId },
+                        data: { bulletinsCreated: { increment: 1 } }
+                    });
+                }
+            } else if (wasApproved && !isNowApproved) {
+                const userStats = await tx.userStatistic.findFirst({ where: { userId: authorId } });
+                if (userStats && userStats.bulletinsCreated > 0) {
+                    await tx.userStatistic.update({
+                        where: { userId: userStats.userId },
+                        data: { bulletinsCreated: { decrement: 1 } }
+                    });
+                }
+            }
+        }
+
+        return updatedBulletin;
+    });
 }
 
 // Admin PATCH Bulletin Status
@@ -1086,14 +1218,13 @@ app.post('/api/admin/bulletins', authenticateAdminToken, async (req, res) => {
             include: defaultIncludes['bulletin']
         });
 
-        // If newly created bulletin is Approved, increment author's bulletinsCreated stat
         const statusRec = await prisma.contentStatus.findUnique({ where: { id: newBulletin.contentStatusId } });
         if (statusRec?.statusName === 'Approved') {
             const userStats = await prisma.userStatistic.findFirst({ where: { userId: authorId } });
             if (userStats) {
                 await prisma.userStatistic.update({
                     where: { userId: userStats.userId },
-                    data: { bulletinsCreated: userStats.bulletinsCreated + 1 }
+                    data: { bulletinsCreated: { increment: 1 } }
                 });
             }
         }
@@ -1429,13 +1560,38 @@ app.post('/api/admin/users/:id/status', async (req, res) => {
                 }
             });
 
-            await tx.user.update({
+            const updatedUsr = await tx.user.update({
                 where: { id },
                 data: {
                     userStatusId: statusObj.id,
                     currentRecordId: record.id
                 }
             });
+
+            // Handle Verified achievement (Category 10001)
+            const achievements = await tx.achievement.findMany();
+            const verifiedAch = achievements.find(a => a.achievementCategory === 10001);
+            if (verifiedAch) {
+                if (statusObj.statusName === 'Official') {
+                    const existing = await tx.userAchievement.findFirst({
+                        where: { userId: id, achievementId: verifiedAch.id }
+                    });
+                    if (!existing) {
+                        await tx.userAchievement.create({
+                            data: {
+                                userId: id,
+                                achievementId: verifiedAch.id,
+                                achievementTier: 1,
+                                achievedDate: new Date().toISOString()
+                            }
+                        });
+                    }
+                } else {
+                    await tx.userAchievement.deleteMany({
+                        where: { userId: id, achievementId: verifiedAch.id }
+                    });
+                }
+            }
 
             return tx.user.findUnique({
                 where: { id },

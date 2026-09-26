@@ -120,12 +120,10 @@ export function EventsFeed() {
                           : event.location?.landmark || 'TBA'}
                       </span>
                     </div>
-                    {event.responses > 0 && (
-                      <div className="flex items-center gap-2">
-                        <Users className="w-4 h-4" />
-                        <span className="text-sm">{event.responses} attending</span>
-                      </div>
-                    )}
+                    <div className="flex items-center gap-2">
+                      <Users className="w-4 h-4" />
+                      <span className="text-sm">{event.responses} attending</span>
+                    </div>
                   </div>
                   <Link
                     to={`/events/${event.id}`}

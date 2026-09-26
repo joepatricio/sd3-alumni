@@ -17,6 +17,7 @@ const BulletinDetail = lazy(() => import('@pages/user/BulletinDetail').then(m =>
 const About = lazy(() => import('@pages/user/About').then(m => ({ default: m.About })));
 const Login = lazy(() => import('@pages/user/Login').then(m => ({ default: m.Login })));
 const ForgotPassword = lazy(() => import('@pages/user/ForgotPassword').then(m => ({ default: m.ForgotPassword })));
+const ResetPassword = lazy(() => import('@pages/user/ResetPassword').then(m => ({ default: m.ResetPassword })));
 const TermsOfService = lazy(() => import('@pages/user/TermsOfService').then(m => ({ default: m.TermsOfService })));
 const PrivacyPolicy = lazy(() => import('@pages/user/PrivacyPolicy').then(m => ({ default: m.PrivacyPolicy })));
 const Profile = lazy(() => import('@pages/user/Profile').then(m => ({ default: m.Profile })));
@@ -76,6 +77,7 @@ export default function AppRoutes() {
                 <Route path="/login" element={withSuspense(Login)} />
                 <Route path="/register" element={withSuspense(Register)} />
                 <Route path="/forgot-password" element={withSuspense(ForgotPassword)} />
+                <Route path="/reset-password" element={withSuspense(ResetPassword)} />
                 <Route path="/terms" element={withSuspense(TermsOfService)} />
                 <Route path="/privacy" element={withSuspense(PrivacyPolicy)} />
 

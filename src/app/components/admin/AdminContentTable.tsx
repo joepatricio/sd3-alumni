@@ -4,7 +4,7 @@ import { Button } from '@components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@components/ui/tabs';
 import { Input } from '@components/ui/input';
 import { Badge } from '@components/ui/badge';
-import { ArrowUp, ArrowDown, ArrowUpDown, Ban, ChevronLeft, ChevronRight, Search, Eye, FileText, HardHat } from 'lucide-react';
+import { ArrowUp, ArrowDown, ArrowUpDown, Ban, ChevronLeft, ChevronRight, Search, Eye, FileText, HardHat, Lock } from 'lucide-react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@components/ui/select';
 import { getCategoryColor, formatDate } from '@/app/views/formatters';
@@ -15,7 +15,7 @@ const CreateEventModal = lazy(loadCreateEventModal);
 
 const loadCreateBulletinModal = () => import('@components/user/CreateBulletinModal').then(m => ({ default: m.CreateBulletinModal }));
 const CreateBulletinModal = lazy(loadCreateBulletinModal);
-export const ACCOUNT_SCOPES = ['All', 'Regular', 'Official', 'Banned'] as const;
+export const ACCOUNT_SCOPES = ['All', 'Regular', 'Official', 'Suspended', 'Banned'] as const;
 export type AccountScope = typeof ACCOUNT_SCOPES[number];
 
 export interface ContentItem {
@@ -30,6 +30,7 @@ export interface ContentItem {
     category: string;
     isOfficial: boolean;
     isBanned?: boolean;
+    isSuspended?: boolean;
 }
 
 interface AdminContentTableProps {
@@ -45,7 +46,7 @@ interface AdminContentTableProps {
         searchEndDate?: string,
         status: string,
         categories?: string[],
-        accountScope?: AccountScope,
+        accountScope?: AccountScope[],
         sort: { key: string, direction: 'asc' | 'desc' } | null
     }) => Promise<{ data: ContentItem[], total: number }>;
     primaryColorClass: string;
@@ -132,8 +133,8 @@ export function AdminContentTable({
         setSearchEndDate(end);
     };
 
-    const [accountScope, setAccountScope] = useState<AccountScope>('All');
-    const [appliedAccountScope, setAppliedAccountScope] = useState<AccountScope>('All');
+    const [accountScope, setAccountScope] = useState<AccountScope[]>(['All']);
+    const [appliedAccountScope, setAppliedAccountScope] = useState<AccountScope[]>(['All']);
 
     const handleApplyFilters = () => {
         setAppliedSearchName(searchName);
@@ -151,13 +152,13 @@ export function AdminContentTable({
         setSearchStartDate('');
         setSearchEndDate('');
         setSearchCategories(['All']);
-        setAccountScope('All');
+        setAccountScope(['All']);
         setAppliedSearchName('');
         setAppliedSearchAuthor('');
         setAppliedSearchStartDate('');
         setAppliedSearchEndDate('');
         setAppliedSearchCategories(['All']);
-        setAppliedAccountScope('All');
+        setAppliedAccountScope(['All']);
         setCurrentPage(1);
     };
 
@@ -329,7 +330,9 @@ export function AdminContentTable({
                                     <div className="flex items-center gap-1">Author {renderSortIcon('author')}</div>
                                 </th>
                                 <th className="px-6 py-3 cursor-pointer hover:bg-gray-100 transition-colors" onClick={() => handleSort('date')}>
-                                    <div className="flex items-center gap-1">Date Submitted {renderSortIcon('date')}</div>
+                                    <div className="flex items-center gap-1">
+                                        {contentType === 'Event' ? 'Event Date' : 'Date Submitted'}{renderSortIcon('date')}
+                                    </div>
                                 </th>
                                 {/* <th className="px-9 py-3 ">Quick Actions</th> */}
                                 <th className="px-9 py-3">Actions</th>
@@ -356,6 +359,11 @@ export function AdminContentTable({
                                             {item.isBanned && (
                                                 <span title="Banned User">
                                                     <Ban className="w-4 h-4 text-red-600" />
+                                                </span>
+                                            )}
+                                            {item.isSuspended && (
+                                                <span title="Suspended User">
+                                                    <Lock className="w-4 h-4 text-yellow-600" />
                                                 </span>
                                             )}
                                             <span>{item.author}</span>
@@ -600,7 +608,7 @@ export function AdminContentTable({
                             {ACCOUNT_SCOPES
                                 .filter((scope) => !(contentType === 'Event' && scope === 'Regular'))
                                 .map((scope) => {
-                                    const isSelected = accountScope === scope;
+                                    const isSelected = accountScope.includes(scope);
                                     return (
                                         <Button
                                             key={scope}
@@ -608,12 +616,25 @@ export function AdminContentTable({
                                             size="sm"
                                             className={isSelected ? "bg-brand-secondary hover:bg-brand-secondary-hover text-white" : "border border-gray-300"}
                                             onClick={() => {
-                                                setAccountScope(scope);
-                                                setAppliedAccountScope(scope);
+                                                let newScope = [...accountScope];
+                                                if (scope === 'All') {
+                                                    newScope = ['All'];
+                                                } else {
+                                                    newScope = newScope.filter(s => s !== 'All');
+                                                    if (newScope.includes(scope)) {
+                                                        newScope = newScope.filter(s => s !== scope);
+                                                        if (newScope.length === 0) newScope = ['All'];
+                                                    } else {
+                                                        newScope.push(scope);
+                                                    }
+                                                }
+                                                setAccountScope(newScope);
+                                                setAppliedAccountScope(newScope);
                                                 setCurrentPage(1);
                                             }}
                                         >
-                                            {scope === 'Official' && <HardHat className="w-3.5 h-3.5 mr-1" />}
+                                            {scope === 'Official' && <HardHat className={`w-3.5 h-3.5 mr-1 ${isSelected ? 'text-white' : 'text-brand-primary'}`} />}
+                                            {scope === 'Suspended' && <Lock className={`w-3.5 h-3.5 mr-1 ${isSelected ? 'text-white' : 'text-yellow-600'}`} />}
                                             {scope === 'Banned' && <Ban className={`w-3.5 h-3.5 mr-1 ${isSelected ? 'text-white' : 'text-red-600'}`} />}
                                             {scope}
                                         </Button>
@@ -666,8 +687,8 @@ export function AdminContentTable({
                                     size="sm"
                                     className="border border-gray-300"
                                     onClick={() => {
-                                        setAccountScope('All');
-                                        setAppliedAccountScope('All');
+                                        setAccountScope(['All']);
+                                        setAppliedAccountScope(['All']);
                                         setSearchCategories(['All']);
                                         setAppliedSearchCategories(['All']);
                                         setCurrentPage(1);

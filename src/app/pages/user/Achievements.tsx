@@ -85,7 +85,15 @@ export function Achievements() {
                         </div>
                     ) : (
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            {achievements.map((achv, i) => {
+                            {Object.values(achievements.reduce((acc: any, achv: any) => {
+                                const cat = achv.achievement?.achievementCategory;
+                                if (cat !== undefined) {
+                                    if (!acc[cat] || acc[cat].achievementTier < achv.achievementTier) {
+                                        acc[cat] = achv;
+                                    }
+                                }
+                                return acc;
+                            }, {})).sort((a: any, b: any) => new Date(b.achievedDate).getTime() - new Date(a.achievedDate).getTime()).map((achv: any, i) => {
                                 const achievement = achv.achievement;
                                 if (!achievement) return null;
                                 const Icon = AchievementIconMap[achievement.achievementIcon] || Trophy;

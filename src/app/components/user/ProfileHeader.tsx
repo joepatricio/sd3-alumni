@@ -192,8 +192,8 @@ export function ProfileHeader({
                 </div>
 
                 {/* Bio Section - centered on mobile, left on desktop */}
-                <div className="max-w-2xl mb-8">
-                    <p className="text-gray-600 leading-relaxed text-center md:text-left font-medium">
+                <div className="mb-8">
+                    <p className="text-gray-500 leading-relaxed text-center md:text-left font-medium">
                         {bio}
                     </p>
                 </div>

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Heart, Globe, GraduationCap, Users, Mail, Phone, ArrowLeft, User } from 'lucide-react';
 import { SiFacebook, SiX, SiInstagram } from 'react-icons/si';
@@ -17,6 +17,24 @@ export function Donation() {
     const [donorEmail, setDonorEmail] = useState('');
     const [emailError, setEmailError] = useState<string | null>(null);
     const [isAnonymous, setIsAnonymous] = useState(false);
+    const [userName, setUserName] = useState<string>('Alumni');
+    const [profileImage, setProfileImage] =useState<string | null>(null);
+
+    useEffect(() => {
+        if (isLoggedIn && session?.userId) {
+            api.get('/profiles', { params: { userId: session.userId } })
+                .then(res => {
+                    const data = Array.isArray(res.data) ? res.data : (res.data?.data || []);
+                    if (data.length > 0 && !!data) {
+                        setUserName(data[0].userName);
+                        setProfileImage(data[0].profileImage);
+                    }
+                })
+                .catch(console.error);
+        } else {
+            setUserName('Alumni');
+        }
+    }, [isLoggedIn, session?.userId]);
 
     const amounts = [500, 1000, 2000, 5000, 10000, 20000];
 
@@ -77,22 +95,6 @@ export function Donation() {
                 }
             }
 
-            if (isLoggedIn) {
-                const achRes = await api.get('/achievements', { params: { 'achievementTitle': 'Philanthropist' } });
-                const id_donate = achRes.data[0].id;
-                const user_ach_donated = await api.get('/userAchievements', { params: { userId: session?.userId, achievementId: id_donate } });
-                const ach = user_ach_donated.data;
-
-                if (!ach || ach.length === 0) {
-                    await api.post('/userAchievements', {
-                        userId: session?.userId,
-                        achievementId: id_donate,
-                        achievementTier: 1,
-                        achievedDate: new Date().toISOString()
-                    });
-                }
-            }
-
             toast.success("Thank You for Your Generosity!", {
                 description: `Your donation of ${formatCurrency(amount)} was successful.\nReference ID: ${refId}`,
                 duration: 8000,
@@ -148,7 +150,8 @@ export function Donation() {
                         Empower the Next Generation of Josenians
                     </h1>
                     <p className="text-lg md:text-xl text-gray-100 max-w-2xl leading-relaxed">
-                        Your generosity fuels scholarships, alumni programs, and community initiatives that keep the Josenian spirit alive.
+                        <strong>DISCLAIMER:</strong> This prototype <span className="underline">does not</span> handle actual transactions.<br/>
+                        Please refrain from providing your actual banking information.
                     </p>
                 </div>
             </div>
@@ -198,11 +201,19 @@ export function Donation() {
                                 ) : (
                                     <div className="bg-brand-primary p-6 text-white flex items-center justify-between gap-4">
                                         <div className="flex items-center gap-3">
-                                            <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center shrink-0">
-                                                <User className="w-5 h-5 text-white" />
-                                            </div>
+                                            {!!profileImage ? (
+                                                <img
+                                                    src={profileImage}
+                                                    alt={userName || "User"}
+                                                    className="w-10 h-10 rounded-full object-cover"
+                                                />
+                                            ) : (
+                                                <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center shrink-0">
+                                                    <User className="w-5 h-5 text-white" />
+                                                </div>
+                                            )}
                                             <div className="text-left">
-                                                <h3 className="font-bold text-lg leading-tight mb-1">Logged in as Alumni</h3>
+                                                <h3 className="font-bold text-lg leading-tight mb-1">Logged in as {userName}</h3>
                                                 <p className="text-white/80 text-xs">Donation linked to your account</p>
                                             </div>
                                         </div>

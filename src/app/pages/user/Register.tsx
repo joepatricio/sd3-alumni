@@ -119,7 +119,7 @@ export function Register() {
             });
 
             toast.success("Account created successfully!", {
-                description: "Welcome to the USJ-R SEA Alumni community.",
+                description: "Your account is awaiting admin approval.",
             });
             navigate('/login');
         } catch (error: any) {

@@ -58,6 +58,8 @@ export interface BulletinData {
     bulletinImage?: string | File | null;
     readTimeMinutes?: number;
     category?: string;
+    contentStatus?: { id: string; statusName: string };
+    status?: { id: string; statusName: string };
     bulletinCategory?: { id?: string; bulletinCategoryName: string } | string;
     bulletinCategoryId?: string;
 }
@@ -183,6 +185,19 @@ export function CreateBulletinModal({ trigger, initialData, isAdmin = false, ope
             }
         }
 
+        if (!isAdmin) {
+            try {
+                const statusRes = await api.get('/contentStatuses?statusName=Pending');
+                const statusData = Array.isArray(statusRes.data) ? statusRes.data : statusRes.data.data;
+                const pendingStatus = statusData?.[0];
+                if (pendingStatus) {
+                    payload.contentStatusId = pendingStatus.id;
+                }
+            } catch (e) {
+                console.error('Failed to fetch Pending status ID', e);
+            }
+        }
+
         try {
             const endpoint = isAdmin ? `/admin/bulletins` : `/bulletins`;
             const token = sessionStorage.getItem('adminToken') || sessionStorage.getItem('token');
@@ -191,13 +206,33 @@ export function CreateBulletinModal({ trigger, initialData, isAdmin = false, ope
             if (isEditMode && initialData?.id) {
                 const patchEndpoint = isAdmin ? `/admin/bulletins/${initialData.id}` : `/bulletins/${initialData.id}`;
                 await api.patch(patchEndpoint, payload, { headers });
+
+                // If it was valid and now it's pending (because !isAdmin), decrement bulletinsCreated
+                if (!isAdmin && session?.userId) {
+                    const validStatuses = ['Approved', 'Concluded'];
+                    const oldStatus = initialData.contentStatus?.statusName;
+                    if (oldStatus && validStatuses.includes(oldStatus)) {
+                        try {
+                            const statsRes = await api.get('/userStatistics', { params: { userId: session.userId } });
+                            const stats = Array.isArray(statsRes.data) ? statsRes.data : (statsRes.data?.data || []);
+                            if (stats && stats.length > 0) {
+                                const currentStats = stats[0];
+                                await api.patch(`/userStatistics/${currentStats.id}`, {
+                                    bulletinsCreated: Math.max(0, (currentStats.bulletinsCreated || 0) - 1)
+                                });
+                            }
+                        } catch (statErr) {
+                            console.error("Failed to decrement user statistics for bulletin edit:", statErr);
+                        }
+                    }
+                }
             } else {
                 await api.post(endpoint, payload, { headers });
             }
 
             // const isPending = !isAdmin && isEditMode;
             const message = initialData ? 'Bulletin successfully updated!' : 'Bulletin successfully created!';
-            const description = initialData ? 'Your changes have been saved.' : 'Your bulletin has been submitted for review.';
+            const description = isAdmin ? 'Your changes have been saved.' : 'Your bulletin has been submitted for review.';
 
             toast.success(message, {
                 description: description,

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { toast } from 'sonner';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import {
     Calendar,
@@ -74,9 +75,10 @@ export function EventDetail() {
                 }
 
                 if (session?.userId) {
-                    const currentU = allUsers.find((u: any) => String(u.userId) === String(session.userId));
+                    const currentU = allUsers.find((u: any) => String(u.id) === String(session.userId));
                     if (currentU && currentU.userStatus?.statusName === 'Suspended') {
                         setIsSuspended(true);
+                        toast.error('You are suspended from submitting or editing content.');
                     }
                 }
 
@@ -155,7 +157,8 @@ export function EventDetail() {
                 const res = await api.post('/userRsvps', {
                     userId: session.userId.toString(),
                     eventId: eventData.id,
-                    isAttending
+                    isAttending,
+                    isValid: false
                 });
 
                 if (isAttending) {
@@ -205,6 +208,26 @@ export function EventDetail() {
             const statusObj = statusData?.[0];
             if (statusObj) {
                 await api.patch(`/events/${eventData.id}`, { eventStatusId: statusObj.id });
+
+                // Decrement eventsCreated if it was Approved or Concluded and the new status is not
+                const validStatuses = ['Approved', 'Concluded'];
+                const wasValid = eventData.eventStatus?.statusName && validStatuses.includes(eventData.eventStatus.statusName);
+                const isValidNow = validStatuses.includes(newStatusName);
+
+                if (wasValid && !isValidNow) {
+                    const authorId = eventData.author?.id || eventData.authorId;
+                    if (authorId) {
+                        const statsRes = await api.get('/userStatistics', { params: { userId: authorId } });
+                        const stats = Array.isArray(statsRes.data) ? statsRes.data : (statsRes.data?.data || []);
+                        if (stats && stats.length > 0) {
+                            const currentStats = stats[0];
+                            await api.patch(`/userStatistics/${currentStats.id}`, {
+                                eventsCreated: Math.max(0, (currentStats.eventsCreated || 0) - 1)
+                            });
+                        }
+                    }
+                }
+
                 if (newStatusName === 'Archived') {
                     navigate('/events');
                 } else {
@@ -234,6 +257,13 @@ export function EventDetail() {
     const mapLat = loc?.lat || 10.2954;
     const mapLng = loc?.lng || 123.8944;
 
+    const statusName = eventData.eventStatus?.statusName;
+
+    const statusMessage = {
+        Pending: 'This event is pending admin review. It is not yet accepting RSVPs.',
+        Concluded: 'This event has concluded. It is no longer accepting RSVPs.',
+        Cancelled: 'This event has been cancelled. It is no longer accepting RSVPs.',
+    }[statusName ?? 'RSVP is not available at this time.'];
     return (
         <div className="bg-gray-50 pb-12">
             {isAdminPreview && (
@@ -339,6 +369,7 @@ export function EventDetail() {
             </div>
 
             <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                     {/* Left Column: Main Content */}
                     <div className="lg:col-span-2 space-y-8">
@@ -426,14 +457,16 @@ export function EventDetail() {
                     <div className="space-y-8 sticky top-24 self-start">
                         {/* RSVP Card */}
                         <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-                            {isPastEvent || currentStatusName === "Archived" || currentStatusName === "Concluded" ? (
+                            {statusMessage || isPastEvent || currentStatusName === "Archived" ? (
                                 <Alert className="bg-amber-50 border-amber-200 text-amber-800">
                                     <AlertCircle className="h-4 w-4 text-amber-600" />
-                                    <AlertTitle className="font-bold">Event Passed</AlertTitle>
+                                    <AlertTitle className="font-bold">
+                                        {currentStatusName === "Pending" ? "Event Pending" :
+                                            currentStatusName === "Cancelled" ? "Event Cancelled" :
+                                                "RSVP Unavailable"}
+                                    </AlertTitle>
                                     <AlertDescription className="text-amber-700">
-                                        {currentStatusName === "Archived"
-                                            ? "This event has been archived. RSVP is disabled."
-                                            : "This event has already concluded. RSVP is no longer available."}
+                                        {statusMessage}
                                     </AlertDescription>
                                 </Alert>
                             ) : isLoggedIn && !isSuspended ? (

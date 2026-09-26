@@ -3,14 +3,14 @@ import { useParams } from 'react-router-dom';
 import { useAuth } from '@/app/views/auth';
 import {
     Star, Award, Trophy, BookOpen, Heart, HeartPulse, HandCoins,
-    Calendar1, Calendar, CalendarDays, MessageSquare, MessageCircle,
-    Sparkle, Sparkles, Newspaper, Cog
+    Calendar1, Calendar, CalendarDays, MessageSquare, MessagesSquare,
+    Sparkle, Sparkles, Newspaper, Cog, Landmark
 } from 'lucide-react';
 
 export const AchievementIconMap: Record<string, any> = {
     Star, Award, Trophy, BookOpen, Heart, HeartPulse, HandCoins,
-    Calendar1, Calendar, CalendarDays, MessageSquare, MessageCircle,
-    Sparkle, Sparkles, Newspaper, Cog
+    Calendar1, Calendar, CalendarDays, MessageSquare, MessagesSquare,
+    Sparkle, Sparkles, Newspaper, Cog, Landmark
 };
 
 export const useProfileRoute = () => {
@@ -107,6 +107,7 @@ export interface EventData {
     modality: string;
     eventImage: string;
 
+    author?: User;
     location?: LocationData;
     userRsvps?: RSVPData[];
     eventStatus?: { id: string, statusName: string };

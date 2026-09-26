@@ -141,6 +141,7 @@ export interface EventData {
     title: string;
     category: string;
     date: string;
+    eventStatus?: { id: string; statusName: string };
     startTimeHour: string;
     startTimeMinute: string;
     startTimeAmPm: string;
@@ -267,6 +268,21 @@ export function CreateEventModal({ trigger, initialData, isAdmin, open: external
 
     // Effect to update basic form values when initialData changes or modal opens
     useEffect(() => {
+        const parseTimeStr = (timeStr?: string, defaultHour: string = '12', defaultAmpm: string = 'AM') => {
+            if (!timeStr) return { hour: defaultHour, minute: '00', ampm: defaultAmpm };
+            if (timeStr.includes('AM') || timeStr.includes('PM')) {
+                const [time, ampm] = timeStr.split(' ');
+                const [h, m] = time.split(':');
+                return { hour: (parseInt(h, 10) % 12 || 12).toString(), minute: m, ampm };
+            }
+            const [hStr, mStr] = timeStr.split(':');
+            if (!hStr || !mStr) return { hour: defaultHour, minute: '00', ampm: defaultAmpm };
+            let h = parseInt(hStr, 10);
+            const ampm = h >= 12 ? 'PM' : 'AM';
+            h = h % 12 || 12;
+            return { hour: h.toString(), minute: mStr || '00', ampm };
+        };
+
         if (initialData && open) {
             let formattedDate = initialData.date || (initialData as any).eventDate;
             if (formattedDate) {
@@ -306,6 +322,9 @@ export function CreateEventModal({ trigger, initialData, isAdmin, open: external
                 parsedLocation = { ...parsedLocation as any, lat: 10.2954, lng: 123.8944 };
             }
 
+            const startParsed = parseTimeStr((initialData as any).startTime, '12', 'AM');
+            const endParsed = parseTimeStr((initialData as any).endTime, '1', 'PM');
+
             form.reset({
                 title: initialData.title,
                 category: (initialData as any).eventCategory?.eventCategoryName || initialData.category,
@@ -324,12 +343,12 @@ export function CreateEventModal({ trigger, initialData, isAdmin, open: external
                 },
                 description: initialData.description,
                 date: formattedDate,
-                startTimeHour: initialData.startTimeHour || '12',
-                startTimeMinute: initialData.startTimeMinute || '00',
-                startTimeAmPm: initialData.startTimeAmPm || 'AM',
-                endTimeHour: initialData.endTimeHour || '1',
-                endTimeMinute: initialData.endTimeMinute || '00',
-                endTimeAmPm: initialData.endTimeAmPm || 'PM',
+                startTimeHour: startParsed.hour,
+                startTimeMinute: startParsed.minute,
+                startTimeAmPm: startParsed.ampm,
+                endTimeHour: endParsed.hour,
+                endTimeMinute: endParsed.minute,
+                endTimeAmPm: endParsed.ampm,
                 modality: initialData.modality || '',
                 image: (initialData as any).eventImage || initialData.image,
             });
@@ -823,9 +842,15 @@ export function CreateEventModal({ trigger, initialData, isAdmin, open: external
     ), [mapCenter, mapZoom, currentLat, currentLng]);
 
     async function onSubmit(values: z.infer<typeof formSchema>) {
-        // Construct final time strings
-        const startTime = `${values.startTimeHour}:${values.startTimeMinute} ${values.startTimeAmPm}`;
-        const endTime = `${values.endTimeHour}:${values.endTimeMinute} ${values.endTimeAmPm}`;
+        // Construct final time strings in military time format
+        const formatMilitaryTime = (h: string, m: string, ampm: string) => {
+            let hour = parseInt(h, 10);
+            if (ampm === 'PM' && hour !== 12) hour += 12;
+            if (ampm === 'AM' && hour === 12) hour = 0;
+            return `${hour.toString().padStart(2, '0')}:${m}`;
+        };
+        const startTime = formatMilitaryTime(values.startTimeHour, values.startTimeMinute, values.startTimeAmPm);
+        const endTime = formatMilitaryTime(values.endTimeHour, values.endTimeMinute, values.endTimeAmPm);
 
         // Prepare Location payload - Backend might expect location to be handled separately or nested if Prisma allows it.
         // Prisma allows nested create via relation: `location: { create: { ... } }` or just sending locationId. 
@@ -887,6 +912,33 @@ export function CreateEventModal({ trigger, initialData, isAdmin, open: external
                 }
 
                 await api.patch(patchEndpoint, payload, { headers });
+                
+                // If it was valid and now it's pending (because !isAdmin), decrement eventsCreated
+                if (!isAdmin) {
+                    const validStatuses = ['Approved', 'Concluded'];
+                    const oldStatus = initialData.eventStatus?.statusName;
+                    if (oldStatus && validStatuses.includes(oldStatus)) {
+                        try {
+                            const userToken = sessionStorage.getItem('token');
+                            if (userToken) {
+                                const parsed = JSON.parse(atob(userToken.split('.')[1]));
+                                const currentUserId = parsed?.id;
+                                if (currentUserId) {
+                                    const statsRes = await api.get('/userStatistics', { params: { userId: currentUserId } });
+                                    const stats = Array.isArray(statsRes.data) ? statsRes.data : (statsRes.data?.data || []);
+                                    if (stats && stats.length > 0) {
+                                        const currentStats = stats[0];
+                                        await api.patch(`/userStatistics/${currentStats.id}`, {
+                                            eventsCreated: Math.max(0, (currentStats.eventsCreated || 0) - 1)
+                                        });
+                                    }
+                                }
+                            }
+                        } catch (statErr) {
+                            console.error("Failed to decrement user statistics for event edit:", statErr);
+                        }
+                    }
+                }
             } else {
                 await api.post(endpoint, payload, { headers });
             }

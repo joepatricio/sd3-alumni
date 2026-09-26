@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { toast } from 'sonner';
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import {
     ArrowLeft,
@@ -10,7 +11,9 @@ import {
     Edit,
     Loader2,
     Info,
-    Trash2
+    Trash2,
+    Check,
+    X
 } from 'lucide-react';
 import { CreateBulletinModal } from '@components/user/CreateBulletinModal';
 import { Button } from '@components/ui/button';
@@ -38,7 +41,9 @@ export function BulletinDetail() {
     const [comment, setComment] = useState('');
 
     const [bulletin, setBulletin] = useState<BulletinData | null>(null);
+    const [bulletinStatus, setBulletinStatus] = useState<string>("null");
     const [commentsList, setCommentsList] = useState<BulletinCommentData[]>([]);
+    const [commentLength, setCommentLength] = useState<number>(0);
     const [loading, setLoading] = useState(true);
     const [submitting, setSubmitting] = useState(false);
     const [isSuspended, setIsSuspended] = useState(false);
@@ -47,22 +52,39 @@ export function BulletinDetail() {
 
     const COMMENTS_LIMIT = 7;
     const [commentsLimit, setCommentsLimit] = useState(COMMENTS_LIMIT);
+    const [sortOrder, setSortOrder] = useState<string>('-likes,-commentDate');
+    const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
+    const [editedCommentText, setEditedCommentText] = useState('');
+
+    const fetchComments = async () => {
+        try {
+            const cRes = await api.get(`/comments`, { params: { bulletinId: id, _limit: commentsLimit, _sort: sortOrder } });
+            const commentsData = Array.isArray(cRes.data) ? cRes.data : (cRes.data?.data || []);
+            setCommentsList(commentsData || []);
+            setCommentLength(cRes.data.items || commentsData.length);
+        } catch (err) {
+            console.error("Failed to fetch comments:", err);
+        }
+    };
+
+    useEffect(() => {
+        fetchComments();
+    }, [id, commentsLimit, sortOrder]);
 
     useEffect(() => {
         const fetchBulletinAndProfiles = async () => {
             try {
-                const [bRes, cRes, usersRes] = await Promise.all([
+                const [bRes, usersRes] = await Promise.all([
                     api.get(`/bulletins`, { params: { id: id, } }),
-                    api.get(`/comments`, { params: { bulletinId: id, _limit: commentsLimit, _sort: '-commentDate' } }),
                     api.get('/users')
                 ]);
 
                 const bulletinData = bRes.data[0];
-                const commentsData = Array.isArray(cRes.data) ? cRes.data : (cRes.data?.data || []);
                 const allUsers = Array.isArray(usersRes.data) ? usersRes.data : (usersRes.data?.data || []);
 
                 if (bulletinData && bulletinData.profile) {
                     const authorUser = allUsers.find((u: any) => String(u.id) === String(bulletinData.profile.userId));
+                    setBulletinStatus(bulletinData.contentStatus?.statusName);
                     if (authorUser && authorUser.userStatus?.statusName === 'Banned') {
                         setBulletin(null);
                         setLoading(false);
@@ -71,9 +93,10 @@ export function BulletinDetail() {
                 }
 
                 if (session?.userId) {
-                    const currentU = allUsers.find((u: any) => String(u.userId) === String(session.userId));
+                    const currentU = allUsers.find((u: any) => String(u.id) === String(session.userId));
                     if (currentU && currentU.userStatus?.statusName === 'Suspended') {
                         setIsSuspended(true);
+                        toast.error('You are suspended from submitting or editing content.');
                     }
                     try {
                         const statsRes = await api.get('/userStatistics', { params: { userId: session.userId } });
@@ -97,7 +120,6 @@ export function BulletinDetail() {
                 }
 
                 setBulletin(bulletinData || null);
-                setCommentsList(commentsData || []);
             } catch (err) {
                 console.error("Failed to fetch bulletin details:", err);
             } finally {
@@ -105,7 +127,7 @@ export function BulletinDetail() {
             }
         };
         fetchBulletinAndProfiles();
-    }, [id, commentsLimit]);
+    }, [id]);
 
     if (loading) {
         return (
@@ -116,10 +138,8 @@ export function BulletinDetail() {
         );
     }
 
-    const currentStatusName = bulletin?.contentStatus?.statusName || null;
     const isAdminPreview = location.pathname.includes('/admin/preview') && !!sessionStorage.getItem('adminToken');
-
-    if (!bulletin || (currentStatusName !== "Approved" && !isAdminPreview)) {
+    if (!bulletin || (!['Approved', 'Pending'].includes(bulletinStatus) && !isAdminPreview)) {
         return <NotFound />;
     }
 
@@ -128,7 +148,7 @@ export function BulletinDetail() {
         if (!comment.trim() || !session?.userId || !bulletin) return;
         setSubmitting(true);
         try {
-            const res = await api.post('/comments', {
+            await api.post('/comments', {
                 userId: session.userId.toString(),
                 bulletinId: bulletin.id,
                 commentDate: new Date().toISOString(),
@@ -151,14 +171,8 @@ export function BulletinDetail() {
                 console.error("Failed to update user statistics for comment:", statErr);
             }
 
-            // Re-fetch the newly created comment with embedded profile
-            const newCommentRes = await api.get('/comments', { params: { id: res.data.id, } });
-            if (newCommentRes.data && newCommentRes.data.length > 0) {
-                setCommentsList(prev => [newCommentRes.data[0], ...prev]);
-            } else {
-                setCommentsList(prev => [res.data, ...prev]);
-            }
-
+            setCommentLength(prev => prev + 1);
+            await fetchComments();
             setComment('');
         } catch (err) {
             console.error("Failed to post comment:", err);
@@ -175,6 +189,20 @@ export function BulletinDetail() {
             const statusObj = statusData?.[0];
             if (statusObj) {
                 await api.patch(`/bulletins/${bulletin.id}`, { contentStatusId: statusObj.id });
+
+                // Decrement bulletinsCreated if it was Approved or Concluded
+                const validStatuses = ['Approved', 'Concluded'];
+                if (bulletin.contentStatus?.statusName && validStatuses.includes(bulletin.contentStatus.statusName)) {
+                    const statsRes = await api.get('/userStatistics', { params: { userId: bulletin.authorId } });
+                    const stats = Array.isArray(statsRes.data) ? statsRes.data : (statsRes.data?.data || []);
+                    if (stats && stats.length > 0) {
+                        const currentStats = stats[0];
+                        await api.patch(`/userStatistics/${currentStats.id}`, {
+                            bulletinsCreated: Math.max(0, (currentStats.bulletinsCreated || 0) - 1)
+                        });
+                    }
+                }
+
                 navigate('/bulletin');
             }
         } catch (err) {
@@ -185,7 +213,20 @@ export function BulletinDetail() {
     const handleDeleteComment = async (commentId: string) => {
         try {
             await api.delete(`/comments/${commentId}`);
-            setCommentsList(prev => prev.filter(c => c.id !== commentId));
+            setCommentLength(prev => Math.max(0, prev - 1));
+            await fetchComments();
+
+            // Decrement commentsWritten
+            if (session?.userId) {
+                const statsRes = await api.get('/userStatistics', { params: { userId: session.userId } });
+                const stats = Array.isArray(statsRes.data) ? statsRes.data : (statsRes.data?.data || []);
+                if (stats && stats.length > 0) {
+                    const currentStats = stats[0];
+                    await api.patch(`/userStatistics/${currentStats.id}`, {
+                        commentsWritten: Math.max(0, (currentStats.commentsWritten || 0) - 1)
+                    });
+                }
+            }
         } catch (err) {
             console.error('Failed to delete comment:', err);
         }
@@ -229,6 +270,18 @@ export function BulletinDetail() {
         }
     };
 
+    const handleEditComment = async (commentId: string) => {
+        if (!editedCommentText.trim()) return;
+        try {
+            await api.patch(`/comments/${commentId}`, { comment: editedCommentText });
+            setEditingCommentId(null);
+            setEditedCommentText('');
+            await fetchComments();
+        } catch (err) {
+            console.error("Failed to edit comment:", err);
+        }
+    };
+
     const authorProfile = bulletin.profile;
     const sortedComments = commentsList;
 
@@ -238,7 +291,7 @@ export function BulletinDetail() {
                 <div className="bg-blue-50 px-4 py-3 border-b border-blue-200 text-center flex items-center justify-center gap-2">
                     <Info className="w-4 h-4 text-blue-800" />
                     <p className="text-blue-800 font-medium text-sm">
-                        Admin Preview Mode: Viewing bulletin with status "{currentStatusName}"
+                        Admin Preview Mode: Viewing bulletin with status "{bulletinStatus}"
                     </p>
                 </div>
             )}
@@ -291,7 +344,7 @@ export function BulletinDetail() {
 
             {/* Article */}
             <div className="max-w-4xl mx-auto px-4 md:px-8 py-8">
-                {bulletin.contentStatus?.statusName === 'Archived' && (
+                {bulletin.contentStatus?.statusName === 'Pending' && (
                     <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6 rounded-r-md">
                         <div className="flex">
                             <div className="flex-shrink-0">
@@ -299,7 +352,7 @@ export function BulletinDetail() {
                             </div>
                             <div className="ml-3">
                                 <p className="text-sm text-yellow-700">
-                                    This bulletin has been archived. It is no longer active and comments are disabled.
+                                    This bulletin is pending admin review. It is not yet active and comments are disabled.
                                 </p>
                             </div>
                         </div>
@@ -362,13 +415,28 @@ export function BulletinDetail() {
 
                 {/* Comments Section */}
                 <div className="bg-white rounded-lg shadow-md p-8 mt-8">
-                    <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
-                        <MessageCircle className="w-6 h-6 text-brand-primary" />
-                        Comments ({sortedComments.length})
-                    </h2>
+                    <div className="flex justify-between items-center mb-6">
+                        <h2 className="text-2xl font-bold flex items-center gap-2">
+                            <MessageCircle className="w-6 h-6 text-brand-primary" />
+                            Comments ({commentLength})
+                        </h2>
+
+                        <div className="flex items-center gap-2">
+                            <label className="text-sm text-gray-500 font-medium">Sort by:</label>
+                            <select
+                                value={sortOrder}
+                                onChange={(e) => setSortOrder(e.target.value)}
+                                className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-primary focus:border-brand-primary block p-2"
+                            >
+                                <option value="-likes,-commentDate">Likes</option>
+                                <option value="-commentDate">Newest</option>
+                                <option value="commentDate">Oldest</option>
+                            </select>
+                        </div>
+                    </div>
 
                     {/* Comment Form */}
-                    {isLoggedIn && !isSuspended && bulletin.contentStatus?.statusName !== 'Archived' ? (
+                    {isLoggedIn && !isSuspended && bulletin.contentStatus?.statusName !== 'Pending' ? (
                         userCommentsCount >= 100 ? (
                             <div className="text-center py-6 px-4 bg-gray-50 rounded-lg border border-gray-100 mb-8">
                                 <h3 className="text-lg font-bold text-gray-900 mb-2">Comment Limit Reached</h3>
@@ -424,6 +492,12 @@ export function BulletinDetail() {
                             <h3 className="text-lg font-bold text-gray-900 mb-2">Commenting Restricted</h3>
                             <p className="text-gray-500 text-sm mb-4">Your account has been suspended. You cannot add comments at this time.</p>
                         </div>
+                    ) : bulletinStatus === 'Pending' ? (
+                        <div className="text-center py-8 px-4 bg-gray-50 rounded-lg border border-gray-100 mb-8">
+                            <MessageCircle className="w-10 h-10 text-brand-primary/50 mx-auto mb-3" />
+                            <h3 className="text-lg font-bold text-gray-900 mb-2">Pending Review</h3>
+                            <p className="text-gray-500 text-sm mb-4">Bulletin is pending admin review. You cannot add comments at this time.</p>
+                        </div>
                     ) : (
                         <div className="text-center py-8 px-4 bg-gray-50 rounded-lg border border-gray-100 mb-8">
                             <MessageCircle className="w-10 h-10 text-brand-primary/50 mx-auto mb-3" />
@@ -473,7 +547,37 @@ export function BulletinDetail() {
                                                     {formatDate(commentItem.commentDate, 'datetime')}
                                                 </span>
                                             </div>
-                                            <p className="text-gray-700">{commentItem.comment}</p>
+                                            {editingCommentId === commentItem.id ? (
+                                                <div className="mt-2">
+                                                    <textarea
+                                                        value={editedCommentText}
+                                                        onChange={(e) => setEditedCommentText(e.target.value)}
+                                                        rows={2}
+                                                        maxLength={140}
+                                                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-brand-primary resize-none text-sm"
+                                                    />
+                                                    <div className="flex justify-end gap-2 mt-2">
+                                                        <button
+                                                            onClick={() => {
+                                                                setEditingCommentId(null);
+                                                                setEditedCommentText('');
+                                                            }}
+                                                            className="text-xs flex items-center gap-1 text-gray-500 hover:text-gray-700"
+                                                        >
+                                                            <X className="w-3 h-3" /> Cancel
+                                                        </button>
+                                                        <button
+                                                            onClick={() => handleEditComment(commentItem.id)}
+                                                            disabled={!editedCommentText.trim() || editedCommentText.length > 140}
+                                                            className="text-xs flex items-center gap-1 bg-brand-primary text-white px-2 py-1 rounded hover:bg-brand-primary-hover disabled:opacity-50"
+                                                        >
+                                                            <Check className="w-3 h-3" /> Save
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            ) : (
+                                                <p className="text-gray-700">{commentItem.comment}</p>
+                                            )}
                                         </div>
                                         <div className="flex items-center justify-between mt-2">
                                             <button
@@ -486,13 +590,25 @@ export function BulletinDetail() {
                                             </button>
 
                                             {isLoggedIn && session?.userId?.toString() === commentItem.userId?.toString() && (
-                                                <button
-                                                    onClick={() => handleDeleteComment(commentItem.id)}
-                                                    className="flex items-center gap-1 text-sm text-red-500 hover:text-red-700 transition-colors"
-                                                    title="Delete Comment"
-                                                >
-                                                    <Trash2 className="w-4 h-4" />
-                                                </button>
+                                                <div className="flex items-center gap-3">
+                                                    <button
+                                                        onClick={() => {
+                                                            setEditingCommentId(commentItem.id);
+                                                            setEditedCommentText(commentItem.comment);
+                                                        }}
+                                                        className="flex items-center gap-1 text-sm text-gray-400 hover:text-brand-primary transition-colors"
+                                                        title="Edit Comment"
+                                                    >
+                                                        <Edit className="w-4 h-4" />
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleDeleteComment(commentItem.id)}
+                                                        className="flex items-center gap-1 text-sm text-red-500 hover:text-red-700 transition-colors"
+                                                        title="Delete Comment"
+                                                    >
+                                                        <Trash2 className="w-4 h-4" />
+                                                    </button>
+                                                </div>
                                             )}
                                         </div>
                                     </div>
@@ -502,7 +618,7 @@ export function BulletinDetail() {
                     </div>
 
                     {/* Load More Comments */}
-                    {sortedComments.length >= commentsLimit && (
+                    {sortedComments.length < commentLength && (
                         <div className="flex justify-center items-center gap-4 mt-8">
                             <Button
                                 variant="outline"

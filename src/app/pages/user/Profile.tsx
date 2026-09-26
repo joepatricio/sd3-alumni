@@ -74,7 +74,18 @@ export function Profile() {
                 }
 
                 const userAchs = Array.isArray(achUserRes.data) ? achUserRes.data : (achUserRes.data?.data || []);
-                setAchievements(userAchs);
+                const highestTierAchs = new Map<number, any>();
+                userAchs.forEach((ach: any) => {
+                    if (ach.achievement) {
+                        const cat = ach.achievement.achievementCategory;
+                        const tier = ach.achievement.achievementTier;
+                        const existing = highestTierAchs.get(cat);
+                        if (!existing || tier > existing.achievement.achievementTier) {
+                            highestTierAchs.set(cat, ach);
+                        }
+                    }
+                });
+                setAchievements(Array.from(highestTierAchs.values()));
 
             } catch (err) {
                 console.error("Failed to load profile", err);
@@ -89,7 +100,8 @@ export function Profile() {
     useEffect(() => {
         const fetchTabContent = async () => {
             if (activeTab === 'overview' || activeTab === 'bulletins') {
-                api.get('/bulletins', { params: { 'authorId': profileId, '_sort': '-bulletinDate', '_include': 'none' } })
+                const validStatuses = ['Approved', 'Concluded'].join(',');
+                api.get('/bulletins', { params: { 'authorId': profileId, 'status.statusName:in': validStatuses, '_sort': '-bulletinDate', '_include': 'none' } })
                     .catch(() => ({ data: [] }))
                     .then(res => {
                         const data = Array.isArray(res.data) ? res.data : (res.data?.data || []);

@@ -116,7 +116,7 @@ export function BulletinFeed() {
                 Featured
               </span>
             </div>
-            <div className="content-center p-8">
+            <div className="flex flex-col p-8 h-full">
               <div className="flex items-center gap-4 mb-4">
                 <span className="text-sm text-gray-500 flex items-center gap-1">
                   <Calendar className="w-4 h-4" />
@@ -128,8 +128,8 @@ export function BulletinFeed() {
                 </span>
               </div>
               <h3 className="text-2xl font-bold mb-4 line-clamp-2">{featured.title}</h3>
-              <p className="text-gray-600 mb-4 line-clamp-3">{featured.content}</p>
-              <div className="flex items-center justify-between">
+              <p className="text-gray-600 mb-4 line-clamp-3 flex-grow">{featured.content}</p>
+              <div className="flex items-center justify-between mt-auto">
                 <div className="text-sm text-gray-500">
                   <p>By <Link to={`/profile/${featured.authorId}`} className="hover:text-brand-primary transition-colors">{featuredAuthor}</Link></p>
                 </div>
@@ -150,7 +150,7 @@ export function BulletinFeed() {
             return (
               <div
                 key={bulletin.id}
-                className="bg-white rounded-lg overflow-hidden shadow-md hover:shadow-xl transition-shadow group"
+                className="bg-white rounded-lg overflow-hidden shadow-md hover:shadow-xl transition-shadow group flex flex-col h-full"
               >
                 <div className="relative h-48 overflow-hidden bg-gray-100 flex items-center justify-center">
                   {isContain && (
@@ -171,7 +171,7 @@ export function BulletinFeed() {
                       : 'object-cover'
                       }`} />
                 </div>
-                <div className="p-6">
+                <div className="p-6 flex flex-col flex-grow">
                   <div className="flex items-center gap-4 mb-3">
                     <span className="text-xs text-gray-500 flex items-center gap-1">
                       <Calendar className="w-3 h-3" />
@@ -185,10 +185,10 @@ export function BulletinFeed() {
                   <h3 className="text-lg font-semibold mb-2 line-clamp-2">
                     {bulletin.title}
                   </h3>
-                  <p className="text-gray-600 text-sm mb-4 line-clamp-3">
+                  <p className="text-gray-600 text-sm mb-4 line-clamp-3 flex-grow">
                     {bulletin.content}
                   </p>
-                  <div className="flex items-center justify-between text-sm text-gray-500">
+                  <div className="flex items-center justify-between text-sm text-gray-500 mt-auto">
                     <span>By <Link to={`/profile/${bulletin.authorId}`} className="hover:text-brand-primary transition-colors">{authorName}</Link></span>
                     <Link to={`/bulletin/${bulletin.id}`} className="text-brand-primary cursor-pointer hover:text-brand-primary-hover font-semibold">
                       Read →

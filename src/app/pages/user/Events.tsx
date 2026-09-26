@@ -232,7 +232,7 @@ export function Events() {
                                         to={`/events/${event.id}`}
                                         className="block bg-white border border-gray-200 rounded-lg overflow-hidden hover:shadow-lg transition-shadow duration-300"
                                     >
-                                        <div className="flex flex-col md:flex-row md:h-[200px] lg:h-[220px]">
+                                        <div className="flex flex-col md:flex-row md:h-[220px] lg:h-[240px]">
                                             {/* Image */}
                                             <div className="relative w-full md:w-64 lg:w-80 h-48 md:h-full flex-shrink-0 overflow-hidden">
                                                 <img

@@ -14,20 +14,14 @@ export function AdminEvents() {
         if (params.search) {
             whereClause.title = { contains: params.search };
         }
-        const hasActiveAccountScope = params.accountScope && params.accountScope !== 'All';
+        const hasActiveAccountScope = params.accountScope && params.accountScope.length > 0 && !params.accountScope.includes('All');
         if (hasActiveAccountScope || params.searchAuthor) {
             whereClause.author = {};
             if (params.searchAuthor) {
                 whereClause.author.profile = { userName: { contains: params.searchAuthor } };
             }
             if (hasActiveAccountScope) {
-                if (params.accountScope === 'Official') {
-                    whereClause.author.userStatus = { statusName: 'Official' };
-                } else if (params.accountScope === 'Regular') {
-                    whereClause.author.userStatus = { statusName: 'Regular' };
-                } else if (params.accountScope === 'Banned') {
-                    whereClause.author.userStatus = { statusName: 'Banned' };
-                }
+                whereClause.author.userStatus = { statusName: { in: params.accountScope } };
             }
         }
         if (params.categories && params.categories.length > 0 && !params.categories.includes('All')) {
@@ -82,6 +76,7 @@ export function AdminEvents() {
             category: e.eventCategory?.eventCategoryName || "General",
             isOfficial: e.author?.userStatus?.statusName === 'Official',
             isBanned: e.author?.userStatus?.statusName === 'Banned',
+            isSuspended: e.author?.userStatus?.statusName === 'Suspended',
             rawDate: new Date(e.eventDate).getTime()
         }));
 
@@ -90,9 +85,15 @@ export function AdminEvents() {
 
     const handleStatusChange = async (id: string, newStatus: string) => {
         try {
-            await api.patch(`/admin/events/${id}/status`, { status: newStatus }, {
-                headers: { Authorization: `Bearer ${sessionStorage.getItem('adminToken')}` }
-            });
+            const headers = { Authorization: `Bearer ${sessionStorage.getItem('adminToken')}` };
+            
+            // Get the old event to check previous status and author
+            await api.get(`/events/${id}`, { headers });
+
+            // Patch status
+            await api.patch(`/admin/events/${id}/status`, { status: newStatus }, { headers });
+
+
         } catch (err) {
             console.error('Failed to update status:', err);
             throw err;

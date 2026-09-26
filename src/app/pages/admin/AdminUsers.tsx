@@ -700,52 +700,49 @@ export function AdminUsers() {
                                 </SelectContent>
                             </Select>
                         </div>
-
-                        {(editStatus === 'Suspended' || editStatus === 'Banned' || editStatus === 'Deactivated' || editStatus === 'Regular') && (
-                            <div className="space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
-                                {editStatus === 'Suspended' && (
-                                    <div className="space-y-2">
-                                        <div className="flex items-center justify-between">
-                                            <Label>Suspension Expiry Date</Label>
-                                            {editExpiryDate && new Date(editExpiryDate).getFullYear() >= 3000 && (
-                                                <Badge className="bg-orange-100 text-orange-800 border-orange-200 text-xs">
-                                                    Indefinite
-                                                </Badge>
-                                            )}
-                                        </div>
-                                        <Input
-                                            type="date"
-                                            value={editExpiryDate}
-                                            onChange={(e) => setEditExpiryDate(e.target.value)}
-                                        />
-                                        <div className="flex gap-2 pt-1 flex-wrap">
-                                            <Button type="button" variant="outline" size="sm" onClick={() => setPresetDuration(3)}>3 Days</Button>
-                                            <Button type="button" variant="outline" size="sm" onClick={() => setPresetDuration(7)}>1 Week</Button>
-                                            <Button type="button" variant="outline" size="sm" onClick={() => setPresetDuration(30)}>1 Month</Button>
-                                            <Button
-                                                type="button"
-                                                variant="outline"
-                                                size="sm"
-                                                className={editExpiryDate && new Date(editExpiryDate).getFullYear() >= 3000 ? "bg-orange-50 border-orange-300 text-orange-700 font-semibold" : ""}
-                                                onClick={setIndefiniteDuration}
-                                            >
-                                                Indefinite
-                                            </Button>
-                                        </div>
-                                    </div>
-                                )}
+                        <div className="space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
+                            {editStatus === 'Suspended' && (
                                 <div className="space-y-2">
-                                    <Label>Reason / Administrative Note (Optional)</Label>
-                                    <Textarea
-                                        placeholder="Provide reasoning or record note..."
-                                        value={editReason}
-                                        onChange={(e) => setEditReason(e.target.value)}
-                                        rows={3}
+                                    <div className="flex items-center justify-between">
+                                        <Label>Suspension Expiry Date</Label>
+                                        {editExpiryDate && new Date(editExpiryDate).getFullYear() >= 3000 && (
+                                            <Badge className="bg-orange-100 text-orange-800 border-orange-200 text-xs">
+                                                Indefinite
+                                            </Badge>
+                                        )}
+                                    </div>
+                                    <Input
+                                        type="date"
+                                        value={editExpiryDate}
+                                        onChange={(e) => setEditExpiryDate(e.target.value)}
                                     />
-                                    <p className="text-xs text-gray-500">This description will be recorded in the user status logs.</p>
+                                    <div className="flex gap-2 pt-1 flex-wrap">
+                                        <Button type="button" variant="outline" size="sm" onClick={() => setPresetDuration(3)}>3 Days</Button>
+                                        <Button type="button" variant="outline" size="sm" onClick={() => setPresetDuration(7)}>1 Week</Button>
+                                        <Button type="button" variant="outline" size="sm" onClick={() => setPresetDuration(30)}>1 Month</Button>
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            size="sm"
+                                            className={editExpiryDate && new Date(editExpiryDate).getFullYear() >= 3000 ? "bg-orange-50 border-orange-300 text-orange-700 font-semibold" : ""}
+                                            onClick={setIndefiniteDuration}
+                                        >
+                                            Indefinite
+                                        </Button>
+                                    </div>
                                 </div>
+                            )}
+                            <div className="space-y-2">
+                                <Label>Reason / Administrative Note (Optional)</Label>
+                                <Textarea
+                                    placeholder="Provide reasoning or record note..."
+                                    value={editReason}
+                                    onChange={(e) => setEditReason(e.target.value)}
+                                    rows={3}
+                                />
+                                <p className="text-xs text-gray-500">This description will be recorded in the user status logs.</p>
                             </div>
-                        )}
+                        </div>
                     </div>
                     <DialogFooter>
                         <Button variant="outline" onClick={() => setEditingUser(null)}>Cancel</Button>
