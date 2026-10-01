@@ -606,7 +606,6 @@ export function AdminContentTable({
                                 Account Scope
                             </span>
                             {ACCOUNT_SCOPES
-                                .filter((scope) => !(contentType === 'Event' && scope === 'Regular'))
                                 .map((scope) => {
                                     const isSelected = accountScope.includes(scope);
                                     return (

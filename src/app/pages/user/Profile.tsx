@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { Calendar, Award, Heart, Loader2, Mail, Phone, MapPin, Briefcase, MessageSquare, FileText, User, NonBinary, Mars, Venus } from 'lucide-react';
 import { ProfileHeader } from '@components/user/ProfileHeader';
@@ -30,6 +30,21 @@ export function Profile() {
     const [bulletins, setBulletins] = useState<any[]>([]);
     const [comments, setComments] = useState<any[]>([]);
     const [events, setEvents] = useState<any[]>([]);
+    const [tabPage, setTabPage] = useState(1);
+    const [tabHasMore, setTabHasMore] = useState(true);
+    const [tabLoadingMore, setTabLoadingMore] = useState(false);
+
+    useEffect(() => {
+        setTabPage(1);
+        setTabHasMore(true);
+        if (activeTab === 'bulletins') setBulletins([]);
+        else if (activeTab === 'comments') setComments([]);
+        else if (activeTab === 'events') setEvents([]);
+        else if (activeTab === 'overview') {
+            setBulletins([]);
+            setComments([]);
+        }
+    }, [activeTab]);
 
     useEffect(() => {
         const fetchProfileData = async () => {
@@ -99,45 +114,88 @@ export function Profile() {
 
     useEffect(() => {
         const fetchTabContent = async () => {
+            setTabLoadingMore(true);
+            let currentHasMore = false;
+            const promises = [];
+
             if (activeTab === 'overview' || activeTab === 'bulletins') {
                 const validStatuses = ['Approved', 'Concluded'].join(',');
-                api.get('/bulletins', { params: { 'authorId': profileId, 'status.statusName:in': validStatuses, '_sort': '-bulletinDate', '_include': 'none' } })
-                    .catch(() => ({ data: [] }))
-                    .then(res => {
-                        const data = Array.isArray(res.data) ? res.data : (res.data?.data || []);
-                        setBulletins(data);
-                    });
+                promises.push(
+                    api.get('/bulletins', { params: { 'authorId': profileId, 'status.statusName:in': validStatuses, '_sort': '-bulletinDate', '_include': 'none', _page: tabPage, _per_page: 10 } })
+                        .catch(() => ({ data: [] }))
+                        .then(res => {
+                            const data = Array.isArray(res.data) ? res.data : (res.data?.data || []);
+                            if (tabPage === 1) setBulletins(data);
+                            else setBulletins(prev => [...prev, ...data]);
+                            if (data.length === 10) currentHasMore = true;
+                        })
+                );
             }
             if (activeTab === 'overview' || activeTab === 'comments') {
-                api.get('/comments', { params: { 'userId': profileId, '_sort': '-commentDate', _include: 'none' } })
-                    .catch(() => ({ data: [] }))
-                    .then(res => {
-                        const fetchedComments = Array.isArray(res.data) ? res.data : (res.data?.data || []);
-                        setComments(fetchedComments);
-                    });
+                promises.push(
+                    api.get('/comments', { params: { 'userId': profileId, '_sort': '-commentDate', _include: 'none', _page: tabPage, _per_page: 10 } })
+                        .catch(() => ({ data: [] }))
+                        .then(res => {
+                            const data = Array.isArray(res.data) ? res.data : (res.data?.data || []);
+                            if (tabPage === 1) setComments(data);
+                            else setComments(prev => [...prev, ...data]);
+                            if (data.length === 10) currentHasMore = true;
+                        })
+                );
             }
             if (activeTab === 'events') {
-                api.get('/userRsvps', { params: { 'userId': profileId, 'isAttending': true } }).catch(() => ({ data: [] })).then(async rsvpRes => {
-                    const rsvps = Array.isArray(rsvpRes.data) ? rsvpRes.data : (rsvpRes.data?.data || []);
-                    if (rsvps.length > 0) {
-                        const eventIds = rsvps.map((r: any) => r.eventId).join(',');
-                        const eventRes = await api.get('/events', {
-                            params: {
-                                'id:in': eventIds,
-                                'status.statusName': 'Approved',
-                                '_sort': '-eventDate'
-                            }
-                        }).catch(() => ({ data: [] }));
-                        const attended = Array.isArray(eventRes.data) ? eventRes.data : (eventRes.data?.data || []);
-                        setEvents(attended);
-                    } else {
-                        setEvents([]);
-                    }
-                });
+                promises.push(
+                    api.get('/userRsvps', { params: { 'userId': profileId, 'isAttending': true, _page: tabPage, _per_page: 10 } }).catch(() => ({ data: [] })).then(async rsvpRes => {
+                        const rsvps = Array.isArray(rsvpRes.data) ? rsvpRes.data : (rsvpRes.data?.data || []);
+                        if (rsvps.length > 0) {
+                            const eventIds = rsvps.map((r: any) => r.eventId).join(',');
+                            const eventRes = await api.get('/events', {
+                                params: {
+                                    'id:in': eventIds,
+                                    'status.statusName': 'Approved',
+                                    '_sort': '-eventDate'
+                                }
+                            }).catch(() => ({ data: [] }));
+                            const data = Array.isArray(eventRes.data) ? eventRes.data : (eventRes.data?.data || []);
+                            if (tabPage === 1) setEvents(data);
+                            else setEvents(prev => [...prev, ...data]);
+                            if (rsvps.length === 10) currentHasMore = true;
+                        } else {
+                            if (tabPage === 1) setEvents([]);
+                        }
+                    })
+                );
             }
+
+            await Promise.all(promises);
+            setTabHasMore(currentHasMore);
+            setTabLoadingMore(false);
         };
         fetchTabContent();
-    }, [profileId, activeTab]);
+    }, [profileId, activeTab, tabPage]);
+
+    const tabObserverTarget = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        const observer = new IntersectionObserver(
+            entries => {
+                if (entries[0].isIntersecting && tabHasMore && !tabLoadingMore) {
+                    setTabPage(p => p + 1);
+                }
+            },
+            { threshold: 1.0 }
+        );
+
+        if (tabObserverTarget.current) {
+            observer.observe(tabObserverTarget.current);
+        }
+
+        return () => {
+            if (tabObserverTarget.current) {
+                observer.unobserve(tabObserverTarget.current);
+            }
+        };
+    }, [tabHasMore, tabLoadingMore]);
 
     if (loading) {
         return (
@@ -458,6 +516,11 @@ export function Profile() {
                                                 setStatsData(prev => prev ? { ...prev, donatedAmount: newAmount } : prev);
                                             }}
                                         />
+                                    )}
+                                    {activeTab !== 'donations' && (
+                                        <div ref={tabObserverTarget} className="py-4 mt-4 w-full flex justify-center">
+                                            {tabLoadingMore && <Loader2 className="w-6 h-6 animate-spin text-brand-primary" />}
+                                        </div>
                                     )}
                                 </>
                             )}

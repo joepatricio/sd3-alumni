@@ -20,7 +20,8 @@ export function EventsFeed() {
             _include: 'location,status,category',
             _where: JSON.stringify({
               eventStatus: { statusName: 'Approved' },
-              eventDate: { gte: todayStr }
+              eventDate: { gte: todayStr },
+              author: { userStatus: { statusName: { ne: 'Banned' } } }
             })
           }
         });

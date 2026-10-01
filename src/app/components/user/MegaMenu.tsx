@@ -1,7 +1,6 @@
 import { Mail, Phone, MapPin, ExternalLink } from 'lucide-react';
-import { SiFacebook, SiX, SiInstagram } from 'react-icons/si';
-import { FaLinkedin } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
+import { SOCIAL_LINKS } from '@/app/views/formatters';
 
 interface MegaMenuProps {
   isOpen: boolean;
@@ -16,12 +15,7 @@ export function MegaMenu({ isOpen, onClose }: MegaMenuProps) {
     { label: 'About', href: '/about' },
   ];
 
-  const socialLinks = [
-    { icon: SiFacebook, label: 'Facebook', href: 'https://www.facebook.com/usjr.official', color: 'hover:bg-blue-600' },
-    { icon: SiX, label: 'X (formerly Twitter)', href: 'https://x.com/USJR_official', color: 'hover:bg-black' },
-    { icon: SiInstagram, label: 'Instagram', href: 'https://www.instagram.com/usjr_official/', color: 'hover:bg-pink-600' },
-    { icon: FaLinkedin, label: 'LinkedIn', href: 'https://www.linkedin.com/school/usjrofficial/', color: 'hover:bg-blue-700' },
-  ];
+
 
   if (!isOpen) return null;
 
@@ -64,13 +58,13 @@ export function MegaMenu({ isOpen, onClose }: MegaMenuProps) {
               Follow Us
             </h3>
             <div className="grid grid-cols-2 gap-3 mb-8">
-              {socialLinks.map((social) => (
+              {SOCIAL_LINKS.map((social) => (
                 <a
                   key={social.label}
-                  href={social.href}
+                  href={social.url}
                   target='_blank'
                   rel="noopener noreferrer"
-                  className={`flex items-center gap-3 p-3 bg-gray-100 rounded-lg ${social.color} transition-colors group`}
+                  className="flex items-center gap-3 p-3 bg-gray-100 rounded-lg hover:bg-brand-primary transition-colors group"
                 >
                   <social.icon className="w-5 h-5 text-gray-700 group-hover:text-white" />
                   <span className="text-sm font-medium text-gray-700 group-hover:text-white">

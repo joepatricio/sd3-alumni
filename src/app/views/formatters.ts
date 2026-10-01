@@ -1,4 +1,7 @@
 import { format } from 'date-fns';
+import { SiFacebook, SiX, SiInstagram } from 'react-icons/si';
+import { FaLinkedin } from 'react-icons/fa';
+
 export const DEFAULT_PROFILE = "http://localhost:3000/engineer.png"
 
 export function formatCurrency(value: number): string {
@@ -125,3 +128,10 @@ export function getBankColor(bankName: string): string {
     }
     return fallbacks[Math.abs(hash) % fallbacks.length];
 }
+
+export const SOCIAL_LINKS = [
+    { label: 'Facebook', url: 'https://www.facebook.com/usjr.official', icon: SiFacebook },
+    { label: 'X', url: 'https://x.com/USJR_official', icon: SiX },
+    { label: 'Instagram', url: 'https://www.instagram.com/usjr_official/', icon: SiInstagram },
+    { label: 'LinkedIn', url: 'https://www.linkedin.com/school/usjrofficial/', icon: FaLinkedin },
+];

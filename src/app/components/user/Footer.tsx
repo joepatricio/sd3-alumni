@@ -1,7 +1,6 @@
 import { Mail, Phone, MapPin } from 'lucide-react';
-import { SiFacebook, SiX, SiInstagram } from 'react-icons/si';
-import { FaLinkedin } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
+import { SOCIAL_LINKS } from '@/app/views/formatters';
 
 export function Footer() {
   const footerLinks = {
@@ -34,38 +33,18 @@ export function Footer() {
               worldwide through meaningful engagement and lifelong support.
             </p>
             <div className="flex gap-3">
-              <a
-                href="https://www.facebook.com/usjr.official"
-                target='_blank'
-                rel="noopener noreferrer"
-                className="w-9 h-9 bg-white rounded-full flex items-center justify-center hover:bg-brand-primary hover:text-white text-brand-primary transition-colors shadow-sm"
-              >
-                <SiFacebook className="w-4 h-4" />
-              </a>
-              <a
-                href="https://x.com/USJR_official"
-                target='_blank'
-                rel="noopener noreferrer"
-                className="w-9 h-9 bg-white rounded-full flex items-center justify-center hover:bg-brand-primary hover:text-white text-brand-primary transition-colors shadow-sm"
-              >
-                <SiX className="w-4 h-4" />
-              </a>
-              <a
-                href="https://www.instagram.com/usjr_official/"
-                target='_blank'
-                rel="noopener noreferrer"
-                className="w-9 h-9 bg-white rounded-full flex items-center justify-center hover:bg-brand-primary hover:text-white text-brand-primary transition-colors shadow-sm"
-              >
-                <SiInstagram className="w-4 h-4" />
-              </a>
-              <a
-                href="https://www.linkedin.com/school/usjrofficial/"
-                target='_blank'
-                rel="noopener noreferrer"
-                className="w-9 h-9 bg-white rounded-full flex items-center justify-center hover:bg-brand-primary hover:text-white text-brand-primary transition-colors shadow-sm"
-              >
-                <FaLinkedin className="w-4 h-4" />
-              </a>
+              {SOCIAL_LINKS.map((social) => (
+                <a
+                  key={social.label}
+                  href={social.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={social.label}
+                  className="w-9 h-9 bg-white rounded-full flex items-center justify-center hover:bg-brand-primary hover:text-white text-brand-primary transition-colors shadow-sm"
+                >
+                  <social.icon className="w-4 h-4" />
+                </a>
+              ))}
             </div>
           </div>
 

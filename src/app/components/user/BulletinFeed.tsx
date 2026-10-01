@@ -15,7 +15,10 @@ export function BulletinFeed() {
         const [bRes] = await Promise.all([
           api.get('/bulletins', {
             params: {
-              _where: JSON.stringify({ status: { statusName: 'Approved' } }),
+              _where: JSON.stringify({ 
+                status: { statusName: 'Approved' },
+                author: { userStatus: { statusName: { ne: 'Banned' } } }
+              }),
               _sort: '-bulletinDate',
               _page: 1,
               _per_page: 7,
