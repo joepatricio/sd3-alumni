@@ -68,6 +68,24 @@ const checkAndAwardAchievements = async (userId, stats) => {
     }
 };
 
+const createNotification = async (tx, userId, message, link) => {
+    try {
+        let notifType = await tx.notificationType.findFirst({ where: { notificationTypeName: 'System' } });
+        if (!notifType) {
+            notifType = await tx.notificationType.create({ data: { notificationTypeName: 'System' } });
+        }
+        await tx.notification.create({
+            data: {
+                userId,
+                notificationTypeId: notifType.id,
+                notificationMessage: JSON.stringify({ text: message, link: link || null })
+            }
+        });
+    } catch (e) {
+        console.error("Failed to create notification:", e);
+    }
+};
+
 export const prisma = basePrisma.$extends({
     query: {
         userStatistic: {
@@ -94,10 +112,11 @@ app.use(cors({
 app.use(express.json({ limit: '50mb' }));
 app.use(cookieParser());
 app.use(express.static('public'));
+app.use('/uploads', express.static('uploads'));
 
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
-        cb(null, 'public/')
+        cb(null, 'uploads/')
     },
     filename: function (req, file, cb) {
         const uniqueSuffix = uuidv4();
@@ -111,7 +130,7 @@ app.post('/api/upload', upload.single('image'), (req, res) => {
     if (!req.file) {
         return res.status(400).json({ error: 'No file uploaded' });
     }
-    res.json({ url: `http://localhost:3000/${req.file.filename}` });
+    res.json({ url: `/uploads/${req.file.filename}` });
 });
 
 // Authentication Middleware
@@ -264,7 +283,7 @@ app.post('/api/auth/register', async (req, res) => {
                             email,
                             degreeId: degreeId,
                             batch: parseInt(batch, 10) || null,
-                            profileImage: "http://localhost:3000/engineer.png",
+                            profileImage: "/engineer.png",
                             gender: gender
                         }
                     },
@@ -302,7 +321,7 @@ app.post('/api/auth/register', async (req, res) => {
 
 // Custom Auth Login
 app.post('/api/auth/login', async (req, res) => {
-    const { email, password } = req.body;
+    const { email, password, rememberMe } = req.body;
     try {
         const userAuth = await prisma.userAuth.findFirst({
             where: { email },
@@ -374,7 +393,7 @@ app.post('/api/auth/login', async (req, res) => {
         const token = jwt.sign(
             { id: userAuth.user.id, email: userAuth.email },
             JWT_SECRET,
-            { expiresIn: '24h' }
+            { expiresIn: rememberMe ? '30d' : '24h' }
         );
 
         res.json({
@@ -649,6 +668,14 @@ const concludeEvent = async (eventId) => {
                         where: { userId: rsvp.userId },
                         data: { eventsAttended: (stat.eventsAttended || 0) + 1 }
                     });
+                }
+            }
+
+            const link = `/events/${eventId}`;
+            await createNotification(tx, event.authorId, `Your event "${event.title}" status changed to Concluded.`, link);
+            for (const rsvp of validRsvps) {
+                if (rsvp.userId !== event.authorId) {
+                    await createNotification(tx, rsvp.userId, `An event you RSVP'd to ("${event.title}") changed status to Concluded.`, link);
                 }
             }
         });
@@ -1163,6 +1190,16 @@ async function updateEventStatusAndStats({ eventId, newStatusName, adminId, addi
                     });
                 }
             }
+
+            const link = (updatedStatusName === 'Rejected' || updatedStatusName === 'Archived') ? null : `/events/${eventId}`;
+            await createNotification(tx, authorId, `Your event "${existing.title}" status changed to ${updatedStatusName}.`, link);
+
+            const rsvps = await tx.userRsvp.findMany({ where: { eventId, isAttending: true } });
+            for (const rsvp of rsvps) {
+                if (rsvp.userId !== authorId) {
+                    await createNotification(tx, rsvp.userId, `An event you RSVP'd to ("${existing.title}") changed status to ${updatedStatusName}.`, link);
+                }
+            }
         }
 
         return updatedEvent;
@@ -1234,6 +1271,9 @@ async function updateBulletinStatusAndStats({ bulletinId, newStatusName, adminId
                     });
                 }
             }
+
+            const link = `/bulletin/${bulletinId}`;
+            await createNotification(tx, authorId, `Your bulletin "${existing.title}" status changed to ${updatedStatusName}.`, link);
         }
 
         return updatedBulletin;
@@ -1656,6 +1696,10 @@ app.post('/api/admin/users/:id/status', async (req, res) => {
                         where: { userId: id, achievementId: verifiedAch.id }
                     });
                 }
+            }
+
+            if (statusObj.statusName === 'Suspended') {
+                await createNotification(tx, id, "You have been suspended from posting.", null);
             }
 
             return tx.user.findUnique({

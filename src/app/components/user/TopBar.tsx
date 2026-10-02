@@ -1,4 +1,4 @@
-import { User, Menu, X } from "lucide-react";
+import { User, Menu, X, Bell } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/app/views/auth";
 
@@ -46,6 +46,15 @@ export function TopBar({
         </div>
 
         <div className="flex items-center gap-4">
+          {/* Notifications */}
+          {isLoggedIn && (
+            <Link
+              to="/notifications"
+              className="flex items-center gap-2 hover:text-brand-accent transition-colors"
+            >
+              <Bell className="w-4 h-4" />
+            </Link>
+          )}
           {/* Login/Profile */}
           <Link
             to={isLoggedIn ? "/profile" : "/login"}

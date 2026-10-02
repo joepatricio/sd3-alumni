@@ -892,7 +892,7 @@ export function CreateEventModal({ trigger, initialData, isAdmin, open: external
         try {
             const isEditMode = !!initialData;
             const endpoint = isAdmin ? `/admin/events` : `/events`;
-            const token = sessionStorage.getItem('adminToken') || sessionStorage.getItem('token');
+            const token = sessionStorage.getItem('adminToken') || localStorage.getItem('token') || sessionStorage.getItem('token');
             const headers = token ? { Authorization: `Bearer ${token}` } : undefined;
 
             if (isEditMode && initialData?.id) {
@@ -919,7 +919,7 @@ export function CreateEventModal({ trigger, initialData, isAdmin, open: external
                     const oldStatus = initialData.eventStatus?.statusName;
                     if (oldStatus && validStatuses.includes(oldStatus)) {
                         try {
-                            const userToken = sessionStorage.getItem('token');
+                            const userToken = localStorage.getItem('token') || sessionStorage.getItem('token');
                             if (userToken) {
                                 const parsed = JSON.parse(atob(userToken.split('.')[1]));
                                 const currentUserId = parsed?.id;

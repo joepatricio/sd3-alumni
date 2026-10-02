@@ -96,7 +96,7 @@ export function BulletinDetail() {
                     const currentU = allUsers.find((u: any) => String(u.id) === String(session.userId));
                     if (currentU && currentU.userStatus?.statusName === 'Suspended') {
                         setIsSuspended(true);
-                        toast.error('You are suspended from submitting or editing content.');
+                        toast.error('You are suspended from commenting.');
                     }
                     try {
                         const statsRes = await api.get('/userStatistics', { params: { userId: session.userId } });

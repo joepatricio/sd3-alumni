@@ -55,7 +55,8 @@ export function Login() {
         try {
             const response = await api.post('/auth/login', {
                 email: values.email,
-                password: values.password
+                password: values.password,
+                rememberMe: values.rememberMe
             });
             const { token } = response.data;
 

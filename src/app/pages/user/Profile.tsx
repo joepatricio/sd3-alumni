@@ -43,6 +43,7 @@ export function Profile() {
         else if (activeTab === 'overview') {
             setBulletins([]);
             setComments([]);
+            setEvents([]);
         }
     }, [activeTab]);
 
@@ -143,22 +144,34 @@ export function Profile() {
                         })
                 );
             }
-            if (activeTab === 'events') {
+            if (activeTab === 'overview' || activeTab === 'events') {
+                const queryParams: any = { 'userId': profileId, _page: tabPage, _per_page: 10 };
+                if (activeTab === 'overview') {
+                    queryParams.isAttending = true;
+                } else {
+                    queryParams._where = JSON.stringify({ or: [{ isAttending: true }, { isValid: true }] });
+                }
+
                 promises.push(
-                    api.get('/userRsvps', { params: { 'userId': profileId, 'isAttending': true, _page: tabPage, _per_page: 10 } }).catch(() => ({ data: [] })).then(async rsvpRes => {
+                    api.get('/userRsvps', { params: queryParams }).catch(() => ({ data: [] })).then(async rsvpRes => {
                         const rsvps = Array.isArray(rsvpRes.data) ? rsvpRes.data : (rsvpRes.data?.data || []);
                         if (rsvps.length > 0) {
                             const eventIds = rsvps.map((r: any) => r.eventId).join(',');
                             const eventRes = await api.get('/events', {
                                 params: {
                                     'id:in': eventIds,
-                                    'status.statusName': 'Approved',
+                                    'status.statusName:in': 'Approved,Concluded',
                                     '_sort': '-eventDate'
                                 }
                             }).catch(() => ({ data: [] }));
                             const data = Array.isArray(eventRes.data) ? eventRes.data : (eventRes.data?.data || []);
                             if (tabPage === 1) setEvents(data);
-                            else setEvents(prev => [...prev, ...data]);
+                            else setEvents(prev => {
+                                // Filter out duplicates just in case
+                                const newIds = new Set(data.map((d: any) => d.id));
+                                const uniquePrev = prev.filter(p => !newIds.has(p.id));
+                                return [...uniquePrev, ...data];
+                            });
                             if (rsvps.length === 10) currentHasMore = true;
                         } else {
                             if (tabPage === 1) setEvents([]);
@@ -213,8 +226,11 @@ export function Profile() {
         return <NotFound />;
     }
 
-    const overviewContent = [...bulletins.map(b => ({ ...b, type: 'bulletin' })), ...comments.map(c => ({ ...c, type: 'comment' }))]
-        .sort((a, b) => new Date(b.bulletinDate || b.commentDate).getTime() - new Date(a.bulletinDate || a.commentDate).getTime());
+    const overviewContent = [
+        ...bulletins.map(b => ({ ...b, type: 'bulletin', sortDate: b.bulletinDate })),
+        ...comments.map(c => ({ ...c, type: 'comment', sortDate: c.commentDate })),
+        ...(activeTab === 'overview' ? events.map(e => ({ ...e, type: 'event', sortDate: e.eventDate })) : [])
+    ].sort((a, b) => new Date(b.sortDate).getTime() - new Date(a.sortDate).getTime());
 
     const renderBulletin = (b: any) => (
         <div key={`bulletin-${b.id}`} className="bg-white p-4 rounded-lg shadow-sm border border-gray-100 mb-4 last:mb-0 hover:shadow-md transition-shadow">
@@ -235,6 +251,33 @@ export function Profile() {
                 <h4 className="font-bold text-lg text-brand-primary">{b.title}</h4>
                 <p className="text-gray-700 text-sm line-clamp-2 mt-1">{b.content}</p>
                 <p className="text-sm text-brand-accent font-medium mt-2 inline-block">Read more</p>
+            </Link>
+        </div>
+    );
+
+    const renderEventOverview = (event: any) => (
+        <div key={`event-ov-${event.id}`} className="bg-white p-4 rounded-lg shadow-sm border border-gray-100 mb-4 last:mb-0 hover:shadow-md transition-shadow">
+            <Link to={`/events/${event.id}`}>
+                <div className="flex items-center gap-2 text-sm text-gray-500 mb-3">
+                    <Calendar className="w-4 h-4" />
+                    <span>Confirmed attendance to an event • {formatDate(event.eventDate, 'short')}</span>
+                </div>
+                {event.eventImage && (
+                    <div className="w-full h-48 mb-3 rounded-md overflow-hidden bg-gray-100">
+                        <LazyImage
+                            src={event.eventImage}
+                            alt={event.title}
+                            className="w-full h-full object-cover"
+                        />
+                    </div>
+                )}
+                <h4 className="font-bold text-lg text-brand-primary">{event.title}</h4>
+                <div className="space-y-1 text-xs text-gray-600 mt-2">
+                    <div className="flex items-center gap-2">
+                        <MapPin className="w-3 h-3 text-brand-primary shrink-0" />
+                        <span className="truncate">{event.location?.landmark || event.modality}</span>
+                    </div>
+                </div>
             </Link>
         </div>
     );
@@ -482,7 +525,12 @@ export function Profile() {
                                             {overviewContent.length === 0 && (
                                                 <div className="bg-white p-8 text-center rounded-lg border border-gray-100 text-gray-500">No recent activity to show.</div>
                                             )}
-                                            {overviewContent.map(item => item.type === 'bulletin' ? renderBulletin(item) : renderComment(item))}
+                                            {overviewContent.map(item => {
+                                                if (item.type === 'bulletin') return renderBulletin(item);
+                                                if (item.type === 'comment') return renderComment(item);
+                                                if (item.type === 'event') return renderEventOverview(item);
+                                                return null;
+                                            })}
                                         </div>
                                     )}
                                     {activeTab === 'bulletins' && (

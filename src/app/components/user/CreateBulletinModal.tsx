@@ -200,7 +200,7 @@ export function CreateBulletinModal({ trigger, initialData, isAdmin = false, ope
 
         try {
             const endpoint = isAdmin ? `/admin/bulletins` : `/bulletins`;
-            const token = sessionStorage.getItem('adminToken') || sessionStorage.getItem('token');
+            const token = sessionStorage.getItem('adminToken') || localStorage.getItem('token') || sessionStorage.getItem('token');
             const headers = token ? { Authorization: `Bearer ${token}` } : undefined;
 
             if (isEditMode && initialData?.id) {

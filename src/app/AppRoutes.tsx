@@ -26,6 +26,7 @@ const Connections = lazy(() => import('@pages/user/Connections').then(m => ({ de
 const UserEvents = lazy(() => import('@/assets/UserEvents').then(m => ({ default: m.UserEvents })));
 const Achievements = lazy(() => import('@pages/user/Achievements').then(m => ({ default: m.Achievements })));
 const AlumniDirectory = lazy(() => import('@pages/user/AlumniDirectory').then(m => ({ default: m.AlumniDirectory })));
+const Notifications = lazy(() => import('@pages/user/Notifications').then(m => ({ default: m.Notifications })));
 
 export const adminLoaders: Record<string, () => Promise<any>> = {
     '/admin': () => import('@pages/admin/AdminDashboard').then(m => ({ default: m.AdminDashboard })),
@@ -83,6 +84,7 @@ export default function AppRoutes() {
 
                 <Route element={<ProtectedRoute />}>
                     <Route path="/directory" element={withSuspense(AlumniDirectory)} />
+                    <Route path="/notifications" element={withSuspense(Notifications)} />
                     <Route path="/profile" element={withSuspense(Profile)} />
                     <Route path="/profile/:id" element={withSuspense(Profile)} />
                     <Route path="/profile/edit" element={withSuspense(EditProfile)} />

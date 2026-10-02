@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { toast } from 'sonner';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import {
     Calendar,
@@ -47,7 +46,6 @@ export function EventDetail() {
     const [organizer, setOrganizer] = useState<ProfileData | null>(null);
     const [loading, setLoading] = useState(true);
     const [rsvpLoading, setRsvpLoading] = useState(false);
-    const [isSuspended, setIsSuspended] = useState(false);
 
     useEffect(() => {
         const fetchEventAndOrganizer = async () => {
@@ -73,16 +71,8 @@ export function EventDetail() {
                         setOrganizer(profData[0]);
                     }
                 }
-
-                if (session?.userId) {
-                    const currentU = allUsers.find((u: any) => String(u.id) === String(session.userId));
-                    if (currentU && currentU.userStatus?.statusName === 'Suspended') {
-                        setIsSuspended(true);
-                        toast.error('You are suspended from submitting or editing content.');
-                    }
-                }
-
                 setEventData(event);
+
             } catch (error) {
                 console.error("Failed to fetch event details:", error);
             } finally {
@@ -182,7 +172,7 @@ export function EventDetail() {
     const handleConcludeEvent = async () => {
         if (!eventData) return;
         try {
-            const token = sessionStorage.getItem('token') || sessionStorage.getItem('adminToken');
+            const token = localStorage.getItem('token') || sessionStorage.getItem('token') || sessionStorage.getItem('adminToken');
             const headers = token ? { Authorization: `Bearer ${token}` } : undefined;
             await api.post(`/events/${eventData.id}/conclude`, {}, { headers });
             // Optimistically update the local state to Concluded
@@ -469,7 +459,7 @@ export function EventDetail() {
                                         {statusMessage}
                                     </AlertDescription>
                                 </Alert>
-                            ) : isLoggedIn && !isSuspended ? (
+                            ) : isLoggedIn ? (
                                 <>
                                     <div className="text-center mb-6">
                                         <h3 className="text-lg font-bold text-gray-900 mb-2">Are you going?</h3>
@@ -497,12 +487,6 @@ export function EventDetail() {
                                         </Button>
                                     </div>
                                 </>
-                            ) : isSuspended ? (
-                                <div className="text-center py-4">
-                                    <AlertCircle className="w-8 h-8 text-brand-primary/50 mx-auto mb-3" />
-                                    <h3 className="text-lg font-bold text-gray-900 mb-2">RSVP Restricted</h3>
-                                    <p className="text-gray-500 text-sm mb-6">Your account has been suspended. You cannot RSVP to events at this time.</p>
-                                </div>
                             ) : (
                                 <div className="text-center py-4">
                                     <h3 className="text-lg font-bold text-gray-900 mb-2">RSVP to this Event</h3>
