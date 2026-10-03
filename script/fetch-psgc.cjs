@@ -43,14 +43,15 @@ async function run() {
         cityCode: b.cityCode || b.municipalityCode
     }));
 
-    const outputStr = `\n// PSGC Static Data\n` +
-        `export const psgcRegions = ${JSON.stringify(mappedRegions)};\n` +
-        `export const psgcProvinces = ${JSON.stringify(mappedProvinces)};\n` +
-        `export const psgcCities = ${JSON.stringify(mappedCities)};\n` +
-        `export const psgcBarangays = ${JSON.stringify(mappedBarangays)};\n`;
+    const outputData = {
+        psgcRegions: mappedRegions,
+        psgcProvinces: mappedProvinces,
+        psgcCities: mappedCities,
+        psgcBarangays: mappedBarangays
+    };
 
-    fs.appendFileSync('src/assets/psgc_prefetch.tsx', outputStr);
-    console.log('Successfully appended static PSGC arrays to src/assets/psgc_prefetch.tsx!');
+    fs.writeFileSync('public/psgc.json', JSON.stringify(outputData));
+    console.log('Successfully saved static PSGC data to public/psgc.json!');
 }
 
 run().catch(console.error);

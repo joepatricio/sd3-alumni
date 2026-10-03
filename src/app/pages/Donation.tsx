@@ -120,7 +120,7 @@ export function Donation() {
                     className="absolute inset-0 bg-cover bg-center"
                     style={{
                         backgroundImage:
-                            'url(http://localhost:3000/donate-hero.avif)',
+                            'url(/uploads/donate-hero.avif)',
                     }}
                 >
                     <div className="absolute inset-0 bg-gradient-to-r from-brand-primary/90 to-brand-primary/40"></div>
@@ -142,7 +142,7 @@ export function Donation() {
                     </div>
                     <div className="flex items-center gap-3 mb-6">
                         <Link to="/" className="flex items-center gap-3 ">
-                            <img src="http://localhost:3000/alumni-logo.jpg" alt="USJ-R Logo" className="w-12 h-12 rounded-full border-2 border-white/30" />
+                            <img src="/uploads/alumni-logo.jpg" alt="USJ-R Logo" className="w-12 h-12 rounded-full border-2 border-white/30" />
                             <span className="font-bold text-xl tracking-wide">USJ-R SEA Alumni</span>
                         </Link>
                     </div>
@@ -324,7 +324,7 @@ export function Donation() {
                         <div className="flex flex-col items-center md:items-start gap-4">
                             <div className="flex items-center gap-2 text-white/90">
                                 <Link to="/" className="flex items-center gap-2">
-                                    <img src="http://localhost:3000/alumni-logo.jpg" alt="Logo" className="w-8 h-8 rounded opacity-80" />
+                                    <img src="/uploads/alumni-logo.jpg" alt="Logo" className="w-8 h-8 rounded opacity-80" />
                                     <span className="font-semibold tracking-wide">USJ-R SEA Alumni Association</span>
                                 </Link>
                             </div>

@@ -221,13 +221,14 @@ export function CreateEventModal({ trigger, initialData, isAdmin, open: external
     useEffect(() => {
         if (open && !psgcData && !isLoadingPsgc) {
             setIsLoadingPsgc(true);
-            import('@assets/psgc_prefetch')
-                .then((module) => {
+            fetch('/psgc.json')
+                .then(res => res.json())
+                .then((data) => {
                     setPsgcData({
-                        psgcRegions: module.psgcRegions,
-                        psgcProvinces: module.psgcProvinces,
-                        psgcCities: module.psgcCities,
-                        psgcBarangays: module.psgcBarangays,
+                        psgcRegions: data.psgcRegions,
+                        psgcProvinces: data.psgcProvinces,
+                        psgcCities: data.psgcCities,
+                        psgcBarangays: data.psgcBarangays,
                     });
                     setIsLoadingPsgc(false);
                 })
@@ -856,7 +857,7 @@ export function CreateEventModal({ trigger, initialData, isAdmin, open: external
         // Prisma allows nested create via relation: `location: { create: { ... } }` or just sending locationId. 
         // For simplicity and since we don't have the exact backend mapping for nested creations without seeing it,
         // we'll format the values exactly as they are in the schema and let the backend handle it, or send it directly.
-        const finalImage = values.image || previewUrl || 'http://localhost:3000/alumni-logo.jpg';
+        const finalImage = values.image || previewUrl || '/uploads/alumni-logo.jpg';
         const payload: any = {
             title: values.title,
             description: values.description,

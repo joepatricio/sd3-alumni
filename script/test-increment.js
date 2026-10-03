@@ -2,7 +2,7 @@ import jwt from 'jsonwebtoken';
 import axios from 'axios';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'ae573cec338aafd3579d22c7526be83ff4c9d5dc631438691c2c886b296591d9';
-const API_URL = 'http://localhost:3000/api';
+const API_URL = '/uploads/api';
 
 async function main() {
     // 1. Get an admin token

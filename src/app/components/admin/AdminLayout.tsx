@@ -166,7 +166,7 @@ export function AdminLayout() {
             <aside className="w-64 bg-brand-primary text-white flex flex-col shadow-xl z-10 transition-all duration-300">
                 <div className="h-16 flex items-center flex justify-left gap-2 px-6 border-b border-white/20">
                     <img
-                        src="http://localhost:3000/alumni-logo.jpg"
+                        src="/uploads/alumni-logo.jpg"
                         alt="Alumni"
                         className="h-8 w-8 object-contain rounded"
                     />

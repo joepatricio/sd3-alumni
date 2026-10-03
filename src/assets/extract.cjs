@@ -1,15 +1,12 @@
 const fs = require('fs');
-const content = fs.readFileSync('c:/Users/PATRICIOJOSENAJEAL/Desktop/bin/sd3-alumni/src/assets/psgc_prefetch.tsx', 'utf8');
+const content = fs.readFileSync('c:/Users/PATRICIOJOSENAJEAL/Desktop/bin/sd3-alumni/public/psgc.json', 'utf8');
 
-const regionsStr = content.match(/export const psgcRegions = (\[.*?\]);/)[1];
-const provincesStr = content.match(/export const psgcProvinces = (\[.*?\]);/)[1];
-const citiesStr = content.match(/export const psgcCities = (\[.*?\]);/)[1];
-const barangaysStr = content.match(/export const psgcBarangays = (\[.*\]);/)[1];
-
-const regions = JSON.parse(regionsStr);
-const provinces = JSON.parse(provincesStr);
-const cities = JSON.parse(citiesStr);
-const barangays = JSON.parse(barangaysStr);
+const {
+    psgcRegions: regions,
+    psgcProvinces: provinces,
+    psgcCities: cities,
+    psgcBarangays: barangays
+} = JSON.parse(content);
 
 const r7 = regions.find(r => r.code === '070000000');
 const cebu = provinces.find(p => p.code === '072200000');

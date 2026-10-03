@@ -68,7 +68,7 @@ export function ProfileHeader({
         <div className="bg-white rounded-2xl shadow-xl overflow-hidden mb-8 border border-gray-100">
             {/* Cover Image - taller and more vibrant */}
             <div className="h-48 bg-gradient-to-br from-brand-primary via-brand-primary/90 to-brand-secondary relative">
-                <div className="absolute inset-0 opacity-20 bg-[url('http://localhost:3000/cubes.png')]"></div>
+                <div className="absolute inset-0 opacity-20 bg-[url('/uploads/cubes.png')]"></div>
             </div>
 
             {/* Profile Info Container */}

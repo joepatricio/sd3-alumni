@@ -2,7 +2,7 @@ import { format } from 'date-fns';
 import { SiFacebook, SiX, SiInstagram } from 'react-icons/si';
 import { FaLinkedin } from 'react-icons/fa';
 
-export const DEFAULT_PROFILE = "http://localhost:3000/engineer.png"
+export const DEFAULT_PROFILE = "/uploads/engineer.png"
 
 export function formatCurrency(value: number): string {
     return new Intl.NumberFormat('en-PH', {

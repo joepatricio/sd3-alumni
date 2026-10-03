@@ -180,7 +180,7 @@ export function EditProfile() {
                     name={watchedValues.name || 'Your Name'}
                     degree={degreeInfo ? `${degreeInfo?.degreeName} (${degreeInfo?.degreeAbbr})` : ''}
                     graduationYear={profile?.batch?.toString() || 'YYYY'}
-                    profileImage={profileImageUrl || 'http://localhost:3000/profile-image.jpg'}
+                    profileImage={profileImageUrl || '/uploads/profile-image.jpg'}
                     bio={watchedValues.bio || ''}
                 />
 
@@ -214,7 +214,7 @@ export function EditProfile() {
                             <ImageUpload
                                 previewUrl={profileImageUrl}
                                 onFileSelect={handleImageSelect}
-                                onClear={() => setProfileImageUrl('http://localhost:3000/profile-image.jpg')}
+                                onClear={() => setProfileImageUrl('/uploads/profile-image.jpg')}
                                 placeholderText="Upload a new profile picture"
                             />
                         </div>

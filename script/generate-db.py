@@ -241,7 +241,7 @@ def generate_phase_2():
             "location": random.choice(["Cebu City, Philippines", "Manila, Philippines", "Davao, Philippines", "Abroad"]),
             "currentJob": job,
             "company": company,
-            "profileImage": "http://localhost:3000/profile-image.jpg",
+            "profileImage": "/uploads/profile-image.jpg",
             "degreeId": degree_id,
             "batch": batch,
             "birthday": birthday
@@ -450,17 +450,17 @@ def generate_phase_4(USER, USER_STATISTICS):
         bulletin_category = random.choice(BULLETIN_CATEGORY)
         bulletin_category_id = bulletin_category["id"]
         bulletin_category_name = bulletin_category["bulletinCategoryName"]
-        bulletin_image = "http://localhost:3000/bulletin-image.jpg"
+        bulletin_image = "/uploads/bulletin-image.jpg"
 
         match bulletin_category_name:
             case "Announcements":
-                bulletin_image = "http://localhost:3000/bulletin-image.jpg"
+                bulletin_image = "/uploads/bulletin-image.jpg"
             case "Careers":
-                bulletin_image = "http://localhost:3000/bulletin-careers.jpg"
+                bulletin_image = "/uploads/bulletin-careers.jpg"
             case "Success Stories":
-                bulletin_image = "http://localhost:3000/bulletin-success.jpg"
+                bulletin_image = "/uploads/bulletin-success.jpg"
             case "Donations":
-                bulletin_image = "http://localhost:3000/bulletin-donations.jpg"
+                bulletin_image = "/uploads/bulletin-donations.jpg"
             case "Others":
                 bulletin_image = None
             case _:
@@ -499,23 +499,23 @@ def generate_phase_4(USER, USER_STATISTICS):
         event_category_id = event_category["id"]
         event_category_name = event_category["eventCategoryName"]
         author_reg = user_reg_map.get(organizer_id, datetime.datetime(2025, 1, 1))
-        event_image = "http://localhost:3000/events-image.jpg"
+        event_image = "/uploads/events-image.jpg"
 
         match event_category_name:
             case "Conference":
-                event_image = "http://localhost:3000/events-conference.jpg"
+                event_image = "/uploads/events-conference.jpg"
             case "Networking":
-                event_image = "http://localhost:3000/events-networking.jpg"
+                event_image = "/uploads/events-networking.jpg"
             case "Reunion":
-                event_image = "http://localhost:3000/events-reunion.jpg"
+                event_image = "/uploads/events-reunion.jpg"
             case "Sports":
-                event_image = "http://localhost:3000/events-sports.jpg"
+                event_image = "/uploads/events-sports.jpg"
             case "Virtual":
-                event_image = "http://localhost:3000/events-virtual.jpg"
+                event_image = "/uploads/events-virtual.jpg"
             case "Workshop":
-                event_image = "http://localhost:3000/events-workshop.jpg"
+                event_image = "/uploads/events-workshop.jpg"
             case _:
-                event_image = "http://localhost:3000/alumni-logo.jpg"
+                event_image = "/uploads/alumni-logo.jpg"
 
         if status_name == "Concluded":
             # Concluded events happened in the past

@@ -11,7 +11,7 @@ const isNoTesters = args.includes('--no-testers');
 
 function main() {
     console.log("Starting integration test script...");
-    
+
     // 1. Look for Miku
     const mikuProfile = db.prepare(`SELECT * FROM Profile WHERE userName = ?`).get('初音ミク');
     if (!mikuProfile) {
@@ -47,7 +47,7 @@ function main() {
     // 3. Programmatically send friend requests from all users currently in the database to Miku.
     const allUsers = db.prepare(`SELECT id FROM User WHERE id != ?`).all(mikuId);
     console.log(`Sending friend requests from ${allUsers.length} users to Miku...`);
-    
+
     const insertConnection = db.prepare(`
         INSERT OR IGNORE INTO UserConnection (id, userId, friendId, connectionStatusId, dateUpdated)
         VALUES (?, ?, ?, ?, ?)
@@ -73,7 +73,7 @@ function main() {
     const activeUserStatus = db.prepare(`SELECT id FROM UserStatus WHERE statusName = ?`).get('Regular');
     const publicProfileStatus = db.prepare(`SELECT id FROM ProfileStatus WHERE statusName = ?`).get('Public');
     const degree = db.prepare(`SELECT id FROM Degree LIMIT 1`).get();
-    
+
     if (!activeUserStatus || !publicProfileStatus || !degree) {
         console.error("Required statuses or degree not found.");
         process.exit(1);
@@ -93,21 +93,21 @@ function main() {
     `);
 
     const testerIds = [];
-    
+
     db.transaction(() => {
         const now = new Date().toISOString();
         for (let i = 1; i <= 40; i++) {
             const testerId = crypto.randomUUID();
             testerIds.push(testerId);
-            
+
             insertUser.run(testerId, activeUserStatus.id, publicProfileStatus.id);
-            insertProfile.run(testerId, `Tester User ${i}`, 'Tester', degree.id, 2026, 'http://localhost:3000/engineer.png');
+            insertProfile.run(testerId, `Tester User ${i}`, 'Tester', degree.id, 2026, '/uploads/engineer.png');
             insertStats.run(testerId, now);
         }
     })();
 
     console.log("Tester accounts created. Miku is sending friend requests to them...");
-    
+
     // Miku sends friend requests to all Tester accounts
     db.transaction(() => {
         const now = new Date().toISOString();

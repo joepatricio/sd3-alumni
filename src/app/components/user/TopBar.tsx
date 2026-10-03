@@ -34,7 +34,7 @@ export function TopBar({
           <Link to="/" className="favi-alum">
             <div className="flex items-center gap-2">
               <img
-                src="http://localhost:3000/alumni-logo.jpg"
+                src="/uploads/alumni-logo.jpg"
                 alt="Alumni"
                 className="h-8 w-8 object-contain rounded"
               />

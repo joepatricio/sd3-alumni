@@ -525,13 +525,13 @@ app.post('/api/connections/action', authenticateToken, async (req, res) => {
                 if (txc1.connectionStatusId === acceptedCode) return; // Already accepted
 
                 // Use updateMany for atomic check-and-update to prevent race conditions
-                const update1 = await tx.userConnection.updateMany({ 
-                    where: { id: txc1.id, connectionStatusId: { not: acceptedCode } }, 
-                    data: { connectionStatusId: acceptedCode } 
+                const update1 = await tx.userConnection.updateMany({
+                    where: { id: txc1.id, connectionStatusId: { not: acceptedCode } },
+                    data: { connectionStatusId: acceptedCode }
                 });
-                const update2 = await tx.userConnection.updateMany({ 
-                    where: { id: txc2.id, connectionStatusId: { not: acceptedCode } }, 
-                    data: { connectionStatusId: acceptedCode } 
+                const update2 = await tx.userConnection.updateMany({
+                    where: { id: txc2.id, connectionStatusId: { not: acceptedCode } },
+                    data: { connectionStatusId: acceptedCode }
                 });
 
                 // If no records were updated, another request already processed this
@@ -554,7 +554,7 @@ app.post('/api/connections/action', authenticateToken, async (req, res) => {
             await prisma.$transaction(async (tx) => {
                 const txc1 = await tx.userConnection.findFirst({ where: { userId: currentUserId, friendId: profileId } });
                 const txc2 = await tx.userConnection.findFirst({ where: { userId: profileId, friendId: currentUserId } });
-                
+
                 if (!txc1 && !txc2) return;
 
                 let deleted1 = 0;
@@ -567,7 +567,7 @@ app.post('/api/connections/action', authenticateToken, async (req, res) => {
                     const res = await tx.userConnection.deleteMany({ where: { id: txc2.id } });
                     deleted2 = res.count;
                 }
-                
+
                 if (deleted1 === 0 && deleted2 === 0) return;
 
                 const txcWasAccepted = txc1?.connectionStatusId === acceptedCode;
@@ -590,7 +590,7 @@ app.post('/api/connections/action', authenticateToken, async (req, res) => {
             await prisma.$transaction(async (tx) => {
                 const txc1 = await tx.userConnection.findFirst({ where: { userId: currentUserId, friendId: profileId } });
                 const txc2 = await tx.userConnection.findFirst({ where: { userId: profileId, friendId: currentUserId } });
-                
+
                 if (txc1?.connectionStatusId === blockingCode) return; // Already blocking
 
                 if (txc1) await tx.userConnection.update({ where: { id: txc1.id }, data: { connectionStatusId: blockingCode } });
@@ -1596,7 +1596,7 @@ app.post('/api/admin/users', async (req, res) => {
                             email,
                             degreeId,
                             batch: batch ? parseInt(batch, 10) : null,
-                            profileImage: "http://localhost:3000/engineer.png",
+                            profileImage: "/uploads/engineer.png",
                             gender: gender || null
                         }
                     },
