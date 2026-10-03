@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, memo } from 'react';
 import { startOfWeek, endOfWeek, startOfMonth, endOfMonth, startOfYear, endOfYear, format } from 'date-fns';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@components/ui/card';
 import { Button } from '@components/ui/button';
@@ -20,6 +20,30 @@ const STATUS_COLORS: Record<string, string> = {
     Failed: '#dc2626', // Red
     Other: '#9ca3af' // Gray
 };
+
+const DonationTableRow = memo(({ donation }: { donation: any }) => (
+    <tr className="border-t hover:bg-gray-50/50 transition-colors">
+        <td className="px-6 py-4 whitespace-nowrap text-gray-600">{donation.date}</td>
+        <td className="px-6 py-4 font-medium text-gray-900">{donation.donor}</td>
+        <td className="px-6 py-4 font-medium text-gray-900">{donation.amount}</td>
+        <td className="px-6 py-4">
+            <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold ${
+                donation.status === 'Completed' ? 'bg-green-100 text-green-800 border-transparent hover:bg-green-200' :
+                    donation.status === 'Processing' ? 'bg-yellow-100 text-yellow-800 border-transparent hover:bg-yellow-200' :
+                        donation.status === 'Failed' ? 'bg-red-100 text-red-800 border-transparent hover:bg-red-200' : 'bg-gray-100 text-gray-800'
+            }`}>
+                {donation.status}
+            </span>
+        </td>
+        <td className="px-6 py-4 text-gray-600">{donation.bankName || 'N/A'}</td>
+        <td className="px-6 py-4 text-gray-500 font-mono text-xs">{donation.donationReference}</td>
+        <td className="px-6 py-4 text-right">
+            <button disabled={donation.status !== 'Completed'} className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors hover:bg-brand-primary/10 h-8 px-3 text-brand-primary hover:text-brand-primary-hover disabled:pointer-events-none disabled:opacity-50">
+                {donation.status === 'Completed' ? 'View' : ''}
+            </button>
+        </td>
+    </tr>
+));
 
 export function AdminDonations() {
     const [itemsPerPage, setItemsPerPage] = useState(20);
@@ -997,27 +1021,7 @@ export function AdminDonations() {
                                     </tr>
                                 ) : (
                                     paginatedDonations.map((donation) => (
-                                        <tr key={donation.id} className="border-t hover:bg-gray-50/50 transition-colors">
-                                            <td className="px-6 py-4 whitespace-nowrap text-gray-600">{donation.date}</td>
-                                            <td className="px-6 py-4 font-medium text-gray-900">{donation.donor}</td>
-                                            <td className="px-6 py-4 font-medium text-gray-900">{donation.amount}</td>
-                                            <td className="px-6 py-4">
-                                                <Badge className={
-                                                    donation.status === 'Completed' ? 'bg-green-100 text-green-800 border-transparent hover:bg-green-200' :
-                                                        donation.status === 'Processing' ? 'bg-yellow-100 text-yellow-800 border-transparent hover:bg-yellow-200' :
-                                                            donation.status === 'Failed' ? 'bg-red-100 text-red-800 border-transparent hover:bg-red-200' : 'bg-gray-100 text-gray-800'
-                                                }>
-                                                    {donation.status}
-                                                </Badge>
-                                            </td>
-                                            <td className="px-6 py-4 text-gray-600">{donation.bankName || 'N/A'}</td>
-                                            <td className="px-6 py-4 text-gray-500 font-mono text-xs">{donation.donationReference}</td>
-                                            <td className="px-6 py-4 text-right">
-                                                <Button variant="ghost" size="sm" disabled={donation.status !== 'Completed'} className="text-brand-primary hover:text-brand-primary-hover hover:bg-brand-primary/10">
-                                                    {donation.status === 'Completed' ? 'View' : ''}
-                                                </Button>
-                                            </td>
-                                        </tr>
+                                        <DonationTableRow key={donation.id} donation={donation} />
                                     ))
                                 )}
                             </tbody>

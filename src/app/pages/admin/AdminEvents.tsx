@@ -1,3 +1,4 @@
+import { useCallback } from 'react';
 import { AdminContentTable } from '@components/admin/AdminContentTable';
 
 import { api } from '@/app/views/api';
@@ -6,7 +7,7 @@ export function AdminEvents() {
     // Statuses based on the EventStatus table
     const EVENT_STATUSES = ["All", "Pending", "Approved", "Rejected", "Cancelled", "Concluded", "Archived"];
 
-    const fetchData = async (params: any) => {
+    const fetchData = useCallback(async (params: any) => {
         const whereClause: any = {};
         if (params.status !== 'All') {
             whereClause.status = { statusName: params.status };
@@ -81,7 +82,7 @@ export function AdminEvents() {
         }));
 
         return { data: mappedEvents, total };
-    };
+    }, []);
 
     const handleStatusChange = async (id: string, newStatus: string) => {
         try {

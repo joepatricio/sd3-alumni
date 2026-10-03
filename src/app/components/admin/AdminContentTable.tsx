@@ -1,9 +1,8 @@
-import { useState, useEffect, lazy, Suspense } from 'react';
+import { useState, useEffect, lazy, Suspense, useCallback, useMemo, memo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@components/ui/card';
 import { Button } from '@components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@components/ui/tabs';
 import { Input } from '@components/ui/input';
-import { Badge } from '@components/ui/badge';
 import { ArrowUp, ArrowDown, ArrowUpDown, Ban, ChevronLeft, ChevronRight, Search, Eye, FileText, HardHat, Lock } from 'lucide-react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@components/ui/select';
@@ -29,9 +28,88 @@ export interface ContentItem {
     rawDate: number;
     category: string;
     isOfficial: boolean;
-    isBanned?: boolean;
-    isSuspended?: boolean;
+    isBanned: boolean;
+    isSuspended: boolean;
 }
+
+const ContentTableRow = memo(({
+    item,
+    getCategoryClass,
+    getStatusIndicator,
+    handleStatusUpdate,
+    statusOptions,
+    setEditingItem,
+    loadCreateEventModal,
+    loadCreateBulletinModal
+}: any) => (
+    <tr className="border-t">
+        <td className="px-6 py-4">
+            <div className="font-semibold text-gray-900 flex items-center gap-2">
+                <Link to={`/${item.type === 'Bulletin' ? 'bulletin' : 'events'}/${item.id}`} className="text-gray-900 hover:text-brand-primary hover:underline">
+                    {item.title}
+                </Link>
+                <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold ${getCategoryClass(item.category)}`}>{item.category}</span>
+                <Link to={`/admin/preview/${item.type === 'Bulletin' ? 'bulletin' : 'event'}/${item.id}`} className="text-gray-400 hover:text-brand-primary" title="Preview as Approved">
+                    <Eye className="w-4 h-4" />
+                </Link>
+            </div>
+            <div className="text-xs text-gray-500 line-clamp-1 max-w-sm">{item.description}</div>
+        </td>
+        <td className="px-6 py-4">
+            <div className="flex items-center gap-2">
+                {item.isOfficial && <HardHat className="w-4 h-4 text-brand-primary" />}
+                {item.isBanned && (
+                    <span title="Banned User">
+                        <Ban className="w-4 h-4 text-red-600" />
+                    </span>
+                )}
+                {item.isSuspended && (
+                    <span title="Suspended User">
+                        <Lock className="w-4 h-4 text-yellow-600" />
+                    </span>
+                )}
+                <span>{item.author}</span>
+                {item.authorId ? (
+                    <Link to={`/admin/preview/user/${item.authorId}`} className="text-gray-400 hover:text-brand-primary" title="Preview Profile">
+                        <Eye className="w-4 h-4" />
+                    </Link>
+                ) : null}
+            </div>
+        </td>
+        <td className="px-6 py-4">{formatDate(item.date, 'long')}</td>
+        <td className="px-6 py-4">
+            <div className="flex gap-2 justify-center">
+                <div className="flex items-center gap-2">
+                    <span className={`w-2 h-2 rounded-full ${getStatusIndicator(item.status)}`}></span>
+                    <select
+                        value={item.status}
+                        onChange={(e) => handleStatusUpdate(item.id, e.target.value)}
+                        className="w-[120px] h-8 text-xs bg-white border border-gray-300 rounded px-2 focus:ring-1 focus:ring-brand-primary outline-none"
+                    >
+                        {statusOptions}
+                    </select>
+                </div>
+                <button
+                    className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors hover:bg-gray-200 h-8 px-3"
+                    onMouseEnter={() => {
+                        if (item.type === 'Event') loadCreateEventModal();
+                        else if (item.type === 'Bulletin') loadCreateBulletinModal();
+                    }}
+                    onFocus={() => {
+                        if (item.type === 'Event') loadCreateEventModal();
+                        else if (item.type === 'Bulletin') loadCreateBulletinModal();
+                    }}
+                    onClick={() => setEditingItem(item)}
+                >
+                    <FileText className="w-4 h-4 mr-1" />
+                    Edit
+                </button>
+            </div>
+        </td>
+    </tr>
+));
+
+
 
 interface AdminContentTableProps {
     title: string;
@@ -162,7 +240,7 @@ export function AdminContentTable({
         setCurrentPage(1);
     };
 
-    const handleStatusUpdate = async (id: string, newStatus: string) => {
+    const handleStatusUpdate = useCallback(async (id: string, newStatus: string) => {
         if (onStatusChange) {
             try {
                 await onStatusChange(id, newStatus);
@@ -171,7 +249,7 @@ export function AdminContentTable({
                 console.error("Failed to update status", err);
             }
         }
-    };
+    }, [onStatusChange]);
 
     const handleExportCSV = () => {
         const headers = ['Title', 'Author', 'Date', 'Type', 'Status'];
@@ -251,7 +329,7 @@ export function AdminContentTable({
         }
     }
 
-    const getStatusIndicator = (status: string) => {
+    const getStatusIndicator = useCallback((status: string) => {
         switch (status) {
             case "All": return 'bg-gray-400';
             case "Pending": return 'bg-yellow-400';
@@ -262,16 +340,20 @@ export function AdminContentTable({
             case "Concluded": return 'bg-blue-500';
             default: return 'bg-gray-400';
         }
-    }
+    }, []);
 
-    const getCategoryClass = (category: string) => {
+    const getCategoryClass = useCallback((category: string) => {
         if (category === "All" || category === "Pending" || category === "Approved" || category === "Rejected" || category === "Cancelled" || category === "Archived" || category === "Concluded") {
             return getStatusClass(category);
         }
         if (category === "Official") return 'bg-brand-primary text-white';
         if (category === "Regular") return 'bg-brand-accent text-white';
         return getCategoryColor(category);
-    }
+    }, []);
+
+    const statusOptions = useMemo(() => statuses.filter(s => s !== "All").map(s => (
+        <option key={s} value={s}>{s}</option>
+    )), [statuses]);
 
     const renderTable = () => {
         if (isLoading) {
@@ -340,157 +422,24 @@ export function AdminContentTable({
                         </thead>
                         <tbody>
                             {paginatedContent.map((item) => (
-                                <tr key={item.id} className="border-t">
-                                    <td className="px-6 py-4">
-                                        <div className="font-semibold text-gray-900 flex items-center gap-2">
-                                            <Link to={`/${item.type === 'Bulletin' ? 'bulletin' : 'events'}/${item.id}`} className="text-gray-900 hover:text-brand-primary hover:underline">
-                                                {item.title}
-                                            </Link>
-                                            <Badge className={getCategoryClass(item.category)}>{item.category}</Badge>
-                                            <Link to={`/admin/preview/${item.type === 'Bulletin' ? 'bulletin' : 'event'}/${item.id}`} className="text-gray-400 hover:text-brand-primary" title="Preview as Approved">
-                                                <Eye className="w-4 h-4" />
-                                            </Link>
-                                        </div>
-                                        <div className="text-xs text-gray-500 line-clamp-1 max-w-sm">{item.description}</div>
-                                    </td>
-                                    <td className="px-6 py-4">
-                                        <div className="flex items-center gap-2">
-                                            {item.isOfficial && <HardHat className="w-4 h-4 text-brand-primary" />}
-                                            {item.isBanned && (
-                                                <span title="Banned User">
-                                                    <Ban className="w-4 h-4 text-red-600" />
-                                                </span>
-                                            )}
-                                            {item.isSuspended && (
-                                                <span title="Suspended User">
-                                                    <Lock className="w-4 h-4 text-yellow-600" />
-                                                </span>
-                                            )}
-                                            <span>{item.author}</span>
-                                            {(item as any).authorId ? (
-                                                <Link to={`/admin/preview/user/${(item as any).authorId}`} className="text-gray-400 hover:text-brand-primary" title="Preview Profile">
-                                                    <Eye className="w-4 h-4" />
-                                                </Link>
-                                            ) : null}
-                                        </div>
-                                    </td>
-                                    <td className="px-6 py-4">{formatDate(item.date, 'long')}</td>
-                                    {/* Quick actions, removed because of space constraints */}
-                                    {/* <td className="px-6 py-4">
-                                        <div className="flex justify-left gap-2">
-                                            {item.status === "Pending" && (
-                                                <>
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="sm"
-                                                        className="text-green-600 hover:text-green-700 hover:bg-green-50"
-                                                        onClick={() => handleStatusUpdate(item.id, "Approved")}
-                                                    >
-                                                        <CheckCircle className="w-4 h-4 mr-1" />
-                                                        Approve
-                                                    </Button>
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="sm"
-                                                        className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                                                        onClick={() => handleStatusUpdate(item.id, "Rejected")}
-                                                    >
-                                                        <XCircle className="w-4 h-4 mr-1" />
-                                                        Reject
-                                                    </Button>
-                                                </>
-                                            )}
-                                            {(item.status === "Approved" || item.status === "Rejected" || item.status === "Cancelled") && (
-                                                <>
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="sm"
-                                                        className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
-                                                        onClick={() => handleStatusUpdate(item.id, "Pending")}
-                                                    >
-                                                        <RotateCcw className="w-4 h-4 mr-1" />
-                                                        Reset
-                                                    </Button>
-                                                    {(item.status === "Rejected" || (item.type === "Bulletin" && item.status === "Approved")) && (<Button
-                                                        variant="ghost"
-                                                        size="sm"
-                                                        className="text-gray-600 hover:text-gray-700 hover:bg-gray-50"
-                                                        onClick={() => handleStatusUpdate(item.id, "Archived")}
-                                                    >
-                                                        <Archive className="w-4 h-4 mr-1" />
-                                                        Archive
-                                                    </Button>
-                                                    )}
-                                                </>
-                                            )}
-                                            {item.status === "Concluded" && (
-                                                <Button
-                                                    variant="ghost"
-                                                    size="sm"
-                                                    className="text-gray-600 hover:text-gray-700 hover:bg-gray-50"
-                                                    onClick={() => handleStatusUpdate(item.id, "Archived")}
-                                                >
-                                                    <Archive className="w-4 h-4 mr-1" />
-                                                    Archive
-                                                </Button>
-                                            )}
-                                            {item.status === "Archived" && (
-                                                <Button
-                                                    variant="ghost"
-                                                    size="sm"
-                                                    className="text-gray-600 hover:text-gray-700 hover:bg-gray-50"
-                                                    onClick={() => handleStatusUpdate(item.id, item.type === "Bulletin" ? "Approved" : "Concluded")}
-                                                >
-                                                    <RotateCcw className="w-4 h-4 mr-1" />
-                                                    Unarchive
-                                                </Button>
-                                            )}
-                                        </div>
-                                    </td> */}
-                                    <td className="px-6 py-4">
-                                        <div className="flex gap-2 justify-center">
-                                            <Select value={item.status} onValueChange={(val) => handleStatusUpdate(item.id, val)}>
-                                                <SelectTrigger className="w-[140px] h-8 text-xs bg-white border border-gray-300">
-                                                    <SelectValue placeholder="Status" />
-                                                </SelectTrigger>
-                                                <SelectContent>
-                                                    {statuses.filter(s => s !== "All").map(s => (
-                                                        <SelectItem key={s} value={s}>
-                                                            <div className="flex items-center gap-2">
-                                                                <span className={`w-2 h-2 rounded-full ${getStatusIndicator(s)}`}></span>
-                                                                <span>{s}</span>
-                                                            </div>
-                                                        </SelectItem>
-                                                    ))}
-                                                </SelectContent>
-                                            </Select>
-                                            <Button
-                                                variant="ghost"
-                                                size="sm"
-                                                className="hover:bg-gray-200"
-                                                onMouseEnter={() => {
-                                                    if (item.type === 'Event') loadCreateEventModal();
-                                                    else if (item.type === 'Bulletin') loadCreateBulletinModal();
-                                                }}
-                                                onFocus={() => {
-                                                    if (item.type === 'Event') loadCreateEventModal();
-                                                    else if (item.type === 'Bulletin') loadCreateBulletinModal();
-                                                }}
-                                                onClick={() => setEditingItem(item)}
-                                            >
-                                                <FileText className="w-4 h-4 mr-1" />
-                                                Edit
-                                            </Button>
-                                        </div>
-                                    </td>
-                                </tr>
+                                <ContentTableRow
+                                    key={item.id}
+                                    item={item}
+                                    getCategoryClass={getCategoryClass}
+                                    getStatusIndicator={getStatusIndicator}
+                                    handleStatusUpdate={handleStatusUpdate}
+                                    statusOptions={statusOptions}
+                                    setEditingItem={setEditingItem}
+                                    loadCreateEventModal={loadCreateEventModal}
+                                    loadCreateBulletinModal={loadCreateBulletinModal}
+                                />
                             ))}
                         </tbody>
                     </table>
                 </div>
-            </div >
+            </div>
         );
-    };
+    }
 
     return (
         <div className="space-y-6 animate-in fade-in duration-500">

@@ -1,4 +1,4 @@
-import { useState, useEffect, lazy, Suspense } from 'react';
+import { useState, useEffect, lazy, Suspense, useCallback, memo } from 'react';
 import { subYears, format } from 'date-fns';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@components/ui/card';
 import { Button } from '@components/ui/button';
@@ -30,6 +30,73 @@ interface User {
     expiryDate?: string;
     rawExpiryDate?: number;
 }
+
+const UserTableRow = memo(({ user, openEditModal }: { user: User, openEditModal: (user: User, status?: string) => void }) => {
+    const showRestoreUnbanActivate = ['Suspended', 'Banned', 'Deactivated'].includes(user.status);
+    const showSuspend = user.status === 'Official' || user.status === 'Regular';
+    const showBan = user.status === 'Official' || user.status === 'Regular' || user.status === 'Suspended';
+    const showDeactivate = user.status !== 'Deactivated';
+
+    return (
+        <tr className="border-t">
+            <td className="px-6 py-4 font-medium">
+                <div className="flex items-center gap-2">
+                    <Link to={`/profile/${user.id}`} className="text-gray-900 hover:text-brand-primary" title="Link to Profile">
+                        <span>{user.name}</span>
+                    </Link>
+                    <Link to={`/admin/preview/user/${user.id}`} className="text-gray-400 hover:text-brand-primary" title="Preview Profile">
+                        <Eye className="w-4 h-4" />
+                    </Link>
+                </div>
+            </td>
+            <td className="px-6 py-4">{user.email}</td>
+            <td className="px-6 py-4">{user.batch}</td>
+            <td className="px-6 py-4 whitespace-nowrap">
+                {user.status === 'Suspended' ? (
+                    <div className="text-orange-700">Expires: {user.expiryDate || 'N/A'}</div>
+                ) : (
+                    user.grantedDate ? formatDate(user.grantedDate, "long") : 'N/A'
+                )}
+            </td>
+            <td className="px-6 py-4">
+                <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold ${user.status === 'Official' ? 'bg-blue-100 text-blue-800 border-transparent' :
+                        user.status === 'Regular' ? 'bg-green-100 text-green-800 border-transparent' :
+                            user.status === 'Pending' ? 'bg-yellow-100 text-yellow-800 border-transparent' :
+                                user.status === 'Suspended' ? 'bg-orange-100 text-orange-800 border-transparent' :
+                                    user.status === 'Banned' ? 'bg-red-100 text-red-800 border-transparent' :
+                                        'bg-gray-100 text-gray-800 border-transparent'
+                    }`}>
+                    {user.status}
+                </span>
+            </td>
+            <td className="px-6 py-4 text-left">
+                <div className="flex justify-end gap-1">
+                    {showRestoreUnbanActivate && (
+                        <button
+                            className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors border h-8 px-3 text-blue-600 border-blue-200 hover:text-blue-700 hover:bg-blue-200"
+                            onClick={() => openEditModal(user, 'Regular')}
+                        >
+                            {user.status === 'Suspended' ? 'Restore' : user.status === 'Banned' ? 'Unban' : 'Activate'}
+                        </button>
+                    )}
+                    {showSuspend && (
+                        <button className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors border h-8 px-3 text-orange-600 border-orange-200 hover:bg-orange-50" onClick={() => openEditModal(user, 'Suspended')}>Suspend</button>
+                    )}
+                    {showBan && (
+                        <button className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors border h-8 px-3 text-red-600 border-red-200 hover:bg-red-50" onClick={() => openEditModal(user, 'Banned')}>Ban</button>
+                    )}
+                    {showDeactivate && (
+                        <button className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors border h-8 px-3 text-gray-600 border-gray-200 hover:bg-gray-100" onClick={() => openEditModal(user, 'Deactivated')}>Deactivate</button>
+                    )}
+                    <button className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors hover:bg-gray-200 h-8 px-3" onClick={() => openEditModal(user)}>
+                        <FileText className="w-4 h-4 mr-1" />
+                        Edit
+                    </button>
+                </div>
+            </td>
+        </tr>
+    );
+});
 
 export function AdminUsers() {
     const [itemsPerPage, setItemsPerPage] = useState(20);
@@ -386,7 +453,7 @@ export function AdminUsers() {
         setSearchParams({ tab: val }, { replace: true });
     };
 
-    const openEditModal = (user: User, specificStatus?: string) => {
+    const openEditModal = useCallback((user: User, specificStatus?: string) => {
         setEditingUser(user);
         setEditStatus(specificStatus || user.status);
         setEditReason(user.reason || '');
@@ -404,42 +471,9 @@ export function AdminUsers() {
             }
         }
         setEditExpiryDate(initialExpiry);
-    };
+    }, []);
 
-    const renderQuickActions = (user: User) => {
-        const showRestoreUnbanActivate = ['Suspended', 'Banned', 'Deactivated'].includes(user.status);
-        const showSuspend = user.status === 'Official' || user.status === 'Regular';
-        const showBan = user.status === 'Official' || user.status === 'Regular' || user.status === 'Suspended';
-        const showDeactivate = user.status !== 'Deactivated';
 
-        return (
-            <div className="flex justify-end gap-1">
-                {showRestoreUnbanActivate && (
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        className="text-blue-600 border-blue-200 hover:text-blue-700 hover:bg-blue-200"
-                        onClick={() => openEditModal(user, 'Regular')}
-                    >
-                        {user.status === 'Suspended' ? 'Restore' : user.status === 'Banned' ? 'Unban' : 'Activate'}
-                    </Button>
-                )}
-                {showSuspend && (
-                    <Button variant="outline" size="sm" className="text-orange-600 border-orange-200 hover:bg-orange-50" onClick={() => openEditModal(user, 'Suspended')}>Suspend</Button>
-                )}
-                {showBan && (
-                    <Button variant="outline" size="sm" className="text-red-600 border-red-200 hover:bg-red-50" onClick={() => openEditModal(user, 'Banned')}>Ban</Button>
-                )}
-                {showDeactivate && (
-                    <Button variant="outline" size="sm" className="text-gray-600 border-gray-200 hover:bg-gray-100" onClick={() => openEditModal(user, 'Deactivated')}>Deactivate</Button>
-                )}
-                <Button variant="ghost" size="sm" onClick={() => openEditModal(user)}>
-                    <FileText className="w-4 h-4 mr-1" />
-                    Edit
-                </Button>
-            </div>
-        );
-    };
 
     const renderTable = () => {
         if (users.length === 0) {
@@ -502,42 +536,7 @@ export function AdminUsers() {
                         </thead>
                         <tbody>
                             {paginatedUsers.map((user) => (
-                                <tr key={user.id} className="border-t">
-                                    <td className="px-6 py-4 font-medium">
-                                        <div className="flex items-center gap-2">
-                                            <Link to={`/profile/${user.id}`} className="text-gray-900 hover:text-brand-primary" title="Link to Profile">
-                                                <span>{user.name}</span>
-                                            </Link>
-                                            <Link to={`/admin/preview/user/${user.id}`} className="text-gray-400 hover:text-brand-primary" title="Preview Profile">
-                                                <Eye className="w-4 h-4" />
-                                            </Link>
-                                        </div>
-                                    </td>
-                                    <td className="px-6 py-4">{user.email}</td>
-                                    <td className="px-6 py-4">{user.batch}</td>
-                                    <td className="px-6 py-4 whitespace-nowrap">
-                                        {user.status === 'Suspended' ? (
-                                            <div className="text-orange-700">Expires: {user.expiryDate || 'N/A'}</div>
-                                        ) : (
-                                            user.grantedDate ? formatDate(user.grantedDate, "long") : 'N/A'
-                                        )}
-                                    </td>
-                                    <td className="px-6 py-4">
-                                        <Badge className={
-                                            user.status === 'Official' ? 'bg-blue-100 text-blue-800' :
-                                                user.status === 'Regular' ? 'bg-green-100 text-green-800' :
-                                                    user.status === 'Pending' ? 'bg-yellow-100 text-yellow-800' :
-                                                        user.status === 'Suspended' ? 'bg-orange-100 text-orange-800' :
-                                                            user.status === 'Banned' ? 'bg-red-100 text-red-800' :
-                                                                'bg-gray-100 text-gray-800'
-                                        }>
-                                            {user.status}
-                                        </Badge>
-                                    </td>
-                                    <td className="px-6 py-4 text-left">
-                                        {renderQuickActions(user)}
-                                    </td>
-                                </tr>
+                                <UserTableRow key={user.id} user={user} openEditModal={openEditModal} />
                             ))}
                         </tbody>
                     </table>

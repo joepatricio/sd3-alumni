@@ -978,8 +978,12 @@ async function resolveBulletinData(body, isUpdate = false, req = null) {
         if (defaultStatus) data.contentStatusId = defaultStatus.id;
     }
 
-    if (data.readTimeMinutes !== undefined && data.readTimeMinutes !== null) {
+    if (data.content && typeof data.content === 'string') {
+        data.readTimeMinutes = Math.max(1, Math.ceil(data.content.length / 1000));
+    } else if (data.readTimeMinutes !== undefined && data.readTimeMinutes !== null) {
         data.readTimeMinutes = parseInt(data.readTimeMinutes, 10) || 5;
+    } else {
+        data.readTimeMinutes = 5;
     }
 
     // Remove non-scalar or relation fields
@@ -1748,7 +1752,9 @@ const tableToModel = {
     locations: 'location',
     achievements: 'achievement',
     bulletinLikes: 'bulletinLike',
-    commentLikes: 'commentLike'
+    commentLikes: 'commentLike',
+    notifications: 'notification',
+    notificationTypes: 'notificationType'
 };
 
 const defaultIncludes = {
@@ -2207,6 +2213,11 @@ app.post('/api/:table', async (req, res, next) => {
             data,
             include: defaultIncludes[modelName] ? defaultIncludes[modelName] : undefined
         });
+
+        if ((modelName === 'event' || modelName === 'bulletin') && item.authorId) {
+            const link = modelName === 'event' ? `/events/${item.id}` : `/bulletin/${item.id}`;
+            await createNotification(prisma, item.authorId, `Your ${modelName} "${item.title || 'submission'}" has been submitted and is currently under review.`, link);
+        }
 
         res.status(201).json(formatOutput(modelName, item));
     } catch (error) {
