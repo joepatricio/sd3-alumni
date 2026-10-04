@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { Heart, Globe, GraduationCap, Users, Mail, Phone, ArrowLeft, User } from 'lucide-react';
 import { SiFacebook, SiX, SiInstagram } from 'react-icons/si';
 import { FaLinkedin } from 'react-icons/fa';
@@ -12,6 +12,7 @@ import { z } from 'zod';
 
 export function Donation() {
     const { isLoggedIn, session, setSession } = useAuth();
+    const [searchParams, setSearchParams] = useSearchParams();
     const [selectedAmount, setSelectedAmount] = useState<number | null>(1000);
     const [customAmount, setCustomAmount] = useState('');
     const [donorEmail, setDonorEmail] = useState('');
@@ -19,6 +20,25 @@ export function Donation() {
     const [isAnonymous, setIsAnonymous] = useState(false);
     const [userName, setUserName] = useState<string>('Alumni');
     const [profileImage, setProfileImage] =useState<string | null>(null);
+
+    useEffect(() => {
+        const status = searchParams.get('status');
+        const ref = searchParams.get('ref');
+        
+        if (status === 'success') {
+            toast.success("Thank You for Your Generosity!", {
+                description: `Your donation was successful.\nReference ID: ${ref}`,
+                duration: 8000,
+            });
+            setSearchParams({});
+        } else if (status === 'cancel') {
+            toast.info("Donation Canceled", {
+                description: "You canceled the donation process.",
+                duration: 5000,
+            });
+            setSearchParams({});
+        }
+    }, [searchParams, setSearchParams]);
 
     useEffect(() => {
         if (isLoggedIn && session?.userId) {
@@ -68,46 +88,28 @@ export function Donation() {
         const refId = `DON-${nanoidRef()}-${nanoidRef()}`;
 
         try {
-            const statusRes = await api.get('/donationStatuses');
-            const completedId = statusRes.data.find((s: any) => s.statusName === 'Completed')?.id;
-
-            const newDonation = {
+            const checkoutPayload = {
+                amount,
                 donationReference: refId,
-                userId: isLoggedIn ? session?.userId : null,
-                donationStatusId: completedId,
-                donationDate: new Date().toISOString(),
-                donationAmount: amount,
-                donationAmountPhp: formatCurrency(amount),
                 donationAnonymous: !isLoggedIn || isAnonymous,
-                donationEmail: isLoggedIn ? session?.email : donorEmail
+                donationEmail: isLoggedIn ? session?.email : donorEmail,
+                userId: isLoggedIn ? session?.userId : null
             };
 
-            await api.post('/donations', newDonation);
-
-            if (isLoggedIn && !isAnonymous) {
-                const statsRes = await api.get('/userStatistics', { params: { userId: session?.userId } });
-                const stats = statsRes.data;
-                if (stats && stats.length > 0) {
-                    const currentStats = stats[0];
-                    await api.patch(`/userStatistics/${currentStats.id}`, {
-                        donatedAmount: currentStats.donatedAmount + amount
-                    });
-                }
+            const response = await api.post('/donations/checkout', checkoutPayload);
+            
+            if (response.data && response.data.checkoutUrl) {
+                // Redirect to PayMongo Checkout
+                window.location.href = response.data.checkoutUrl;
+            } else {
+                throw new Error("Invalid checkout response");
             }
-
-            toast.success("Thank You for Your Generosity!", {
-                description: `Your donation of ${formatCurrency(amount)} was successful.\nReference ID: ${refId}`,
-                duration: 8000,
-            });
-
-            setSelectedAmount(1000);
-            setCustomAmount('');
-            setDonorEmail('');
-            setEmailError(null);
-            setIsAnonymous(false);
-
-        } catch (error) {
-            toast.error("Failed to process donation. Please try again.");
+        } catch (error: any) {
+            if (error.response?.data?.error) {
+                toast.error(error.response.data.error);
+            } else {
+                toast.error("Failed to initiate checkout. Please try again.");
+            }
             console.error(error);
         }
     };

@@ -22,8 +22,9 @@ dev.db
 
 # misc
 .DS_Store
-.env.production
 .env
+.env.production
+.env.development
 .env.local
 .env.development.local
 .env.test.local

@@ -10,6 +10,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { PrismaClient } from "../prisma/generated/client";
 import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
 import { parseWhere, parseSort, numericFields } from './queryParser.js';
+import rateLimit from 'express-rate-limit';
 
 const adapter = new PrismaBetterSqlite3({
     url: process.env.DATABASE_URL || "file:./dev.db",
@@ -105,6 +106,22 @@ const app = express();
 const PORT = process.env.PORT;
 const JWT_SECRET = process.env.JWT_SECRET;
 
+// =======================
+// SYSTEM CONFIGURATION
+// =======================
+// Suggested Rate Limits:
+// Strict (Current): 5 auth attempts per 15 mins, 10 content creations per hr
+// Moderate: 10 auth attempts per 15 mins, 30 content creations per hr
+// Permissive: 20 auth attempts per 15 mins, 100 content creations per hr
+const RATE_LIMIT_AUTH_WINDOW_MS = 15 * 60 * 1000;
+const RATE_LIMIT_CONTENT_WINDOW_MS = 60 * 60 * 1000;
+const RATE_LIMIT_AUTH_MAX = 5;
+const RATE_LIMIT_CONTENT_MAX = 10;
+
+// Maximum number of registered users on the platform. 
+// Set to Infinity to disable this limit.
+const MAX_TOTAL_USERS = 100;
+
 app.use(cors({
     origin: true,
     credentials: true,
@@ -162,7 +179,15 @@ const authenticateAdminToken = (req, res, next) => {
 // AUTH ROUTES & CUSTOM OVERRIDES
 // =======================
 
-app.post('/api/auth/check-email', async (req, res) => {
+const authLimiter = rateLimit({
+    windowMs: RATE_LIMIT_AUTH_WINDOW_MS,
+    max: RATE_LIMIT_AUTH_MAX,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { error: 'Too many authentication attempts from this IP, please try again after 15 minutes' }
+});
+
+app.post('/api/auth/check-email', authLimiter, async (req, res) => {
     try {
         const { email } = req.body;
         if (!email) return res.status(400).json({ error: 'Email is required' });
@@ -178,7 +203,7 @@ app.post('/api/auth/check-email', async (req, res) => {
     }
 });
 
-app.post('/api/auth/reset-password', async (req, res) => {
+app.post('/api/auth/reset-password', authLimiter, async (req, res) => {
     try {
         const { email, password } = req.body;
         if (!email || !password) return res.status(400).json({ error: 'Email and password are required' });
@@ -206,13 +231,13 @@ app.post('/api/auth/reset-password', async (req, res) => {
 });
 
 // User limits check and registration
-app.post('/api/auth/register', async (req, res) => {
+app.post('/api/auth/register', authLimiter, async (req, res) => {
     let { fullName, email, password, degreeProgram, batch, gender } = req.body;
 
     try {
         // Check user limit
         const userCount = await prisma.userAuth.count();
-        if (userCount >= 100) {
+        if (userCount >= MAX_TOTAL_USERS) {
             return res.status(403).json({ error: 'Registrations are closed. The maximum number of users has been reached.' });
         }
 
@@ -320,7 +345,7 @@ app.post('/api/auth/register', async (req, res) => {
 });
 
 // Custom Auth Login
-app.post('/api/auth/login', async (req, res) => {
+app.post('/api/auth/login', authLimiter, async (req, res) => {
     const { email, password, rememberMe } = req.body;
     try {
         const userAuth = await prisma.userAuth.findFirst({
@@ -412,7 +437,7 @@ app.post('/api/auth/login', async (req, res) => {
 });
 
 // Custom Admin Login
-app.post('/api/auth/admin/login', async (req, res) => {
+app.post('/api/auth/admin/login', authLimiter, async (req, res) => {
     const { username, password } = req.body;
     try {
         const admin = await prisma.admin.findUnique({
@@ -1021,7 +1046,7 @@ app.patch('/api/admin/events/:id/status', authenticateAdminToken, async (req, re
 });
 
 // Admin POST Event
-app.post('/api/admin/events', authenticateAdminToken, async (req, res) => {
+app.post('/api/admin/events', authenticateAdminToken, contentLimiter, async (req, res) => {
     try {
         const existingUser = await prisma.user.findFirst({
             where: { userStatus: { statusName: 'Official' } }
@@ -1305,7 +1330,7 @@ app.patch('/api/admin/bulletins/:id/status', authenticateAdminToken, async (req,
 });
 
 // Admin POST Bulletin
-app.post('/api/admin/bulletins', authenticateAdminToken, async (req, res) => {
+app.post('/api/admin/bulletins', authenticateAdminToken, contentLimiter, async (req, res) => {
     try {
         const existingUser = await prisma.user.findFirst({
             where: { userStatus: { statusName: 'Official' } }
@@ -2181,8 +2206,32 @@ app.get('/api/:table/:id', async (req, res, next) => {
     }
 });
 
+const contentLimiter = rateLimit({
+    windowMs: RATE_LIMIT_CONTENT_WINDOW_MS,
+    max: RATE_LIMIT_CONTENT_MAX,
+    standardHeaders: true,
+    legacyHeaders: false,
+    keyGenerator: (req, res) => {
+        // Limit by user ID if authenticated (either from decoded token in headers or req user object)
+        const authHeader = req.headers['authorization'];
+        const token = authHeader && authHeader.split(' ')[1];
+        if (token) {
+            try {
+                const decoded = jwt.verify(token, process.env.JWT_SECRET);
+                if (decoded && (decoded.id || decoded.userId)) {
+                    return decoded.id || decoded.userId;
+                }
+            } catch (err) {
+                // Ignore token errors here, fallback to IP
+            }
+        }
+        return req.ip;
+    },
+    message: { error: 'Too many content creation attempts, please try again later' }
+});
+
 // Generic POST
-app.post('/api/:table', async (req, res, next) => {
+app.post('/api/:table', contentLimiter, async (req, res, next) => {
     const { table } = req.params;
     const modelName = tableToModel[table];
     if (!modelName) return next();
@@ -2336,6 +2385,134 @@ app.delete('/api/:table/:id', async (req, res, next) => {
     }
 });
 
+
+
+
+
+// =======================
+// PAYMONGO CHECKOUT INTEGRATION
+// =======================
+
+app.post('/api/donations/checkout', async (req, res) => {
+    try {
+        const { amount, donationReference, donationAnonymous, donationEmail, userId } = req.body;
+        
+        const paymongoSecretKey = process.env.PAYMONGO_SECRET_KEY;
+        if (!paymongoSecretKey || paymongoSecretKey === 'sk_test_...') {
+            return res.status(500).json({ error: 'PayMongo Secret Key not configured in .env' });
+        }
+
+        const authString = Buffer.from(`${paymongoSecretKey}:`).toString('base64');
+        const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+
+        const checkoutPayload = {
+            data: {
+                attributes: {
+                    send_email_receipt: true,
+                    show_description: true,
+                    show_line_items: true,
+                    line_items: [
+                        {
+                            currency: 'PHP',
+                            amount: Math.round(amount * 100), // PayMongo uses centavos
+                            description: 'Donation',
+                            name: 'Donation to USJ-R SEA Alumni',
+                            quantity: 1
+                        }
+                    ],
+                    payment_method_types: ['gcash', 'paymaya', 'grab_pay', 'qrph', 'card', 'dob'],
+                    reference_number: donationReference,
+                    success_url: `${frontendUrl}/donations?status=success&ref=${donationReference}`,
+                    cancel_url: `${frontendUrl}/donations?status=cancel&ref=${donationReference}`,
+                    description: 'Alumni Donation'
+                }
+            }
+        };
+
+        const response = await fetch('https://api.paymongo.com/v1/checkout_sessions', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Basic ${authString}`
+            },
+            body: JSON.stringify(checkoutPayload)
+        });
+
+        const data = await response.json();
+        
+        if (!response.ok) {
+            console.error("PayMongo checkout error:", data);
+            return res.status(500).json({ error: 'Failed to create PayMongo checkout session' });
+        }
+
+        // Pre-create the donation record with a 'Pending' status
+        const pendingStatus = await prisma.donationStatus.findFirst({ where: { statusName: 'Pending' } });
+        if (pendingStatus) {
+            await prisma.donation.create({
+                data: {
+                    donationReference: donationReference,
+                    donationStatusId: pendingStatus.id,
+                    donationAmount: amount,
+                    donationAmountPhp: `₱${amount.toFixed(2)}`,
+                    donationAnonymous: donationAnonymous,
+                    donationEmail: donationEmail,
+                    userId: userId || null
+                }
+            });
+        }
+
+        // Return the checkout URL to redirect the user
+        res.json({ checkoutUrl: data.data.attributes.checkout_url });
+    } catch (error) {
+        console.error("PayMongo checkout exception:", error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+app.post('/api/donations/webhook', async (req, res) => {
+    try {
+        const payload = req.body;
+        console.log("PayMongo Webhook Payload Received");
+        
+        // Very basic webhook handling (In production, verify signature)
+        if (payload && payload.data && payload.data.attributes) {
+            const eventType = payload.data.attributes.type;
+            
+            if (eventType === 'checkout_session.payment.paid') {
+                const checkoutData = payload.data.attributes.data;
+                const donationReference = checkoutData.attributes.reference_number;
+                
+                if (donationReference) {
+                    const completedStatus = await prisma.donationStatus.findFirst({ where: { statusName: 'Completed' } });
+                    
+                    if (completedStatus) {
+                        await prisma.donation.updateMany({
+                            where: { donationReference: donationReference },
+                            data: { donationStatusId: completedStatus.id }
+                        });
+                        
+                        // Update user stats if the donation has a userId
+                        const donation = await prisma.donation.findFirst({ where: { donationReference: donationReference } });
+                        if (donation && donation.userId && !donation.donationAnonymous) {
+                             const userStat = await prisma.userStatistic.findUnique({ where: { userId: donation.userId } });
+                             if (userStat) {
+                                 await prisma.userStatistic.update({
+                                     where: { userId: donation.userId },
+                                     data: { donatedAmount: (userStat.donatedAmount || 0) + donation.donationAmount }
+                                 });
+                             }
+                        }
+                    }
+                }
+            }
+        }
+        
+        res.status(200).send('Webhook received');
+    } catch (error) {
+        console.error("Webhook processing error:", error);
+        res.status(500).send('Error processing webhook');
+    }
+});
 
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
