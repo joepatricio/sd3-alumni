@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, memo } from 'react';
 import { startOfWeek, endOfWeek, startOfMonth, endOfMonth, startOfYear, endOfYear, format } from 'date-fns';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@components/ui/card';
+
 import { Button } from '@components/ui/button';
 import { Badge } from '@components/ui/badge';
 import { Tabs, TabsList, TabsTrigger } from '@components/ui/tabs';
@@ -27,11 +27,10 @@ const DonationTableRow = memo(({ donation }: { donation: any }) => (
         <td className="px-6 py-4 font-medium text-gray-900">{donation.donor}</td>
         <td className="px-6 py-4 font-medium text-gray-900">{donation.amount}</td>
         <td className="px-6 py-4">
-            <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold ${
-                donation.status === 'Completed' ? 'bg-green-100 text-green-800 border-transparent hover:bg-green-200' :
-                    donation.status === 'Processing' ? 'bg-yellow-100 text-yellow-800 border-transparent hover:bg-yellow-200' :
-                        donation.status === 'Failed' ? 'bg-red-100 text-red-800 border-transparent hover:bg-red-200' : 'bg-gray-100 text-gray-800'
-            }`}>
+            <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold ${donation.status === 'Completed' ? 'bg-green-100 text-green-800 border-transparent hover:bg-green-200' :
+                donation.status === 'Processing' ? 'bg-yellow-100 text-yellow-800 border-transparent hover:bg-yellow-200' :
+                    donation.status === 'Failed' ? 'bg-red-100 text-red-800 border-transparent hover:bg-red-200' : 'bg-gray-100 text-gray-800'
+                }`}>
                 {donation.status}
             </span>
         </td>
@@ -328,7 +327,7 @@ export function AdminDonations() {
                     }
                 }
 
-                let sortStr = undefined;
+                let sortStr = "-donationDate";
                 if (sortConfig) {
                     let sortKey: string = sortConfig.key;
                     if (sortKey === 'amount') sortKey = 'donationAmount';
@@ -421,23 +420,6 @@ export function AdminDonations() {
         setActiveBank(prev => prev === e.value ? null : e.value);
     };
 
-    const renderCustomTooltip = ({ active, payload }: any, totalKey: string) => {
-        if (active && payload && payload.length) {
-            const data = payload[0].payload;
-            const sum = totalKey === 'status' 
-                ? statusData.reduce((acc, curr) => acc + curr.value, 0)
-                : bankData.reduce((acc, curr) => acc + curr.value, 0);
-
-            const percent = sum > 0 ? ((data.value / sum) * 100).toFixed(1) : '0.0';
-
-            return (
-                <div className="bg-white border border-gray-200 shadow-sm rounded-md p-2 text-xs">
-                    <span className="font-semibold">{data.name}</span>: {data.value} ({percent}%)
-                </div>
-            );
-        }
-        return null;
-    };
 
     const handlePrintReport = async () => {
         if (!printRef.current || isExporting) return;
@@ -506,8 +488,8 @@ export function AdminDonations() {
                                 </Button>
                             </div>
                         </div>
-                        <Card className="border-none shadow-md overflow-hidden">
-                            <CardContent className="p-0 grid grid-cols-2 sm:grid-cols-3 divide-y sm:divide-x divide-gray-100">
+                        <div className="bg-white rounded-xl border border-gray-200 border-none shadow-md overflow-hidden" >
+                            <div className="px-6 pb-6 p-0 grid grid-cols-2 sm:grid-cols-3 divide-y sm:divide-x divide-gray-100" >
                                 <div className="p-4 bg-green-50/50 flex flex-col justify-center col-span-2 sm:col-span-1 border-b sm:border-b-0">
                                     <div className="text-xs font-medium text-green-800">Total Raised (YTD)</div>
                                     <div className="text-xl font-bold text-green-900 leading-tight mt-1">{formatCurrency(stats.totalRaised)}</div>
@@ -568,13 +550,13 @@ export function AdminDonations() {
                                     </div>
                                     <div className="text-xl font-bold text-gray-900 leading-tight mt-1">{(stats.engagementRate * 100).toFixed(1)}%</div>
                                 </div>
-                            </CardContent>
-                        </Card>
+                            </div>
+                        </div>
 
                         {/* Charts */}
                         <div className="grid grid-cols-1 gap-6">
-                            <Card className="border-none shadow-md overflow-hidden">
-                                <CardContent className="p-0 flex flex-col sm:flex-row h-72">
+                            <div className="bg-white rounded-xl border border-gray-200 border-none shadow-md overflow-hidden" >
+                                <div className="px-6 pb-6 p-0 flex flex-col sm:flex-row h-72" >
                                     <div className="w-full sm:w-1/3 p-6 flex flex-col justify-center border-b sm:border-b-0 sm:border-r border-gray-100 bg-gray-50/50">
                                         <h3 className="text-base font-semibold text-gray-900">Status Share</h3>
                                         <p className="text-xs text-gray-500 mt-1 mb-4">Click legend items to isolate</p>
@@ -605,7 +587,7 @@ export function AdminDonations() {
                                                         />
                                                     ))}
                                                 </Pie>
-                                                <RechartsTooltip content={(props) => renderCustomTooltip(props, 'status')} />
+                                                <RechartsTooltip formatter={(val: any) => [`${val} transactions`, 'Count']} contentStyle={{ backgroundColor: 'white', color: 'black', borderRadius: '8px', borderColor: '#e2e8f0', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }} />
                                             </PieChart>
                                         </ResponsiveContainer>
                                         {activeStatus && (
@@ -631,11 +613,11 @@ export function AdminDonations() {
                                             })()
                                         )}
                                     </div>
-                                </CardContent>
-                            </Card>
+                                </div>
+                            </div>
 
-                            <Card className="border-none shadow-md overflow-hidden">
-                                <CardContent className="p-0 flex flex-col sm:flex-row h-90">
+                            <div className="bg-white rounded-xl border border-gray-200 border-none shadow-md overflow-hidden" >
+                                <div className="px-6 pb-6 p-0 flex flex-col sm:flex-row h-90" >
                                     <div className="w-full sm:w-1/3 p-6 flex flex-col justify-center border-b sm:border-b-0 sm:border-r border-gray-100 bg-gray-50/50">
                                         <h3 className="text-base font-semibold text-gray-900">Bank Share</h3>
                                         <p className="text-xs text-gray-500 mt-1 mb-4">Click legend items to isolate</p>
@@ -666,7 +648,7 @@ export function AdminDonations() {
                                                         />
                                                     ))}
                                                 </Pie>
-                                                <RechartsTooltip content={(props) => renderCustomTooltip(props, 'bank')} />
+                                                <RechartsTooltip formatter={(val: any) => [`${val} transactions`, 'Count']} contentStyle={{ backgroundColor: 'white', color: 'black', borderRadius: '8px', borderColor: '#e2e8f0', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }} />
                                             </PieChart>
                                         </ResponsiveContainer>
                                         {activeBank && (
@@ -692,17 +674,17 @@ export function AdminDonations() {
                                             })()
                                         )}
                                     </div>
-                                </CardContent>
-                            </Card>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
                     {/* RIGHT COLUMN: Top Donors */}
                     <div className="lg:col-span-1 flex flex-col h-full">
-                        <Card className="border-none shadow-md h-full flex flex-col gap-0">
-                            <CardHeader className="bg-gray-50/50 border-b border-gray-100 py-4">
+                        <div className="bg-white rounded-xl border border-gray-200 border-none shadow-md h-full flex flex-col gap-0" >
+                            <div className="flex flex-col space-y-1.5 px-6 pt-6 bg-gray-50/50 border-b border-gray-100 py-4" >
                                 <div className="flex flex-col gap-2">
-                                    <CardTitle className="text-sm font-semibold text-gray-900">Top Donors</CardTitle>
+                                    <h4 className="font-semibold leading-none tracking-tight text-sm font-semibold text-gray-900" >Top Donors</h4>
                                     <Tabs value={activeLeaderboardTab} onValueChange={setActiveLeaderboardTab} className="w-full mt-2">
                                         <TabsList className="grid w-full grid-cols-3 h-8">
                                             <TabsTrigger value="Top LTV" className="text-xs">Top LTV</TabsTrigger>
@@ -711,8 +693,8 @@ export function AdminDonations() {
                                         </TabsList>
                                     </Tabs>
                                 </div>
-                            </CardHeader>
-                            <CardContent className="flex-1 p-0">
+                            </div>
+                            <div className="px-6 pb-6 flex-1 p-0" >
                                 <div className="flex flex-col divide-y divide-gray-100">
                                     {(activeLeaderboardTab === 'Top LTV' ? leaderboards.topLTV : activeLeaderboardTab === 'Top Avg Donation' ? leaderboards.topAvgDonation : leaderboards.topFrequency).map((d: any, idx: number) => (
                                         <div
@@ -798,25 +780,25 @@ export function AdminDonations() {
                                         </div>
                                     ))}
                                 </div>
-                            </CardContent>
-                        </Card>
+                            </div>
+                        </div>
                     </div>
                 </div>
             )}
 
-            <Card className="border-none shadow-md print:hidden">
-                <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="bg-white rounded-xl border border-gray-200 border-none shadow-md print:hidden" >
+                <div className="flex flex-col space-y-1.5 px-6 pt-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4" >
                     <div>
-                        <CardTitle className="text-lg">All Donations</CardTitle>
-                        <CardDescription>Detailed log of all monetary contributions from alumni</CardDescription>
+                        <h4 className="font-semibold leading-none tracking-tight text-lg" >All Donations</h4>
+                        <p className="text-sm text-gray-500" >Detailed log of all monetary contributions from alumni</p>
                     </div>
                     <div>
                         <Button variant="default" className="gap-2 shrink-0 bg-brand-primary text-white hover:bg-brand-primary-hover" onClick={handleExportCSV}>
                             <Download size={16} /> Export CSV
                         </Button>
                     </div>
-                </CardHeader>
-                <CardContent className="space-y-4">
+                </div>
+                <div className="px-6 pb-6 space-y-4" >
                     <Tabs value={activeTab} onValueChange={onTabChange} className="w-full">
                         <TabsList className="mb-2">
                             <TabsTrigger value="All" className="min-w-[100px]">All</TabsTrigger>
@@ -1035,8 +1017,8 @@ export function AdminDonations() {
                             </div>
                         </div>
                     )}
-                </CardContent>
-            </Card>
+                </div>
+            </div>
         </div>
     );
 }

@@ -10,7 +10,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { PrismaClient } from "../prisma/generated/client";
 import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
 import { parseWhere, parseSort, numericFields } from './queryParser.js';
-import rateLimit from 'express-rate-limit';
+import { rateLimit, ipKeyGenerator } from 'express-rate-limit';
 
 const adapter = new PrismaBetterSqlite3({
     url: process.env.DATABASE_URL || "file:./dev.db",
@@ -185,6 +185,30 @@ const authLimiter = rateLimit({
     standardHeaders: true,
     legacyHeaders: false,
     message: { error: 'Too many authentication attempts from this IP, please try again after 15 minutes' }
+});
+
+const contentLimiter = rateLimit({
+    windowMs: RATE_LIMIT_CONTENT_WINDOW_MS,
+    max: RATE_LIMIT_CONTENT_MAX,
+    standardHeaders: true,
+    legacyHeaders: false,
+    keyGenerator: (req, res) => {
+        // Limit by user ID if authenticated (either from decoded token in headers or req user object)
+        const authHeader = req.headers['authorization'];
+        const token = authHeader && authHeader.split(' ')[1];
+        if (token) {
+            try {
+                const decoded = jwt.verify(token, process.env.JWT_SECRET);
+                if (decoded && (decoded.id || decoded.userId)) {
+                    return decoded.id || decoded.userId;
+                }
+            } catch (err) {
+                // Ignore token errors here, fallback to IP
+            }
+        }
+        return ipKeyGenerator(req, res);
+    },
+    message: { error: 'Too many content creation attempts, please try again later' }
 });
 
 app.post('/api/auth/check-email', authLimiter, async (req, res) => {
@@ -2206,30 +2230,6 @@ app.get('/api/:table/:id', async (req, res, next) => {
     }
 });
 
-const contentLimiter = rateLimit({
-    windowMs: RATE_LIMIT_CONTENT_WINDOW_MS,
-    max: RATE_LIMIT_CONTENT_MAX,
-    standardHeaders: true,
-    legacyHeaders: false,
-    keyGenerator: (req, res) => {
-        // Limit by user ID if authenticated (either from decoded token in headers or req user object)
-        const authHeader = req.headers['authorization'];
-        const token = authHeader && authHeader.split(' ')[1];
-        if (token) {
-            try {
-                const decoded = jwt.verify(token, process.env.JWT_SECRET);
-                if (decoded && (decoded.id || decoded.userId)) {
-                    return decoded.id || decoded.userId;
-                }
-            } catch (err) {
-                // Ignore token errors here, fallback to IP
-            }
-        }
-        return req.ip;
-    },
-    message: { error: 'Too many content creation attempts, please try again later' }
-});
-
 // Generic POST
 app.post('/api/:table', contentLimiter, async (req, res, next) => {
     const { table } = req.params;
@@ -2396,7 +2396,7 @@ app.delete('/api/:table/:id', async (req, res, next) => {
 app.post('/api/donations/checkout', async (req, res) => {
     try {
         const { amount, donationReference, donationAnonymous, donationEmail, userId } = req.body;
-        
+
         const paymongoSecretKey = process.env.PAYMONGO_SECRET_KEY;
         if (!paymongoSecretKey || paymongoSecretKey === 'sk_test_...') {
             return res.status(500).json({ error: 'PayMongo Secret Key not configured in .env' });
@@ -2422,8 +2422,8 @@ app.post('/api/donations/checkout', async (req, res) => {
                     ],
                     payment_method_types: ['gcash', 'paymaya', 'grab_pay', 'qrph', 'card', 'dob'],
                     reference_number: donationReference,
-                    success_url: `${frontendUrl}/donations?status=success&ref=${donationReference}`,
-                    cancel_url: `${frontendUrl}/donations?status=cancel&ref=${donationReference}`,
+                    success_url: `${frontendUrl}/donate?status=success&ref=${donationReference}`,
+                    cancel_url: `${frontendUrl}/donate?status=cancel&ref=${donationReference}`,
                     description: 'Alumni Donation'
                 }
             }
@@ -2439,14 +2439,14 @@ app.post('/api/donations/checkout', async (req, res) => {
         });
 
         const data = await response.json();
-        
+
         if (!response.ok) {
             console.error("PayMongo checkout error:", data);
             return res.status(500).json({ error: 'Failed to create PayMongo checkout session' });
         }
 
-        // Pre-create the donation record with a 'Pending' status
-        const pendingStatus = await prisma.donationStatus.findFirst({ where: { statusName: 'Pending' } });
+        // Pre-create the donation record with a 'Processing' status
+        const pendingStatus = await prisma.donationStatus.findFirst({ where: { statusName: 'Processing' } });
         if (pendingStatus) {
             await prisma.donation.create({
                 data: {
@@ -2456,7 +2456,8 @@ app.post('/api/donations/checkout', async (req, res) => {
                     donationAmountPhp: `₱${amount.toFixed(2)}`,
                     donationAnonymous: donationAnonymous,
                     donationEmail: donationEmail,
-                    userId: userId || null
+                    userId: userId || null,
+                    bankName: data.data.id // Storing checkout_session_id for reconciliation
                 }
             });
         }
@@ -2473,46 +2474,122 @@ app.post('/api/donations/webhook', async (req, res) => {
     try {
         const payload = req.body;
         console.log("PayMongo Webhook Payload Received");
-        
+
         // Very basic webhook handling (In production, verify signature)
         if (payload && payload.data && payload.data.attributes) {
             const eventType = payload.data.attributes.type;
-            
+
             if (eventType === 'checkout_session.payment.paid') {
                 const checkoutData = payload.data.attributes.data;
                 const donationReference = checkoutData.attributes.reference_number;
-                
+
                 if (donationReference) {
                     const completedStatus = await prisma.donationStatus.findFirst({ where: { statusName: 'Completed' } });
-                    
+
                     if (completedStatus) {
                         await prisma.donation.updateMany({
                             where: { donationReference: donationReference },
                             data: { donationStatusId: completedStatus.id }
                         });
-                        
+
                         // Update user stats if the donation has a userId
                         const donation = await prisma.donation.findFirst({ where: { donationReference: donationReference } });
                         if (donation && donation.userId && !donation.donationAnonymous) {
-                             const userStat = await prisma.userStatistic.findUnique({ where: { userId: donation.userId } });
-                             if (userStat) {
-                                 await prisma.userStatistic.update({
-                                     where: { userId: donation.userId },
-                                     data: { donatedAmount: (userStat.donatedAmount || 0) + donation.donationAmount }
-                                 });
-                             }
+                            const userStat = await prisma.userStatistic.findUnique({ where: { userId: donation.userId } });
+                            if (userStat) {
+                                await prisma.userStatistic.update({
+                                    where: { userId: donation.userId },
+                                    data: { donatedAmount: (userStat.donatedAmount || 0) + donation.donationAmount }
+                                });
+                            }
                         }
                     }
                 }
             }
         }
-        
+
         res.status(200).send('Webhook received');
     } catch (error) {
         console.error("Webhook processing error:", error);
         res.status(500).send('Error processing webhook');
     }
 });
+// Background Reconciliation for Pending PayMongo Donations
+setInterval(async () => {
+    try {
+        const pendingStatus = await prisma.donationStatus.findFirst({ where: { statusName: 'Processing' } });
+        const completedStatus = await prisma.donationStatus.findFirst({ where: { statusName: 'Completed' } });
+        const failedStatus = await prisma.donationStatus.findFirst({ where: { statusName: 'Failed' } });
+
+        if (!pendingStatus || !completedStatus || !failedStatus) return;
+
+        // Find all processing donations that have a PayMongo checkout_session_id in bankName
+        const pendingDonations = await prisma.donation.findMany({
+            where: {
+                donationStatusId: pendingStatus.id,
+                bankName: { startsWith: 'cs_' },
+                // Only reconcile donations from the last 24 hours to prevent endless polling of old abandoned sessions
+                donationDate: { gte: new Date(Date.now() - 24 * 60 * 60 * 1000) }
+            }
+        });
+
+        if (pendingDonations.length === 0) return;
+
+        const paymongoSecretKey = process.env.PAYMONGO_SECRET_KEY;
+        if (!paymongoSecretKey || paymongoSecretKey.startsWith('sk_test_...')) return;
+        const authString = Buffer.from(`${paymongoSecretKey}:`).toString('base64');
+
+        for (const donation of pendingDonations) {
+            const csId = donation.bankName;
+            const response = await fetch(`https://api.paymongo.com/v1/checkout_sessions/${csId}`, {
+                method: 'GET',
+                headers: { 'Authorization': `Basic ${authString}` }
+            });
+            if (!response.ok) continue;
+            
+            const data = await response.json();
+            const payments = data.data?.attributes?.payments || [];
+            
+            // Check if there is a successful payment
+            const isPaid = payments.some(p => p.attributes.status === 'paid');
+            const isFailed = payments.some(p => p.attributes.status === 'failed') && !isPaid;
+
+            if (isPaid) {
+                await prisma.donation.update({
+                    where: { id: donation.id },
+                    data: { donationStatusId: completedStatus.id }
+                });
+                
+                // Update user stats
+                if (donation.userId && !donation.donationAnonymous) {
+                    const userStat = await prisma.userStatistic.findUnique({ where: { userId: donation.userId } });
+                    if (userStat) {
+                        await prisma.userStatistic.update({
+                            where: { userId: donation.userId },
+                            data: { donatedAmount: (userStat.donatedAmount || 0) + donation.donationAmount }
+                        });
+                    }
+                }
+                console.log(`Reconciled donation ${donation.donationReference} as Completed`);
+            } else if (isFailed && payments.length > 0) {
+                // If there's a definitive failure and no success, mark as failed
+                // (Note: users can retry within the same checkout session, so be careful. 
+                // Wait for the session to be truly dead or rely on webhook for failure if supported)
+                // For now, we only mark as failed if all payments are failed.
+                const allFailed = payments.every(p => p.attributes.status === 'failed');
+                if (allFailed) {
+                    await prisma.donation.update({
+                        where: { id: donation.id },
+                        data: { donationStatusId: failedStatus.id }
+                    });
+                    console.log(`Reconciled donation ${donation.donationReference} as Failed`);
+                }
+            }
+        }
+    } catch (err) {
+        console.error("Reconciliation error:", err);
+    }
+}, 30 * 1000); // Check every 30 seconds
 
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);

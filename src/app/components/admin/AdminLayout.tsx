@@ -62,7 +62,7 @@ function AdminClock() {
     };
 
     return (
-        <div className="flex items-center gap-2 text-sm text-gray-700 font-medium bg-gray-50 px-3 py-1.5 rounded-lg border border-gray-100 shadow-xs">
+        <div className="flex items-center gap-2 text-sm text-gray-700 font-medium bg-gray-50 px-3 py-1.5 rounded-lg border border-gray-100 shadow-xs tabular-nums min-w-[280px]">
             <Clock size={16} />
             <span>Time: {formatTime(currentTime)}</span>
             <span className="text-xs text-brand-primary/80 bg-brand-primary/10 px-2 py-0.5 rounded-md ml-1 font-semibold">{timeSource}</span>

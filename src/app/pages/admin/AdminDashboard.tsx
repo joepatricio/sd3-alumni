@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@components/ui/card';
+
 import {
     Users, FileText, Calendar as CalendarIcon, CreditCard, Activity, AlertTriangle,
     ArrowRight, ShieldAlert, CheckCircle2, RefreshCw, Download, Loader2,
@@ -160,14 +160,14 @@ const CalendarWidget = ({ events }: { events: EventItem[] }) => {
     };
 
     return (
-        <Card className="shadow-md border-none flex flex-col">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
+        <div className="bg-white rounded-xl border border-gray-200 shadow-md border-none flex flex-col" >
+            <div className="flex flex-col space-y-1.5 px-6 pt-6 flex flex-row items-center justify-between pb-2" >
                 <div>
-                    <CardTitle className="flex items-center gap-2 text-gray-900">
+                    <h4 className="font-semibold leading-none tracking-tight flex items-center gap-2 text-gray-900" >
                         <CalendarIcon className="w-5 h-5 text-brand-primary" />
                         Event Monthly Calendar
-                    </CardTitle>
-                    <CardDescription>Browse scheduled alumni activities by date</CardDescription>
+                    </h4>
+                    <p className="text-sm text-gray-500" >Browse scheduled alumni activities by date</p>
                 </div>
                 <div className="flex items-center gap-1">
                     <button
@@ -186,8 +186,8 @@ const CalendarWidget = ({ events }: { events: EventItem[] }) => {
                         <ChevronRight size={16} />
                     </button>
                 </div>
-            </CardHeader>
-            <CardContent className="flex-1 flex flex-col justify-between">
+            </div>
+            <div className="px-6 pb-6 flex-1 flex flex-col justify-between" >
                 <div>
                     {/* Calendar Days Header */}
                     <div className="grid grid-cols-7 gap-1 text-center mb-2">
@@ -257,8 +257,8 @@ const CalendarWidget = ({ events }: { events: EventItem[] }) => {
                         <p className="text-xs text-gray-400 text-center py-2">Click any highlighted calendar date to view scheduled event proposals.</p>
                     )}
                 </div>
-            </CardContent>
-        </Card>
+            </div>
+        </div>
     );
 };
 
@@ -599,15 +599,15 @@ export function AdminDashboard() {
             </div>
 
             {/* User Analytics Card */}
-            <Card className="w-full shadow-md border-none flex flex-col justify-between mb-8">
-                <CardHeader className="pb-3 border-b border-gray-100">
-                    <CardTitle className="flex items-center gap-2 text-gray-900 text-lg">
+            <div className="bg-white rounded-xl border border-gray-200 w-full shadow-md border-none flex flex-col justify-between mb-8" >
+                <div className="flex flex-col space-y-1.5 px-6 pt-6 pb-3 border-b border-gray-100" >
+                    <h4 className="font-semibold leading-none tracking-tight flex items-center gap-2 text-gray-900 text-lg" >
                         <PieChartIcon className="w-5 h-5 text-brand-primary" />
                         User Status, Demographics & Profile Status Analytics
-                    </CardTitle>
-                    <CardDescription>Visual distribution of account verification status, generational cohort proportions, and profile privacy preferences across all users.</CardDescription>
-                </CardHeader>
-                <CardContent className="pt-4 flex-1 flex flex-col justify-center">
+                    </h4>
+                    <p className="text-sm text-gray-500" >Visual distribution of account verification status, generational cohort proportions, and profile privacy preferences across all users.</p>
+                </div>
+                <div className="px-6 pb-6 pt-4 flex-1 flex flex-col justify-center" >
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6 divide-y md:divide-y-0 md:divide-x divide-gray-100">
                         {/* User Status Pie Chart */}
                         <div className="flex flex-col items-center">
@@ -660,7 +660,7 @@ export function AdminDashboard() {
                                                 key={`us-leg-${entry.name}`}
                                                 onClick={() => setActiveUserStatus(prev => prev === entry.name ? null : entry.name)}
                                                 className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-semibold transition-all border
-                                                        ${activeUserStatus === entry.name ? 'bg-gray-900 text-white border-gray-900 shadow-2xs scale-105' :
+                                                        ${activeUserStatus === entry.name ? 'bg-brand-primary text-white border-brand-primary shadow-2xs scale-105' :
                                                         activeUserStatus && activeUserStatus !== entry.name ? 'bg-gray-50 text-gray-400 border-gray-100 opacity-50' :
                                                             'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100'}`}
                                             >
@@ -729,7 +729,7 @@ export function AdminDashboard() {
                                                 key={`demo-leg-${entry.name}`}
                                                 onClick={() => setActiveDemographic(prev => prev === entry.name ? null : entry.name)}
                                                 className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-semibold transition-all border
-                                                        ${activeDemographic === entry.name ? 'bg-gray-900 text-white border-gray-900 shadow-2xs scale-105' :
+                                                        ${activeDemographic === entry.name ? 'bg-brand-primary text-white border-brand-primary shadow-2xs scale-105' :
                                                         activeDemographic && activeDemographic !== entry.name ? 'bg-gray-50 text-gray-400 border-gray-100 opacity-50' :
                                                             'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100'}`}
                                             >
@@ -797,7 +797,7 @@ export function AdminDashboard() {
                                                 key={`ps-leg-${entry.name}`}
                                                 onClick={() => setActiveProfileStatus(prev => prev === entry.name ? null : entry.name)}
                                                 className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-semibold transition-all border
-                                                        ${activeProfileStatus === entry.name ? 'bg-gray-900 text-white border-gray-900 shadow-2xs scale-105' :
+                                                        ${activeProfileStatus === entry.name ? 'bg-brand-primary text-white border-brand-primary shadow-2xs scale-105' :
                                                         activeProfileStatus && activeProfileStatus !== entry.name ? 'bg-gray-50 text-gray-400 border-gray-100 opacity-50' :
                                                             'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100'}`}
                                             >
@@ -815,29 +815,29 @@ export function AdminDashboard() {
                             )}
                         </div>
                     </div>
-                </CardContent>
-            </Card>
+                </div>
+            </div>
 
             {/* Platform Health Metrics & Category Share Breakdown */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 {/* Platform Health Metrics Card */}
-                <Card className="col-span-1 shadow-md border-none">
-                    <CardHeader>
-                        <CardTitle className="flex items-center gap-2 text-gray-900">
+                <div className="bg-white rounded-xl border border-gray-200 col-span-1 shadow-md border-none" >
+                    <div className="flex flex-col space-y-1.5 px-6 pt-6" >
+                        <h4 className="font-semibold leading-none tracking-tight flex items-center gap-2 text-gray-900" >
                             <Activity className="w-5 h-5 text-brand-primary" />
                             Platform System Telemetry
-                        </CardTitle>
-                        <CardDescription>Metrics regarding community engagement</CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
+                        </h4>
+                        <p className="text-sm text-gray-500" >Metrics regarding community engagement</p>
+                    </div>
+                    <div className="px-6 pb-6 space-y-4" >
                         <div className="p-3.5 bg-slate-50 rounded-lg border border-slate-100 flex items-center justify-between">
                             <div className="flex items-center gap-3">
                                 <div className="p-2 bg-blue-100 text-blue-700 rounded-md">
                                     <Users size={18} />
                                 </div>
                                 <div>
-                                    <p className="text-xs text-gray-500 font-medium">Total Network Connections</p>
-                                    <p className="text-base font-bold text-gray-900">{platformHealth.totalConnections} Established</p>
+                                    <p className="text-xs text-gray-500 font-medium">Total Users</p>
+                                    <p className="text-base font-bold text-gray-900">{stats ? (stats.officialUsers + stats.regularUsers + stats.pendingUsers) : 0} Active</p>
                                 </div>
                             </div>
                         </div>
@@ -877,19 +877,19 @@ export function AdminDashboard() {
                                 </div>
                             </div>
                         </div>
-                    </CardContent>
-                </Card>
+                    </div>
+                </div>
 
                 {/* Content & Event Category Share Breakdown Chart Card */}
-                <Card className="col-span-1 lg:col-span-2 shadow-md border-none flex flex-col justify-between">
-                    <CardHeader className="pb-3 border-b border-gray-100">
-                        <CardTitle className="flex items-center gap-2 text-gray-900 text-lg">
+                <div className="bg-white rounded-xl border border-gray-200 col-span-1 lg:col-span-2 shadow-md border-none flex flex-col justify-between" >
+                    <div className="flex flex-col space-y-1.5 px-6 pt-6 pb-3 border-b border-gray-100" >
+                        <h4 className="font-semibold leading-none tracking-tight flex items-center gap-2 text-gray-900 text-lg" >
                             <PieChartIcon className="w-5 h-5 text-brand-primary" />
                             Category Share Analytics
-                        </CardTitle>
-                        <CardDescription>Proportional breakdown of published bulletins and event proposals by category</CardDescription>
-                    </CardHeader>
-                    <CardContent className="pt-4 flex-1 flex flex-col justify-center">
+                        </h4>
+                        <p className="text-sm text-gray-500" >Proportional breakdown of published bulletins and event proposals by category</p>
+                    </div>
+                    <div className="px-6 pb-6 pt-4 flex-1 flex flex-col justify-center" >
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 divide-y md:divide-y-0 md:divide-x divide-gray-100">
                             {/* Bulletin Category Donut Chart */}
                             <div className="flex flex-col items-center">
@@ -943,7 +943,7 @@ export function AdminDashboard() {
                                                     key={`b-leg-${entry.name}`}
                                                     onClick={() => setActiveBulletinCategory(prev => prev === entry.name ? null : entry.name)}
                                                     className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-semibold transition-all border
-                                                        ${activeBulletinCategory === entry.name ? 'bg-gray-900 text-white border-gray-900 shadow-2xs scale-105' :
+                                                        ${activeBulletinCategory === entry.name ? 'bg-brand-primary text-white border-brand-primary shadow-2xs scale-105' :
                                                             activeBulletinCategory && activeBulletinCategory !== entry.name ? 'bg-gray-50 text-gray-400 border-gray-100 opacity-50' :
                                                                 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100'}`}
                                                 >
@@ -1013,7 +1013,7 @@ export function AdminDashboard() {
                                                     key={`e-leg-${entry.name}`}
                                                     onClick={() => setActiveEventCategory(prev => prev === entry.name ? null : entry.name)}
                                                     className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-semibold transition-all border
-                                                        ${activeEventCategory === entry.name ? 'bg-gray-900 text-white border-gray-900 shadow-2xs scale-105' :
+                                                        ${activeEventCategory === entry.name ? 'bg-brand-primary text-white border-brand-primary shadow-2xs scale-105' :
                                                             activeEventCategory && activeEventCategory !== entry.name ? 'bg-gray-50 text-gray-400 border-gray-100 opacity-50' :
                                                                 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100'}`}
                                                 >
@@ -1031,21 +1031,21 @@ export function AdminDashboard() {
                                 )}
                             </div>
                         </div>
-                    </CardContent>
-                </Card>
+                    </div>
+                </div>
             </div>
 
             {/* Spatial & Temporal Interactive Widgets (Map & Calendar) */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 {/* Switchable Upcoming Events List Widget */}
-                <Card className="shadow-md border-none flex flex-col">
-                    <CardHeader className="flex flex-row items-center justify-between pb-3 border-b border-gray-100">
+                <div className="bg-white rounded-xl border border-gray-200 shadow-md border-none flex flex-col" >
+                    <div className="flex flex-col space-y-1.5 px-6 pt-6 flex flex-row items-center justify-between pb-3 border-b border-gray-100" >
                         <div>
-                            <CardTitle className="flex items-center gap-2 text-gray-900 text-lg pb-0">
+                            <h4 className="font-semibold leading-none tracking-tight flex items-center gap-2 text-gray-900 text-lg pb-0" >
                                 <CalendarIcon className="w-5 h-5 text-brand-primary" />
                                 Upcoming Alumni Events
-                            </CardTitle>
-                            <CardDescription>Filter scheduled events by time window</CardDescription>
+                            </h4>
+                            <p className="text-sm text-gray-500" >Filter scheduled events by time window</p>
                         </div>
                         <div className="flex items-center gap-1 bg-gray-100 p-1 rounded-lg">
                             {(['Upcoming', '7 days', '30 days'] as const).map((range) => (
@@ -1061,8 +1061,8 @@ export function AdminDashboard() {
                                 </button>
                             ))}
                         </div>
-                    </CardHeader>
-                    <CardContent className="flex-1 px-4 pb-4 pt-0 overflow-y-auto max-h-[420px]">
+                    </div>
+                    <div className="px-6 pb-6 flex-1 px-4 pb-4 pt-0 overflow-y-auto max-h-[420px]" >
                         {filteredUpcomingEvents.length > 0 ? (
                             <div className="space-y-3">
                                 {filteredUpcomingEvents.map((evt) => {
@@ -1108,23 +1108,23 @@ export function AdminDashboard() {
                                 <p>No events scheduled for the selected timeframe ({eventTimeRange}).</p>
                             </div>
                         )}
-                    </CardContent>
-                </Card>
+                    </div>
+                </div>
 
                 {/* Monthly Event Calendar View Widget */}
                 <CalendarWidget events={events} />
             </div>
 
             {/* Activity Feed, disabled due to feature creep */}
-            {/* <Card className="shadow-md border-none">
-                <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-gray-900">
+            {/* <div className="bg-white rounded-xl border border-gray-200 shadow-md border-none" >
+                <div className="flex flex-col space-y-1.5 px-6 pt-6" >
+                    <h4 className="font-semibold leading-none tracking-tight flex items-center gap-2 text-gray-900" >
                         <Activity className="w-5 h-5 text-brand-primary" />
                         Activity Feed
-                    </CardTitle>
-                    <CardDescription>Real-time feed of user registrations, bulletins, event proposals, and donations</CardDescription>
-                </CardHeader>
-                <CardContent>
+                    </h4>
+                    <p className="text-sm text-gray-500" >Real-time feed of user registrations, bulletins, event proposals, and donations</p>
+                </div>
+                <div className="px-6 pb-6" >
                     {stats.recentActivity && stats.recentActivity.length > 0 ? (
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                             {stats.recentActivity.map((activity) => (
@@ -1160,8 +1160,8 @@ export function AdminDashboard() {
                     ) : (
                         <p className="text-gray-500 text-sm py-4">No recent activity logged yet.</p>
                     )}
-                </CardContent>
-            </Card> */}
+                </div>
+            </div> */}
         </div>
     );
 }
