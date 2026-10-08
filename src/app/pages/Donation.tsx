@@ -64,7 +64,9 @@ export function Donation() {
     };
 
     const handleCustomAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        setCustomAmount(e.target.value);
+        const val = e.target.value;
+        if (Number(val) < 0) return;
+        setCustomAmount(val);
         setSelectedAmount(null);
     };
 
@@ -258,6 +260,7 @@ export function Donation() {
                                             <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 font-medium">₱</span>
                                             <input
                                                 type="number"
+                                                min="0"
                                                 placeholder="Enter amount"
                                                 value={customAmount}
                                                 onChange={handleCustomAmountChange}

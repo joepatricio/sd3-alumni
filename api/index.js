@@ -12,6 +12,24 @@ import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
 import { parseWhere, parseSort, numericFields } from './queryParser.js';
 import { rateLimit, ipKeyGenerator } from 'express-rate-limit';
 
+// In production, serve the Vite frontend build (dist folder)
+// Otherwise ngrok is used to tunnel traffic to localhost:8085
+if (process.env.NODE_ENV === 'production') {
+    const distPath = path.resolve('dist');
+    app.use(express.static(distPath));
+} else if (process.env.NODE_ENV === 'development') {
+    async function forwardToApp() {
+        const ngrok = await import("@ngrok/ngrok");
+        const forwarder = await ngrok.forward({
+            addr: "127.0.0.1:3000",
+            authtoken_from_env: true,
+            domain: "kabob-chasing-zap.ngrok-free.dev",
+        });
+        console.log(`[ngrok] Tunnel available at: ${forwarder.url()}`);
+    }
+    forwardToApp().catch(console.error);
+}
+
 const adapter = new PrismaBetterSqlite3({
     url: process.env.DATABASE_URL || "file:./dev.db",
 });
@@ -128,7 +146,7 @@ app.use(cors({
 }));
 app.use(express.json({ limit: '50mb' }));
 app.use(cookieParser());
-app.use(express.static('public'));
+// Serve static uploads
 app.use('/uploads', express.static('uploads'));
 
 const storage = multer.diskStorage({
@@ -2403,7 +2421,9 @@ app.post('/api/donations/checkout', async (req, res) => {
         }
 
         const authString = Buffer.from(`${paymongoSecretKey}:`).toString('base64');
-        const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+        // Dynamically resolve the frontend URL from the request Origin header.
+        // Ensures that redirects seamlessly return to the exact same URL the user initiated the checkout from.
+        const frontendUrl = req.headers.origin || `http://${req.headers.host}`;
 
         const checkoutPayload = {
             data: {
@@ -2420,7 +2440,7 @@ app.post('/api/donations/checkout', async (req, res) => {
                             quantity: 1
                         }
                     ],
-                    payment_method_types: ['gcash', 'paymaya', 'grab_pay', 'qrph', 'card', 'dob'],
+                    payment_method_types: ['gcash', 'paymaya', 'grab_pay', 'qrph', 'card'],
                     reference_number: donationReference,
                     success_url: `${frontendUrl}/donate?status=success&ref=${donationReference}`,
                     cancel_url: `${frontendUrl}/donate?status=cancel&ref=${donationReference}`,
@@ -2445,8 +2465,8 @@ app.post('/api/donations/checkout', async (req, res) => {
             return res.status(500).json({ error: 'Failed to create PayMongo checkout session' });
         }
 
-        // Pre-create the donation record with a 'Processing' status
-        const pendingStatus = await prisma.donationStatus.findFirst({ where: { statusName: 'Processing' } });
+        // Pre-create the donation record with a 'Pending' status (Intent to Pay)
+        const pendingStatus = await prisma.donationStatus.findFirst({ where: { statusName: 'Pending' } });
         if (pendingStatus) {
             await prisma.donation.create({
                 data: {
@@ -2473,9 +2493,8 @@ app.post('/api/donations/checkout', async (req, res) => {
 app.post('/api/donations/webhook', async (req, res) => {
     try {
         const payload = req.body;
-        console.log("PayMongo Webhook Payload Received");
+        console.log("PayMongo Webhook Payload Received:", payload?.data?.attributes?.type);
 
-        // Very basic webhook handling (In production, verify signature)
         if (payload && payload.data && payload.data.attributes) {
             const eventType = payload.data.attributes.type;
 
@@ -2483,13 +2502,26 @@ app.post('/api/donations/webhook', async (req, res) => {
                 const checkoutData = payload.data.attributes.data;
                 const donationReference = checkoutData.attributes.reference_number;
 
+                // Extract the actual payment method (e.g. gcash, paymaya, card)
+                let actualPaymentMethod = checkoutData.id; // Fallback to session ID
+                const payments = checkoutData.attributes.payments;
+                if (payments && payments.length > 0) {
+                    const source = payments[0].attributes.source;
+                    if (source && source.type) {
+                        actualPaymentMethod = source.type.toUpperCase(); // e.g., 'GCASH'
+                    }
+                }
+
                 if (donationReference) {
                     const completedStatus = await prisma.donationStatus.findFirst({ where: { statusName: 'Completed' } });
 
                     if (completedStatus) {
                         await prisma.donation.updateMany({
                             where: { donationReference: donationReference },
-                            data: { donationStatusId: completedStatus.id }
+                            data: {
+                                donationStatusId: completedStatus.id,
+                                bankName: actualPaymentMethod
+                            }
                         });
 
                         // Update user stats if the donation has a userId
@@ -2505,6 +2537,30 @@ app.post('/api/donations/webhook', async (req, res) => {
                         }
                     }
                 }
+            } else if (eventType === 'payment.failed') {
+                console.log("[Demo] Received payment.failed event. Marking latest Pending donation as Failed.");
+
+                const pendingStatus = await prisma.donationStatus.findFirst({ where: { statusName: 'Pending' } });
+                const failedStatus = await prisma.donationStatus.findFirst({ where: { statusName: 'Failed' } });
+
+                if (pendingStatus && failedStatus) {
+                    // For demo purposes: Since payment.failed payloads don't contain the checkout session's reference_number,
+                    // we will just grab the most recent Pending donation and fail it.
+                    const latestPending = await prisma.donation.findFirst({
+                        where: { donationStatusId: pendingStatus.id },
+                        orderBy: { donationDate: 'desc' }
+                    });
+
+                    if (latestPending) {
+                        await prisma.donation.update({
+                            where: { id: latestPending.id },
+                            data: { donationStatusId: failedStatus.id }
+                        });
+                        console.log(`[Demo] Successfully marked donation ${latestPending.donationReference} as Failed!`);
+                    } else {
+                        console.log(`[Demo] No Pending donations found to mark as Failed.`);
+                    }
+                }
             }
         }
 
@@ -2514,82 +2570,41 @@ app.post('/api/donations/webhook', async (req, res) => {
         res.status(500).send('Error processing webhook');
     }
 });
-// Background Reconciliation for Pending PayMongo Donations
+
+// =======================
+// CRON: ABANDONED CHECKOUT CLEANUP
+// =======================
+// Runs every hour to delete 'Pending' donations older than 24 hours.
 setInterval(async () => {
     try {
-        const pendingStatus = await prisma.donationStatus.findFirst({ where: { statusName: 'Processing' } });
-        const completedStatus = await prisma.donationStatus.findFirst({ where: { statusName: 'Completed' } });
-        const failedStatus = await prisma.donationStatus.findFirst({ where: { statusName: 'Failed' } });
+        const pendingStatus = await prisma.donationStatus.findFirst({ where: { statusName: 'Pending' } });
+        if (pendingStatus) {
+            const yesterday = new Date();
+            yesterday.setHours(yesterday.getHours() - 24);
 
-        if (!pendingStatus || !completedStatus || !failedStatus) return;
-
-        // Find all processing donations that have a PayMongo checkout_session_id in bankName
-        const pendingDonations = await prisma.donation.findMany({
-            where: {
-                donationStatusId: pendingStatus.id,
-                bankName: { startsWith: 'cs_' },
-                // Only reconcile donations from the last 24 hours to prevent endless polling of old abandoned sessions
-                donationDate: { gte: new Date(Date.now() - 24 * 60 * 60 * 1000) }
-            }
-        });
-
-        if (pendingDonations.length === 0) return;
-
-        const paymongoSecretKey = process.env.PAYMONGO_SECRET_KEY;
-        if (!paymongoSecretKey || paymongoSecretKey.startsWith('sk_test_...')) return;
-        const authString = Buffer.from(`${paymongoSecretKey}:`).toString('base64');
-
-        for (const donation of pendingDonations) {
-            const csId = donation.bankName;
-            const response = await fetch(`https://api.paymongo.com/v1/checkout_sessions/${csId}`, {
-                method: 'GET',
-                headers: { 'Authorization': `Basic ${authString}` }
+            const deleted = await prisma.donation.deleteMany({
+                where: {
+                    donationStatusId: pendingStatus.id,
+                    donationDate: { lt: yesterday }
+                }
             });
-            if (!response.ok) continue;
-            
-            const data = await response.json();
-            const payments = data.data?.attributes?.payments || [];
-            
-            // Check if there is a successful payment
-            const isPaid = payments.some(p => p.attributes.status === 'paid');
-            const isFailed = payments.some(p => p.attributes.status === 'failed') && !isPaid;
-
-            if (isPaid) {
-                await prisma.donation.update({
-                    where: { id: donation.id },
-                    data: { donationStatusId: completedStatus.id }
-                });
-                
-                // Update user stats
-                if (donation.userId && !donation.donationAnonymous) {
-                    const userStat = await prisma.userStatistic.findUnique({ where: { userId: donation.userId } });
-                    if (userStat) {
-                        await prisma.userStatistic.update({
-                            where: { userId: donation.userId },
-                            data: { donatedAmount: (userStat.donatedAmount || 0) + donation.donationAmount }
-                        });
-                    }
-                }
-                console.log(`Reconciled donation ${donation.donationReference} as Completed`);
-            } else if (isFailed && payments.length > 0) {
-                // If there's a definitive failure and no success, mark as failed
-                // (Note: users can retry within the same checkout session, so be careful. 
-                // Wait for the session to be truly dead or rely on webhook for failure if supported)
-                // For now, we only mark as failed if all payments are failed.
-                const allFailed = payments.every(p => p.attributes.status === 'failed');
-                if (allFailed) {
-                    await prisma.donation.update({
-                        where: { id: donation.id },
-                        data: { donationStatusId: failedStatus.id }
-                    });
-                    console.log(`Reconciled donation ${donation.donationReference} as Failed`);
-                }
+            if (deleted.count > 0) {
+                console.log(`[Cleanup] Removed ${deleted.count} abandoned checkouts.`);
             }
         }
     } catch (err) {
-        console.error("Reconciliation error:", err);
+        console.error('[Cleanup] Failed to clean abandoned checkouts:', err);
     }
-}, 30 * 1000); // Check every 30 seconds
+}, 1000 * 60 * 60); // Every hour
+
+// Webhook handles reconciliation of PayMongo donations now.
+// Catch-all route for the React Single Page Application (SPA)
+// Must be placed after all API routes!
+if (process.env.NODE_ENV === 'production') {
+    app.get('*', (req, res) => {
+        res.sendFile(path.resolve('dist', 'index.html'));
+    });
+}
 
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);

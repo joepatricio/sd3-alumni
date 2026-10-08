@@ -1,6 +1,8 @@
 import { User, Menu, X, Bell } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/app/views/auth";
+import { api } from "@/app/views/api";
 
 interface TopBarProps {
   isMenuOpen: boolean;
@@ -11,7 +13,19 @@ export function TopBar({
   isMenuOpen,
   setIsMenuOpen,
 }: TopBarProps) {
-  const { isLoggedIn } = useAuth();
+  const { isLoggedIn, session } = useAuth();
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  useEffect(() => {
+    if (isLoggedIn && session?.userId) {
+      api.get('/notifications', { params: { userId: session.userId, isRead: false } })
+        .then(res => {
+          const count = Array.isArray(res.data) ? res.data.length : (res.data?.data?.length || 0);
+          setUnreadCount(count);
+        })
+        .catch(console.error);
+    }
+  }, [isLoggedIn, session?.userId]);
 
   return (
     <div className="bg-brand-primary text-white py-3 px-4 md:px-8 sticky top-0 left-0 right-0 z-50 shadow-md">
@@ -50,9 +64,14 @@ export function TopBar({
           {isLoggedIn && (
             <Link
               to="/notifications"
-              className="flex items-center gap-2 hover:text-brand-accent transition-colors"
+              className="relative flex items-center justify-center hover:text-brand-accent transition-colors"
             >
-              <Bell className="w-4 h-4" />
+              <Bell className="w-5 h-5" />
+              {unreadCount > 0 && (
+                <span className="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full min-w-[16px] text-center">
+                  {unreadCount > 99 ? '99+' : unreadCount}
+                </span>
+              )}
             </Link>
           )}
           {/* Login/Profile */}

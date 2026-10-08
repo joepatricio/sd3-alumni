@@ -94,7 +94,9 @@ export function useAuth() {
                     headers: { Authorization: `Bearer ${token}` }
                 }).catch((error) => {
                     console.error("Session validation failed:", error);
-                    setSession(null);
+                    if (error.response && (error.response.status === 401 || error.response.status === 403)) {
+                        setSession(null);
+                    }
                 });
             }
         }

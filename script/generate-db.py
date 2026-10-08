@@ -62,6 +62,7 @@ for base in USER_STATUS:
 
 DONATION_STATUS = [
     {"statusName": "Processing"},
+    {"statusName": "Pending"},
     {"statusName": "Completed"},
     {"statusName": "Failed"}
 ]
@@ -754,6 +755,8 @@ def main():
         "donationStatuses": DONATION_STATUS,
         "eventCategories": EVENT_CATEGORY,
         "bulletinCategories": BULLETIN_CATEGORY,
+        # No time to implement this anymore :(
+        "notificationType": [{"notificationTypeName": "System", "id": "c73701e6-1a17-4d8d-814c-20182ff01639"}],
         "profileStatuses": PROFILE_STATUS,
         "achievements": ACHIEVEMENTS,
         "users": USER,
