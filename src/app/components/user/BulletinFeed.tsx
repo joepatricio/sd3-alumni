@@ -156,9 +156,9 @@ export function BulletinFeed() {
                   <img
                     src={featured.bulletinImage || featured.author?.profile?.profileImage || DEFAULT_PROFILE}
                     alt=""
-                    className="w-full h-full object-cover blur-3xl scale-140 opacity-75 transition-transform duration-500 group-hover:scale-150"
+                    className="w-full h-full object-cover blur-3xl scale-140 opacity-75 transition-transform duration-500 group-hover:scale-150 transform-gpu will-change-transform"
                   />
-                  <div className="absolute inset-0 bg-black/10 backdrop-blur-xs" />
+                  <div className="absolute inset-0 bg-black/10 backdrop-blur-xs transform-gpu" />
                 </div>
               )}
               <img
@@ -216,9 +216,9 @@ export function BulletinFeed() {
                       <img
                         src={bulletinImg}
                         alt=""
-                        className="w-full h-full object-cover blur-3xl scale-140 opacity-75 transition-transform duration-500 group-hover:scale-150"
+                        className="w-full h-full object-cover blur-3xl scale-140 opacity-75 transition-transform duration-500 group-hover:scale-150 transform-gpu will-change-transform"
                       />
-                      <div className="absolute inset-0 bg-black/10 backdrop-blur-xs" />
+                      <div className="absolute inset-0 bg-black/10 backdrop-blur-xs transform-gpu" />
                     </div>
                   )}
                   <img
@@ -229,7 +229,7 @@ export function BulletinFeed() {
                       : 'object-cover'
                       }`} />
                 </div>
-                <div className="p-6 flex flex-col flex-grow">
+                <div className="p-6 flex flex-col flex-grow min-h-0">
                   <div className="flex items-center gap-4 mb-3">
                     <span className="text-xs text-gray-500 flex items-center gap-1">
                       <Calendar className="w-3 h-3" />
@@ -243,7 +243,7 @@ export function BulletinFeed() {
                   <h3 className="text-lg font-semibold mb-2 line-clamp-2">
                     {bulletin.title}
                   </h3>
-                  <div className="flex-grow mb-4">
+                  <div className="flex-grow mb-4 min-h-0">
                     <p className="text-gray-600 text-sm line-clamp-3">
                       {bulletin.content}
                     </p>

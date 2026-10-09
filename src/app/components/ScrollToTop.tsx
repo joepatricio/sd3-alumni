@@ -29,13 +29,21 @@ const ScrollToTop = ({ children, scrollContainerRef }: ScrollToTopProps) => {
     }, [location.pathname, scrollContainerRef]);
 
     useEffect(() => {
-        const handleScroll = () => {
-            const scrollTop = scrollContainerRef?.current
-                ? scrollContainerRef.current.scrollTop
-                : window.scrollY;
+        let ticking = false;
 
-            const shouldShow = scrollTop > 300;
-            setShowScrollTop(prev => prev !== shouldShow ? shouldShow : prev);
+        const handleScroll = () => {
+            if (!ticking) {
+                window.requestAnimationFrame(() => {
+                    const scrollTop = scrollContainerRef?.current
+                        ? scrollContainerRef.current.scrollTop
+                        : window.scrollY;
+
+                    const shouldShow = scrollTop > 300;
+                    setShowScrollTop(prev => prev !== shouldShow ? shouldShow : prev);
+                    ticking = false;
+                });
+                ticking = true;
+            }
         };
 
         const target = scrollContainerRef?.current || window;

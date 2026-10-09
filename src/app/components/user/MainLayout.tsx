@@ -14,7 +14,7 @@ export function MainLayout({ children }: LayoutProps) {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
 
     return (
-        <div className="min-h-screen bg-gray-50 flex flex-col gap-10">
+        <div className="min-h-[100dvh] bg-gray-50 flex flex-col gap-10">
             <main className="flex-grow">
                 <TopBar
                     isMenuOpen={isMenuOpen}
