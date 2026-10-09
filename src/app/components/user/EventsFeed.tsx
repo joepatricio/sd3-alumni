@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Calendar, MapPin, Users, Video, Loader2 } from 'lucide-react';
+import { Calendar, MapPin, Users, Video } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { getCategoryColor, formatDate } from '@/app/views/formatters';
 import { LazyImage } from '@components/user/LazyImage';
@@ -41,9 +41,30 @@ export function EventsFeed() {
   if (loading) {
     return (
       <section id="events" className="py-16 bg-white">
-        <div className="max-w-6xl mx-auto px-4 md:px-8 text-center">
-          <Loader2 className="w-12 h-12 text-brand-primary animate-spin mx-auto mb-4" />
-          <p className="text-gray-500">Loading upcoming events...</p>
+        <div className="max-w-6xl mx-auto px-4 md:px-8">
+          <div className="flex justify-between items-center mb-8">
+            <div>
+              <div className="h-10 w-64 bg-gray-200 rounded animate-pulse mb-2"></div>
+              <div className="h-6 w-96 bg-gray-200 rounded animate-pulse"></div>
+            </div>
+            <div className="h-6 w-24 bg-gray-200 rounded animate-pulse hidden sm:block"></div>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="bg-white rounded-lg overflow-hidden shadow-md">
+                <div className="h-48 bg-gray-200 animate-pulse"></div>
+                <div className="p-6 space-y-4">
+                  <div className="h-6 bg-gray-200 rounded animate-pulse w-3/4"></div>
+                  <div className="space-y-2">
+                    <div className="h-4 bg-gray-200 rounded animate-pulse w-1/2"></div>
+                    <div className="h-4 bg-gray-200 rounded animate-pulse w-2/3"></div>
+                    <div className="h-4 bg-gray-200 rounded animate-pulse w-1/3"></div>
+                  </div>
+                  <div className="h-10 bg-gray-200 rounded animate-pulse w-full mt-4"></div>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
     );

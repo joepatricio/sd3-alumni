@@ -12,23 +12,7 @@ import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
 import { parseWhere, parseSort, numericFields } from './queryParser.js';
 import { rateLimit, ipKeyGenerator } from 'express-rate-limit';
 
-// In production, serve the Vite frontend build (dist folder)
-// Otherwise ngrok is used to tunnel traffic to localhost:8085
-if (process.env.NODE_ENV === 'production') {
-    const distPath = path.resolve('dist');
-    app.use(express.static(distPath));
-} else if (process.env.NODE_ENV === 'development') {
-    async function forwardToApp() {
-        const ngrok = await import("@ngrok/ngrok");
-        const forwarder = await ngrok.forward({
-            addr: "127.0.0.1:3000",
-            authtoken_from_env: true,
-            domain: "kabob-chasing-zap.ngrok-free.dev",
-        });
-        console.log(`[ngrok] Tunnel available at: ${forwarder.url()}`);
-    }
-    forwardToApp().catch(console.error);
-}
+
 
 const adapter = new PrismaBetterSqlite3({
     url: process.env.DATABASE_URL,
@@ -119,6 +103,25 @@ export const prisma = basePrisma.$extends({
 });
 
 const app = express();
+app.set('trust proxy', 1); // Trust the reverse proxy to get the real client IP
+
+// In production, serve the Vite frontend build (dist folder)
+// Otherwise ngrok is used to tunnel traffic to localhost:8085
+if (process.env.NODE_ENV === 'production') {
+    const distPath = path.resolve('dist');
+    app.use(express.static(distPath));
+} else if (process.env.NODE_ENV === 'development') {
+    async function forwardToApp() {
+        const ngrok = await import("@ngrok/ngrok");
+        const forwarder = await ngrok.forward({
+            addr: "127.0.0.1:3000",
+            authtoken_from_env: true,
+            domain: "kabob-chasing-zap.ngrok-free.dev",
+        });
+        console.log(`[ngrok] Tunnel available at: ${forwarder.url()}`);
+    }
+    forwardToApp().catch(console.error);
+}
 
 const PORT = process.env.PORT;
 const JWT_SECRET = process.env.JWT_SECRET;
@@ -2601,7 +2604,7 @@ setInterval(async () => {
 // Catch-all route for the React Single Page Application (SPA)
 // Must be placed after all API routes!
 if (process.env.NODE_ENV === 'production') {
-    app.get('*', (req, res) => {
+    app.get(/.*/, (req, res) => {
         res.sendFile(path.resolve('dist', 'index.html'));
     });
 }
