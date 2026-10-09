@@ -31,6 +31,7 @@ for base in CONNECTION_STATUS:
 
 CONTENT_STATUS = [
     {"statusName": "Pending"},
+    {"statusName": "Flagged"},
     {"statusName": "Approved"},
     {"statusName": "Rejected"},
     {"statusName": "Archived"}

@@ -43,6 +43,9 @@
       ],
       "@views/*": [
         "app/views/*"
+      ],
+      "@prisma-client/*": [
+        "prisma/generated/*"
       ]
     }
   },

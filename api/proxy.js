@@ -8,7 +8,7 @@ const app = express();
 const PORT = process.env.PROXY_PORT;
 
 // Route API requests to Node.js backend
-app.use(createProxyMiddleware('/api', {
+app.use('/api', createProxyMiddleware({
     target: 'http://127.0.0.1:3000',
     changeOrigin: true,
 }));

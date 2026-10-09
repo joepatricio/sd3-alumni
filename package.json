@@ -15,7 +15,8 @@
     "prisma:deploy": "npx prisma migrate deploy && npx prisma generate",
     "prisma:push": "npx prisma db push",
     "prisma:seed": "tsx prisma/seed.ts",
-    "proxy": "node api/proxy.js"
+    "proxy": "node api/proxy.js",
+    "classifier": "tsx api/classifier.js"
   },
   "dependencies": {
     "@emotion/react": "11.14.0",
@@ -99,6 +100,7 @@
     "react-slick": "0.31.0",
     "recharts": "3.10.1",
     "shadcn": "^3.8.5",
+    "sharp": "^0.35.5",
     "sonner": "2.0.3",
     "tailwind-merge": "^3.7.0",
     "tailwindcss-animate": "^1.0.7",

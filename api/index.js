@@ -7,7 +7,7 @@ import cookieParser from 'cookie-parser';
 import multer from 'multer';
 import path from 'path';
 import { v4 as uuidv4 } from 'uuid';
-import { PrismaClient } from "../prisma/generated/client";
+import { PrismaClient } from "@prisma-client/client";
 import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
 import { parseWhere, parseSort, numericFields } from './queryParser.js';
 import { rateLimit, ipKeyGenerator } from 'express-rate-limit';
@@ -31,9 +31,8 @@ if (process.env.NODE_ENV === 'production') {
 }
 
 const adapter = new PrismaBetterSqlite3({
-    url: process.env.DATABASE_URL || "file:./dev.db",
+    url: process.env.DATABASE_URL,
 });
-
 const basePrisma = new PrismaClient({ adapter });
 
 const checkAndAwardAchievements = async (userId, stats) => {
@@ -1789,7 +1788,7 @@ app.post('/api/admin/users/:id/status', async (req, res) => {
 // =======================
 // GENERIC FALLBACK CRUD ROUTER (COMPATIBILITY ENGINE)
 // =======================
-
+// Add new tables here
 const tableToModel = {
     degrees: 'degree',
     connectionStatuses: 'connectionStatus',
@@ -1821,7 +1820,8 @@ const tableToModel = {
     bulletinLikes: 'bulletinLike',
     commentLikes: 'commentLike',
     notifications: 'notification',
-    notificationTypes: 'notificationType'
+    clefLogs: 'clefLog',
+    clefLog: 'clefLog'
 };
 
 const defaultIncludes = {

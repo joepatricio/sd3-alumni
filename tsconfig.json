@@ -25,6 +25,9 @@
       ],
       "@views/*": [
         "src/app/views/*"
+      ],
+      "@prisma-client/*": [
+        "prisma/generated/*"
       ]
     }
   }

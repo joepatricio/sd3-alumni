@@ -139,7 +139,8 @@ export function BulletinDetail() {
     }
 
     const isAdminPreview = location.pathname.includes('/admin/preview') && !!sessionStorage.getItem('adminToken');
-    if (!bulletin || (!['Approved', 'Pending'].includes(bulletinStatus) && !isAdminPreview)) {
+    const isAuthor = session?.userId && String(session.userId) === String(bulletin?.authorId);
+    if (!bulletin || (!['Approved', 'Pending'].includes(bulletinStatus) && !isAdminPreview && !isAuthor)) {
         return <NotFound />;
     }
 
@@ -358,6 +359,20 @@ export function BulletinDetail() {
                         </div>
                     </div>
                 )}
+                {['Flagged', 'Rejected'].includes(bulletin.contentStatus?.statusName || '') && (
+                    <div className="bg-red-50 border-l-4 border-red-500 p-4 mb-6 rounded-r-md">
+                        <div className="flex">
+                            <div className="flex-shrink-0">
+                                <Info className="h-5 w-5 text-red-500" aria-hidden="true" />
+                            </div>
+                            <div className="ml-3">
+                                <p className="text-sm text-red-700">
+                                    This bulletin has been {bulletin.contentStatus?.statusName.toLowerCase()}. It is not visible to the public. You can edit it to make changes and submit it for review again.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                )}
                 <article className="bg-white rounded-lg shadow-md overflow-hidden">
                     {/* Hero Image */}
                     {bulletin.bulletinImage && (
@@ -436,7 +451,7 @@ export function BulletinDetail() {
                     </div>
 
                     {/* Comment Form */}
-                    {isLoggedIn && !isSuspended && bulletin.contentStatus?.statusName !== 'Pending' ? (
+                    {isLoggedIn && !isSuspended && !['Pending', 'Flagged', 'Rejected', 'Archived'].includes(bulletin.contentStatus?.statusName || '') ? (
                         userCommentsCount >= 100 ? (
                             <div className="text-center py-6 px-4 bg-gray-50 rounded-lg border border-gray-100 mb-8">
                                 <h3 className="text-lg font-bold text-gray-900 mb-2">Comment Limit Reached</h3>

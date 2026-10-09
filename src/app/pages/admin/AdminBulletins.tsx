@@ -103,7 +103,7 @@ export function AdminBulletins() {
             description="Review, approve, or reject user-submitted and community announcements."
             contentType="Bulletin"
             fetchData={fetchData}
-            statuses={["All", "Pending", "Approved", "Rejected", "Archived"]}
+            statuses={["All", "Pending", "Flagged", "Approved", "Rejected", "Archived"]}
             primaryColorClass="bg-blue-600 hover:bg-blue-700 text-white"
             outlineColorClass="text-blue-600 border-blue-200 hover:bg-blue-50"
             categories={[

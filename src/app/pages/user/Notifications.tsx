@@ -35,6 +35,7 @@ export function Notifications() {
         try {
             await api.patch(`/notifications/${id}`, { isRead: true });
             setNotifications(prev => prev.map(n => n.id === id ? { ...n, isRead: true } : n));
+            window.dispatchEvent(new Event('notificationsUpdated'));
         } catch (err) {
             console.error("Failed to mark as read", err);
         }
@@ -45,6 +46,7 @@ export function Notifications() {
             const unread = notifications.filter(n => !n.isRead);
             await Promise.all(unread.map(n => api.patch(`/notifications/${n.id}`, { isRead: true })));
             setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
+            window.dispatchEvent(new Event('notificationsUpdated'));
         } catch (err) {
             console.error("Failed to mark all as read", err);
         }

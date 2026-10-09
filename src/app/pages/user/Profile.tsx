@@ -121,6 +121,7 @@ export function Profile() {
 
             if (activeTab === 'overview' || activeTab === 'bulletins') {
                 const validStatuses = ['Approved', 'Concluded'].join(',');
+                // const validStatuses = (isOwner ? ['Approved', 'Concluded', 'Pending', 'Flagged', 'Rejected'] : ['Approved', 'Concluded']).join(',');
                 promises.push(
                     api.get('/bulletins', { params: { 'authorId': profileId, 'status.statusName:in': validStatuses, '_sort': '-bulletinDate', '_include': 'none', _page: tabPage, _per_page: 10 } })
                         .catch(() => ({ data: [] }))

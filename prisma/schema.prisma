@@ -344,3 +344,13 @@ model Notification {
   user User             @relation(fields: [userId], references: [id])
   type NotificationType @relation(fields: [notificationTypeId], references: [id])
 }
+
+model ClefLog {
+  id              String   @id @default(uuid())
+  targetId        String
+  targetType      String   // 'Bulletin', 'Event', or 'User'
+  requestPayload  String?
+  responsePayload String?
+  decision        String   // 'Approved', 'Rejected', 'Review'
+  createdAt       DateTime @default(now())
+}

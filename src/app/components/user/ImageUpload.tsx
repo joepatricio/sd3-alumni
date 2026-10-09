@@ -127,7 +127,7 @@ export function ImageUpload({ previewUrl, onFileSelect, onClear, placeholderText
                 <>
                     <Upload className={cn("w-8 h-8 mb-2", isDragging ? "text-brand-primary" : "text-gray-400")} />
                     <p className="text-sm text-gray-600 font-medium">{placeholderText}</p>
-                    <p className="text-xs text-gray-400 mt-1">SVG, PNG, JPG (max. 5MB)</p>
+                    <p className="text-xs text-gray-400 mt-1">PNG, JPG (max. 5MB)</p>
                 </>
             )}
         </div>

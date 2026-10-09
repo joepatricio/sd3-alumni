@@ -1,6 +1,6 @@
 import { User, Menu, X, Bell } from "lucide-react";
-import { Link } from "react-router-dom";
-import { useState, useEffect } from "react";
+import { Link, useLocation } from "react-router-dom";
+import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/app/views/auth";
 import { api } from "@/app/views/api";
 
@@ -15,8 +15,9 @@ export function TopBar({
 }: TopBarProps) {
   const { isLoggedIn, session } = useAuth();
   const [unreadCount, setUnreadCount] = useState(0);
+  const location = useLocation();
 
-  useEffect(() => {
+  const fetchUnread = useCallback(() => {
     if (isLoggedIn && session?.userId) {
       api.get('/notifications', { params: { userId: session.userId, isRead: false } })
         .then(res => {
@@ -26,6 +27,15 @@ export function TopBar({
         .catch(console.error);
     }
   }, [isLoggedIn, session?.userId]);
+
+  useEffect(() => {
+    fetchUnread();
+  }, [fetchUnread, location.pathname]);
+
+  useEffect(() => {
+    window.addEventListener('notificationsUpdated', fetchUnread);
+    return () => window.removeEventListener('notificationsUpdated', fetchUnread);
+  }, [fetchUnread]);
 
   return (
     <div className="bg-brand-primary text-white py-3 px-4 md:px-8 sticky top-0 left-0 right-0 z-50 shadow-md">

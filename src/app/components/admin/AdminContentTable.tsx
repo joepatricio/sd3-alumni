@@ -312,6 +312,7 @@ export function AdminContentTable({
             case "Cancelled": return { title: `Cancelled ${contentType}s`, description: 'Events that were cancelled' };
             case "Archived": return { title: `Archived ${contentType}s`, description: `${contentType}s that are archived` };
             case "Concluded": return { title: `Concluded ${contentType}s`, description: 'Events that have concluded successfully' };
+            case "Flagged": return { title: `Flagged ${contentType}s`, description: `${contentType}s that are flagged by the AI filter` };
             default: return { title: `${status} ${contentType}s`, description: `Viewing ${status.toLowerCase()} items` };
         }
     };
@@ -325,6 +326,7 @@ export function AdminContentTable({
             case "Cancelled": return 'bg-gray-100 text-gray-800';
             case "Archived": return 'bg-slate-200 text-slate-800';
             case "Concluded": return 'bg-blue-100 text-blue-800';
+            case "Flagged": return 'bg-orange-100 text-orange-800';
             default: return 'bg-gray-100 text-gray-800';
         }
     }
@@ -338,6 +340,7 @@ export function AdminContentTable({
             case "Cancelled": return 'bg-gray-500';
             case "Archived": return 'bg-slate-500';
             case "Concluded": return 'bg-blue-500';
+            case "Flagged": return 'bg-orange-500';
             default: return 'bg-gray-400';
         }
     }, []);

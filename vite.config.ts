@@ -18,6 +18,7 @@ export default defineConfig({
       '@assets': path.resolve(__dirname, './src/assets'),
       '@pages': path.resolve(__dirname, './src/app/pages'),
       '@views': path.resolve(__dirname, './src/app/views'),
+      '@prisma-client': path.resolve(__dirname, './prisma/generated'),
     },
   },
   server: {
