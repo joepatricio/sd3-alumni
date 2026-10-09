@@ -1,8 +1,5 @@
 ## Alumni Tracking Network
 
-This project is currently in development.
-The intended client is the USJ-R School of Engineering and Architecture.
-
 From the project brief:
   "Create an online directory for graduates with profiles, job updates, and event RSVPs, using a database for connections, achievements, and donations. Add search by graduation year or industry, plus messaging for networking. It practices many-to-many relationships and data privacy controls."
 
@@ -13,13 +10,17 @@ The following features have been identified based off the project brief:
 * Messaging capabilities (achieved through the Bulletin system.)
 * Dashboard to create a portal for aforementioned features.
 
-## Vercel Migration & Full-Stack Architecture
+### ✨ Extended Features
+* **AI Content Classification**: Automated content moderation and classification powered by **Cloudflare Clef**.
+* **Payment Processing**: Full donation checkout flow and webhook reconciliation using **PayMongo**.
 
-To prepare for production deployment on **Vercel**, the application was migrated from a mock `json-server` setup to a robust, serverless-ready full-stack architecture:
-* **Serverless Express Backend**: The backend API has been consolidated into an Express application (`api/index.js`) that is served via Vercel Serverless Functions.
+## Full-Stack Architecture & VPS Deployment
+
+The application has been overhauled from a mock `json-server` setup to a robust, full-stack architecture ready for **VPS Deployment**:
+* **Unified Express Backend**: The backend API has been consolidated into an Express application (`api/index.js`). In production, this single server seamlessly serves both the API endpoints on `/api/*` and the static React frontend (`dist/`) on the root path `/`.
 * **Prisma ORM & SQLite**: Swapped out the raw JSON file storage for a relational database powered by **Prisma** and **SQLite** (using `@prisma/adapter-better-sqlite3`).
-* **Compatibility Engine**: A custom query parser (`api/queryParser.js`) is implemented to translate legacy frontend `json-server` URL query structures (e.g. `_sort`, `_page`, `_limit`, key-value filters) directly into Prisma query inputs, preserving existing frontend integrations.
-* **Deployment Config**: `vercel.json` routes all `/api/*` requests to the serverless Express function and maps all fallback routes to the React SPA `index.html`.
+* **Compatibility Engine**: A custom query parser (`api/queryParser.js`) is implemented to translate legacy frontend `json-server` URL query structures directly into Prisma query inputs, preserving existing frontend integrations.
+* **PM2 Process Management**: Production deployments utilize PM2 to daemonize the Express server, ensuring auto-restarts and performance monitoring. See `docs/DEPLOYMENT.md` for full deployment instructions.
 
 ---
 
@@ -79,7 +80,7 @@ Access the application at [http://localhost:5173](http://localhost:5173). The fr
   * `@pages` contains the pages.
   * `@components` contains the components.
   * `@components/ui` contains reusable Shadcn UI components.
-* `vercel.json`: Configures the serverless rewrites and SPA fallback routing for Vercel.
+* `docs/DEPLOYMENT.md`: Comprehensive guide for deploying to a VPS using PM2.
 
 ---
 
@@ -88,9 +89,11 @@ Access the application at [http://localhost:5173](http://localhost:5173). The fr
 ### Backend
 * **Express & CORS**: Server router and cross-origin setup.
 * **Prisma ORM**: Relational database operations client.
-* **@prisma/adapter-better-sqlite3 & better-sqlite3**: Driver adapter enabling SQLite queries in a Serverless-compatible mode.
+* **@prisma/adapter-better-sqlite3 & better-sqlite3**: Driver adapter enabling SQLite queries.
 * **bcryptjs & jsonwebtoken**: JWT authentication and secure password hashing.
 * **cookie-parser & multer**: Middleware for reading cookies and uploading user images.
+* **PayMongo API**: Used for handling donation checkouts and webhooks.
+* **Cloudflare Clef**: AI integration for automated content classification and moderation.
 
 ### Frontend
 * **Vite & React**: Fast SPA framework runtime.

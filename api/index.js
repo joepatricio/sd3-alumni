@@ -1261,7 +1261,7 @@ async function updateEventStatusAndStats({ eventId, newStatusName, adminId, addi
                 }
             }
 
-            const link = (updatedStatusName === 'Rejected' || updatedStatusName === 'Archived') ? null : `/events/${eventId}`;
+            const link = (updatedStatusName === 'Archived') ? null : `/events/${eventId}`;
             await createNotification(tx, authorId, `Your event "${existing.title}" status changed to ${updatedStatusName}.`, link);
 
             const rsvps = await tx.userRsvp.findMany({ where: { eventId, isAttending: true } });
@@ -2440,7 +2440,7 @@ app.post('/api/donations/checkout', async (req, res) => {
                             quantity: 1
                         }
                     ],
-                    payment_method_types: ['gcash', 'paymaya', 'grab_pay', 'qrph', 'card'],
+                    payment_method_types: ['gcash', 'paymaya', 'grab_pay', 'qrph'],
                     reference_number: donationReference,
                     success_url: `${frontendUrl}/donate?status=success&ref=${donationReference}`,
                     cancel_url: `${frontendUrl}/donate?status=cancel&ref=${donationReference}`,

@@ -91,10 +91,11 @@ export function EventDetail() {
         );
     }
 
-    const currentStatusName = eventData?.eventStatus?.statusName || null;
+    const currentStatusName = eventData?.eventStatus?.statusName || "";
     const isAdminPreview = location.pathname.includes('/admin/preview') && !!sessionStorage.getItem('adminToken');
+    const isAuthor = session?.userId && String(session.userId) === String(eventData?.authorId);
 
-    if (!eventData || ((currentStatusName === "Rejected" || currentStatusName === "Archived") && !isAdminPreview)) {
+    if (!eventData || (["Rejected", "Archived"].includes(currentStatusName) && !(isAdminPreview || isAuthor))) {
         return <NotFound />;
     }
 
@@ -253,6 +254,7 @@ export function EventDetail() {
         Pending: 'This event is pending admin review. It is not yet accepting RSVPs.',
         Concluded: 'This event has concluded. It is no longer accepting RSVPs.',
         Cancelled: 'This event has been cancelled. It is no longer accepting RSVPs.',
+        Rejected: 'This event has been rejected by the admin. You may edit the event to resubmit it for review.',
     }[statusName ?? 'RSVP is not available at this time.'];
     return (
         <div className="bg-gray-50 pb-12">
@@ -275,7 +277,7 @@ export function EventDetail() {
                 </Link>
 
                 <div className="flex gap-2">
-                    {isLoggedIn && (session?.userId === eventData.authorId) && eventData.eventStatus?.statusName !== "Concluded" && (
+                    {isLoggedIn && isAuthor && eventData.eventStatus?.statusName !== "Concluded" && (
                         <>
                             <CreateEventModal
                                 trigger={
@@ -447,7 +449,7 @@ export function EventDetail() {
                     <div className="space-y-8 sticky top-24 self-start">
                         {/* RSVP Card */}
                         <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-                            {statusMessage || isPastEvent || currentStatusName === "Archived" ? (
+                            {isPastEvent || currentStatusName === "Archived" || currentStatusName === "Rejected" ? (
                                 <Alert className="bg-amber-50 border-amber-200 text-amber-800">
                                     <AlertCircle className="h-4 w-4 text-amber-600" />
                                     <AlertTitle className="font-bold">

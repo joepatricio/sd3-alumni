@@ -10,6 +10,7 @@ const adapter = new PrismaBetterSqlite3({
 });
 const prisma = new PrismaClient({ adapter });
 
+const INTERVAL_MINUTES = 5
 const CLOUDFLARE_ACCOUNT_ID = process.env.CLOUDFLARE_ACCOUNT_ID;
 const CLOUDFLARE_API_TOKEN = process.env.CLOUDFLARE_API_TOKEN;
 const MODEL = "@cf/cloudflare/clef-flash";
@@ -127,6 +128,26 @@ async function classifyPendingBulletins() {
             data: { contentStatusId: newStatusId }
         });
 
+        let action = "";
+        if (finalDecision === "Approved") action = "automatically approved";
+        else if (finalDecision === "Rejected") action = "automatically rejected";
+        else action = "flagged for manual review";
+
+        let sysNotifType = await prisma.notificationType.findFirst({ where: { notificationTypeName: "System" } });
+        if (!sysNotifType) {
+            sysNotifType = await prisma.notificationType.create({ data: { notificationTypeName: "System" } });
+        }
+        await prisma.notification.create({
+            data: {
+                userId: bulletin.authorId,
+                notificationTypeId: sysNotifType.id,
+                notificationMessage: JSON.stringify({
+                    text: `Your bulletin "${bulletin.title}" was ${action} by the AI filter.`,
+                    link: `/bulletin/${bulletin.id}`
+                })
+            }
+        });
+
         await prisma.clefLog.create({
             data: {
                 targetId: bulletin.id,
@@ -216,4 +237,4 @@ setInterval(() => {
         runTasks(),
         classifyPendingUsers()
     ]).catch(console.error);
-}, 5 * 60 * 1000);
+}, INTERVAL_MINUTES * 60 * 1000);

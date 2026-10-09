@@ -367,7 +367,7 @@ export function BulletinDetail() {
                             </div>
                             <div className="ml-3">
                                 <p className="text-sm text-red-700">
-                                    This bulletin has been {bulletin.contentStatus?.statusName.toLowerCase()}. It is not visible to the public. You can edit it to make changes and submit it for review again.
+                                    This bulletin has been {bulletin.contentStatus?.statusName.toLowerCase()}. It is not visible to the public. You may edit it to make changes and submit it for review again.
                                 </p>
                             </div>
                         </div>
