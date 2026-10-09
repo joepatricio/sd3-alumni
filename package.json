@@ -19,7 +19,7 @@
     "prisma:seed": "tsx prisma/seed.ts",
     "proxy": "node api/proxy.js",
     "classifier": "tsx api/classifier.js",
-    "classifier:daemon": "tmux new-session -d -s classifier 'pnpm run classifier'"
+    "classifier:daemon": "cross-env NODE_ENV=production pm2 start npm --name sd3-classifier -- run classifier"
   },
   "dependencies": {
     "@emotion/react": "11.14.0",
