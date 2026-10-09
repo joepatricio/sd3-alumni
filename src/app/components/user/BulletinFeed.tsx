@@ -152,14 +152,7 @@ export function BulletinFeed() {
           <div className="grid md:grid-cols-2 gap-0">
             <div className="relative h-64 md:h-full max-h-[20rem] overflow-hidden bg-gray-100 flex items-center justify-center">
               {!featured.bulletinImage && (
-                <div className="absolute inset-0 overflow-hidden pointer-events-none" aria-hidden="true">
-                  <img
-                    src={featured.bulletinImage || featured.author?.profile?.profileImage || DEFAULT_PROFILE}
-                    alt=""
-                    className="w-full h-full object-cover blur-3xl scale-140 opacity-75 transition-transform duration-500 group-hover:scale-150 transform-gpu will-change-transform"
-                  />
-                  <div className="absolute inset-0 bg-black/10 backdrop-blur-xs transform-gpu" />
-                </div>
+                <div className="absolute inset-0 bg-gradient-to-br from-brand-primary/20 to-brand-accent/20 group-hover:from-brand-primary/30 group-hover:to-brand-accent/30 transition-colors duration-500 pointer-events-none" aria-hidden="true" />
               )}
               <img
                 src={featured.bulletinImage || featured.author?.profile?.profileImage || DEFAULT_PROFILE}
@@ -212,14 +205,7 @@ export function BulletinFeed() {
               >
                 <div className="relative h-48 overflow-hidden bg-gray-100 flex items-center justify-center">
                   {isContain && (
-                    <div className="absolute inset-0 overflow-hidden pointer-events-none" aria-hidden="true">
-                      <img
-                        src={bulletinImg}
-                        alt=""
-                        className="w-full h-full object-cover blur-3xl scale-140 opacity-75 transition-transform duration-500 group-hover:scale-150 transform-gpu will-change-transform"
-                      />
-                      <div className="absolute inset-0 bg-black/10 backdrop-blur-xs transform-gpu" />
-                    </div>
+                    <div className="absolute inset-0 bg-gradient-to-br from-brand-primary/20 to-brand-accent/20 group-hover:from-brand-primary/30 group-hover:to-brand-accent/30 transition-colors duration-500 pointer-events-none" aria-hidden="true" />
                   )}
                   <img
                     src={bulletinImg}
