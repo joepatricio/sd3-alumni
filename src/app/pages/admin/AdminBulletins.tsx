@@ -5,7 +5,11 @@ export function AdminBulletins() {
     const fetchData = async (params: any) => {
         const whereClause: any = {};
         if (params.status !== 'All') {
-            whereClause.status = { statusName: params.status };
+            if (params.status === 'For Review') {
+                whereClause.status = { statusName: { in: ['Flagged', 'Pending'] } };
+            } else {
+                whereClause.status = { statusName: params.status };
+            }
         }
         if (params.search) {
             whereClause.title = { contains: params.search };
@@ -46,6 +50,15 @@ export function AdminBulletins() {
             else if (sortKey === 'status') sortKey = 'status.statusName';
 
             sortStr = params.sort.direction === 'desc' ? `-${sortKey}` : sortKey;
+        } 
+        
+        // If on the 'For Review' tab, ensure we always group Flagged items first
+        if (params.status === 'For Review') {
+            if (sortStr && !sortStr.includes('status.statusName')) {
+                sortStr = `status.statusName,${sortStr}`;
+            } else if (!sortStr) {
+                sortStr = 'status.statusName';
+            }
         }
 
         const response = await api.get('/admin/bulletins', {
@@ -103,7 +116,7 @@ export function AdminBulletins() {
             description="Review, approve, or reject user-submitted and community announcements."
             contentType="Bulletin"
             fetchData={fetchData}
-            statuses={["All", "Pending", "Flagged", "Approved", "Rejected", "Archived"]}
+            statuses={["All", "For Review", "Pending", "Flagged", "Approved", "Rejected", "Archived"]}
             primaryColorClass="bg-blue-600 hover:bg-blue-700 text-white"
             outlineColorClass="text-blue-600 border-blue-200 hover:bg-blue-50"
             categories={[

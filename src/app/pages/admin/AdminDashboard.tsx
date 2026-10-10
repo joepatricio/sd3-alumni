@@ -31,6 +31,7 @@ interface DashboardStats {
         };
     };
     pendingBulletins: number;
+    flaggedBulletins: number;
     pendingEvents: number;
     approvedEvents: number;
     donationsTotal: number;
@@ -457,7 +458,7 @@ export function AdminDashboard() {
     );
 
     const totalPendingActions = React.useMemo(
-        () => stats ? stats.pendingUsers + stats.pendingBulletins + stats.pendingEvents : 0,
+        () => stats ? stats.pendingUsers + stats.pendingBulletins + stats.flaggedBulletins + stats.pendingEvents : 0,
         [stats]
     );
 
@@ -528,7 +529,7 @@ export function AdminDashboard() {
                             </h2>
                             <p className="text-amber-100 text-sm">
                                 {stats.pendingUsers > 0 && `${stats.pendingUsers} pending user approval${stats.pendingUsers > 1 ? 's' : ''}. `}
-                                {stats.pendingBulletins > 0 && `${stats.pendingBulletins} bulletin${stats.pendingBulletins > 1 ? 's' : ''} awaiting moderation. `}
+                                {(stats.pendingBulletins + stats.flaggedBulletins) > 0 && `${stats.pendingBulletins + stats.flaggedBulletins} bulletin${(stats.pendingBulletins + stats.flaggedBulletins) > 1 ? 's' : ''} awaiting moderation. `}
                                 {stats.pendingEvents > 0 && `${stats.pendingEvents} event proposal${stats.pendingEvents > 1 ? 's' : ''} pending review.`}
                             </p>
                         </div>
@@ -543,12 +544,12 @@ export function AdminDashboard() {
                                 Users ({stats.pendingUsers}) <ArrowRight size={12} />
                             </Link>
                         )}
-                        {stats.pendingBulletins > 0 && (
+                        {(stats.pendingBulletins + stats.flaggedBulletins) > 0 && (
                             <Link
-                                to="/admin/bulletins?tab=Pending"
+                                to="/admin/bulletins?tab=For%20Review"
                                 className="px-3.5 py-1.5 bg-white text-amber-800 hover:bg-amber-50 text-xs font-bold rounded-lg transition-colors flex items-center gap-1 shadow-xs"
                             >
-                                Bulletins ({stats.pendingBulletins}) <ArrowRight size={12} />
+                                Bulletins ({stats.pendingBulletins + stats.flaggedBulletins}) <ArrowRight size={12} />
                             </Link>
                         )}
                         {stats.pendingEvents > 0 && (

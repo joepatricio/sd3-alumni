@@ -10,7 +10,7 @@ const adapter = new PrismaBetterSqlite3({
 });
 const prisma = new PrismaClient({ adapter });
 
-const INTERVAL_MINUTES = 5
+const INTERVAL = process.env.CLASSIFIER_INTERVAL_MINUTES || 5;
 const CLOUDFLARE_ACCOUNT_ID = process.env.CLOUDFLARE_ACCOUNT_ID;
 const CLOUDFLARE_API_TOKEN = process.env.CLOUDFLARE_API_TOKEN;
 const MODEL = "@cf/cloudflare/clef-flash";
@@ -237,4 +237,4 @@ setInterval(() => {
         runTasks(),
         classifyPendingUsers()
     ]).catch(console.error);
-}, INTERVAL_MINUTES * 60 * 1000);
+}, INTERVAL * 60 * 1000);

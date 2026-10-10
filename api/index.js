@@ -352,7 +352,7 @@ app.post('/api/auth/register', authLimiter, async (req, res) => {
                             email,
                             degreeId: degreeId,
                             batch: parseInt(batch, 10) || null,
-                            profileImage: "/engineer.png",
+                            profileImage: "/uploads/engineer.png",
                             gender: gender
                         }
                     },
@@ -1454,6 +1454,7 @@ app.get('/api/admin/dashboard-stats', authenticateAdminToken, async (req, res) =
             disabledUsersCount,
             totalUsersCount,
             pendingBulletinsCount,
+            flaggedBulletinsCount,
             pendingEventsCount,
             approvedEventsCount,
             completedDonations,
@@ -1471,6 +1472,7 @@ app.get('/api/admin/dashboard-stats', authenticateAdminToken, async (req, res) =
             prisma.user.count({ where: { userStatus: { statusName: 'Disabled' } } }),
             prisma.user.count(),
             prisma.bulletin.count({ where: { status: { statusName: 'Pending' } } }),
+            prisma.bulletin.count({ where: { status: { statusName: 'Flagged' } } }),
             prisma.event.count({ where: { status: { statusName: 'Pending' } } }),
             prisma.event.count({ where: { status: { statusName: 'Approved' } } }),
             prisma.donation.findMany({ where: { status: { statusName: 'Completed' } } }),
@@ -1611,6 +1613,7 @@ app.get('/api/admin/dashboard-stats', authenticateAdminToken, async (req, res) =
                 }
             },
             pendingBulletins: pendingBulletinsCount,
+            flaggedBulletins: flaggedBulletinsCount,
             pendingEvents: pendingEventsCount,
             approvedEvents: approvedEventsCount,
             donationsTotal,
