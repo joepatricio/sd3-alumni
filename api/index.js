@@ -204,6 +204,7 @@ const authLimiter = rateLimit({
     max: RATE_LIMIT_AUTH_MAX,
     standardHeaders: true,
     legacyHeaders: false,
+    skipSuccessfulRequests: true,
     message: { error: 'Too many authentication attempts from this IP, please try again after 15 minutes' }
 });
 

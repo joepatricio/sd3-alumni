@@ -99,7 +99,7 @@ export function EventDetail() {
         return <NotFound />;
     }
 
-    const isPastEvent = new Date(eventData.eventDate) < new Date();
+    const isPastEvent = new Date(eventData.eventDate) < new Date() || eventData.eventStatus?.statusName === 'Concluded';
 
     const formatTime = (timeStr: string) => {
         // timeStr might be "16:00:00" or "16:00"

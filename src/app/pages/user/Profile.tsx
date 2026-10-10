@@ -297,7 +297,7 @@ export function Profile() {
     );
 
     const renderEvent = (event: any) => {
-        const isUpcoming = new Date(event.eventDate) >= new Date();
+        const isUpcoming = !(event.eventStatus.statusName === 'Concluded');
         return (
             <Link
                 key={event.id}
@@ -316,7 +316,7 @@ export function Profile() {
                         </div>
                     ) : (
                         <div className="absolute top-2 right-2 bg-gray-500 text-white text-xs font-bold px-2 py-1 rounded-full shadow-md">
-                            Past
+                            Concluded
                         </div>
                     )}
                 </div>
@@ -389,7 +389,10 @@ export function Profile() {
     const profStatus = userRecord?.profileStatus?.statusName || 'hidden';
     const isConnected = connection?.status?.connectionName === 'Accepted';
 
-    if (isOwner || profStatus === 'Public' || isAdminPreview || (profStatus === 'Connections Only' && isConnected)) {
+    if (connection?.status?.connectionName === 'Blocked') {
+        visibility = 'hidden';
+        tabVisibility = false;
+    } else if (isOwner || profStatus === 'Public' || isAdminPreview || (profStatus === 'Connections Only' && isConnected)) {
         visibility = 'full';
         tabVisibility = true;
     } else if (profStatus === 'Connections Only' && !isConnected) {
@@ -414,8 +417,8 @@ export function Profile() {
                     isOwner={isOwner}
                     connectionStatus={connection?.status?.connectionName}
                     pendingRequestsCount={pendingRequestsCount}
-                    onConnectionUpdate={(newCode, newCount) => {
-                        setConnection(newCode !== null ? { connectionStatusId: newCode } : null);
+                    onConnectionUpdate={(newStatusName, newCount) => {
+                        setConnection(newStatusName !== null ? { status: { connectionName: newStatusName } } : null);
                         if (newCount !== undefined) {
                             setStatsData(prev => prev ? { ...prev, userConnections: newCount } : prev);
                         }
