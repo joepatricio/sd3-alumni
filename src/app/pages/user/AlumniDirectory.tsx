@@ -30,8 +30,14 @@ export function AlumniDirectory() {
 
     useEffect(() => {
         api.get<any>('/degrees').then(res => setDegrees(res.data || []));
-        const url = `/profiles`;
-        api.get(url).then(res => setAbsoluteTotalAlumni(res.data.length || 0));
+        api.get('/users', {
+            params: {
+                _where: JSON.stringify({
+                    userStatus: { statusName: { notIn: ['Banned', 'Deactivated'] } }
+                }),
+                _include: "userStatus"
+            }
+        }).then(res => setAbsoluteTotalAlumni(res.data.items || res.data.length || 0));
     }, []);
 
     useEffect(() => {
@@ -41,9 +47,9 @@ export function AlumniDirectory() {
             setLoading(true);
             try {
                 const whereClause: any = {
-                    user: { userStatus: { statusName: { not: 'Banned' } } }
+                    user: { userStatus: { statusName: { notIn: ['Banned', 'Deactivated'] } } }
                 };
-                
+
                 if (activeFilters.name) {
                     whereClause.userName = { contains: activeFilters.name };
                 }
