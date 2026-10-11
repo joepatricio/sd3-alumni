@@ -81,7 +81,7 @@ export function Login() {
     };
 
     return (
-        <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+        <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 px-4 sm:px-6 lg:px-8">
             <div className="sm:mx-auto sm:w-full sm:max-w-md text-center">
                 <div className="inline-flex items-center justify-center w-16 h-16 bg-brand-primary rounded-full mb-4">
                     <User className="w-8 h-8 text-white" />
@@ -91,7 +91,7 @@ export function Login() {
             </div>
 
             <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-                <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
+                <div className="bg-white py-8 px-4 shadow-sm border border-gray-100 rounded-lg sm:rounded-xl sm:shadow sm:border-transparent sm:px-10">
                     <Form {...form}>
                         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                             <FormField
@@ -153,15 +153,15 @@ export function Login() {
                                     control={form.control}
                                     name="rememberMe"
                                     render={({ field }) => (
-                                        <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                                        <FormItem className="flex flex-row items-center space-x-2 space-y-0">
                                             <FormControl>
                                                 <Checkbox
                                                     checked={field.value}
                                                     onCheckedChange={field.onChange}
-                                                    className="data-[state=checked]:bg-brand-primary data-[state=checked]:border-brand-primary"
+                                                    className="shrink-0 data-[state=checked]:bg-brand-primary data-[state=checked]:border-brand-primary"
                                                 />
                                             </FormControl>
-                                            <FormLabel className="font-normal text-gray-600">
+                                            <FormLabel className="!block text-sm font-normal text-gray-600 cursor-pointer select-none">
                                                 Remember me
                                             </FormLabel>
                                         </FormItem>

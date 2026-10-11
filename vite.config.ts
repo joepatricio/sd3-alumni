@@ -25,14 +25,20 @@ export default defineConfig({
     allowedHosts: [
       'localhost',
       'winjoe.local',
+      'kabob-chasing-zap.ngrok-free.dev',
     ],
     proxy: {
+      '/api': {
+        target: 'http://localhost:3000',
+        changeOrigin: true,
+      },
       '/uploads': {
         target: 'http://localhost:3000',
         changeOrigin: true,
       }
     }
   },
+
   // File types to support raw imports. Never add .css, .tsx, or .ts files to this.
   assetsInclude: ['**/*.svg', '**/*.csv'],
 })

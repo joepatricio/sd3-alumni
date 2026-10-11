@@ -115,13 +115,17 @@ async function classifyPendingBulletins() {
         let finalDecision = "Review";
         let newStatusId = flaggedStatus.id; // Mark as flagged by default so it escapes the infinite loop
 
-        if (isUnsafe >= 0.6) {
+        if (isUnsafe >= 0.45) {
             finalDecision = "Rejected";
             newStatusId = rejectedStatus.id;
-        } else if (isSafe >= 0.6) {
+        } else if (isSafe >= 0.80 && isUnsafe <= 0.15) {
             finalDecision = "Approved";
             newStatusId = approvedStatus.id;
+        } else {
+            finalDecision = "Review";
+            newStatusId = flaggedStatus.id;
         }
+
 
         await prisma.bulletin.update({
             where: { id: bulletin.id },

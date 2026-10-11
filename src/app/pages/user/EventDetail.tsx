@@ -267,7 +267,7 @@ export function EventDetail() {
                 </div>
             )}
             {/* Header / Nav */}
-            <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 flex justify-between items-center">
+            <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <Link
                     to="/events"
                     className="inline-flex items-center gap-2 text-gray-600 hover:text-brand-primary transition-colors"
@@ -276,7 +276,7 @@ export function EventDetail() {
                     <span className="font-medium">Back to Events</span>
                 </Link>
 
-                <div className="flex gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                     {isLoggedIn && isAuthor && eventData.eventStatus?.statusName !== "Concluded" && (
                         <>
                             <CreateEventModal

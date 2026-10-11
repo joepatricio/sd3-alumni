@@ -146,33 +146,31 @@ export function Events() {
 
     return (
         <div className="min-h-screen bg-gray-50">
-            <div className="max-w-6xl mx-auto">
+            <div className="max-w-6xl mx-auto px-4 md:px-8 py-8">
                 {/* Header */}
-                <div>
-                    <div className="max-w-6xl mx-auto px-4 md:px-8 py-8">
-                        <div className="flex flex-co l md:flex-row md:items-center md:justify-between gap-4">
-                            <div>
-                                <h1 className="text-3xl font-bold mb-2">Upcoming Events</h1>
-                                <p className="text-gray-600">
-                                    Connect, learn, and celebrate with fellow Josenians at our upcoming
-                                    events
-                                </p>
-                            </div>
-                            {currentUserStatus === 'Official' && (
-                                <button
-                                    onMouseEnter={loadCreateEventModal}
-                                    onFocus={loadCreateEventModal}
-                                    onClick={() => {
-                                        loadCreateEventModal();
-                                        setIsCreateOpen(true);
-                                    }}
-                                    className="flex items-center justify-center gap-2 bg-brand-primary text-white px-6 py-3 rounded-lg hover:bg-brand-primary-hover transition-colors font-semibold"
-                                >
-                                    <Plus className="w-5 h-5" />
-                                    Create Event
-                                </button>
-                            )}
+                <div className="mb-8">
+                    <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                        <div>
+                            <h1 className="text-3xl font-bold mb-2">Upcoming Events</h1>
+                            <p className="text-gray-600">
+                                Connect, learn, and celebrate with fellow Josenians at our upcoming
+                                events
+                            </p>
                         </div>
+                        {currentUserStatus === 'Official' && (
+                            <button
+                                onMouseEnter={loadCreateEventModal}
+                                onFocus={loadCreateEventModal}
+                                onClick={() => {
+                                    loadCreateEventModal();
+                                    setIsCreateOpen(true);
+                                }}
+                                className="flex items-center justify-center gap-2 bg-brand-primary text-white px-6 py-3 rounded-lg hover:bg-brand-primary-hover transition-colors font-semibold"
+                            >
+                                <Plus className="w-5 h-5" />
+                                Create Event
+                            </button>
+                        )}
                     </div>
                 </div>
 

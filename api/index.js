@@ -12,8 +12,6 @@ import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
 import { parseWhere, parseSort, numericFields } from './queryParser.js';
 import { rateLimit, ipKeyGenerator } from 'express-rate-limit';
 
-
-
 const adapter = new PrismaBetterSqlite3({
     url: process.env.DATABASE_URL,
 });
@@ -106,24 +104,25 @@ const app = express();
 app.set('trust proxy', 1); // Trust the reverse proxy to get the real client IP
 
 // In production, serve the Vite frontend build (dist folder)
-// Otherwise ngrok is used to tunnel traffic to localhost:8085
+// Otherwise ngrok is used to tunnel traffic to localhost
 if (process.env.NODE_ENV === 'production') {
     const distPath = path.resolve('dist');
     app.use(express.static(distPath));
 } else if (process.env.NODE_ENV === 'development') {
     async function forwardToApp() {
         const ngrok = await import("@ngrok/ngrok");
+        const PROXY_PORT = process.env.PROXY_PORT;
         const forwarder = await ngrok.forward({
-            addr: "127.0.0.1:3000",
+            addr: `127.0.0.1:${PROXY_PORT}`,
             authtoken_from_env: true,
             domain: "kabob-chasing-zap.ngrok-free.dev",
         });
-        console.log(`[ngrok] Tunnel available at: ${forwarder.url()}`);
+        console.log(`[ngrok] Tunnel available at: ${forwarder.url()}:${PROXY_PORT}`);
     }
     forwardToApp().catch(console.error);
 }
 
-const PORT = process.env.PORT;
+const PORT = process.env.API_PORT;
 const JWT_SECRET = process.env.JWT_SECRET;
 
 // =======================

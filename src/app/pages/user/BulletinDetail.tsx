@@ -298,7 +298,7 @@ export function BulletinDetail() {
             )}
 
             {/* Back Button and Edit Button */}
-            <div className="max-w-4xl mx-auto px-4 md:px-8 pt-6 flex justify-between items-center">
+            <div className="max-w-4xl mx-auto px-4 md:px-8 pt-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <Link
                     to="/bulletin"
                     className="inline-flex items-center gap-2 text-gray-600 hover:text-brand-primary transition-colors"
@@ -308,7 +308,7 @@ export function BulletinDetail() {
                 </Link>
 
                 {isLoggedIn && (session?.userId === bulletin.authorId) && (
-                    <div className="flex gap-2">
+                    <div className="flex flex-wrap items-center gap-2">
                         <CreateBulletinModal
                             trigger={
                                 <Button variant="outline" className="gap-2 text-brand-primary border-brand-primary hover:bg-brand-primary hover:text-white transition-colors">
