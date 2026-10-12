@@ -2,6 +2,7 @@ import { useState, useEffect, lazy, Suspense } from 'react';
 import { Calendar, MapPin, Clock, Video, Loader2 } from 'lucide-react';
 import { Plus } from 'lucide-react';
 import { Button } from '@components/ui/button';
+import { MultiOptionDropdown } from '@/app/components/user/multi-option-dropdown';
 import { Link } from 'react-router-dom';
 import { getCategoryColor, formatDate } from '@/app/views/formatters';
 
@@ -112,12 +113,8 @@ export function Events() {
         fetchEvents();
     }, [visibleCount, selectedCategories, timeRange, session?.userId]);
 
-    const categories = allCategories;
-
-    const toggleCategory = (cat: string) => {
-        setSelectedCategories(prev =>
-            prev.includes(cat) ? prev.filter(c => c !== cat) : [...prev, cat]
-        );
+    const handleCategoryChange = (cats: string[]) => {
+        setSelectedCategories(cats);
         setVisibleCount(EVENTS_PER_PAGE);
     };
 
@@ -174,43 +171,63 @@ export function Events() {
                     </div>
                 </div>
 
-                <div className="mb-8 bg-white p-4 rounded-lg shadow-sm border border-gray-100 flex flex-row items-center overflow-x-auto gap-4 hide-scrollbar">
-                    {/* Category Filter */}
-                    <div className="flex items-center gap-2 flex-shrink-0">
-                        {categories.map(cat => (
+                <div className="mb-8 bg-white p-5 rounded-xl shadow-xs border border-gray-200 flex flex-col gap-4">
+                    {/* Multi-Option Category Filter */}
+                    <div>
+                        <label htmlFor="event-category-select" className="block text-sm font-semibold text-gray-800 mb-1.5">
+                            Search for events
+                        </label>
+                        <MultiOptionDropdown
+                            id="event-category-select"
+                            options={allCategories}
+                            selected={selectedCategories}
+                            onChange={handleCategoryChange}
+                            placeholder="Search or select categories..."
+                        />
+                    </div>
+
+                    {/* Time Range Filter Pills & Clear All Filters */}
+                    <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-gray-100">
+                        {/* Time Range Pills */}
+                        <div className="flex items-center gap-2 flex-wrap">
+                            {[
+                                { label: 'Upcoming', value: 'Upcoming' },
+                                { label: 'Next 7 days', value: '7 days' },
+                                { label: 'Next 30 days', value: '30 days' },
+                                { label: 'Past', value: 'Past' }
+                            ].map(range => (
+                                <button
+                                    key={range.value}
+                                    type="button"
+                                    onClick={() => { setTimeRange(range.value); setVisibleCount(EVENTS_PER_PAGE); }}
+                                    className={`px-3.5 py-1.5 rounded-full text-xs sm:text-sm font-medium transition-all ${timeRange === range.value
+                                        ? "bg-brand-primary text-white shadow-xs"
+                                        : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"
+                                        }`}
+                                >
+                                    {range.label}
+                                </button>
+                            ))}
+                        </div>
+
+                        {(selectedCategories.length > 0 || timeRange !== 'Upcoming') && (
                             <Button
-                                key={cat}
-                                variant={selectedCategories.includes(cat) ? "default" : "outline"}
-                                className={selectedCategories.includes(cat) ? getCategoryColor(cat) : ""}
-                                onClick={() => toggleCategory(cat)}
+                                variant="outline"
+                                size="sm"
+                                className="text-brand-primary border-brand-primary/30 hover:bg-brand-primary/10 hover:text-brand-primary text-xs sm:text-sm font-medium"
+                                onClick={clearFilters}
                             >
-                                {cat}
+                                Clear all filters
                             </Button>
-                        ))}
+                        )}
                     </div>
+                </div>
 
-                    <div className="h-8 w-px bg-gray-200 hidden md:block mx-1 flex-shrink-0"></div>
-
-                    {/* Time Range Filter */}
-                    <div className="flex items-center gap-2 flex-shrink-0">
-                        {['Upcoming', '7 days', '30 days', 'Past'].map(range => (
-                            <Button
-                                key={range}
-                                variant={timeRange === range ? "default" : "outline"}
-                                className={timeRange === range ? "bg-brand-primary hover:bg-brand-primary text-white" : ""}
-                                onClick={() => { setTimeRange(range); setVisibleCount(EVENTS_PER_PAGE); }}
-                            >
-                                {range}
-                            </Button>
-                        ))}
-                    </div>
-
-                    {/* Clear Filters */}
-                    <div className="flex items-center ml-auto flex-shrink-0">
-                        <Button variant="ghost" className="text-gray-600 hover:text-gray-900 whitespace-nowrap" onClick={clearFilters}>
-                            Clear Filters
-                        </Button>
-                    </div>
+                {/* Section Header with Event Count */}
+                <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-xl font-bold text-gray-900">
+                        Events {totalEvents > 0 ? `(${totalEvents})` : ''}
+                    </h2>
                 </div>
 
                 {/* Events List */}

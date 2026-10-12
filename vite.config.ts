@@ -3,42 +3,50 @@ import path from 'path'
 import tailwindcss from '@tailwindcss/vite'
 import react from '@vitejs/plugin-react'
 
-export default defineConfig({
-  plugins: [
-    // The React and Tailwind plugins are both required for Make, even if
-    // Tailwind is not being actively used – do not remove them
-    react(),
-    tailwindcss()
-  ],
-  resolve: {
-    alias: {
-      // Alias @ to the src directory
-      '@': path.resolve(__dirname, './src'),
-      '@components': path.resolve(__dirname, './src/app/components'),
-      '@assets': path.resolve(__dirname, './src/assets'),
-      '@pages': path.resolve(__dirname, './src/app/pages'),
-      '@views': path.resolve(__dirname, './src/app/views'),
-      '@prisma-client': path.resolve(__dirname, './prisma/generated'),
-    },
-  },
-  server: {
-    allowedHosts: [
-      'localhost',
-      'winjoe.local',
-      'kabob-chasing-zap.ngrok-free.dev',
-    ],
-    proxy: {
-      '/api': {
-        target: 'http://localhost:3000',
-        changeOrigin: true,
-      },
-      '/uploads': {
-        target: 'http://localhost:3000',
-        changeOrigin: true,
-      }
-    }
-  },
+export default defineConfig(({ mode }) => {
+  const isDev = mode === 'development';
 
-  // File types to support raw imports. Never add .css, .tsx, or .ts files to this.
-  assetsInclude: ['**/*.svg', '**/*.csv'],
+  return {
+    plugins: [
+      // The React and Tailwind plugins are both required for Make, even if
+      // Tailwind is not being actively used – do not remove them
+      react(),
+      tailwindcss()
+    ],
+    resolve: {
+      alias: {
+        // Alias @ to the src directory
+        '@': path.resolve(__dirname, './src'),
+        '@components': path.resolve(__dirname, './src/app/components'),
+        '@assets': path.resolve(__dirname, './src/assets'),
+        '@pages': path.resolve(__dirname, './src/app/pages'),
+        '@views': path.resolve(__dirname, './src/app/views'),
+        '@prisma-client': path.resolve(__dirname, './prisma/generated'),
+      },
+    },
+    // The reverse proxy and dev tunnel hosts are strictly scoped to development mode
+    // and will not be configured during production builds
+    ...(isDev && {
+      server: {
+        allowedHosts: [
+          'localhost',
+          'winjoe.local',
+          'kabob-chasing-zap.ngrok-free.dev',
+        ],
+        proxy: {
+          '/api': {
+            target: 'http://localhost:3000',
+            changeOrigin: true,
+          },
+          '/uploads': {
+            target: 'http://localhost:3000',
+            changeOrigin: true,
+          }
+        }
+      }
+    }),
+
+    // File types to support raw imports. Never add .css, .tsx, or .ts files to this.
+    assetsInclude: ['**/*.svg', '**/*.csv'],
+  };
 })

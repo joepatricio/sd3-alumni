@@ -8,23 +8,20 @@ import { useAuth } from '@/app/views/auth';
 import { formatCurrency } from '@/app/views/formatters';
 import { api } from '@/app/views/api';
 import { customAlphabet } from 'nanoid';
-import { z } from 'zod';
 
 export function Donation() {
     const { isLoggedIn, session, setSession } = useAuth();
     const [searchParams, setSearchParams] = useSearchParams();
     const [selectedAmount, setSelectedAmount] = useState<number | null>(1000);
     const [customAmount, setCustomAmount] = useState('');
-    const [donorEmail, setDonorEmail] = useState('');
-    const [emailError, setEmailError] = useState<string | null>(null);
     const [isAnonymous, setIsAnonymous] = useState(false);
     const [userName, setUserName] = useState<string>('Alumni');
-    const [profileImage, setProfileImage] =useState<string | null>(null);
+    const [profileImage, setProfileImage] = useState<string | null>(null);
 
     useEffect(() => {
         const status = searchParams.get('status');
         const ref = searchParams.get('ref');
-        
+
         if (status === 'success') {
             toast.success("Thank You for Your Generosity!", {
                 description: `Your donation was successful.\nReference ID: ${ref}`,
@@ -77,15 +74,6 @@ export function Donation() {
             return;
         }
 
-        if (!isLoggedIn && donorEmail) {
-            const emailResult = z.string().email().safeParse(donorEmail);
-            if (!emailResult.success) {
-                setEmailError("Please enter a valid email address.");
-                return;
-            }
-        }
-        setEmailError(null);
-
         const nanoidRef = customAlphabet("23456789BCDFGHJKLMNPQRSTVWXYZ", 3);
         const refId = `DON-${nanoidRef()}-${nanoidRef()}`;
 
@@ -94,12 +82,12 @@ export function Donation() {
                 amount,
                 donationReference: refId,
                 donationAnonymous: !isLoggedIn || isAnonymous,
-                donationEmail: isLoggedIn ? session?.email : donorEmail,
+                donationEmail: isLoggedIn ? session?.email : null,
                 userId: isLoggedIn ? session?.userId : null
             };
 
             const response = await api.post('/donations/checkout', checkoutPayload);
-            
+
             if (response.data && response.data.checkoutUrl) {
                 // Redirect to PayMongo Checkout
                 window.location.href = response.data.checkoutUrl;
@@ -154,7 +142,7 @@ export function Donation() {
                         Empower the Next Generation of Josenians
                     </h1>
                     <p className="text-lg md:text-xl text-gray-100 max-w-2xl leading-relaxed">
-                        <strong>DISCLAIMER:</strong> This prototype <span className="underline">does not</span> handle actual transactions.<br/>
+                        <strong>DISCLAIMER:</strong> This prototype <span className="underline">does not</span> handle actual transactions.<br />
                         Please refrain from providing your actual banking information.
                     </p>
                 </div>
@@ -168,7 +156,6 @@ export function Donation() {
                             <div className="text-lg text-gray-600">
                                 <h2 className="text-3xl font-bold text-brand-primary mb-6 mt-0">Why Donate?</h2>
                             </div>
-
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 {[
                                     { icon: GraduationCap, title: "Scholarships", desc: "Support tuition for talented students in need." },
@@ -188,8 +175,8 @@ export function Donation() {
                         </div>
 
                         {/* Right Column: Donation Form */}
-                        {/* Should be vertically centered instead of flush */}
-                        <div className="lg:col-span-5 self-center">
+                        {/* Aligned to the bottom of the parent container */}
+                        <div className="lg:col-span-5 self-end">
                             <div className="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
 
                                 {!isLoggedIn ? (
@@ -271,27 +258,7 @@ export function Donation() {
 
                                     {/* Additional Fields based on login state */}
                                     <div className="mb-8">
-                                        {!isLoggedIn ? (
-                                            <div>
-                                                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
-                                                    Email Address (Optional for Receipt)
-                                                </label>
-                                                <div className="relative">
-                                                    <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
-                                                    <input
-                                                        type="email"
-                                                        placeholder="Enter email address"
-                                                        value={donorEmail}
-                                                        onChange={(e) => {
-                                                            setDonorEmail(e.target.value);
-                                                            if (emailError) setEmailError(null);
-                                                        }}
-                                                        className={`w-full pl-10 pr-4 py-3 rounded-lg border-2 ${emailError ? 'border-red-500 focus:border-red-500' : 'border-gray-200 focus:border-brand-primary'} focus:outline-none transition-colors text-sm`}
-                                                    />
-                                                </div>
-                                                {emailError && <p className="text-red-500 text-xs mt-1">{emailError}</p>}
-                                            </div>
-                                        ) : (
+                                        {isLoggedIn && (
                                             <label className="flex items-center gap-3 cursor-pointer p-3 rounded-lg border border-gray-100 bg-gray-50 hover:bg-gray-100 transition-colors">
                                                 <input
                                                     type="checkbox"

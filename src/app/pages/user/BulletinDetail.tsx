@@ -385,35 +385,35 @@ export function BulletinDetail() {
                         </div>
                     )}
 
-                    <div className="p-8 md:p-12">
+                    <div className="p-4 sm:p-8 md:p-12">
                         {/* Title */}
                         <h1 className="text-4xl font-bold mb-6">{bulletin.title}</h1>
 
                         {/* Author Info */}
-                        <div className="flex items-center gap-4 pb-6 mb-8 border-b border-gray-200">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 mb-8 border-b border-gray-200">
                             <Link
                                 to={`/profile/${bulletin.authorId}`}
-                                className="flex items-center gap-3 hover:opacity-80 transition-opacity"
+                                className="flex items-center gap-3 hover:opacity-80 transition-opacity min-w-0"
                             >
                                 <img
                                     src={authorProfile?.profileImage || "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&q=80&w=64&h=64"}
                                     alt={authorProfile?.userName || "Author"}
-                                    className="w-12 h-12 rounded-full object-cover"
+                                    className="w-12 h-12 rounded-full object-cover shrink-0"
                                 />
-                                <div>
-                                    <p className="font-semibold text-gray-900 hover:text-brand-primary transition-colors">
+                                <div className="min-w-0">
+                                    <p className="font-semibold text-gray-900 hover:text-brand-primary transition-colors truncate">
                                         {authorProfile?.userName || "Unknown Author"}
                                     </p>
-                                    <p className="text-sm text-gray-600">{authorProfile?.currentJob ? `${authorProfile.currentJob} at ${authorProfile.company}` : "Alumni"}</p>
+                                    <p className="text-sm text-gray-600 truncate">{authorProfile?.currentJob ? `${authorProfile.currentJob} at ${authorProfile.company}` : "Alumni"}</p>
                                 </div>
                             </Link>
-                            <div className="flex items-center gap-4 ml-auto text-sm text-gray-500">
-                                <div className="flex items-center gap-1">
-                                    <Clock className="w-4 h-4" />
+                            <div className="flex flex-wrap items-center gap-2 sm:gap-4 sm:ml-auto text-xs sm:text-sm text-gray-500">
+                                <div className="flex items-center gap-1.5 shrink-0">
+                                    <Clock className="w-4 h-4 shrink-0" />
                                     <span>{formatDate(bulletin.bulletinDate, 'full')}</span>
                                 </div>
                                 <span>•</span>
-                                <span>{bulletin.readTimeMinutes} min read</span>
+                                <span className="shrink-0">{bulletin.readTimeMinutes} min read</span>
                             </div>
                         </div>
 
@@ -429,15 +429,15 @@ export function BulletinDetail() {
                 </article>
 
                 {/* Comments Section */}
-                <div className="bg-white rounded-lg shadow-md p-8 mt-8">
-                    <div className="flex justify-between items-center mb-6">
-                        <h2 className="text-2xl font-bold flex items-center gap-2">
-                            <MessageCircle className="w-6 h-6 text-brand-primary" />
-                            Comments ({commentLength})
+                <div className="bg-white rounded-lg shadow-md p-4 sm:p-8 mt-8">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
+                        <h2 className="text-xl sm:text-2xl font-bold flex items-center gap-2">
+                            <MessageCircle className="w-5 h-5 sm:w-6 sm:h-6 text-brand-primary shrink-0" />
+                            <span>Comments ({commentLength})</span>
                         </h2>
 
-                        <div className="flex items-center gap-2">
-                            <label className="text-sm text-gray-500 font-medium">Sort by:</label>
+                        <div className="flex items-center gap-2 self-start sm:self-auto">
+                            <label className="text-sm text-gray-500 font-medium whitespace-nowrap">Sort by:</label>
                             <select
                                 value={sortOrder}
                                 onChange={(e) => setSortOrder(e.target.value)}
@@ -484,14 +484,14 @@ export function BulletinDetail() {
                                             className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-primary resize-none disabled:opacity-50"
                                             required
                                         />
-                                        <div className="flex justify-between items-center mt-2">
-                                            <span className={`text-xs ${comment.length >= 140 ? 'text-red-500 font-medium' : 'text-gray-500'}`}>
+                                        <div className="flex flex-wrap sm:flex-nowrap items-center justify-between gap-2 mt-2">
+                                            <span className={`text-xs whitespace-nowrap ${comment.length >= 140 ? 'text-red-500 font-medium' : 'text-gray-500'}`}>
                                                 {comment.length}/140 characters
                                             </span>
                                             <button
                                                 type="submit"
                                                 disabled={submitting || comment.length > 140}
-                                                className="flex items-center gap-2 bg-brand-primary text-white px-6 py-2 rounded-lg hover:bg-brand-primary-hover transition-colors font-semibold disabled:opacity-50"
+                                                className="flex items-center justify-center gap-2 bg-brand-primary text-white px-4 sm:px-6 py-2 rounded-lg hover:bg-brand-primary-hover transition-colors font-semibold disabled:opacity-50 text-sm shrink-0"
                                             >
                                                 {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
                                                 Post Comment
@@ -550,15 +550,15 @@ export function BulletinDetail() {
                                         )}
                                     </Link>
                                     <div className="flex-1">
-                                        <div className="bg-gray-50 rounded-lg p-4">
-                                            <div className="flex items-center gap-2 mb-2">
+                                        <div className="bg-gray-50 rounded-lg p-3 sm:p-4">
+                                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 sm:gap-2 mb-2">
                                                 <Link
                                                     to={`/profile/${commentItem.userId}`}
                                                     className="font-semibold text-gray-900 hover:text-brand-primary transition-colors"
                                                 >
                                                     {commenterProfile?.userName || "Unknown User"}
                                                 </Link>
-                                                <span className="text-sm text-gray-500">
+                                                <span className="text-xs text-gray-500 whitespace-nowrap">
                                                     {formatDate(commentItem.commentDate, 'datetime')}
                                                 </span>
                                             </div>

@@ -380,21 +380,21 @@ export function EventDetail() {
                                 </div>
                             </div>
 
-                            <div className="p-6 sm:p-8">
-                                <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">{eventData.title}</h1>
+                            <div className="p-4 sm:p-8">
+                                <h1 className="text-2xl sm:text-4xl font-bold text-gray-900 mb-4">{eventData.title}</h1>
 
-                                <div className="flex flex-wrap gap-4 sm:gap-6 text-gray-600 mb-6">
+                                <div className="flex flex-col sm:flex-row sm:flex-wrap gap-3 sm:gap-6 text-gray-600 mb-6 text-sm">
                                     <div className="flex items-center gap-2">
-                                        <Calendar className="w-5 h-5 text-brand-primary" />
+                                        <Calendar className="w-5 h-5 text-brand-primary shrink-0" />
                                         <span>{formatDate(eventData.eventDate, 'full')}</span>
                                     </div>
                                     <div className="flex items-center gap-2">
-                                        <Clock className="w-5 h-5 text-brand-primary" />
+                                        <Clock className="w-5 h-5 text-brand-primary shrink-0" />
                                         <span>{displayTime}</span>
                                     </div>
-                                    <div className="flex items-center gap-2">
-                                        <MapPin className="w-5 h-5 text-brand-primary" />
-                                        <span>{formatLocation(eventData)}</span>
+                                    <div className="flex items-start gap-2 min-w-0">
+                                        <MapPin className="w-5 h-5 text-brand-primary shrink-0 mt-0.5" />
+                                        <span className="min-w-0 break-words">{formatLocation(eventData)}</span>
                                     </div>
                                 </div>
 
