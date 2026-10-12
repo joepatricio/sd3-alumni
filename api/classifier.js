@@ -232,7 +232,7 @@ async function runTasks() {
     }
 }
 
-console.log("Starting automated content classifier (bulletins and users every 5 mins)...");
+console.log(`Starting automated content classifier (bulletins and users every ${INTERVAL} mins)...`);
 runTasks();
 classifyPendingUsers();
 
