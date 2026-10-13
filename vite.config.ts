@@ -4,7 +4,7 @@ import tailwindcss from '@tailwindcss/vite'
 import react from '@vitejs/plugin-react'
 
 export default defineConfig(({ mode }) => {
-  const isDev = mode === 'development';
+  const isDev = ["development", "local"].includes(mode);
 
   return {
     plugins: [
