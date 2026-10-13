@@ -630,7 +630,7 @@ def generate_phase_5(USER, BULLETIN, EVENTS, USER_STATISTICS, USER_CONNECTIONS, 
         status = random.choice(DONATION_STATUS)
         status_id = status["id"]
         ALPHABET = "23456789BCDFGHJKLMNPQRSTVWXYZ"
-        bank_name = random.choice(["GCash", "Maya", "BDO", "BPI", "UnionBank"])
+        bank_name = random.choice(["GCASH", "PAYMAYA", "GRAB_PAY", "QRPH", "CARD"])
         donation_dt = random_date_between(donor_reg, NOW)
         
         DONATIONS.append({

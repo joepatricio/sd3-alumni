@@ -117,6 +117,8 @@ export function getBankColor(bankName: string): string {
     if (format.includes('dbp') || format.includes('development bank')) return '#00529C';
     if (format.includes('gcash')) return '#007DF2';
     if (format.includes('maya')) return '#00C25A';
+    if (format.includes('qrph')) return '#FCD116';
+    if (format.includes('grab')) return '#00B14F';
 
     // Fallback colors for banks not specified
     const fallbacks = ['#64748b', '#78716c', '#0f766e', '#0369a1', '#6d28d9', '#be123c', '#c2410c'];

@@ -34,13 +34,10 @@ const DonationTableRow = memo(({ donation }: { donation: any }) => (
                 {donation.status}
             </span>
         </td>
-        <td className="px-6 py-4 text-gray-600">{donation.bankName || 'N/A'}</td>
-        <td className="px-6 py-4 text-gray-500 font-mono text-xs">{donation.donationReference}</td>
-        <td className="px-6 py-4 text-right">
-            <button disabled={donation.status !== 'Completed'} className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors hover:bg-brand-primary/10 h-8 px-3 text-brand-primary hover:text-brand-primary-hover disabled:pointer-events-none disabled:opacity-50">
-                {donation.status === 'Completed' ? 'View' : ''}
-            </button>
+        <td className="px-6 py-4 text-gray-600">
+            {donation.bankName?.includes('cs_') ? 'N/A' : donation.bankName || 'N/A'}
         </td>
+        <td className="px-6 py-4 text-gray-500 font-mono text-xs">{donation.donationReference}</td>
     </tr>
 ));
 
@@ -810,7 +807,12 @@ export function AdminDonations() {
 
                     <div className="p-4 bg-gray-50/50 border border-gray-100 rounded-lg flex flex-col gap-4">
                         <div className="flex justify-between items-center">
-                            <div className="text-sm font-medium text-gray-700">Filters</div>
+                            <div className="text-sm font-medium text-gray-700 flex flex-row gap-2">
+                                <span>Filters</span>
+                                <Badge variant="secondary" className="bg-brand-primary/10 text-brand-primary hover:bg-brand-primary/20 cursor-default">
+                                    {totalDonations} matching transactions
+                                </Badge>
+                            </div>
                             {!isTableLoading && (
                                 <div className="flex items-center gap-4">
                                     <div className="flex items-center gap-2">
@@ -835,9 +837,6 @@ export function AdminDonations() {
                                             <ChevronRight className="h-4 w-4" />
                                         </Button>
                                     </div>
-                                    <Badge variant="secondary" className="bg-brand-primary/10 text-brand-primary hover:bg-brand-primary/20 cursor-default">
-                                        {totalDonations} matching transactions
-                                    </Badge>
                                 </div>
                             )}
                         </div>
@@ -894,7 +893,7 @@ export function AdminDonations() {
                                         <SelectItem value="all">All</SelectItem>
                                         <SelectItem value="below_1000">Below 1000</SelectItem>
                                         <SelectItem value="1000_5000">1000 - 5000</SelectItem>
-                                        <SelectItem value="above_5000">5000 Above</SelectItem>
+                                        <SelectItem value="above_5000">Above 5000</SelectItem>
                                         <SelectItem value="custom">Custom</SelectItem>
                                     </SelectContent>
                                 </Select>
@@ -984,7 +983,6 @@ export function AdminDonations() {
                                     <th className="px-6 py-3 hover:bg-gray-100 transition-colors">
                                         <div className="flex items-center gap-1">Donation Reference</div>
                                     </th>
-                                    <th className="px-6 py-3 text-right">Receipt</th>
                                 </tr>
                             </thead>
                             <tbody>
