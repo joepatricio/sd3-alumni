@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@comp
 import { Button } from '@components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@components/ui/tabs';
 import { Input } from '@components/ui/input';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@components/ui/dialog';
 import { Label } from '@components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@components/ui/select';
 import { Textarea } from '@components/ui/textarea';
@@ -306,13 +306,11 @@ export function AdminUsers() {
         if (!editingUser) return;
 
         try {
-            const adminToken = sessionStorage.getItem('adminToken');
-            const headers = adminToken ? { Authorization: `Bearer ${adminToken}` } : undefined;
             await api.post(`/admin/users/${editingUser.id}/status`, {
                 statusName: editStatus,
                 reason: editReason,
                 expiryDate: editStatus === 'Suspended' ? editExpiryDate : null
-            }, { headers });
+            });
             setEditingUser(null);
             fetchUsersList();
         } catch (err) {
@@ -686,6 +684,9 @@ export function AdminUsers() {
                 <DialogContent>
                     <DialogHeader>
                         <DialogTitle>Edit User Status: {editingUser?.name}</DialogTitle>
+                        <DialogDescription>
+                            Update user account status, duration, and administrative record.
+                        </DialogDescription>
                     </DialogHeader>
                     <div className="space-y-4 py-4">
                         <div className="space-y-2">

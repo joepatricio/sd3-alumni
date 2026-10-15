@@ -26,13 +26,14 @@ from playwright.sync_api import sync_playwright, expect, Page, BrowserContext
 # ==============================================================================
 # TESTER CONFIGURATION - ADJUST VALUES BEFORE EXECUTION
 # ==============================================================================
-# BASE_URL = "localhost:5173"
-BASE_URL = "https://najealp.top"
+BASE_URL = "localhost:5173"
+# BASE_URL = "https://najealp.top"
 
 # Test Member Information
 # Note: Ensure the email is unique or updated before running a fresh registration.
+#TEST_USER_EMAIL = f"demo.{int(time.time())}@example.com"
+TEST_USER_EMAIL = "najealp@example.com"
 TEST_USER_NAME = "Patricio Jose Najeal"
-TEST_USER_EMAIL = f"demo.{int(time.time())}@example.com"
 TEST_USER_PASSWORD = "Password123!"
 TEST_USER_BATCH = 2024
 TEST_USER_DEGREE = "Bachelor of Science in Computer Engineering"
@@ -252,7 +253,7 @@ def stage_5_bulletin_interaction(page: Page, base_url: str):
     # Click first available bulletin card to view details
     bulletin_card = page.locator("a[href^='/bulletin/']").first
     expect(bulletin_card).to_be_visible(timeout=10000)
-    bulletin_card.click()
+    bulletin_card.click(force=True)
     page.wait_for_url(lambda u: "/bulletin/" in u, timeout=10000)
     print(f"[OK] Viewing bulletin detail at: {page.url}")
 
@@ -380,7 +381,8 @@ def stage_8_admin_elevation(admin_page: Page, base_url: str, admin_user: str, ad
 
         # Save Changes
         save_btn = dialog.locator("button:has-text('Save Changes')").first
-        save_btn.click()
+        save_btn.click(force=True)
+        expect(dialog).to_be_hidden(timeout=10000)
         print("[OK] Saved user status changes! Member is now elevated to Official status.")
         time.sleep(1)
     else:
@@ -389,6 +391,7 @@ def stage_8_admin_elevation(admin_page: Page, base_url: str, admin_user: str, ad
 
 # ------------------------------------------------------------------------------
 # STAGE 9: Official Event Creation & Scheduling
+# This part creates a false positive. User is unable to create event using this script
 # ------------------------------------------------------------------------------
 def stage_9_official_event_creation(user_page: Page, base_url: str):
     log_step(9, "Official Event Creation & Scheduling", "As an Official member, create and publish a new campus event.")
@@ -435,7 +438,7 @@ def stage_9_official_event_creation(user_page: Page, base_url: str):
     # Attach demo banner image if sample file exists
     sample_image = os.path.abspath(r"docs\277a3b3d-763f-4a79-8d22-af02475fb976.jpg")
     file_input = modal.locator("input[type='file']").first
-    if os.path.exists(sample_image) and file_input.is_attached():
+    if os.path.exists(sample_image) and file_input.count() > 0:
         file_input.set_input_files(sample_image)
         print("[OK] Attached event banner image.")
         time.sleep(1)

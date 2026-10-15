@@ -28,6 +28,7 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 export const api = axios.create({
     baseURL: API_BASE_URL,
+    withCredentials: true,
     headers: {
         'Content-Type': 'application/json',
     },
@@ -41,15 +42,14 @@ api.interceptors.request.use(config => {
         config.url = config.url.substring(1);
     }
 
-    if (!config.headers.Authorization) {
-        const adminToken = sessionStorage.getItem('adminToken');
-        const userToken = localStorage.getItem('token') || sessionStorage.getItem('token');
-        const token = (config.url?.startsWith('admin/') || config.url?.startsWith('api/admin/'))
-            ? (adminToken || userToken)
-            : (userToken || adminToken);
-
-        if (token) {
-            config.headers.Authorization = `Bearer ${token}`;
+    const headers = config.headers as any;
+    const existingAuth = headers?.Authorization || headers?.authorization || (headers?.get && headers.get('Authorization'));
+    if (existingAuth === 'Bearer null' || existingAuth === 'Bearer undefined') {
+        if (headers?.set && typeof headers.set === 'function') {
+            headers.set('Authorization', undefined);
+        } else if (headers) {
+            delete headers.Authorization;
+            delete headers.authorization;
         }
     }
     return config;

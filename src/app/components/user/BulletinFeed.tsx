@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
-import { Clock, FileText, Calendar } from 'lucide-react';
+import { FileText, Calendar } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { api, type BulletinData, type ProfileData } from '@/app/views/api';
-import { DEFAULT_PROFILE, formatDate } from '@/app/views/formatters';
+import { DEFAULT_PROFILE, formatDate, getCategoryColor } from '@/app/views/formatters';
 
 export function BulletinFeed() {
   const [bulletins, setBulletins] = useState<BulletinData[]>([]);
@@ -126,8 +126,15 @@ export function BulletinFeed() {
     );
   }
 
+  const getCategoryName = (b: BulletinData) => {
+    return (typeof b.category === 'object' ? b.category?.bulletinCategoryName : b.category)
+      || b.bulletinCategory?.bulletinCategoryName
+      || 'General';
+  };
+
   const featured = displayBulletins[0];
   const featuredAuthor = profilesMap[featured.authorId]?.userName || "Unknown Author";
+  const featuredCategory = getCategoryName(featured);
 
   return (
     <section id="bulletin" className="py-16 bg-gray-50">
@@ -166,14 +173,14 @@ export function BulletinFeed() {
               </span>
             </div>
             <div className="flex flex-col p-8 h-full">
-              <div className="flex items-center gap-4 mb-4">
+              <div className="flex items-center gap-3 mb-4 flex-wrap">
                 <span className="text-sm text-gray-500 flex items-center gap-1">
                   <Calendar className="w-4 h-4" />
                   {formatDate(featured.bulletinDate, 'long')}
                 </span>
-                <span className="text-sm text-gray-500 flex items-center gap-1">
-                  <Clock className="w-4 h-4" />
-                  {featured.readTimeMinutes} min read
+                <span className="text-gray-300">•</span>
+                <span className={`px-2.5 py-0.5 rounded-full text-xs font-semibold shadow-xs ${getCategoryColor(featuredCategory)}`}>
+                  {featuredCategory}
                 </span>
               </div>
               <h3 className="text-2xl font-bold mb-4 line-clamp-2">{featured.title}</h3>
@@ -196,6 +203,7 @@ export function BulletinFeed() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {displayBulletins.slice(1).map((bulletin) => {
             const authorName = profilesMap[bulletin.authorId]?.userName || "Unknown Author";
+            const bulletinCategory = getCategoryName(bulletin);
             const bulletinImg = bulletin.bulletinImage || bulletin.author?.profile?.profileImage || DEFAULT_PROFILE;
             const isContain = !bulletin.bulletinImage;
             return (
@@ -216,14 +224,13 @@ export function BulletinFeed() {
                       }`} />
                 </div>
                 <div className="p-6 flex flex-col flex-grow min-h-0">
-                  <div className="flex items-center gap-4 mb-3">
+                  <div className="flex items-center justify-between gap-2 mb-3">
                     <span className="text-xs text-gray-500 flex items-center gap-1">
                       <Calendar className="w-3 h-3" />
                       {formatDate(bulletin.bulletinDate, 'long')}
                     </span>
-                    <span className="text-xs text-gray-500 flex items-center gap-1">
-                      <Clock className="w-3 h-3" />
-                      {bulletin.readTimeMinutes} min read
+                    <span className={`px-2 py-0.5 rounded-full text-[11px] font-semibold shadow-xs ${getCategoryColor(bulletinCategory)}`}>
+                      {bulletinCategory}
                     </span>
                   </div>
                   <h3 className="text-lg font-semibold mb-2 line-clamp-2">

@@ -58,10 +58,10 @@ export function Login() {
                 password: values.password,
                 rememberMe: values.rememberMe
             });
-            const { token } = response.data;
+            const { user } = response.data;
 
-            if (token) {
-                setSession(token, values.rememberMe);
+            if (user) {
+                setSession({ userId: user.id, email: user.email }, values.rememberMe);
             }
 
             toast.success("Welcome back!", {

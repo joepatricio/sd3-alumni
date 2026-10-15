@@ -74,54 +74,33 @@ export function AdminLayout() {
     const location = useLocation();
     const scrollRef = useRef<HTMLDivElement>(null);
 
-    const [token, setToken] = useState(sessionStorage.getItem('adminToken'));
-    const [isCheckingToken, setIsCheckingToken] = useState(!sessionStorage.getItem('adminToken'));
+    const [username, setUsername] = useState<string>('Administrator');
+    const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
 
     useEffect(() => {
-        let timeoutId: any;
-        const handleStorageEvent = (e: StorageEvent) => {
-            if (e.key === 'logoutAdminEvent') {
-                sessionStorage.removeItem('adminToken');
-                setToken(null);
-            } else if (e.key === 'requestAdminSession' && sessionStorage.getItem('adminToken')) {
-                localStorage.setItem('shareAdminSession', sessionStorage.getItem('adminToken')!);
-                localStorage.removeItem('shareAdminSession');
-            } else if (e.key === 'shareAdminSession' && e.newValue && !sessionStorage.getItem('adminToken')) {
-                sessionStorage.setItem('adminToken', e.newValue);
-                setToken(e.newValue);
-                setIsCheckingToken(false);
+        let isMounted = true;
+        const checkAuth = async () => {
+            try {
+                const res = await api.get('/auth/admin/me');
+                if (isMounted) {
+                    if (res.data?.admin?.username) {
+                        setUsername(res.data.admin.username);
+                    }
+                    setIsAuthenticated(true);
+                }
+            } catch {
+                if (isMounted) {
+                    setIsAuthenticated(false);
+                }
             }
         };
 
-        window.addEventListener('storage', handleStorageEvent);
-
-        if (!sessionStorage.getItem('adminToken')) {
-            localStorage.setItem('requestAdminSession', Date.now().toString());
-            localStorage.removeItem('requestAdminSession');
-            timeoutId = setTimeout(() => {
-                setIsCheckingToken(false);
-            }, 500); // Wait for potential broadcast
-        } else {
-            setIsCheckingToken(false);
-        }
-
+        checkAuth();
         return () => {
-            window.removeEventListener('storage', handleStorageEvent);
-            clearTimeout(timeoutId);
+            isMounted = false;
         };
     }, []);
 
-    let username = 'Administrator';
-    if (token) {
-        try {
-            const payload = JSON.parse(atob(token.split('.')[1]));
-            if (payload && payload.username) {
-                username = payload.username;
-            }
-        } catch (e) {
-            console.error('Failed to parse token payload', e);
-        }
-    }
     const avatarLetter = username.charAt(0).toUpperCase();
 
     const scrollToTop = () => {
@@ -146,19 +125,18 @@ export function AdminLayout() {
         }
     }, []);
 
-
-    const handleLogout = () => {
-        sessionStorage.removeItem('adminToken');
-        localStorage.setItem('logoutAdminEvent', Date.now().toString());
-        localStorage.removeItem('logoutAdminEvent');
+    const handleLogout = async () => {
+        try {
+            await api.post('/auth/admin/logout');
+        } catch {}
         window.location.href = '/admin/login'; // Hard redirect to clear session completely
     };
 
-    if (isCheckingToken) {
+    if (isAuthenticated === null) {
         return <div className="flex h-screen items-center justify-center"><Loader2 className="animate-spin text-brand-primary h-8 w-8" /></div>;
     }
 
-    if (!token) {
+    if (!isAuthenticated) {
         return <Navigate to="/admin/login" replace />;
     }
 

@@ -27,6 +27,20 @@ export function Events() {
     const [allCategories, setAllCategories] = useState<string[]>([]);
     const [totalEvents, setTotalEvents] = useState(0);
     const [isCreateOpen, setIsCreateOpen] = useState(false);
+    const [isCreateLoading, setIsCreateLoading] = useState(false);
+
+    const handleCreateEventClick = async () => {
+        if (isCreateLoading || isCreateOpen) return;
+        setIsCreateLoading(true);
+        try {
+            await loadCreateEventModal();
+            setIsCreateOpen(true);
+        } catch (error) {
+            console.error("Failed to load create event modal:", error);
+        } finally {
+            setIsCreateLoading(false);
+        }
+    };
 
     useEffect(() => {
         const fetchCategories = async () => {
@@ -156,16 +170,23 @@ export function Events() {
                         </div>
                         {currentUserStatus === 'Official' && (
                             <button
+                                disabled={isCreateLoading || isCreateOpen}
                                 onMouseEnter={loadCreateEventModal}
                                 onFocus={loadCreateEventModal}
-                                onClick={() => {
-                                    loadCreateEventModal();
-                                    setIsCreateOpen(true);
-                                }}
-                                className="flex items-center justify-center gap-2 bg-brand-primary text-white px-6 py-3 rounded-lg hover:bg-brand-primary-hover transition-colors font-semibold"
+                                onClick={handleCreateEventClick}
+                                className="flex items-center justify-center gap-2 bg-brand-primary text-white px-6 py-3 rounded-lg hover:bg-brand-primary-hover transition-colors font-semibold disabled:opacity-60 disabled:cursor-not-allowed"
                             >
-                                <Plus className="w-5 h-5" />
-                                Create Event
+                                {isCreateLoading ? (
+                                    <>
+                                        <Loader2 className="w-5 h-5 animate-spin" />
+                                        <span>Loading...</span>
+                                    </>
+                                ) : (
+                                    <>
+                                        <Plus className="w-5 h-5" />
+                                        <span>Create Event</span>
+                                    </>
+                                )}
                             </button>
                         )}
                     </div>

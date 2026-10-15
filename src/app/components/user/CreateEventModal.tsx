@@ -11,6 +11,7 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { ImageUpload } from './ImageUpload';
 import { api } from '@/app/views/api';
+import { useAuth } from '@/app/views/auth';
 
 // Fix for default marker icon in react-leaflet
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -175,6 +176,7 @@ interface CreateEventModalProps {
 }
 
 export function CreateEventModal({ trigger, initialData, isAdmin, open: externalOpen, onOpenChange: externalOnOpenChange }: CreateEventModalProps) {
+    const { session } = useAuth();
     const [internalOpen, setInternalOpen] = useState(false);
     const open = externalOpen !== undefined ? externalOpen : internalOpen;
     const setOpen = externalOnOpenChange || setInternalOpen;
@@ -843,6 +845,7 @@ export function CreateEventModal({ trigger, initialData, isAdmin, open: external
     ), [mapCenter, mapZoom, currentLat, currentLng]);
 
     async function onSubmit(values: z.infer<typeof formSchema>) {
+        if (form.formState.isSubmitting) return;
         // Construct final time strings in military time format
         const formatMilitaryTime = (h: string, m: string, ampm: string) => {
             let hour = parseInt(h, 10);
@@ -893,8 +896,6 @@ export function CreateEventModal({ trigger, initialData, isAdmin, open: external
         try {
             const isEditMode = !!initialData;
             const endpoint = isAdmin ? `/admin/events` : `/events`;
-            const token = sessionStorage.getItem('adminToken') || localStorage.getItem('token') || sessionStorage.getItem('token');
-            const headers = token ? { Authorization: `Bearer ${token}` } : undefined;
 
             if (isEditMode && initialData?.id) {
                 const patchEndpoint = isAdmin ? `/admin/events/${initialData.id}` : `/events/${initialData.id}`;
@@ -912,28 +913,22 @@ export function CreateEventModal({ trigger, initialData, isAdmin, open: external
                     }
                 }
 
-                await api.patch(patchEndpoint, payload, { headers });
+                await api.patch(patchEndpoint, payload);
                 
                 // If it was valid and now it's pending (because !isAdmin), decrement eventsCreated
-                if (!isAdmin) {
+                if (!isAdmin && session?.userId) {
                     const validStatuses = ['Approved', 'Concluded'];
                     const oldStatus = initialData.eventStatus?.statusName;
                     if (oldStatus && validStatuses.includes(oldStatus)) {
                         try {
-                            const userToken = localStorage.getItem('token') || sessionStorage.getItem('token');
-                            if (userToken) {
-                                const parsed = JSON.parse(atob(userToken.split('.')[1]));
-                                const currentUserId = parsed?.id;
-                                if (currentUserId) {
-                                    const statsRes = await api.get('/userStatistics', { params: { userId: currentUserId } });
-                                    const stats = Array.isArray(statsRes.data) ? statsRes.data : (statsRes.data?.data || []);
-                                    if (stats && stats.length > 0) {
-                                        const currentStats = stats[0];
-                                        await api.patch(`/userStatistics/${currentStats.id}`, {
-                                            eventsCreated: Math.max(0, (currentStats.eventsCreated || 0) - 1)
-                                        });
-                                    }
-                                }
+                            const currentUserId = session.userId;
+                            const statsRes = await api.get('/userStatistics', { params: { userId: currentUserId } });
+                            const stats = Array.isArray(statsRes.data) ? statsRes.data : (statsRes.data?.data || []);
+                            if (stats && stats.length > 0) {
+                                const currentStats = stats[0];
+                                await api.patch(`/userStatistics/${currentStats.id}`, {
+                                    eventsCreated: Math.max(0, (currentStats.eventsCreated || 0) - 1)
+                                });
                             }
                         } catch (statErr) {
                             console.error("Failed to decrement user statistics for event edit:", statErr);
@@ -941,7 +936,7 @@ export function CreateEventModal({ trigger, initialData, isAdmin, open: external
                     }
                 }
             } else {
-                await api.post(endpoint, payload, { headers });
+                await api.post(endpoint, payload);
             }
 
             const isPending = !isAdmin && isEditMode;
@@ -1031,7 +1026,11 @@ export function CreateEventModal({ trigger, initialData, isAdmin, open: external
                                             </FormControl>
                                             <SelectContent>
                                                 {categories.map((category) => (
-                                                    <SelectItem key={category.id} value={category.eventCategoryName}>
+                                                    <SelectItem
+                                                        key={category.id}
+                                                        value={category.eventCategoryName}
+                                                        className="cursor-pointer transition-colors hover:bg-brand-primary hover:text-white focus:bg-brand-primary focus:text-white data-[highlighted]:bg-brand-primary data-[highlighted]:text-white data-[highlighted]:[&_svg]:text-white hover:[&_svg]:text-white focus:[&_svg]:text-white"
+                                                    >
                                                         {category.eventCategoryName}
                                                     </SelectItem>
                                                 ))}
@@ -1454,11 +1453,13 @@ export function CreateEventModal({ trigger, initialData, isAdmin, open: external
                         </div>
 
                         <DialogFooter>
-                            <Button className="bg-brand-primary  hover:bg-brand-primary-hover" type="submit" disabled={form.formState.isSubmitting}>
+                            <Button className="bg-brand-primary hover:bg-brand-primary-hover" type="submit" disabled={form.formState.isSubmitting}>
                                 {form.formState.isSubmitting && (
                                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                                 )}
-                                {isEditMode ? 'Save Changes' : 'Create Event'}
+                                {form.formState.isSubmitting
+                                    ? (isEditMode ? 'Saving Changes...' : 'Creating Event...')
+                                    : (isEditMode ? 'Save Changes' : 'Create Event')}
                             </Button>
                         </DialogFooter>
                     </form>

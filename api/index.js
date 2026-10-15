@@ -172,11 +172,16 @@ app.post('/api/upload', upload.single('image'), (req, res) => {
 // Authentication Middleware
 const authenticateToken = (req, res, next) => {
     const authHeader = req.headers['authorization'];
-    const token = authHeader && authHeader.split(' ')[1];
-    if (token == null) return res.sendStatus(401);
+    let token = authHeader && authHeader.split(' ')[1];
+    if (!token || token === 'null' || token === 'undefined') {
+        token = req.cookies?.token;
+    }
+    if (!token || token === 'null' || token === 'undefined') {
+        return res.status(401).json({ error: 'Unauthorized: Authentication token required' });
+    }
 
     jwt.verify(token, JWT_SECRET, (err, user) => {
-        if (err) return res.sendStatus(403);
+        if (err) return res.status(403).json({ error: 'Forbidden: Invalid token' });
         req.user = user;
         next();
     });
@@ -184,11 +189,18 @@ const authenticateToken = (req, res, next) => {
 
 const authenticateAdminToken = (req, res, next) => {
     const authHeader = req.headers['authorization'];
-    const token = authHeader && authHeader.split(' ')[1];
-    if (token == null) return res.sendStatus(401);
+    let token = authHeader && authHeader.split(' ')[1];
+    if (!token || token === 'null' || token === 'undefined') {
+        token = req.cookies?.adminToken || req.cookies?.token;
+    }
+    if (!token || token === 'null' || token === 'undefined') {
+        return res.status(401).json({ error: 'Unauthorized: Admin authentication token required' });
+    }
 
     jwt.verify(token, JWT_SECRET, (err, admin) => {
-        if (err || admin.role !== 'admin') return res.sendStatus(403);
+        if (err || admin.role !== 'admin') {
+            return res.status(403).json({ error: 'Forbidden: Admin access required' });
+        }
         req.admin = admin;
         req.user = admin;
         next();
@@ -199,8 +211,11 @@ const getAdminId = (req) => {
     if (req.admin?.id) return req.admin.id;
     if (req.user?.role === 'admin' && req.user.id) return req.user.id;
     const authHeader = req.headers['authorization'];
-    const token = authHeader && authHeader.split(' ')[1];
-    if (token) {
+    let token = authHeader && authHeader.split(' ')[1];
+    if (!token || token === 'null' || token === 'undefined') {
+        token = req.cookies?.adminToken || req.cookies?.token;
+    }
+    if (token && token !== 'null' && token !== 'undefined') {
         try {
             const decoded = jwt.verify(token, JWT_SECRET);
             if (decoded?.role === 'admin' && decoded.id) {
@@ -233,7 +248,10 @@ const contentLimiter = rateLimit({
     keyGenerator: (req, res) => {
         // Limit by user ID if authenticated (either from decoded token in headers or req user object)
         const authHeader = req.headers['authorization'];
-        const token = authHeader && authHeader.split(' ')[1];
+        let token = authHeader && authHeader.split(' ')[1];
+        if (!token || token === 'null' || token === 'undefined') {
+            token = req.cookies?.token;
+        }
         if (token) {
             try {
                 const decoded = jwt.verify(token, process.env.JWT_SECRET);
@@ -483,6 +501,16 @@ app.post('/api/auth/login', authLimiter, async (req, res) => {
             { expiresIn: rememberMe ? '30d' : '24h' }
         );
 
+        const cookieOptions = {
+            httpOnly: true,
+            sameSite: 'lax',
+            secure: process.env.NODE_ENV === 'production',
+            path: '/',
+            ...(rememberMe ? { maxAge: 30 * 24 * 60 * 60 * 1000 } : {})
+        };
+
+        res.cookie('token', token, cookieOptions);
+
         res.json({
             token,
             user: {
@@ -527,11 +555,40 @@ app.post('/api/auth/admin/login', authLimiter, async (req, res) => {
             { expiresIn: '24h' }
         );
 
+        res.cookie('adminToken', token, {
+            httpOnly: true,
+            sameSite: 'lax',
+            secure: process.env.NODE_ENV === 'production',
+            path: '/',
+        });
+
         res.json({ token, admin: { id: admin.id, username: admin.username } });
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: 'Internal server error' });
     }
+});
+
+// Admin Logout
+app.post('/api/auth/admin/logout', (req, res) => {
+    res.clearCookie('adminToken', { path: '/' });
+    res.json({ message: 'Admin logged out successfully' });
+});
+
+// User Logout
+app.post('/api/auth/logout', (req, res) => {
+    res.clearCookie('token', { path: '/' });
+    res.json({ message: 'User logged out successfully' });
+});
+
+// Admin Session Validation
+app.get('/api/auth/admin/me', authenticateAdminToken, (req, res) => {
+    res.json({
+        admin: {
+            id: req.admin.id,
+            username: req.admin.username
+        }
+    });
 });
 
 // Get current user profile for auth validation
@@ -873,7 +930,10 @@ async function resolveEventData(body, isUpdate = false, existingEvent = null, re
     if (!isUpdate && !data.authorId) {
         if (req) {
             const authHeader = req.headers['authorization'];
-            const token = authHeader && authHeader.split(' ')[1];
+            let token = authHeader && authHeader.split(' ')[1];
+            if (!token || token === 'null' || token === 'undefined') {
+                token = req.cookies?.token;
+            }
             if (token) {
                 try {
                     const decoded = jwt.verify(token, JWT_SECRET);
@@ -1001,7 +1061,10 @@ async function resolveBulletinData(body, isUpdate = false, req = null) {
     if (!isUpdate && !data.authorId) {
         if (req) {
             const authHeader = req.headers['authorization'];
-            const token = authHeader && authHeader.split(' ')[1];
+            let token = authHeader && authHeader.split(' ')[1];
+            if (!token || token === 'null' || token === 'undefined') {
+                token = req.cookies?.token;
+            }
             if (token) {
                 try {
                     const decoded = jwt.verify(token, JWT_SECRET);
@@ -1096,8 +1159,8 @@ async function resolveBulletinData(body, isUpdate = false, req = null) {
     return data;
 }
 
-// Admin PATCH Event Status
-app.patch('/api/admin/events/:id/status', authenticateAdminToken, async (req, res) => {
+// Admin Update Event Status
+const handleAdminUpdateEventStatus = async (req, res) => {
     try {
         const { id } = req.params;
         const { status } = req.body;
@@ -1115,7 +1178,10 @@ app.patch('/api/admin/events/:id/status', authenticateAdminToken, async (req, re
         console.error('Failed to update event status:', error);
         res.status(500).json({ error: 'Failed to update event status' });
     }
-});
+};
+app.patch('/api/admin/events/:id/status', authenticateAdminToken, handleAdminUpdateEventStatus);
+app.post('/api/admin/events/:id/status', authenticateAdminToken, handleAdminUpdateEventStatus);
+app.put('/api/admin/events/:id/status', authenticateAdminToken, handleAdminUpdateEventStatus);
 
 // Admin POST Event
 app.post('/api/admin/events', authenticateAdminToken, contentLimiter, async (req, res) => {
@@ -1381,8 +1447,8 @@ async function updateBulletinStatusAndStats({ bulletinId, newStatusName, adminId
     });
 }
 
-// Admin PATCH Bulletin Status
-app.patch('/api/admin/bulletins/:id/status', authenticateAdminToken, async (req, res) => {
+// Admin Update Bulletin Status
+const handleAdminUpdateBulletinStatus = async (req, res) => {
     const { id } = req.params;
     const { status } = req.body;
     try {
@@ -1399,7 +1465,10 @@ app.patch('/api/admin/bulletins/:id/status', authenticateAdminToken, async (req,
         console.error('Failed to update bulletin status:', error);
         res.status(500).json({ error: 'Failed to update bulletin status' });
     }
-});
+};
+app.patch('/api/admin/bulletins/:id/status', authenticateAdminToken, handleAdminUpdateBulletinStatus);
+app.post('/api/admin/bulletins/:id/status', authenticateAdminToken, handleAdminUpdateBulletinStatus);
+app.put('/api/admin/bulletins/:id/status', authenticateAdminToken, handleAdminUpdateBulletinStatus);
 
 // Admin POST Bulletin
 app.post('/api/admin/bulletins', authenticateAdminToken, contentLimiter, async (req, res) => {
@@ -1741,7 +1810,7 @@ app.post('/api/admin/users', authenticateAdminToken, async (req, res) => {
 });
 
 // Admin Update User Status & Record
-app.post('/api/admin/users/:id/status', authenticateAdminToken, async (req, res) => {
+const handleAdminUpdateUserStatus = async (req, res) => {
     const { id } = req.params;
     const { userStatusId, statusName, reason, expiryDate } = req.body;
     try {
@@ -1819,7 +1888,10 @@ app.post('/api/admin/users/:id/status', authenticateAdminToken, async (req, res)
         console.error('Failed to update user status:', error);
         res.status(500).json({ error: 'Failed to update user status' });
     }
-});
+};
+app.post('/api/admin/users/:id/status', authenticateAdminToken, handleAdminUpdateUserStatus);
+app.patch('/api/admin/users/:id/status', authenticateAdminToken, handleAdminUpdateUserStatus);
+app.put('/api/admin/users/:id/status', authenticateAdminToken, handleAdminUpdateUserStatus);
 
 // =======================
 // GENERIC FALLBACK CRUD ROUTER (COMPATIBILITY ENGINE)
