@@ -72,6 +72,8 @@ export function CreateUserModal({
         }
 
         try {
+            const adminToken = sessionStorage.getItem('adminToken');
+            const headers = adminToken ? { Authorization: `Bearer ${adminToken}` } : undefined;
             await api.post('/admin/users', {
                 fullName: createName,
                 email: createEmail,
@@ -81,7 +83,7 @@ export function CreateUserModal({
                 gender: createGender === 'Other' ? '' : createGender,
                 userStatusId: createStatusId,
                 reason: createReason
-            });
+            }, { headers });
 
             resetForm();
             onUserCreated();

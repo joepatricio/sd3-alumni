@@ -33,12 +33,24 @@ export const api = axios.create({
     },
 });
 
-// Ensure that all requests correctly use the /api prefix or relative paths
+// Ensure that all requests correctly use the /api prefix or relative paths, and attach tokens
 api.interceptors.request.use(config => {
     // If the baseURL already ends with /api or /api/, and the request url starts with /,
     // Axios will strip the /api path. To fix this, we strip the leading slash from the request url.
     if (config.url && config.url.startsWith('/')) {
         config.url = config.url.substring(1);
+    }
+
+    if (!config.headers.Authorization) {
+        const adminToken = sessionStorage.getItem('adminToken');
+        const userToken = localStorage.getItem('token') || sessionStorage.getItem('token');
+        const token = (config.url?.startsWith('admin/') || config.url?.startsWith('api/admin/'))
+            ? (adminToken || userToken)
+            : (userToken || adminToken);
+
+        if (token) {
+            config.headers.Authorization = `Bearer ${token}`;
+        }
     }
     return config;
 });

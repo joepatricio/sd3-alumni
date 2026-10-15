@@ -166,81 +166,85 @@ async function classifyPendingBulletins() {
 }
 
 async function classifyPendingUsers() {
-    const pendingUserStatus = await prisma.userStatus.findFirst({ where: { statusName: 'Pending' } });
-    const regularUserStatus = await prisma.userStatus.findFirst({ where: { statusName: 'Regular' } });
+    try {
+        const pendingUserStatus = await prisma.userStatus.findFirst({ where: { statusName: 'Pending' } });
+        const regularUserStatus = await prisma.userStatus.findFirst({ where: { statusName: 'Regular' } });
 
-    if (!pendingUserStatus || !regularUserStatus) {
-        console.log("Pending or Regular user status not found");
-        return;
-    }
-    const pendingUsers = await prisma.user.findMany({
-        where: { userStatusId: pendingUserStatus.id },
-        include: { profile: true, auth: true }
-    });
-
-    if (!pendingUsers || pendingUsers.length === 0) {
-        console.log("No pending users found");
-        return;
-    }
-
-    for (const user of pendingUsers) {
-        console.log(`Auto-approving User: ${user.id}`);
-
-        // Commented out AI classification for users
-        /*
-        const payload = {
-            userName: user.profile?.userName,
-            email: user.auth?.email
-        };
-        const payloadStr = JSON.stringify(payload);
-        const stateStr = `A user has registered: ${payloadStr}`;
-        const questions = {
-            isUnsafe: { type: "noul", instructions: "Is this user unsafe to register?" },
-            isSafe: { type: "noul", instructions: "Is this user safe to register?" }
-        };
-
-        const { isUnsafe, isSafe, responseText } = await askClef(stateStr, questions, null);
-        */
-
-        let finalDecision = "Approved";
-        let newStatusId = regularUserStatus.id;
-
-        if (newStatusId !== pendingUserStatus.id) {
-            await prisma.user.update({
-                where: { id: user.id },
-                data: { userStatusId: newStatusId }
-            });
+        if (!pendingUserStatus || !regularUserStatus) {
+            console.warn("Pending or Regular user status not found in database.");
+            return;
         }
 
-        await prisma.clefLog.create({
-            data: {
-                targetId: user.id,
-                targetType: 'User',
-                requestPayload: null,
-                responsePayload: null,
-                decision: finalDecision
-            }
+        const pendingUsers = await prisma.user.findMany({
+            where: { userStatusId: pendingUserStatus.id },
+            include: { profile: true, auth: true }
         });
-        console.log(`User ${user.id} -> ${finalDecision}`);
+
+        if (!pendingUsers || pendingUsers.length === 0) {
+            return;
+        }
+
+        for (const user of pendingUsers) {
+            console.log(`Auto-approving User: ${user.id}`);
+
+            let finalDecision = "Approved";
+            let newStatusId = regularUserStatus.id;
+
+            // Atomically update user status and add status record
+            await prisma.$transaction(async (tx) => {
+                const record = await tx.record.create({
+                    data: {
+                        userId: user.id,
+                        userStatusId: newStatusId,
+                        description: "Automatically approved by system",
+                        adminId: null
+                    }
+                });
+
+                await tx.user.update({
+                    where: { id: user.id },
+                    data: {
+                        userStatusId: newStatusId,
+                        currentRecordId: record.id
+                    }
+                });
+            });
+
+            await prisma.clefLog.create({
+                data: {
+                    targetId: user.id,
+                    targetType: 'User',
+                    requestPayload: null,
+                    responsePayload: null,
+                    decision: finalDecision
+                }
+            });
+            console.log(`User ${user.id} -> ${finalDecision}`);
+        }
+    } catch (err) {
+        console.error("Error in classifyPendingUsers:", err);
     }
 }
 
 async function runTasks() {
-    console.log(`[${new Date().toISOString()}] Running bulletin classifier task...`);
+    console.log(`[${new Date().toISOString()}] Running classifier tasks...`);
     try {
         await classifyPendingBulletins();
     } catch (e) {
-        console.error("Task Error:", e);
+        console.error("Bulletin Task Error:", e);
+    }
+
+    try {
+        await classifyPendingUsers();
+    } catch (e) {
+        console.error("User Task Error:", e);
     }
 }
 
 console.log(`Starting automated content classifier (bulletins and users every ${INTERVAL} mins)...`);
-runTasks();
-classifyPendingUsers();
+runTasks().catch(console.error);
 
 setInterval(() => {
-    Promise.all([
-        runTasks(),
-        classifyPendingUsers()
-    ]).catch(console.error);
+    runTasks().catch(console.error);
 }, INTERVAL * 60 * 1000);
+

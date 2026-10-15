@@ -306,11 +306,13 @@ export function AdminUsers() {
         if (!editingUser) return;
 
         try {
+            const adminToken = sessionStorage.getItem('adminToken');
+            const headers = adminToken ? { Authorization: `Bearer ${adminToken}` } : undefined;
             await api.post(`/admin/users/${editingUser.id}/status`, {
                 statusName: editStatus,
                 reason: editReason,
                 expiryDate: editStatus === 'Suspended' ? editExpiryDate : null
-            });
+            }, { headers });
             setEditingUser(null);
             fetchUsersList();
         } catch (err) {

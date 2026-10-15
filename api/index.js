@@ -190,9 +190,27 @@ const authenticateAdminToken = (req, res, next) => {
     jwt.verify(token, JWT_SECRET, (err, admin) => {
         if (err || admin.role !== 'admin') return res.sendStatus(403);
         req.admin = admin;
+        req.user = admin;
         next();
     });
 };
+
+const getAdminId = (req) => {
+    if (req.admin?.id) return req.admin.id;
+    if (req.user?.role === 'admin' && req.user.id) return req.user.id;
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+    if (token) {
+        try {
+            const decoded = jwt.verify(token, JWT_SECRET);
+            if (decoded?.role === 'admin' && decoded.id) {
+                return decoded.id;
+            }
+        } catch { }
+    }
+    return req.body?.adminId || null;
+};
+
 
 // =======================
 // AUTH ROUTES & CUSTOM OVERRIDES
@@ -959,6 +977,11 @@ async function resolveEventData(body, isUpdate = false, existingEvent = null, re
     }
     delete data.image;
 
+    if (req && !data.adminId) {
+        const extractedAdminId = getAdminId(req);
+        if (extractedAdminId) data.adminId = extractedAdminId;
+    }
+
     // Remove non-scalar or relation fields
     delete data.id;
     delete data.author;
@@ -1055,6 +1078,11 @@ async function resolveBulletinData(body, isUpdate = false, req = null) {
         data.readTimeMinutes = 5;
     }
 
+    if (req && !data.adminId) {
+        const extractedAdminId = getAdminId(req);
+        if (extractedAdminId) data.adminId = extractedAdminId;
+    }
+
     // Remove non-scalar or relation fields
     delete data.id;
     delete data.author;
@@ -1072,9 +1100,9 @@ async function resolveBulletinData(body, isUpdate = false, req = null) {
 app.patch('/api/admin/events/:id/status', authenticateAdminToken, async (req, res) => {
     try {
         const { id } = req.params;
-        const { status, adminId } = req.body;
+        const { status } = req.body;
 
-        const effectiveAdminId = req.user?.id || adminId;
+        const effectiveAdminId = getAdminId(req);
         const updatedEvent = await updateEventStatusAndStats({
             eventId: id,
             newStatusName: status,
@@ -1099,7 +1127,7 @@ app.post('/api/admin/events', authenticateAdminToken, contentLimiter, async (req
         const authorId = req.body.authorId || existingUser?.id;
         if (!authorId) return res.status(400).json({ error: 'Author user not found' });
 
-        const effectiveAdminId = req.user?.id || req.body.adminId;
+        const effectiveAdminId = getAdminId(req);
         const eventData = await resolveEventData({
             ...req.body,
             authorId,
@@ -1138,7 +1166,7 @@ const handleAdminUpdateEvent = async (req, res) => {
         if (!existingEvent) return res.status(404).json({ error: 'Event not found' });
 
         const eventData = await resolveEventData(req.body, true, existingEvent);
-        const effectiveAdminId = req.user?.id || req.body.adminId;
+        const effectiveAdminId = getAdminId(req);
         const newStatusName = req.body.status || req.body.statusName;
 
         const updatedEvent = await updateEventStatusAndStats({
@@ -1356,9 +1384,9 @@ async function updateBulletinStatusAndStats({ bulletinId, newStatusName, adminId
 // Admin PATCH Bulletin Status
 app.patch('/api/admin/bulletins/:id/status', authenticateAdminToken, async (req, res) => {
     const { id } = req.params;
-    const { status, adminId } = req.body;
+    const { status } = req.body;
     try {
-        const effectiveAdminId = req.user?.id || adminId;
+        const effectiveAdminId = getAdminId(req);
         const updatedBulletin = await updateBulletinStatusAndStats({
             bulletinId: id,
             newStatusName: status,
@@ -1383,7 +1411,7 @@ app.post('/api/admin/bulletins', authenticateAdminToken, contentLimiter, async (
         const authorId = req.body.authorId || existingUser?.id;
         if (!authorId) return res.status(400).json({ error: 'Author user not found' });
 
-        const effectiveAdminId = req.user?.id || req.body.adminId;
+        const effectiveAdminId = getAdminId(req);
         const bulletinData = await resolveBulletinData({
             ...req.body,
             authorId,
@@ -1422,7 +1450,7 @@ const handleAdminUpdateBulletin = async (req, res) => {
         if (!existingBulletin) return res.status(404).json({ error: 'Bulletin not found' });
 
         const bulletinData = await resolveBulletinData(req.body, true);
-        const effectiveAdminId = req.user?.id || req.body.adminId;
+        const effectiveAdminId = getAdminId(req);
         const newStatusName = req.body.status || req.body.statusName;
 
         const updatedBulletin = await updateBulletinStatusAndStats({
@@ -1628,7 +1656,7 @@ app.get('/api/admin/dashboard-stats', authenticateAdminToken, async (req, res) =
 
 
 // Admin POST Create User
-app.post('/api/admin/users', async (req, res) => {
+app.post('/api/admin/users', authenticateAdminToken, async (req, res) => {
     const { fullName, email, password, degreeId, batch, gender, userStatusId, reason } = req.body;
     try {
         if (!fullName || !email || !password || !degreeId) {
@@ -1653,6 +1681,7 @@ app.post('/api/admin/users', async (req, res) => {
 
         const passwordHash = bcrypt.hashSync(password, 10);
         const userId = uuidv4();
+        const effectiveAdminId = getAdminId(req);
 
         const createdUser = await prisma.$transaction(async (tx) => {
             const newUser = await tx.user.create({
@@ -1683,7 +1712,7 @@ app.post('/api/admin/users', async (req, res) => {
                         create: {
                             userStatusId: targetStatusId,
                             description: reason || "Account created by Admin",
-                            adminId: null
+                            adminId: effectiveAdminId
                         }
                     }
                 },
@@ -1712,7 +1741,7 @@ app.post('/api/admin/users', async (req, res) => {
 });
 
 // Admin Update User Status & Record
-app.post('/api/admin/users/:id/status', async (req, res) => {
+app.post('/api/admin/users/:id/status', authenticateAdminToken, async (req, res) => {
     const { id } = req.params;
     const { userStatusId, statusName, reason, expiryDate } = req.body;
     try {
@@ -1729,6 +1758,7 @@ app.post('/api/admin/users/:id/status', async (req, res) => {
 
         const dateExpires = expiryDate ? new Date(expiryDate) : null;
         const description = reason || `Status updated to ${statusObj.statusName}`;
+        const effectiveAdminId = getAdminId(req);
 
         const updatedUser = await prisma.$transaction(async (tx) => {
             const record = await tx.record.create({
@@ -1737,7 +1767,7 @@ app.post('/api/admin/users/:id/status', async (req, res) => {
                     userStatusId: statusObj.id,
                     description,
                     dateExpires,
-                    adminId: null
+                    adminId: effectiveAdminId
                 }
             });
 
@@ -1832,9 +1862,9 @@ const tableToModel = {
 
 const defaultIncludes = {
     profile: { degree: true, user: true },
-    user: { profile: { include: { degree: true } }, userStatus: true, profileStatus: true, records: { include: { userStatus: true }, orderBy: { dateCreated: 'desc' } } },
-    bulletin: { comments: { include: { user: { include: { profile: true } }, likesList: true } }, status: true, category: true, author: { include: { profile: true, userStatus: true } }, likes: true },
-    event: { location: true, rsvps: true, status: true, category: true, author: { include: { profile: true, userStatus: true } } },
+    user: { profile: { include: { degree: true } }, userStatus: true, profileStatus: true, records: { include: { userStatus: true, admin: true }, orderBy: { dateCreated: 'desc' } } },
+    bulletin: { comments: { include: { user: { include: { profile: true } }, likesList: true } }, status: true, category: true, author: { include: { profile: true, userStatus: true } }, likes: true, admin: true },
+    event: { location: true, rsvps: true, status: true, category: true, author: { include: { profile: true, userStatus: true } }, admin: true },
     userConnection: { status: true, user: { include: { profile: { include: { degree: true } } } }, friend: { include: { profile: { include: { degree: true } } } } },
     comment: { user: { include: { profile: true } }, bulletin: true, likesList: true },
     userAchievement: { achievement: true },
