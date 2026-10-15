@@ -21,11 +21,7 @@ export function AdminLogin() {
         setIsLoading(true);
 
         try {
-            const response = await api.post('/auth/admin/login', { username, password });
-            const { token } = response.data;
-
-            // Set simple auth token in sessionStorage
-            sessionStorage.setItem('adminToken', token);
+            await api.post('/auth/admin/login', { username, password });
             navigate('/admin');
         } catch (err: any) {
             setError(err.response?.data?.error || 'Invalid credentials. Please try again.');

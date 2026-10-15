@@ -65,37 +65,21 @@ export function getStatusColor(statusName: string): string {
 }
 
 export function getCategoryColor(category: string): string {
-    const format = category.toLowerCase().trim();
-    switch (format) {
-        case 'reunion':
-            return 'bg-blue-600 hover:bg-blue-700 text-white';
-        case 'workshop':
-            return 'bg-purple-600 hover:bg-purple-700 text-white';
-        case 'conference':
-            return 'bg-indigo-600 hover:bg-indigo-700 text-white';
-        case 'networking':
-            return 'bg-pink-600 hover:bg-pink-700 text-white';
-        case 'sports':
-            return 'bg-brand-primary hover:bg-orange-700 text-white';
-        case 'virtual':
-            return 'bg-teal-600 hover:bg-teal-700 text-white';
-        case 'announcements':
-            return 'bg-blue-600 hover:bg-blue-700 text-white';
-        case 'careers':
-            return 'bg-emerald-600 hover:bg-emerald-700 text-white';
-        case 'success stories':
-            return 'bg-amber-600 hover:bg-amber-700 text-white';
-        case 'donations':
-            return 'bg-rose-600 hover:bg-rose-700 text-white';
-        case 'others':
-            return 'bg-slate-600 hover:bg-slate-700 text-white';
-        case 'official':
-            return 'bg-brand-primary hover:bg-brand-primary-hover text-white';
-        case 'regular':
-            return 'bg-brand-accent hover:bg-brand-accent-hover text-white';
-        default:
-            return 'bg-brand-primary-hover hover:bg-brand-primary text-white'; // default orange
-    }
+    const format = (category || '').toLowerCase().trim();
+    if (format.includes('reunion')) return 'bg-blue-600 hover:bg-blue-700 text-white';
+    if (format.includes('workshop')) return 'bg-purple-600 hover:bg-purple-700 text-white';
+    if (format.includes('conference')) return 'bg-indigo-600 hover:bg-indigo-700 text-white';
+    if (format.includes('network')) return 'bg-pink-600 hover:bg-pink-700 text-white';
+    if (format.includes('sport')) return 'bg-brand-primary hover:bg-orange-700 text-white';
+    if (format.includes('virtual')) return 'bg-teal-600 hover:bg-teal-700 text-white';
+    if (format.includes('announcement') || format.includes('news')) return 'bg-blue-600 hover:bg-blue-700 text-white';
+    if (format.includes('career') || format.includes('job')) return 'bg-emerald-600 hover:bg-emerald-700 text-white';
+    if (format.includes('spotlight') || format.includes('stories') || format.includes('story')) return 'bg-amber-600 hover:bg-amber-700 text-white';
+    if (format.includes('donation') || format.includes('giving')) return 'bg-rose-600 hover:bg-rose-700 text-white';
+    if (format.includes('other')) return 'bg-slate-600 hover:bg-slate-700 text-white';
+    if (format.includes('official')) return 'bg-brand-primary hover:bg-brand-primary-hover text-white';
+    if (format.includes('regular')) return 'bg-brand-accent hover:bg-brand-accent-hover text-white';
+    return 'bg-brand-primary hover:bg-brand-primary-hover text-white'; // default orange
 }
 
 export function getBankColor(bankName: string): string {

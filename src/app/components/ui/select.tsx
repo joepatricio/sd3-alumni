@@ -111,7 +111,7 @@ function SelectItem({
     <SelectPrimitive.Item
       data-slot="select-item"
       className={cn(
-        "bg-white text-gray-900 focus:bg-accent focus:text-accent-foreground [&_svg:not([class*='text-'])]:text-muted-foreground relative flex w-full cursor-default items-center gap-2 rounded-sm py-1.5 pr-8 pl-2 text-sm outline-hidden select-none data-[disabled]:pointer-events-none data-[disabled]:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 *:[span]:last:flex *:[span]:last:items-center *:[span]:last:gap-2",
+        "bg-white text-gray-900 cursor-pointer transition-colors hover:bg-brand-primary hover:text-white focus:bg-brand-primary focus:text-white data-[highlighted]:bg-brand-primary data-[highlighted]:text-white data-[highlighted]:[&_svg]:text-white hover:[&_svg]:text-white focus:[&_svg]:text-white [&_svg:not([class*='text-'])]:text-muted-foreground relative flex w-full items-center gap-2 rounded-sm py-1.5 pr-8 pl-2 text-sm outline-hidden select-none data-[disabled]:pointer-events-none data-[disabled]:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 *:[span]:last:flex *:[span]:last:items-center *:[span]:last:gap-2 data-[state=checked]:bg-brand-primary/10 data-[state=checked]:text-brand-primary data-[state=checked]:font-semibold [&[data-state=checked]_svg]:text-brand-primary",
         className,
       )}
       {...props}

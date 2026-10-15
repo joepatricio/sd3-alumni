@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { Heart, Globe, GraduationCap, Users, Mail, Phone, ArrowLeft, User } from 'lucide-react';
+import { Heart, Globe, GraduationCap, Users, Mail, Phone, ArrowLeft, User, Loader2 } from 'lucide-react';
 import { SiFacebook, SiX, SiInstagram } from 'react-icons/si';
 import { FaLinkedin } from 'react-icons/fa';
 import { toast } from 'sonner';
@@ -17,6 +17,7 @@ export function Donation() {
     const [isAnonymous, setIsAnonymous] = useState(false);
     const [userName, setUserName] = useState<string>('Alumni');
     const [profileImage, setProfileImage] = useState<string | null>(null);
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     useEffect(() => {
         const status = searchParams.get('status');
@@ -68,12 +69,15 @@ export function Donation() {
     };
 
     const handleDonate = async () => {
+        if (isSubmitting) return;
+
         const amount = selectedAmount || Number(customAmount);
         if (!amount || amount <= 0) {
             toast.error("Please select or enter a valid donation amount.");
             return;
         }
 
+        setIsSubmitting(true);
         const nanoidRef = customAlphabet("23456789BCDFGHJKLMNPQRSTVWXYZ", 3);
         const refId = `DON-${nanoidRef()}-${nanoidRef()}`;
 
@@ -89,12 +93,13 @@ export function Donation() {
             const response = await api.post('/donations/checkout', checkoutPayload);
 
             if (response.data && response.data.checkoutUrl) {
-                // Redirect to PayMongo Checkout
+                // Redirect to PayMongo Checkout (keep isSubmitting true to block clicks during unload)
                 window.location.href = response.data.checkoutUrl;
             } else {
                 throw new Error("Invalid checkout response");
             }
         } catch (error: any) {
+            setIsSubmitting(false);
             if (error.response?.data?.error) {
                 toast.error(error.response.data.error);
             } else {
@@ -227,8 +232,9 @@ export function Donation() {
                                         {amounts.map((amount) => (
                                             <button
                                                 key={amount}
+                                                disabled={isSubmitting}
                                                 onClick={() => handleAmountSelect(amount)}
-                                                className={`py-3 px-2 rounded-lg border-2 text-sm font-semibold transition-all ${selectedAmount === amount
+                                                className={`py-3 px-2 rounded-lg border-2 text-sm font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed ${selectedAmount === amount
                                                     ? 'border-brand-accent bg-brand-accent/5 text-brand-primary'
                                                     : 'border-gray-200 hover:border-brand-primary/30 text-gray-600'
                                                     }`}
@@ -248,10 +254,11 @@ export function Donation() {
                                             <input
                                                 type="number"
                                                 min="0"
+                                                disabled={isSubmitting}
                                                 placeholder="Enter amount"
                                                 value={customAmount}
                                                 onChange={handleCustomAmountChange}
-                                                className="w-full pl-8 pr-4 py-3 rounded-lg border-2 border-gray-200 focus:border-brand-primary focus:outline-none transition-colors"
+                                                className="w-full pl-8 pr-4 py-3 rounded-lg border-2 border-gray-200 focus:border-brand-primary focus:outline-none transition-colors disabled:opacity-50 disabled:bg-gray-100"
                                             />
                                         </div>
                                     </div>
@@ -259,12 +266,13 @@ export function Donation() {
                                     {/* Additional Fields based on login state */}
                                     <div className="mb-8">
                                         {isLoggedIn && (
-                                            <label className="flex items-center gap-3 cursor-pointer p-3 rounded-lg border border-gray-100 bg-gray-50 hover:bg-gray-100 transition-colors">
+                                            <label className={`flex items-center gap-3 p-3 rounded-lg border border-gray-100 bg-gray-50 transition-colors ${isSubmitting ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:bg-gray-100'}`}>
                                                 <input
                                                     type="checkbox"
+                                                    disabled={isSubmitting}
                                                     checked={isAnonymous}
                                                     onChange={(e) => setIsAnonymous(e.target.checked)}
-                                                    className="w-4 h-4 text-brand-primary border-gray-300 rounded focus:ring-brand-primary cursor-pointer"
+                                                    className="w-4 h-4 text-brand-primary border-gray-300 rounded focus:ring-brand-primary cursor-pointer disabled:cursor-not-allowed"
                                                 />
                                                 <div className="flex flex-col">
                                                     <span className="text-sm font-semibold text-gray-800">Make my donation anonymous</span>
@@ -277,10 +285,20 @@ export function Donation() {
                                     {/* Donate Button */}
                                     <button
                                         onClick={handleDonate}
-                                        className="w-full bg-brand-accent text-white py-4 rounded-xl font-bold text-lg hover:bg-brand-accent-hover transition-all transform hover:scale-[1.01] shadow-lg shadow-brand-accent/20 flex items-center justify-center gap-2"
+                                        disabled={isSubmitting}
+                                        className="w-full bg-brand-accent text-white py-4 rounded-xl font-bold text-lg hover:bg-brand-accent-hover transition-all transform hover:scale-[1.01] shadow-lg shadow-brand-accent/20 flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none"
                                     >
-                                        <Heart className="w-5 h-5 fill-current" />
-                                        Donate {selectedAmount ? formatCurrency(selectedAmount) : customAmount ? formatCurrency(Number(customAmount)) : ''}
+                                        {isSubmitting ? (
+                                            <>
+                                                <Loader2 className="w-5 h-5 animate-spin" />
+                                                <span>Redirecting to PayMongo...</span>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Heart className="w-5 h-5 fill-current" />
+                                                <span>Donate {selectedAmount ? formatCurrency(selectedAmount) : customAmount ? formatCurrency(Number(customAmount)) : ''}</span>
+                                            </>
+                                        )}
                                     </button>
                                 </div>
                             </div>

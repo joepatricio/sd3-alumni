@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@components/ui/dialog';
 import { Button } from '@components/ui/button';
 import { Label } from '@components/ui/label';
 import { Input } from '@components/ui/input';
@@ -72,8 +72,6 @@ export function CreateUserModal({
         }
 
         try {
-            const adminToken = sessionStorage.getItem('adminToken');
-            const headers = adminToken ? { Authorization: `Bearer ${adminToken}` } : undefined;
             await api.post('/admin/users', {
                 fullName: createName,
                 email: createEmail,
@@ -83,7 +81,7 @@ export function CreateUserModal({
                 gender: createGender === 'Other' ? '' : createGender,
                 userStatusId: createStatusId,
                 reason: createReason
-            }, { headers });
+            });
 
             resetForm();
             onUserCreated();
@@ -99,6 +97,9 @@ export function CreateUserModal({
             <DialogContent className="max-w-md">
                 <DialogHeader>
                     <DialogTitle>Create New User</DialogTitle>
+                    <DialogDescription>
+                        Create a new alumni user account and record administrative details.
+                    </DialogDescription>
                 </DialogHeader>
                 <div className="space-y-3 py-2 text-sm">
                     {createError && (

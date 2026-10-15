@@ -67,8 +67,7 @@ export function AdminBulletins() {
                 _per_page: params.perPage,
                 _sort: sortStr,
                 _where: Object.keys(whereClause).length > 0 ? JSON.stringify(whereClause) : undefined
-            },
-            headers: { Authorization: `Bearer ${sessionStorage.getItem('adminToken')}` }
+            }
         });
 
         const data = response.data.data || response.data;
@@ -95,13 +94,11 @@ export function AdminBulletins() {
 
     const handleStatusChange = async (id: string, newStatus: string) => {
         try {
-            const headers = { Authorization: `Bearer ${sessionStorage.getItem('adminToken')}` };
-            
             // Get the old bulletin to check previous status and author
-            await api.get(`/bulletins/${id}`, { headers });
+            await api.get(`/bulletins/${id}`);
 
             // Patch status
-            await api.patch(`/admin/bulletins/${id}/status`, { status: newStatus }, { headers });
+            await api.patch(`/admin/bulletins/${id}/status`, { status: newStatus });
 
 
         } catch (err) {

@@ -46,14 +46,20 @@ export function EventDetail() {
     const [organizer, setOrganizer] = useState<ProfileData | null>(null);
     const [loading, setLoading] = useState(true);
     const [rsvpLoading, setRsvpLoading] = useState(false);
+    const [isAdmin, setIsAdmin] = useState(false);
 
     useEffect(() => {
         const fetchEventAndOrganizer = async () => {
             try {
-                const [eventRes, usersRes] = await Promise.all([
+                const isPreview = location.pathname.includes('/admin/preview');
+                const [eventRes, usersRes, adminRes] = await Promise.all([
                     api.get(`/events/${id}?_embed=userRsvps`),
-                    api.get('/users')
+                    api.get('/users'),
+                    isPreview ? api.get('/auth/admin/me').catch(() => null) : Promise.resolve(null)
                 ]);
+                if (adminRes && adminRes.data?.admin) {
+                    setIsAdmin(true);
+                }
                 const event = eventRes.data;
                 const allUsers = Array.isArray(usersRes.data) ? usersRes.data : (usersRes.data?.data || []);
 
@@ -92,7 +98,7 @@ export function EventDetail() {
     }
 
     const currentStatusName = eventData?.eventStatus?.statusName || "";
-    const isAdminPreview = location.pathname.includes('/admin/preview') && !!sessionStorage.getItem('adminToken');
+    const isAdminPreview = location.pathname.includes('/admin/preview') && isAdmin;
     const isAuthor = session?.userId && String(session.userId) === String(eventData?.authorId);
 
     if (!eventData || (["Rejected", "Archived"].includes(currentStatusName) && !(isAdminPreview || isAuthor))) {
@@ -173,9 +179,7 @@ export function EventDetail() {
     const handleConcludeEvent = async () => {
         if (!eventData) return;
         try {
-            const token = localStorage.getItem('token') || sessionStorage.getItem('token') || sessionStorage.getItem('adminToken');
-            const headers = token ? { Authorization: `Bearer ${token}` } : undefined;
-            await api.post(`/events/${eventData.id}/conclude`, {}, { headers });
+            await api.post(`/events/${eventData.id}/conclude`);
             // Optimistically update the local state to Concluded
             // We know the status string won't be exactly right without refetching the object
             // but we can just reload the page or update the status name

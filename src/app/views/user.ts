@@ -5,13 +5,10 @@ export const handleConnection = async (
     currentUserId: string,
     profileId: string
 ) => {
-    const token = localStorage.getItem('token') || sessionStorage.getItem('token');
     const res = await api.post('/connections/action', {
         action,
         currentUserId,
         profileId
-    }, {
-        headers: { Authorization: `Bearer ${token}` }
     });
     
     return {

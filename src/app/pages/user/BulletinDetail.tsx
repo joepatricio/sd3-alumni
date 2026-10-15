@@ -4,6 +4,7 @@ import { Link, useParams, useNavigate } from 'react-router-dom';
 import {
     ArrowLeft,
     Clock,
+    Calendar,
     MessageCircle,
     User,
     Send,
@@ -32,7 +33,7 @@ import {
 } from '@components/ui/alert-dialog';
 import { useAuth } from '@/app/views/auth';
 import { api, type BulletinData, type BulletinCommentData, type ProfileData } from '@/app/views/api';
-import { formatDate } from '@/app/views/formatters';
+import { formatDate, getCategoryColor } from '@/app/views/formatters';
 
 export function BulletinDetail() {
     const { id } = useParams();
@@ -55,6 +56,7 @@ export function BulletinDetail() {
     const [sortOrder, setSortOrder] = useState<string>('-likes,-commentDate');
     const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
     const [editedCommentText, setEditedCommentText] = useState('');
+    const [isAdmin, setIsAdmin] = useState(false);
 
     const fetchComments = async () => {
         try {
@@ -74,17 +76,31 @@ export function BulletinDetail() {
     useEffect(() => {
         const fetchBulletinAndProfiles = async () => {
             try {
-                const [bRes, usersRes] = await Promise.all([
-                    api.get(`/bulletins`, { params: { id: id, } }),
-                    api.get('/users')
+                const isPreview = location.pathname.includes('/admin/preview');
+                const [bRes, usersRes, adminRes] = await Promise.all([
+                    api.get(`/bulletins`, { params: { id: id } }),
+                    api.get('/users'),
+                    isPreview ? api.get('/auth/admin/me').catch(() => null) : Promise.resolve(null)
                 ]);
 
-                const bulletinData = bRes.data[0];
+                if (adminRes && adminRes.data?.admin) {
+                    setIsAdmin(true);
+                }
+
+                const bData = Array.isArray(bRes.data) ? bRes.data : (bRes.data?.data || []);
+                const bulletinData = bData[0];
                 const allUsers = Array.isArray(usersRes.data) ? usersRes.data : (usersRes.data?.data || []);
 
-                if (bulletinData && bulletinData.profile) {
-                    const authorUser = allUsers.find((u: any) => String(u.id) === String(bulletinData.profile.userId));
-                    setBulletinStatus(bulletinData.contentStatus?.statusName);
+                if (bulletinData) {
+                    const statusName = bulletinData.contentStatus?.statusName 
+                        || bulletinData.status?.statusName 
+                        || (typeof bulletinData.contentStatus === 'string' ? bulletinData.contentStatus : null)
+                        || (typeof bulletinData.status === 'string' ? bulletinData.status : null)
+                        || 'Approved';
+                    setBulletinStatus(statusName);
+
+                    const authorUserId = bulletinData.profile?.userId || bulletinData.author?.profile?.userId || bulletinData.authorId || bulletinData.author?.id;
+                    const authorUser = allUsers.find((u: any) => String(u.id) === String(authorUserId)) || bulletinData.author;
                     if (authorUser && authorUser.userStatus?.statusName === 'Banned') {
                         setBulletin(null);
                         setLoading(false);
@@ -138,9 +154,12 @@ export function BulletinDetail() {
         );
     }
 
-    const isAdminPreview = location.pathname.includes('/admin/preview') && !!sessionStorage.getItem('adminToken');
-    const isAuthor = session?.userId && String(session.userId) === String(bulletin?.authorId);
-    if (!bulletin || (!['Approved', 'Pending'].includes(bulletinStatus) && !isAdminPreview && !isAuthor)) {
+    const isAdminPreview = location.pathname.includes('/admin/preview') && isAdmin;
+    const isAuthor = Boolean(session?.userId && bulletin && String(session.userId) === String(bulletin.authorId));
+    const effectiveStatus = bulletin?.contentStatus?.statusName || bulletin?.status?.statusName || bulletinStatus;
+    const isValidStatus = ['Approved', 'Pending'].includes(effectiveStatus);
+
+    if (!bulletin || (!isValidStatus && !isAdminPreview && !isAuthor)) {
         return <NotFound />;
     }
 
@@ -283,8 +302,11 @@ export function BulletinDetail() {
         }
     };
 
-    const authorProfile = bulletin.profile;
+    const authorProfile = bulletin.profile || bulletin.author?.profile;
     const sortedComments = commentsList;
+    const categoryName = (typeof bulletin.category === 'object' ? bulletin.category?.bulletinCategoryName : bulletin.category)
+        || bulletin.bulletinCategory?.bulletinCategoryName
+        || 'General';
 
     return (
         <div className="min-h-screen bg-gray-50 pb-12">
@@ -409,11 +431,13 @@ export function BulletinDetail() {
                             </Link>
                             <div className="flex flex-wrap items-center gap-2 sm:gap-4 sm:ml-auto text-xs sm:text-sm text-gray-500">
                                 <div className="flex items-center gap-1.5 shrink-0">
-                                    <Clock className="w-4 h-4 shrink-0" />
+                                    <Calendar className="w-4 h-4 shrink-0" />
                                     <span>{formatDate(bulletin.bulletinDate, 'full')}</span>
                                 </div>
                                 <span>•</span>
-                                <span className="shrink-0">{bulletin.readTimeMinutes} min read</span>
+                                <span className={`px-2.5 py-0.5 rounded-full text-xs font-semibold shrink-0 shadow-xs ${getCategoryColor(categoryName)}`}>
+                                    {categoryName}
+                                </span>
                             </div>
                         </div>
 

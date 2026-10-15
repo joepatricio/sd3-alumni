@@ -154,6 +154,7 @@ export function CreateBulletinModal({ trigger, initialData, isAdmin = false, ope
 
 
     async function onSubmit(values: z.infer<typeof formSchema>) {
+        if (form.formState.isSubmitting) return;
         const payload: any = { ...values, bulletinImage: previewUrl };
 
         if (!initialData) {
@@ -165,24 +166,6 @@ export function CreateBulletinModal({ trigger, initialData, isAdmin = false, ope
 
         if (isAdmin) {
             payload.reviewDate = new Date().toISOString();
-            let adminId: string | undefined;
-            const adminToken = sessionStorage.getItem('adminToken');
-            if (adminToken) {
-                try {
-                    const parsed = JSON.parse(atob(adminToken.split('.')[1]));
-                    if (parsed && parsed.id) {
-                        adminId = parsed.id.toString();
-                    }
-                } catch (e) {
-                    console.error("Failed to parse admin token", e);
-                }
-            }
-            if (!adminId && session?.userId) {
-                adminId = session.userId.toString();
-            }
-            if (adminId) {
-                payload.adminId = adminId;
-            }
         }
 
         if (!isAdmin) {
@@ -200,12 +183,10 @@ export function CreateBulletinModal({ trigger, initialData, isAdmin = false, ope
 
         try {
             const endpoint = isAdmin ? `/admin/bulletins` : `/bulletins`;
-            const token = sessionStorage.getItem('adminToken') || localStorage.getItem('token') || sessionStorage.getItem('token');
-            const headers = token ? { Authorization: `Bearer ${token}` } : undefined;
 
             if (isEditMode && initialData?.id) {
                 const patchEndpoint = isAdmin ? `/admin/bulletins/${initialData.id}` : `/bulletins/${initialData.id}`;
-                await api.patch(patchEndpoint, payload, { headers });
+                await api.patch(patchEndpoint, payload);
 
                 // If it was valid and now it's pending (because !isAdmin), decrement bulletinsCreated
                 if (!isAdmin && session?.userId) {
@@ -227,7 +208,7 @@ export function CreateBulletinModal({ trigger, initialData, isAdmin = false, ope
                     }
                 }
             } else {
-                await api.post(endpoint, payload, { headers });
+                await api.post(endpoint, payload);
             }
 
             // const isPending = !isAdmin && isEditMode;
@@ -305,7 +286,11 @@ export function CreateBulletinModal({ trigger, initialData, isAdmin = false, ope
                                         </FormControl>
                                         <SelectContent>
                                             {(categories.length > 0 ? categories : DEFAULT_BULLETIN_CATEGORIES).map((cat) => (
-                                                <SelectItem key={cat.id || cat.bulletinCategoryName} value={cat.bulletinCategoryName}>
+                                                <SelectItem
+                                                    key={cat.id || cat.bulletinCategoryName}
+                                                    value={cat.bulletinCategoryName}
+                                                    className="cursor-pointer transition-colors hover:bg-brand-primary hover:text-white focus:bg-brand-primary focus:text-white data-[highlighted]:bg-brand-primary data-[highlighted]:text-white data-[highlighted]:[&_svg]:text-white hover:[&_svg]:text-white focus:[&_svg]:text-white"
+                                                >
                                                     {cat.bulletinCategoryName}
                                                 </SelectItem>
                                             ))}
@@ -352,11 +337,13 @@ export function CreateBulletinModal({ trigger, initialData, isAdmin = false, ope
 
                         {/* Footer */}
                         <DialogFooter>
-                            <Button className="bg-brand-primary  hover:bg-brand-primary-hover" type="submit" disabled={form.formState.isSubmitting}>
+                            <Button className="bg-brand-primary hover:bg-brand-primary-hover" type="submit" disabled={form.formState.isSubmitting}>
                                 {form.formState.isSubmitting && (
                                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                                 )}
-                                {isEditMode ? 'Save Changes' : 'Create Bulletin'}
+                                {form.formState.isSubmitting
+                                    ? (isEditMode ? 'Saving Changes...' : 'Creating Bulletin...')
+                                    : (isEditMode ? 'Save Changes' : 'Create Bulletin')}
                             </Button>
                         </DialogFooter>
                     </form>

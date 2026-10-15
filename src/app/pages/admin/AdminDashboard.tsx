@@ -297,14 +297,11 @@ export function AdminDashboard() {
         setError(null);
 
         try {
-            const token = sessionStorage.getItem('adminToken');
-            const headers = token ? { Authorization: `Bearer ${token}` } : {};
-
             // Would be better to just query the whole category or status table instead of _include
             // Joining the tables is easier in the smaller scale, but would be better to just query the whole tables in the long run
             // Also, would be possible to have separate queries for approved events and status/category analytics
             const [dashRes, bulletinsRes, eventsRes, userStatsRes] = await Promise.allSettled([
-                api.get('/admin/dashboard-stats', { headers }),
+                api.get('/admin/dashboard-stats'),
                 api.get('/bulletins?_include=category,status'),
                 api.get('/events?_include=location,category,status'),
                 api.get('/userStatistics')

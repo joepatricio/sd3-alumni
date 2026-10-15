@@ -5,7 +5,7 @@ import {
     List,
     LayoutGrid,
     FileText,
-    Clock,
+    Calendar,
     Loader2
 } from 'lucide-react';
 import { Button } from '@components/ui/button';
@@ -13,7 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { LazyImage } from '@components/user/LazyImage';
 import { api, type BulletinData, type ProfileData } from '@/app/views/api';
 import { useAuth } from '@/app/views/auth';
-import { formatDate } from '@/app/views/formatters';
+import { formatDate, getCategoryColor } from '@/app/views/formatters';
 
 const loadCreateBulletinModal = () => import('@components/user/CreateBulletinModal').then(m => ({ default: m.CreateBulletinModal }));
 const CreateBulletinModal = lazy(loadCreateBulletinModal);
@@ -39,6 +39,20 @@ export function Bulletin() {
     const [selectedCategory, setSelectedCategory] = useState<string>('All');
     const [categories, setCategories] = useState<{ id: string; bulletinCategoryName: string }[]>([]);
     const [isCreateOpen, setIsCreateOpen] = useState(false);
+    const [isCreateLoading, setIsCreateLoading] = useState(false);
+
+    const handleCreateBulletinClick = async () => {
+        if (isCreateLoading || isCreateOpen) return;
+        setIsCreateLoading(true);
+        try {
+            await loadCreateBulletinModal();
+            setIsCreateOpen(true);
+        } catch (error) {
+            console.error("Failed to load create bulletin modal:", error);
+        } finally {
+            setIsCreateLoading(false);
+        }
+    };
 
     useEffect(() => {
         api.get('/bulletinCategories')
@@ -96,7 +110,7 @@ export function Bulletin() {
                         _limit: visibleCount,
                         _sort: '-bulletinDate',
                         _where: JSON.stringify(whereClause),
-                        _include: 'status,author'
+                        _include: 'status,author,category'
                     }
                 });
 
@@ -138,16 +152,23 @@ export function Bulletin() {
                         </div>
                         {(currentUserStatus === 'Regular' || currentUserStatus === 'Official') && (
                             <button
+                                disabled={isCreateLoading || isCreateOpen}
                                 onMouseEnter={loadCreateBulletinModal}
                                 onFocus={loadCreateBulletinModal}
-                                onClick={() => {
-                                    loadCreateBulletinModal();
-                                    setIsCreateOpen(true);
-                                }}
-                                className="flex items-center justify-center gap-2 bg-brand-primary text-white px-6 py-3 rounded-lg hover:bg-brand-primary-hover transition-colors font-semibold"
+                                onClick={handleCreateBulletinClick}
+                                className="flex items-center justify-center gap-2 bg-brand-primary text-white px-6 py-3 rounded-lg hover:bg-brand-primary-hover transition-colors font-semibold disabled:opacity-60 disabled:cursor-not-allowed"
                             >
-                                <Plus className="w-5 h-5" />
-                                Create Bulletin
+                                {isCreateLoading ? (
+                                    <>
+                                        <Loader2 className="w-5 h-5 animate-spin" />
+                                        <span>Loading...</span>
+                                    </>
+                                ) : (
+                                    <>
+                                        <Plus className="w-5 h-5" />
+                                        <span>Create Bulletin</span>
+                                    </>
+                                )}
                             </button>
                         )}
                     </div>
@@ -270,6 +291,9 @@ export function Bulletin() {
                             <div className="space-y-6">
                                 {paginatedItems.map((item) => {
                                     const authorProfile = profilesMap[item.authorId];
+                                    const categoryName = (typeof item.category === 'object' ? item.category?.bulletinCategoryName : item.category)
+                                        || item.bulletinCategory?.bulletinCategoryName
+                                        || 'General';
                                     return (
                                         <div
                                             key={item.id}
@@ -288,7 +312,7 @@ export function Bulletin() {
                                                         </Link>
                                                     )}
                                                     <div className="p-6">
-                                                        <div className="flex items-center gap-3 mb-4">
+                                                        <div className="flex items-center gap-3 mb-4 flex-wrap">
                                                             <Link
                                                                 to={`/profile/${item.authorId}`}
                                                                 className="flex items-center gap-2 hover:opacity-80 transition-opacity relative z-10"
@@ -298,15 +322,19 @@ export function Bulletin() {
                                                                     alt={authorProfile?.userName || "Author"}
                                                                     className="w-8 h-8 rounded-full object-cover"
                                                                 />
-                                                                <span className="text-sm text-gray-600">
+                                                                <span className="text-sm text-gray-600 font-medium">
                                                                     {authorProfile?.userName || "Unknown Author"}
                                                                 </span>
                                                             </Link>
                                                             <span className="text-gray-400">•</span>
                                                             <div className="flex items-center gap-1 text-sm text-gray-500">
-                                                                <Clock className="w-4 h-4" />
+                                                                <Calendar className="w-4 h-4" />
                                                                 <span>{formatDate(item.bulletinDate, 'long')}</span>
                                                             </div>
+                                                            <span className="text-gray-400">•</span>
+                                                            <span className={`px-2.5 py-0.5 rounded-full text-xs font-semibold shadow-xs ${getCategoryColor(categoryName)}`}>
+                                                                {categoryName}
+                                                            </span>
                                                         </div>
                                                         <Link
                                                             to={`/bulletin/${item.id}`}
@@ -343,15 +371,22 @@ export function Bulletin() {
                                                                 {item.title}
                                                             </h2>
                                                         </Link>
-                                                        <div className="flex items-center gap-2 mb-3 text-sm text-gray-600 relative z-10">
+                                                        <div className="flex items-center gap-2 mb-3 text-sm text-gray-600 relative z-10 flex-wrap">
                                                             <Link
                                                                 to={`/profile/${item.authorId}`}
-                                                                className="hover:text-brand-primary transition-colors"
+                                                                className="hover:text-brand-primary transition-colors font-medium"
                                                             >
                                                                 {authorProfile?.userName || "Unknown Author"}
                                                             </Link>
                                                             <span>•</span>
-                                                            <span>{formatDate(item.bulletinDate, 'long')}</span>
+                                                            <div className="flex items-center gap-1 text-gray-500">
+                                                                <Calendar className="w-3.5 h-3.5" />
+                                                                <span>{formatDate(item.bulletinDate, 'long')}</span>
+                                                            </div>
+                                                            <span>•</span>
+                                                            <span className={`px-2 py-0.5 rounded-full text-xs font-semibold shadow-xs ${getCategoryColor(categoryName)}`}>
+                                                                {categoryName}
+                                                            </span>
                                                         </div>
                                                         <p className="text-gray-700 line-clamp-2">
                                                             {item.content}
