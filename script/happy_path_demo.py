@@ -206,6 +206,10 @@ def stage_3_member_registration(page: Page, base_url: str, user_name: str, user_
     print("[OK] Account registered successfully! Navigated to Login page.")
     time.sleep(1)
 
+    # Prompt regardless of arguments to wait for user approval before proceeding
+    prompt_step(f"Wait for registered user ({user_email}) to be approved via automation or manual review.")
+
+
 
 # ------------------------------------------------------------------------------
 # STAGE 4: Member Authentication & Profile Dashboard
