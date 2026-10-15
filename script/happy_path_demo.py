@@ -26,8 +26,8 @@ from playwright.sync_api import sync_playwright, expect, Page, BrowserContext
 # ==============================================================================
 # TESTER CONFIGURATION - ADJUST VALUES BEFORE EXECUTION
 # ==============================================================================
-BASE_URL = "localhost:5173"
-# BASE_URL = "https://najealp.top"
+# BASE_URL = "localhost:5173"
+BASE_URL = "https://najealp.top"
 
 # Test Member Information
 # Note: Ensure the email is unique or updated before running a fresh registration.
@@ -50,7 +50,7 @@ HEADLESS = False                # False = visible browser for tech demo presenta
 SLOW_MO = 500                   # Milliseconds delay between actions for visual clarity
 
 # Interactive Flow Controls
-PAUSE_AT_CHECKOUT = True        # Pause at PayMongo checkout for tester verification of E-Wallet/QRPh
+PAUSE_AT_CHECKOUT = False        # Pause at PayMongo checkout for tester verification of E-Wallet/QRPh
 STEP_BY_STEP = False           # Pause after each completed stage (can also pass --step-by-step)
 # ==============================================================================
 

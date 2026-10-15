@@ -169,21 +169,23 @@ async function classifyPendingUsers() {
     const pendingUserStatus = await prisma.userStatus.findFirst({ where: { statusName: 'Pending' } });
     const regularUserStatus = await prisma.userStatus.findFirst({ where: { statusName: 'Regular' } });
 
-    if (!pendingUserStatus || !regularUserStatus) return;
-
+    if (!pendingUserStatus || !regularUserStatus) {
+        console.log("Pending or Regular user status not found");
+        return;
+    }
     const pendingUsers = await prisma.user.findMany({
         where: { userStatusId: pendingUserStatus.id },
         include: { profile: true, auth: true }
     });
 
-    for (const user of pendingUsers) {
-        // Skip if already evaluated
-        const existingLog = await prisma.clefLog.findFirst({
-            where: { targetId: user.id, targetType: 'User' }
-        });
-        if (existingLog) continue;
+    if (!pendingUsers || pendingUsers.length === 0) {
+        console.log("No pending users found");
+        return;
+    }
 
+    for (const user of pendingUsers) {
         console.log(`Auto-approving User: ${user.id}`);
+
         // Commented out AI classification for users
         /*
         const payload = {
