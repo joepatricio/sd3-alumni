@@ -171,7 +171,6 @@ export function CreateBulletinModal({ trigger, initialData, isAdmin = false, ope
     }, [categories, form.watch('category')]);
 
     async function onSubmit(values: z.infer<typeof formSchema>) {
-        if (form.formState.isSubmitting) return;
         const payload: any = { ...values, bulletinImage: previewUrl };
 
         if (!initialData) {

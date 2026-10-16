@@ -874,7 +874,6 @@ export function CreateEventModal({ trigger, initialData, isAdmin, open: external
     ), [mapCenter, mapZoom, currentLat, currentLng]);
 
     async function onSubmit(values: z.infer<typeof formSchema>) {
-        if (form.formState.isSubmitting) return;
         // Construct final time strings in military time format
         const formatMilitaryTime = (h: string, m: string, ampm: string) => {
             let hour = parseInt(h, 10);
