@@ -161,7 +161,7 @@ model UserRsvp {
   isValid     Boolean?
 
   user  User  @relation(fields: [userId], references: [id])
-  event Event @relation(fields: [eventId], references: [id])
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
 
   @@unique([userId, eventId])
 }
@@ -245,7 +245,7 @@ model BulletinLike {
   isLiked    Boolean
 
   user     User     @relation(fields: [userId], references: [id])
-  bulletin Bulletin @relation(fields: [bulletinId], references: [id])
+  bulletin Bulletin @relation(fields: [bulletinId], references: [id], onDelete: Cascade)
 
   @@unique([userId, bulletinId])
 }
@@ -301,7 +301,7 @@ model Comment {
   likes       Int      @default(0)
 
   user     User     @relation(fields: [userId], references: [id])
-  bulletin Bulletin @relation(fields: [bulletinId], references: [id])
+  bulletin Bulletin @relation(fields: [bulletinId], references: [id], onDelete: Cascade)
   likesList CommentLike[]
 }
 
@@ -312,7 +312,7 @@ model CommentLike {
   isLiked    Boolean
 
   user       User    @relation(fields: [userId], references: [id])
-  comment    Comment @relation(fields: [commentId], references: [id])
+  comment    Comment @relation(fields: [commentId], references: [id], onDelete: Cascade)
 
   @@unique([userId, commentId])
 }

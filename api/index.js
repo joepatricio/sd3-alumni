@@ -2591,6 +2591,55 @@ app.delete('/api/:table/:id', async (req, res, next) => {
 
         const pkField = (modelName === 'profile' || modelName === 'userAuth' || modelName === 'userStatistic') ? 'userId' : 'id';
 
+        if (modelName === 'comment') {
+            await prisma.$transaction(async (tx) => {
+                await tx.commentLike.deleteMany({
+                    where: { commentId: id }
+                });
+                await tx.comment.delete({
+                    where: { id }
+                });
+            });
+            return res.status(204).end();
+        }
+
+        if (modelName === 'bulletin') {
+            await prisma.$transaction(async (tx) => {
+                const comments = await tx.comment.findMany({
+                    where: { bulletinId: id },
+                    select: { id: true }
+                });
+                const commentIds = comments.map(c => c.id);
+                if (commentIds.length > 0) {
+                    await tx.commentLike.deleteMany({
+                        where: { commentId: { in: commentIds } }
+                    });
+                    await tx.comment.deleteMany({
+                        where: { bulletinId: id }
+                    });
+                }
+                await tx.bulletinLike.deleteMany({
+                    where: { bulletinId: id }
+                });
+                await tx.bulletin.delete({
+                    where: { id }
+                });
+            });
+            return res.status(204).end();
+        }
+
+        if (modelName === 'event') {
+            await prisma.$transaction(async (tx) => {
+                await tx.userRsvp.deleteMany({
+                    where: { eventId: id }
+                });
+                await tx.event.delete({
+                    where: { id }
+                });
+            });
+            return res.status(204).end();
+        }
+
         await delegate.delete({
             where: { [pkField]: id }
         });
