@@ -14,8 +14,18 @@ import { rateLimit, ipKeyGenerator } from 'express-rate-limit';
 
 const adapter = new PrismaBetterSqlite3({
     url: process.env.DATABASE_URL,
+    timeout: 10000,
 });
 const basePrisma = new PrismaClient({ adapter });
+
+(async () => {
+    try {
+        await basePrisma.$executeRawUnsafe('PRAGMA journal_mode = WAL;');
+        await basePrisma.$executeRawUnsafe('PRAGMA busy_timeout = 10000;');
+    } catch (e) {
+        console.warn("Could not set SQLite WAL mode / busy_timeout:", e.message);
+    }
+})();
 
 const checkAndAwardAchievements = async (userId, stats) => {
     try {
@@ -174,7 +184,7 @@ const authenticateToken = (req, res, next) => {
     const authHeader = req.headers['authorization'];
     let token = authHeader && authHeader.split(' ')[1];
     if (!token || token === 'null' || token === 'undefined') {
-        token = req.cookies?.token;
+        token = req.cookies?.token || req.cookies?.adminToken;
     }
     if (!token || token === 'null' || token === 'undefined') {
         return res.status(401).json({ error: 'Unauthorized: Authentication token required' });
@@ -250,7 +260,7 @@ const contentLimiter = rateLimit({
         const authHeader = req.headers['authorization'];
         let token = authHeader && authHeader.split(' ')[1];
         if (!token || token === 'null' || token === 'undefined') {
-            token = req.cookies?.token;
+            token = req.cookies?.token || req.cookies?.adminToken;
         }
         if (token) {
             try {
@@ -309,6 +319,77 @@ app.post('/api/auth/reset-password', authLimiter, async (req, res) => {
         res.status(500).json({ error: 'Internal server error' });
     }
 });
+
+let isAutoApprovingUsers = false;
+export async function autoApprovePendingUsers() {
+    if (isAutoApprovingUsers) return;
+    isAutoApprovingUsers = true;
+    try {
+        const pendingUserStatus = await prisma.userStatus.findFirst({ where: { statusName: 'Pending' } });
+        const regularUserStatus = await prisma.userStatus.findFirst({ where: { statusName: 'Regular' } });
+
+        if (!pendingUserStatus || !regularUserStatus) return;
+
+        const pendingUsers = await prisma.user.findMany({
+            where: { userStatusId: pendingUserStatus.id },
+            include: { profile: true, auth: true }
+        });
+
+        if (!pendingUsers || pendingUsers.length === 0) return;
+
+        for (const user of pendingUsers) {
+            try {
+                console.log(`[Auto-Approve] Approving user: ${user.id} (${user.auth?.email || user.profile?.email || 'unknown'})`);
+                const newStatusId = regularUserStatus.id;
+
+                await prisma.$transaction(async (tx) => {
+                    const record = await tx.record.create({
+                        data: {
+                            userId: user.id,
+                            userStatusId: newStatusId,
+                            description: "Automatically approved by system",
+                            adminId: null
+                        }
+                    });
+
+                    await tx.user.update({
+                        where: { id: user.id },
+                        data: {
+                            userStatusId: newStatusId,
+                            currentRecordId: record.id
+                        }
+                    });
+                });
+
+                await prisma.clefLog.create({
+                    data: {
+                        targetId: user.id,
+                        targetType: 'User',
+                        requestPayload: null,
+                        responsePayload: null,
+                        decision: 'Approved'
+                    }
+                }).catch(e => console.warn("Failed to write clefLog for user auto-approval:", e.message));
+
+                console.log(`[Auto-Approve] User ${user.id} approved successfully`);
+            } catch (userErr) {
+                console.error(`[Auto-Approve] Failed to approve user ${user.id}:`, userErr);
+            }
+        }
+    } catch (err) {
+        console.error("Error in autoApprovePendingUsers:", err);
+    } finally {
+        isAutoApprovingUsers = false;
+    }
+}
+
+// Background auto-approval periodic watchdog (runs every 60s)
+setInterval(() => {
+    autoApprovePendingUsers().catch(err => console.error("Recurring auto-approval error:", err));
+}, 60 * 1000);
+
+// Run once on startup
+autoApprovePendingUsers().catch(err => console.error("Startup auto-approval error:", err));
 
 // User limits check and registration
 app.post('/api/auth/register', authLimiter, async (req, res) => {
@@ -415,6 +496,11 @@ app.post('/api/auth/register', authLimiter, async (req, res) => {
                 where: { id: userId },
                 data: { currentRecordId: record.id }
             });
+        });
+
+        // Trigger immediate background auto-approval for newly registered user
+        setImmediate(() => {
+            autoApprovePendingUsers().catch(err => console.error("Immediate auto-approval failed:", err));
         });
 
         res.status(201).json({ message: 'User registered successfully' });
@@ -594,6 +680,30 @@ app.get('/api/auth/admin/me', authenticateAdminToken, (req, res) => {
 // Get current user profile for auth validation
 app.get('/api/auth/me', authenticateToken, async (req, res) => {
     try {
+        if (req.user?.role === 'admin') {
+            const admin = await prisma.admin.findUnique({
+                where: { id: req.user.id }
+            });
+            if (admin) {
+                return res.json({
+                    id: admin.id,
+                    email: req.user.email || `${admin.username}@usjr.edu.ph`,
+                    role: 'admin',
+                    isAdmin: true,
+                    profileId: admin.id,
+                    name: admin.username,
+                    userStatus: { id: 'admin-status', statusName: 'Official' },
+                    profileStatus: { id: 'admin-profile', statusName: 'Public' },
+                    profile: {
+                        userId: admin.id,
+                        userName: admin.username,
+                        email: req.user.email || `${admin.username}@usjr.edu.ph`,
+                        profileImage: '/uploads/engineer.png'
+                    }
+                });
+            }
+        }
+
         const user = await prisma.user.findUnique({
             where: { id: req.user.id },
             include: {
@@ -932,13 +1042,17 @@ async function resolveEventData(body, isUpdate = false, existingEvent = null, re
             const authHeader = req.headers['authorization'];
             let token = authHeader && authHeader.split(' ')[1];
             if (!token || token === 'null' || token === 'undefined') {
-                token = req.cookies?.token;
+                token = req.cookies?.token || req.cookies?.adminToken;
             }
             if (token) {
                 try {
                     const decoded = jwt.verify(token, JWT_SECRET);
-                    if (decoded && (decoded.id || decoded.userId)) {
-                        data.authorId = decoded.id || decoded.userId;
+                    if (decoded) {
+                        if (decoded.role === 'admin') {
+                            if (!data.adminId) data.adminId = decoded.id;
+                        } else if (decoded.id || decoded.userId) {
+                            data.authorId = decoded.id || decoded.userId;
+                        }
                     }
                 } catch (err) {
                     console.error('Failed to verify token in resolveEventData: ', err);
@@ -1063,13 +1177,17 @@ async function resolveBulletinData(body, isUpdate = false, req = null) {
             const authHeader = req.headers['authorization'];
             let token = authHeader && authHeader.split(' ')[1];
             if (!token || token === 'null' || token === 'undefined') {
-                token = req.cookies?.token;
+                token = req.cookies?.token || req.cookies?.adminToken;
             }
             if (token) {
                 try {
                     const decoded = jwt.verify(token, JWT_SECRET);
-                    if (decoded && (decoded.id || decoded.userId)) {
-                        data.authorId = decoded.id || decoded.userId;
+                    if (decoded) {
+                        if (decoded.role === 'admin') {
+                            if (!data.adminId) data.adminId = decoded.id;
+                        } else if (decoded.id || decoded.userId) {
+                            data.authorId = decoded.id || decoded.userId;
+                        }
                     }
                 } catch (err) {
                     console.error('Failed to verify token in resolveBulletinData: ', err);

@@ -19,6 +19,8 @@
 /prisma/generated/
 db.json
 dev.db
+*.db-shm
+*.db-wal
 
 # misc
 .DS_Store

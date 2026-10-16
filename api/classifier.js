@@ -7,8 +7,18 @@ import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
 
 const adapter = new PrismaBetterSqlite3({
     url: process.env.DATABASE_URL,
+    timeout: 10000,
 });
 const prisma = new PrismaClient({ adapter });
+
+(async () => {
+    try {
+        await prisma.$executeRawUnsafe('PRAGMA journal_mode = WAL;');
+        await prisma.$executeRawUnsafe('PRAGMA busy_timeout = 10000;');
+    } catch (e) {
+        console.warn("Could not set SQLite WAL mode in classifier:", e.message);
+    }
+})();
 
 const INTERVAL = process.env.CLASSIFIER_INTERVAL_MINUTES || 5;
 const CLOUDFLARE_ACCOUNT_ID = process.env.CLOUDFLARE_ACCOUNT_ID;
@@ -56,7 +66,8 @@ async function askClef(stateStr, questions, imagePath) {
                 "Authorization": `Bearer ${CLOUDFLARE_API_TOKEN}`,
                 "Content-Type": "application/json"
             },
-            body: JSON.stringify(bodyObj)
+            body: JSON.stringify(bodyObj),
+            signal: AbortSignal.timeout(10000)
         });
 
         const result = await response.json();
@@ -94,74 +105,78 @@ async function classifyPendingBulletins() {
     });
 
     for (const bulletin of pendingBulletins) {
-        console.log(`Classifying Bulletin: ${bulletin.id}`);
-        const payload = {
-            title: bulletin.title,
-            content: bulletin.content
-        };
-        const payloadStr = JSON.stringify(payload);
-        const stateStr =
-            `
-                Ensure people have predictable experiences by properly labeling content that is 
-                graphic, sexually-explicit, or offensive. A user has submitted a new post: ${payloadStr}
-            `;
-        const questions = {
-            isUnsafe: { type: "noul", instructions: "Is this post unsafe?" },
-            isSafe: { type: "noul", instructions: "Is this safe to post?" }
-        };
+        try {
+            console.log(`Classifying Bulletin: ${bulletin.id}`);
+            const payload = {
+                title: bulletin.title,
+                content: bulletin.content
+            };
+            const payloadStr = JSON.stringify(payload);
+            const stateStr =
+                `
+                    Ensure people have predictable experiences by properly labeling content that is 
+                    graphic, sexually-explicit, or offensive. A user has submitted a new post: ${payloadStr}
+                `;
+            const questions = {
+                isUnsafe: { type: "noul", instructions: "Is this post unsafe?" },
+                isSafe: { type: "noul", instructions: "Is this safe to post?" }
+            };
 
-        const { isUnsafe, isSafe, responseText } = await askClef(stateStr, questions, bulletin.bulletinImage);
+            const { isUnsafe, isSafe, responseText } = await askClef(stateStr, questions, bulletin.bulletinImage);
 
-        let finalDecision = "Review";
-        let newStatusId = flaggedStatus.id; // Mark as flagged by default so it escapes the infinite loop
+            let finalDecision = "Review";
+            let newStatusId = flaggedStatus.id; // Mark as flagged by default so it escapes the infinite loop
 
-        if (isUnsafe >= 0.45) {
-            finalDecision = "Rejected";
-            newStatusId = rejectedStatus.id;
-        } else if (isSafe >= 0.80 && isUnsafe <= 0.15) {
-            finalDecision = "Approved";
-            newStatusId = approvedStatus.id;
-        } else {
-            finalDecision = "Review";
-            newStatusId = flaggedStatus.id;
-        }
-
-
-        await prisma.bulletin.update({
-            where: { id: bulletin.id },
-            data: { contentStatusId: newStatusId }
-        });
-
-        let action = "";
-        if (finalDecision === "Approved") action = "automatically approved";
-        else if (finalDecision === "Rejected") action = "automatically rejected";
-        else action = "flagged for manual review";
-
-        let sysNotifType = await prisma.notificationType.findFirst({ where: { notificationTypeName: "System" } });
-        if (!sysNotifType) {
-            sysNotifType = await prisma.notificationType.create({ data: { notificationTypeName: "System" } });
-        }
-        await prisma.notification.create({
-            data: {
-                userId: bulletin.authorId,
-                notificationTypeId: sysNotifType.id,
-                notificationMessage: JSON.stringify({
-                    text: `Your bulletin "${bulletin.title}" was ${action} by the AI filter.`,
-                    link: `/bulletin/${bulletin.id}`
-                })
+            if (isUnsafe >= 0.45) {
+                finalDecision = "Rejected";
+                newStatusId = rejectedStatus.id;
+            } else if (isSafe >= 0.80 && isUnsafe <= 0.15) {
+                finalDecision = "Approved";
+                newStatusId = approvedStatus.id;
+            } else {
+                finalDecision = "Review";
+                newStatusId = flaggedStatus.id;
             }
-        });
 
-        await prisma.clefLog.create({
-            data: {
-                targetId: bulletin.id,
-                targetType: 'Bulletin',
-                requestPayload: payloadStr,
-                responsePayload: responseText,
-                decision: finalDecision
+            await prisma.bulletin.update({
+                where: { id: bulletin.id },
+                data: { contentStatusId: newStatusId }
+            });
+
+            let action = "";
+            if (finalDecision === "Approved") action = "automatically approved";
+            else if (finalDecision === "Rejected") action = "automatically rejected";
+            else action = "flagged for manual review";
+
+            let sysNotifType = await prisma.notificationType.findFirst({ where: { notificationTypeName: "System" } });
+            if (!sysNotifType) {
+                sysNotifType = await prisma.notificationType.create({ data: { notificationTypeName: "System" } });
             }
-        });
-        console.log(`Bulletin ${bulletin.id} -> ${finalDecision}`);
+            await prisma.notification.create({
+                data: {
+                    userId: bulletin.authorId,
+                    notificationTypeId: sysNotifType.id,
+                    notificationMessage: JSON.stringify({
+                        text: `Your bulletin "${bulletin.title}" was ${action} by the AI filter.`,
+                        link: `/bulletin/${bulletin.id}`
+                    })
+                }
+            }).catch(e => console.warn(`Failed notification for bulletin ${bulletin.id}:`, e.message));
+
+            await prisma.clefLog.create({
+                data: {
+                    targetId: bulletin.id,
+                    targetType: 'Bulletin',
+                    requestPayload: payloadStr,
+                    responsePayload: responseText,
+                    decision: finalDecision
+                }
+            }).catch(e => console.warn(`Failed clefLog for bulletin ${bulletin.id}:`, e.message));
+
+            console.log(`Bulletin ${bulletin.id} -> ${finalDecision}`);
+        } catch (bulletinErr) {
+            console.error(`Error processing bulletin ${bulletin.id}:`, bulletinErr);
+        }
     }
 }
 
@@ -185,59 +200,75 @@ async function classifyPendingUsers() {
         }
 
         for (const user of pendingUsers) {
-            console.log(`Auto-approving User: ${user.id}`);
+            try {
+                console.log(`Auto-approving User: ${user.id}`);
 
-            let finalDecision = "Approved";
-            let newStatusId = regularUserStatus.id;
+                let finalDecision = "Approved";
+                let newStatusId = regularUserStatus.id;
 
-            // Atomically update user status and add status record
-            await prisma.$transaction(async (tx) => {
-                const record = await tx.record.create({
-                    data: {
-                        userId: user.id,
-                        userStatusId: newStatusId,
-                        description: "Automatically approved by system",
-                        adminId: null
-                    }
+                // Atomically update user status and add status record
+                await prisma.$transaction(async (tx) => {
+                    const record = await tx.record.create({
+                        data: {
+                            userId: user.id,
+                            userStatusId: newStatusId,
+                            description: "Automatically approved by system",
+                            adminId: null
+                        }
+                    });
+
+                    await tx.user.update({
+                        where: { id: user.id },
+                        data: {
+                            userStatusId: newStatusId,
+                            currentRecordId: record.id
+                        }
+                    });
                 });
 
-                await tx.user.update({
-                    where: { id: user.id },
+                await prisma.clefLog.create({
                     data: {
-                        userStatusId: newStatusId,
-                        currentRecordId: record.id
+                        targetId: user.id,
+                        targetType: 'User',
+                        requestPayload: null,
+                        responsePayload: null,
+                        decision: finalDecision
                     }
                 });
-            });
-
-            await prisma.clefLog.create({
-                data: {
-                    targetId: user.id,
-                    targetType: 'User',
-                    requestPayload: null,
-                    responsePayload: null,
-                    decision: finalDecision
-                }
-            });
-            console.log(`User ${user.id} -> ${finalDecision}`);
+                console.log(`User ${user.id} -> ${finalDecision}`);
+            } catch (userErr) {
+                console.error(`Failed to auto-approve user ${user.id}:`, userErr);
+            }
         }
     } catch (err) {
         console.error("Error in classifyPendingUsers:", err);
     }
 }
 
+let isRunning = false;
 async function runTasks() {
-    console.log(`[${new Date().toISOString()}] Running classifier tasks...`);
-    try {
-        await classifyPendingBulletins();
-    } catch (e) {
-        console.error("Bulletin Task Error:", e);
+    if (isRunning) {
+        console.log(`[${new Date().toISOString()}] Tasks already running, skipping interval tick.`);
+        return;
     }
-
+    isRunning = true;
     try {
-        await classifyPendingUsers();
-    } catch (e) {
-        console.error("User Task Error:", e);
+        console.log(`[${new Date().toISOString()}] Running classifier tasks...`);
+        // Always run user auto-approval independently first
+        try {
+            await classifyPendingUsers();
+        } catch (e) {
+            console.error("User Task Error:", e);
+        }
+
+        // Run bulletin AI classification independently
+        try {
+            await classifyPendingBulletins();
+        } catch (e) {
+            console.error("Bulletin Task Error:", e);
+        }
+    } finally {
+        isRunning = false;
     }
 }
 

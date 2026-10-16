@@ -52,6 +52,23 @@ api.interceptors.request.use(config => {
             delete headers.authorization;
         }
     }
+
+    if (!headers?.Authorization && !headers?.authorization) {
+        const adminToken = typeof sessionStorage !== 'undefined' ? sessionStorage.getItem('adminToken') : null;
+        const userToken = (typeof localStorage !== 'undefined' ? localStorage.getItem('token') : null) ||
+            (typeof sessionStorage !== 'undefined' ? sessionStorage.getItem('token') : null);
+        const token = (config.url?.startsWith('admin/') || config.url?.startsWith('api/admin/'))
+            ? (adminToken || userToken)
+            : (userToken || adminToken);
+
+        if (token && token !== 'null' && token !== 'undefined') {
+            if (headers?.set && typeof headers.set === 'function') {
+                headers.set('Authorization', `Bearer ${token}`);
+            } else if (headers) {
+                headers.Authorization = `Bearer ${token}`;
+            }
+        }
+    }
     return config;
 });
 

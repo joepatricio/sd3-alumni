@@ -52,6 +52,33 @@ export const setIsLoggedIn = (status: boolean): void => {
     }
 };
 
+let inFlightAuthMe: Promise<UserSession | null> | null = null;
+
+const hydrateSession = async (): Promise<UserSession | null> => {
+    if (currentSession) return currentSession;
+    if (inFlightAuthMe) return inFlightAuthMe;
+
+    inFlightAuthMe = api.get('/auth/me')
+        .then(res => {
+            if (res.data?.id) {
+                currentSession = {
+                    userId: res.data.id,
+                    email: res.data.email
+                };
+                return currentSession;
+            }
+            return null;
+        })
+        .catch(() => {
+            return null;
+        })
+        .finally(() => {
+            inFlightAuthMe = null;
+        });
+
+    return inFlightAuthMe;
+};
+
 export function useAuth() {
     const [isLoggedIn, setLoggedInState] = useState<boolean>(() => currentSession !== null);
     const [session, setSessionState] = useState<UserSession | null>(() => currentSession);
@@ -78,28 +105,17 @@ export function useAuth() {
         window.addEventListener(AUTH_EVENT_KEY, handleAuthChange);
         window.addEventListener('storage', handleStorageEvent);
 
-        // Background session hydration via HTTP-Only cookie
-        api.get('/auth/me')
-            .then(res => {
+        if (!currentSession) {
+            hydrateSession().then(sess => {
                 if (isMounted) {
-                    currentSession = {
-                        userId: res.data.id,
-                        email: res.data.email
-                    };
-                    setLoggedInState(true);
-                    setSessionState(currentSession);
-                    setIsLoading(false);
-                }
-            })
-            .catch(() => {
-                if (isMounted) {
-                    if (!currentSession) {
-                        setLoggedInState(false);
-                        setSessionState(null);
-                    }
+                    setLoggedInState(sess !== null);
+                    setSessionState(sess);
                     setIsLoading(false);
                 }
             });
+        } else {
+            setIsLoading(false);
+        }
 
         return () => {
             isMounted = false;

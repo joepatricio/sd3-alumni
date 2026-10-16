@@ -26,14 +26,14 @@ from playwright.sync_api import sync_playwright, expect, Page, BrowserContext
 # ==============================================================================
 # TESTER CONFIGURATION - ADJUST VALUES BEFORE EXECUTION
 # ==============================================================================
-BASE_URL = "localhost:5173"
-# BASE_URL = "https://najealp.top"
+# BASE_URL = "localhost:5173"
+BASE_URL = "https://najealp.top"
 
 # Test Member Information
 # Note: Ensure the email is unique or updated before running a fresh registration.
 #TEST_USER_EMAIL = f"demo.{int(time.time())}@example.com"
-TEST_USER_EMAIL = "najealp@example.com"
-TEST_USER_NAME = "Patricio Jose Najeal"
+TEST_USER_EMAIL = "najeal.test@example.com"
+TEST_USER_NAME = "Jose Hortelano"
 TEST_USER_PASSWORD = "Password123!"
 TEST_USER_BATCH = 2024
 TEST_USER_DEGREE = "Bachelor of Science in Computer Engineering"

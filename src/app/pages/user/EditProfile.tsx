@@ -214,7 +214,7 @@ export function EditProfile() {
                             <ImageUpload
                                 previewUrl={profileImageUrl}
                                 onFileSelect={handleImageSelect}
-                                onClear={() => setProfileImageUrl('/uploads/profile-image.jpg')}
+                                onClear={() => setProfileImageUrl('/uploads/engineer.png')}
                                 placeholderText="Upload a new profile picture"
                             />
                         </div>
