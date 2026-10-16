@@ -5,12 +5,74 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import cookieParser from 'cookie-parser';
 import multer from 'multer';
+import fs from 'fs';
 import path from 'path';
+import sharp from 'sharp';
 import { v4 as uuidv4 } from 'uuid';
 import { PrismaClient } from "@prisma-client/client";
 import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
 import { parseWhere, parseSort, numericFields } from './queryParser.js';
 import { rateLimit, ipKeyGenerator } from 'express-rate-limit';
+
+// ==============================================================================
+// ENVIRONMENT CONFIGURATION VALIDATION
+// ==============================================================================
+const envErrors = [];
+
+// DATABASE_URL
+if (!process.env.DATABASE_URL || !process.env.DATABASE_URL.trim()) {
+    envErrors.push("DATABASE_URL is missing or empty.");
+}
+
+// API_PORT or PORT
+const rawPort = process.env.API_PORT || process.env.PORT;
+if (!rawPort || !/^\d+$/.test(String(rawPort).trim())) {
+    envErrors.push(`API_PORT (or PORT) must be a valid integer between 1 and 65535. Received: "${rawPort}"`);
+} else {
+    const portNum = parseInt(String(rawPort).trim(), 10);
+    if (portNum < 1 || portNum > 65535) {
+        envErrors.push(`API_PORT out of range (1-65535). Received: ${portNum}`);
+    }
+}
+
+// JWT_SECRET
+if (!process.env.JWT_SECRET || !process.env.JWT_SECRET.trim()) {
+    envErrors.push("JWT_SECRET is missing or empty.");
+}
+
+// CLASSIFIER_INTERVAL_MINUTES (strictly an integer)
+const rawClassifierInterval = process.env.CLASSIFIER_INTERVAL_MINUTES;
+if (rawClassifierInterval === undefined || rawClassifierInterval === null || String(rawClassifierInterval).trim() === '') {
+    envErrors.push("CLASSIFIER_INTERVAL_MINUTES is missing or empty. It must strictly be an integer.");
+} else if (!/^-?\d+$/.test(String(rawClassifierInterval).trim())) {
+    envErrors.push(`CLASSIFIER_INTERVAL_MINUTES must strictly be an integer. Received: "${rawClassifierInterval}"`);
+}
+
+// If interval > 0, classification is active; verify Cloudflare credentials
+const parsedInterval = (rawClassifierInterval !== undefined && rawClassifierInterval !== null && /^-?\d+$/.test(String(rawClassifierInterval).trim()))
+    ? parseInt(String(rawClassifierInterval).trim(), 10)
+    : null;
+
+if (parsedInterval !== null && parsedInterval > 0) {
+    if (!process.env.CLOUDFLARE_ACCOUNT_ID || !process.env.CLOUDFLARE_ACCOUNT_ID.trim()) {
+        envErrors.push("CLOUDFLARE_ACCOUNT_ID is required when CLASSIFIER_INTERVAL_MINUTES > 0.");
+    }
+    if (!process.env.CLOUDFLARE_API_TOKEN || !process.env.CLOUDFLARE_API_TOKEN.trim()) {
+        envErrors.push("CLOUDFLARE_API_TOKEN is required when CLASSIFIER_INTERVAL_MINUTES > 0.");
+    }
+}
+
+if (envErrors.length > 0) {
+    console.error("\n=======================================================");
+    console.error("FATAL: Environment configuration misconfigured!");
+    for (const err of envErrors) {
+        console.error(`  - ${err}`);
+    }
+    console.error("=======================================================\n");
+    process.exit(1);
+}
+
+export const CLASSIFIER_INTERVAL_MINUTES = parsedInterval;
 
 const adapter = new PrismaBetterSqlite3({
     url: process.env.DATABASE_URL,
@@ -320,77 +382,6 @@ app.post('/api/auth/reset-password', authLimiter, async (req, res) => {
     }
 });
 
-let isAutoApprovingUsers = false;
-export async function autoApprovePendingUsers() {
-    if (isAutoApprovingUsers) return;
-    isAutoApprovingUsers = true;
-    try {
-        const pendingUserStatus = await prisma.userStatus.findFirst({ where: { statusName: 'Pending' } });
-        const regularUserStatus = await prisma.userStatus.findFirst({ where: { statusName: 'Regular' } });
-
-        if (!pendingUserStatus || !regularUserStatus) return;
-
-        const pendingUsers = await prisma.user.findMany({
-            where: { userStatusId: pendingUserStatus.id },
-            include: { profile: true, auth: true }
-        });
-
-        if (!pendingUsers || pendingUsers.length === 0) return;
-
-        for (const user of pendingUsers) {
-            try {
-                console.log(`[Auto-Approve] Approving user: ${user.id} (${user.auth?.email || user.profile?.email || 'unknown'})`);
-                const newStatusId = regularUserStatus.id;
-
-                await prisma.$transaction(async (tx) => {
-                    const record = await tx.record.create({
-                        data: {
-                            userId: user.id,
-                            userStatusId: newStatusId,
-                            description: "Automatically approved by system",
-                            adminId: null
-                        }
-                    });
-
-                    await tx.user.update({
-                        where: { id: user.id },
-                        data: {
-                            userStatusId: newStatusId,
-                            currentRecordId: record.id
-                        }
-                    });
-                });
-
-                await prisma.clefLog.create({
-                    data: {
-                        targetId: user.id,
-                        targetType: 'User',
-                        requestPayload: null,
-                        responsePayload: null,
-                        decision: 'Approved'
-                    }
-                }).catch(e => console.warn("Failed to write clefLog for user auto-approval:", e.message));
-
-                console.log(`[Auto-Approve] User ${user.id} approved successfully`);
-            } catch (userErr) {
-                console.error(`[Auto-Approve] Failed to approve user ${user.id}:`, userErr);
-            }
-        }
-    } catch (err) {
-        console.error("Error in autoApprovePendingUsers:", err);
-    } finally {
-        isAutoApprovingUsers = false;
-    }
-}
-
-// Background auto-approval periodic watchdog (runs every 60s)
-setInterval(() => {
-    autoApprovePendingUsers().catch(err => console.error("Recurring auto-approval error:", err));
-}, 60 * 1000);
-
-// Run once on startup
-autoApprovePendingUsers().catch(err => console.error("Startup auto-approval error:", err));
-
 // User limits check and registration
 app.post('/api/auth/register', authLimiter, async (req, res) => {
     let { fullName, email, password, degreeProgram, batch, gender } = req.body;
@@ -498,10 +489,12 @@ app.post('/api/auth/register', authLimiter, async (req, res) => {
             });
         });
 
-        // Trigger immediate background auto-approval for newly registered user
-        setImmediate(() => {
-            autoApprovePendingUsers().catch(err => console.error("Immediate auto-approval failed:", err));
-        });
+        // Trigger immediate background auto-approval for newly registered user if enabled
+        if (CLASSIFIER_INTERVAL_MINUTES > 0) {
+            setImmediate(() => {
+                autoApprovePendingUsers().catch(err => console.error("Immediate auto-approval failed:", err));
+            });
+        }
 
         res.status(201).json({ message: 'User registered successfully' });
     } catch (error) {
@@ -2835,3 +2828,286 @@ if (process.env.NODE_ENV === 'production') {
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
 });
+
+// ==============================================================================
+// CONTENT CLASSIFIER & AUTO-REGISTRATION SYSTEM (MERGED)
+// ==============================================================================
+
+const CLOUDFLARE_ACCOUNT_ID = process.env.CLOUDFLARE_ACCOUNT_ID;
+const CLOUDFLARE_API_TOKEN = process.env.CLOUDFLARE_API_TOKEN;
+const CLOUDFLARE_MODEL = "@cf/cloudflare/clef-flash";
+
+async function askClef(stateStr, questions, imagePath) {
+    if (!CLOUDFLARE_ACCOUNT_ID || !CLOUDFLARE_API_TOKEN) {
+        console.warn("[Clef AI] Cloudflare credentials missing. Simulating 'Review'.");
+        return { isUnsafe: 0.5, isSafe: 0.5, responseText: "Review" };
+    }
+
+    const url = `https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}/ai/run/${CLOUDFLARE_MODEL}`;
+
+    const bodyObj = {
+        state: stateStr,
+        questions: questions
+    };
+
+    if (imagePath) {
+        try {
+            const fullPath = path.join(process.cwd(), imagePath);
+            if (fs.existsSync(fullPath)) {
+                const buffer = await sharp(fullPath)
+                    .resize({ width: 512, height: 512, fit: 'inside', withoutEnlargement: true })
+                    .webp({ quality: 80 })
+                    .toBuffer();
+
+                const base64 = buffer.toString("base64");
+                bodyObj.images = [{
+                    content_type: "image/webp",
+                    base64: base64
+                }];
+            }
+        } catch (err) {
+            console.error("[Clef AI] Error reading/resizing image:", err);
+        }
+    }
+
+    try {
+        const response = await fetch(url, {
+            method: "POST",
+            headers: {
+                "Authorization": `Bearer ${CLOUDFLARE_API_TOKEN}`,
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(bodyObj),
+            signal: AbortSignal.timeout(10000)
+        });
+
+        const result = await response.json();
+        if (!result.success) {
+            console.error("[Clef AI] API Error:", JSON.stringify(result.errors));
+            return { isUnsafe: 0.5, isSafe: 0.5, responseText: "Review" };
+        }
+
+        const answers = result.result?.answers || {};
+        const isUnsafeScore = answers.isUnsafe?.noul || 0;
+        const isSafeScore = answers.isSafe?.noul || 0;
+
+        return {
+            isUnsafe: isUnsafeScore,
+            isSafe: isSafeScore,
+            responseText: JSON.stringify(answers)
+        };
+    } catch (e) {
+        console.error("[Clef AI] Fetch Error:", e);
+        return { isUnsafe: 0.5, isSafe: 0.5, responseText: "Review" };
+    }
+}
+
+async function classifyPendingBulletins() {
+    if (CLASSIFIER_INTERVAL_MINUTES <= 0) return;
+    const pendingStatus = await prisma.contentStatus.findFirst({ where: { statusName: 'Pending' } });
+    const approvedStatus = await prisma.contentStatus.findFirst({ where: { statusName: 'Approved' } });
+    const rejectedStatus = await prisma.contentStatus.findFirst({ where: { statusName: 'Rejected' } });
+    const flaggedStatus = await prisma.contentStatus.findFirst({ where: { statusName: 'Flagged' } });
+
+    if (!pendingStatus || !approvedStatus || !rejectedStatus || !flaggedStatus) return;
+
+    const pendingBulletins = await prisma.bulletin.findMany({
+        where: { contentStatusId: pendingStatus.id },
+        include: { author: true }
+    });
+
+    if (!pendingBulletins || pendingBulletins.length === 0) return;
+
+    for (const bulletin of pendingBulletins) {
+        try {
+            console.log(`[Classifier] Classifying Bulletin: ${bulletin.id}`);
+            const payload = {
+                title: bulletin.title,
+                content: bulletin.content
+            };
+            const payloadStr = JSON.stringify(payload);
+            const stateStr = `
+                Ensure people have predictable experiences by properly labeling content that is 
+                graphic, sexually-explicit, or offensive. A user has submitted a new post: ${payloadStr}
+            `;
+            const questions = {
+                isUnsafe: { type: "noul", instructions: "Is this post unsafe?" },
+                isSafe: { type: "noul", instructions: "Is this safe to post?" }
+            };
+
+            const { isUnsafe, isSafe, responseText } = await askClef(stateStr, questions, bulletin.bulletinImage);
+
+            let finalDecision = "Review";
+            let newStatusId = flaggedStatus.id; // Mark as flagged by default so it escapes the infinite loop
+
+            if (isUnsafe >= 0.45) {
+                finalDecision = "Rejected";
+                newStatusId = rejectedStatus.id;
+            } else if (isSafe >= 0.80 && isUnsafe <= 0.15) {
+                finalDecision = "Approved";
+                newStatusId = approvedStatus.id;
+            } else {
+                finalDecision = "Review";
+                newStatusId = flaggedStatus.id;
+            }
+
+            await prisma.bulletin.update({
+                where: { id: bulletin.id },
+                data: { contentStatusId: newStatusId }
+            });
+
+            // Update user statistics if approved
+            if (finalDecision === "Approved" && bulletin.authorId) {
+                const userStats = await prisma.userStatistic.findFirst({ where: { userId: bulletin.authorId } });
+                if (userStats) {
+                    await prisma.userStatistic.update({
+                        where: { userId: userStats.userId },
+                        data: { bulletinsCreated: { increment: 1 } }
+                    });
+                }
+            }
+
+            let action = "";
+            if (finalDecision === "Approved") action = "automatically approved";
+            else if (finalDecision === "Rejected") action = "automatically rejected";
+            else action = "flagged for manual review";
+
+            let sysNotifType = await prisma.notificationType.findFirst({ where: { notificationTypeName: "System" } });
+            if (!sysNotifType) {
+                sysNotifType = await prisma.notificationType.create({ data: { notificationTypeName: "System" } });
+            }
+            await prisma.notification.create({
+                data: {
+                    userId: bulletin.authorId,
+                    notificationTypeId: sysNotifType.id,
+                    notificationMessage: JSON.stringify({
+                        text: `Your bulletin "${bulletin.title}" was ${action} by the AI filter.`,
+                        link: `/bulletin/${bulletin.id}`
+                    })
+                }
+            }).catch(e => console.warn(`Failed notification for bulletin ${bulletin.id}:`, e.message));
+
+            await prisma.clefLog.create({
+                data: {
+                    targetId: bulletin.id,
+                    targetType: 'Bulletin',
+                    requestPayload: payloadStr,
+                    responsePayload: responseText,
+                    decision: finalDecision
+                }
+            }).catch(e => console.warn(`Failed clefLog for bulletin ${bulletin.id}:`, e.message));
+
+            console.log(`[Classifier] Bulletin ${bulletin.id} -> ${finalDecision}`);
+        } catch (bulletinErr) {
+            console.error(`[Classifier] Error processing bulletin ${bulletin.id}:`, bulletinErr);
+        }
+    }
+}
+
+let isAutoApprovingUsers = false;
+async function autoApprovePendingUsers() {
+    if (CLASSIFIER_INTERVAL_MINUTES <= 0) return;
+    if (isAutoApprovingUsers) return;
+    isAutoApprovingUsers = true;
+    try {
+        const pendingUserStatus = await prisma.userStatus.findFirst({ where: { statusName: 'Pending' } });
+        const regularUserStatus = await prisma.userStatus.findFirst({ where: { statusName: 'Regular' } });
+
+        if (!pendingUserStatus || !regularUserStatus) {
+            console.warn("[Auto-Register] Pending or Regular user status not found in database.");
+            return;
+        }
+
+        const pendingUsers = await prisma.user.findMany({
+            where: { userStatusId: pendingUserStatus.id },
+            include: { profile: true, auth: true }
+        });
+
+        if (!pendingUsers || pendingUsers.length === 0) return;
+
+        for (const user of pendingUsers) {
+            try {
+                console.log(`[Auto-Register] Approving user: ${user.id} (${user.auth?.email || user.profile?.email || 'unknown'})`);
+                const newStatusId = regularUserStatus.id;
+
+                await prisma.$transaction(async (tx) => {
+                    const record = await tx.record.create({
+                        data: {
+                            userId: user.id,
+                            userStatusId: newStatusId,
+                            description: "Automatically approved by system",
+                            adminId: null
+                        }
+                    });
+
+                    await tx.user.update({
+                        where: { id: user.id },
+                        data: {
+                            userStatusId: newStatusId,
+                            currentRecordId: record.id
+                        }
+                    });
+                });
+
+                await prisma.clefLog.create({
+                    data: {
+                        targetId: user.id,
+                        targetType: 'User',
+                        requestPayload: null,
+                        responsePayload: null,
+                        decision: 'Approved'
+                    }
+                }).catch(e => console.warn("Failed to write clefLog for user auto-approval:", e.message));
+
+                console.log(`[Auto-Register] User ${user.id} approved successfully`);
+            } catch (userErr) {
+                console.error(`[Auto-Register] Failed to approve user ${user.id}:`, userErr);
+            }
+        }
+    } catch (err) {
+        console.error("[Auto-Register] Error in autoApprovePendingUsers:", err);
+    } finally {
+        isAutoApprovingUsers = false;
+    }
+}
+
+let isRunningClassifier = false;
+async function runClassifierTasks() {
+    if (CLASSIFIER_INTERVAL_MINUTES <= 0) return;
+    if (isRunningClassifier) {
+        console.log(`[${new Date().toISOString()}] Classifier tasks already running, skipping interval tick.`);
+        return;
+    }
+    isRunningClassifier = true;
+    try {
+        console.log(`[${new Date().toISOString()}] Running classifier & auto-approval tasks...`);
+        // Always run user auto-approval first
+        try {
+            await autoApprovePendingUsers();
+        } catch (e) {
+            console.error("[Classifier] User Task Error:", e);
+        }
+
+        // Run bulletin AI classification
+        try {
+            await classifyPendingBulletins();
+        } catch (e) {
+            console.error("[Classifier] Bulletin Task Error:", e);
+        }
+    } finally {
+        isRunningClassifier = false;
+    }
+}
+
+// Classifier & Auto-registration Scheduler
+if (CLASSIFIER_INTERVAL_MINUTES > 0) {
+    console.log(`[Classifier] Starting content classifier and auto-registration loop (every ${CLASSIFIER_INTERVAL_MINUTES} minute(s))...`);
+    runClassifierTasks().catch(err => console.error("[Classifier] Startup task error:", err));
+    setInterval(() => {
+        runClassifierTasks().catch(err => console.error("[Classifier] Interval task error:", err));
+    }, CLASSIFIER_INTERVAL_MINUTES * 60 * 1000);
+} else {
+    console.log(`[Classifier] CLASSIFIER_INTERVAL_MINUTES is ${CLASSIFIER_INTERVAL_MINUTES} (<= 0). Classification and auto-registration logic are disabled.`);
+}
+
+export { autoApprovePendingUsers, classifyPendingBulletins, runClassifierTasks };

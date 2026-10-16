@@ -16,10 +16,7 @@
     "prisma:dev": "npx prisma migrate dev && npx prisma generate",
     "prisma:deploy": "npx prisma migrate deploy && npx prisma generate",
     "prisma:push": "npx prisma db push",
-    "prisma:seed": "tsx prisma/seed.ts",
-    "classifier": "tsx api/classifier.js",
-    "classifier:daemon": "cross-env NODE_ENV=production pm2 start npm --name sd3-classifier -- run classifier",
-    "classifier:stop": "pm2 stop sd3-classifier"
+    "prisma:seed": "tsx prisma/seed.ts"
   },
   "dependencies": {
     "@emotion/react": "11.14.0",
