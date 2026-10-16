@@ -201,10 +201,10 @@ export function ProfileHeader({
                 {/* Tabs Navigation - redesigned for premium feel */}
                 {isProfilePage && showTab && (<div className="flex gap-4 md:gap-8 border-t border-gray-100 pt-6 overflow-x-auto no-scrollbar">
                     {[
-                        { id: 'overview', label: 'Overview', count: statsData ? statsData.bulletinsCreated + statsData.commentsWritten : 0 },
+                        { id: 'overview', label: 'Overview', count: 0 },
                         { id: 'bulletins', label: 'Bulletins', count: statsData ? statsData.bulletinsCreated : 0 },
                         { id: 'comments', label: 'Comments', count: statsData ? statsData.commentsWritten : 0 },
-                        { id: 'events', label: 'Events', count: statsData ? statsData.eventsAttended : 0 },
+                        { id: 'events', label: 'Events', count: 0 },
                         ...(isOwner ? [{ id: 'donations', label: 'Donations', count: 0 }] : []),
                         ...(isOwner && pendingRequestsCount > 0 ? [{ id: 'pending', label: 'Pending Requests', count: pendingRequestsCount, isLink: true, href: '/profile/connections' }] : []),
                     ].map((tab) => (
