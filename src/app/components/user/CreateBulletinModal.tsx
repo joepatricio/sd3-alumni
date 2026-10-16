@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -54,13 +54,14 @@ export interface BulletinData {
     id?: string;
     title: string;
     bulletinDate?: string;
-    content: string;
+    content?: string;
+    description?: string;
     bulletinImage?: string | File | null;
     readTimeMinutes?: number;
-    category?: string;
+    category?: any;
     contentStatus?: { id: string; statusName: string };
     status?: { id: string; statusName: string };
-    bulletinCategory?: { id?: string; bulletinCategoryName: string } | string;
+    bulletinCategory?: any;
     bulletinCategoryId?: string;
 }
 
@@ -73,10 +74,10 @@ interface CreateBulletinModalProps {
 }
 
 const DEFAULT_BULLETIN_CATEGORIES = [
-    { id: '1', bulletinCategoryName: 'General News & Announcements' },
-    { id: '2', bulletinCategoryName: 'Career & Networking' },
-    { id: '3', bulletinCategoryName: 'Alumni Spotlight & Stories' },
-    { id: '4', bulletinCategoryName: 'Donations & Giving' },
+    { id: '1', bulletinCategoryName: 'Announcements' },
+    { id: '2', bulletinCategoryName: 'Careers' },
+    { id: '3', bulletinCategoryName: 'Success Stories' },
+    { id: '4', bulletinCategoryName: 'Donations' },
     { id: '5', bulletinCategoryName: 'Others' }
 ];
 
@@ -113,7 +114,10 @@ export function CreateBulletinModal({ trigger, initialData, isAdmin = false, ope
 
     const getInitialCategory = (data?: BulletinData) => {
         if (!data) return '';
-        if (data.category && typeof data.category === 'string') return data.category;
+        if (typeof data.category === 'string') return data.category;
+        if (typeof data.category === 'object' && (data.category as any)?.bulletinCategoryName) {
+            return (data.category as any).bulletinCategoryName;
+        }
         if (data.bulletinCategory) {
             if (typeof data.bulletinCategory === 'object' && data.bulletinCategory.bulletinCategoryName) {
                 return data.bulletinCategory.bulletinCategoryName;
@@ -122,18 +126,23 @@ export function CreateBulletinModal({ trigger, initialData, isAdmin = false, ope
                 return data.bulletinCategory;
             }
         }
+        if ((data as any).bulletinCategoryName) {
+            return (data as any).bulletinCategoryName;
+        }
         return '';
     };
 
     // Effect to update form values when initialData changes or modal opens
     useEffect(() => {
         if (initialData && open) {
+            const initialCategory = getInitialCategory(initialData);
+            const initialContent = initialData.content || initialData.description || '';
             form.reset({
-                title: initialData.title,
-                category: getInitialCategory(initialData),
-                content: initialData.content,
+                title: initialData.title || '',
+                category: initialCategory,
+                content: initialContent,
                 readTimeMinutes: initialData.readTimeMinutes || 5,
-                bulletinImage: initialData.bulletinImage,
+                bulletinImage: initialData.bulletinImage || null,
             });
             if (typeof initialData.bulletinImage === 'string') {
                 setPreviewUrl(initialData.bulletinImage);
@@ -152,6 +161,14 @@ export function CreateBulletinModal({ trigger, initialData, isAdmin = false, ope
         }
     }, [initialData, form, open]);
 
+    const availableCategories = useMemo(() => {
+        const list = categories.length > 0 ? [...categories] : [...DEFAULT_BULLETIN_CATEGORIES];
+        const currentCategory = form.watch('category');
+        if (currentCategory && !list.some(c => c.bulletinCategoryName === currentCategory)) {
+            list.unshift({ id: 'current', bulletinCategoryName: currentCategory });
+        }
+        return list;
+    }, [categories, form.watch('category')]);
 
     async function onSubmit(values: z.infer<typeof formSchema>) {
         if (form.formState.isSubmitting) return;
@@ -211,7 +228,6 @@ export function CreateBulletinModal({ trigger, initialData, isAdmin = false, ope
                 await api.post(endpoint, payload);
             }
 
-            // const isPending = !isAdmin && isEditMode;
             const message = initialData ? 'Bulletin successfully updated!' : 'Bulletin successfully created!';
             const description = isAdmin ? 'Your changes have been saved.' : 'Your bulletin has been submitted for review.';
 
@@ -229,23 +245,41 @@ export function CreateBulletinModal({ trigger, initialData, isAdmin = false, ope
         }
     }
 
+    const onInvalid = (errors: any) => {
+        console.error("Bulletin form validation errors:", errors);
+        const getFirstError = (errObj: any): string | null => {
+            for (const key of Object.keys(errObj)) {
+                if (errObj[key]?.message) return String(errObj[key].message);
+                if (typeof errObj[key] === 'object') {
+                    const nested = getFirstError(errObj[key]);
+                    if (nested) return nested;
+                }
+            }
+            return null;
+        };
+        const message = getFirstError(errors) || "Please check the form for required fields.";
+        toast.error(message);
+    };
+
     const handleFileSelect = (url: string) => {
         setPreviewUrl(url);
-        form.setValue('bulletinImage', url);
+        form.setValue('bulletinImage', url, { shouldValidate: true });
     };
 
     const handleClearImage = () => {
         setPreviewUrl(null);
-        form.setValue('bulletinImage', null);
+        form.setValue('bulletinImage', null, { shouldValidate: true });
     };
 
     const isEditMode = !!initialData;
 
     return (
         <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger asChild>
-                {trigger}
-            </DialogTrigger>
+            {trigger && (
+                <DialogTrigger asChild>
+                    {trigger}
+                </DialogTrigger>
+            )}
             <DialogContent className="sm:max-w-[425px] md:max-w-[600px] max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                     <DialogTitle>{isEditMode ? 'Edit Bulletin' : 'Create Bulletin'}</DialogTitle>
@@ -255,7 +289,7 @@ export function CreateBulletinModal({ trigger, initialData, isAdmin = false, ope
                 </DialogHeader>
 
                 <Form {...form}>
-                    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                    <form onSubmit={form.handleSubmit(onSubmit, onInvalid)} className="space-y-4">
                         {/* Title */}
                         <FormField
                             control={form.control}
@@ -278,14 +312,14 @@ export function CreateBulletinModal({ trigger, initialData, isAdmin = false, ope
                             render={({ field }) => (
                                 <FormItem>
                                     <FormLabel>Category</FormLabel>
-                                    <Select onValueChange={field.onChange} value={field.value || ''}>
+                                    <Select onValueChange={field.onChange} value={field.value || undefined}>
                                         <FormControl>
                                             <SelectTrigger>
                                                 <SelectValue placeholder="Select bulletin category" />
                                             </SelectTrigger>
                                         </FormControl>
                                         <SelectContent>
-                                            {(categories.length > 0 ? categories : DEFAULT_BULLETIN_CATEGORIES).map((cat) => (
+                                            {availableCategories.map((cat) => (
                                                 <SelectItem
                                                     key={cat.id || cat.bulletinCategoryName}
                                                     value={cat.bulletinCategoryName}
@@ -302,19 +336,26 @@ export function CreateBulletinModal({ trigger, initialData, isAdmin = false, ope
                         />
 
                         {/* Banner Image */}
-                        <FormItem>
-                            <FormLabel>Banner Image (Optional)</FormLabel>
-                            <FormControl>
-                                <div className="space-y-2">
-                                    <ImageUpload
-                                        previewUrl={previewUrl}
-                                        onFileSelect={handleFileSelect}
-                                        onClear={handleClearImage}
-                                        placeholderText="Click or drag to upload bulletin banner"
-                                    />
-                                </div>
-                            </FormControl>
-                        </FormItem>
+                        <FormField
+                            control={form.control}
+                            name="bulletinImage"
+                            render={() => (
+                                <FormItem>
+                                    <FormLabel>Banner Image (Optional)</FormLabel>
+                                    <FormControl>
+                                        <div className="space-y-2">
+                                            <ImageUpload
+                                                previewUrl={previewUrl}
+                                                onFileSelect={handleFileSelect}
+                                                onClear={handleClearImage}
+                                                placeholderText="Click or drag to upload bulletin banner"
+                                            />
+                                        </div>
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
 
                         {/* Content */}
                         <FormField

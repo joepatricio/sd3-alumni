@@ -49,7 +49,17 @@ import {
     SelectValue,
 } from '@components/ui/select';
 
-const formSchema = z.object({
+const DEFAULT_EVENT_CATEGORIES = [
+    { id: '1', eventCategoryName: 'Reunion' },
+    { id: '2', eventCategoryName: 'Workshop' },
+    { id: '3', eventCategoryName: 'Conference' },
+    { id: '4', eventCategoryName: 'Networking' },
+    { id: '5', eventCategoryName: 'Sports' },
+    { id: '6', eventCategoryName: 'Virtual' },
+    { id: '7', eventCategoryName: 'General' }
+];
+
+const getFormSchema = (isEdit: boolean) => z.object({
     title: z.string().min(2, {
         message: 'Title must be at least 2 characters.',
     }),
@@ -58,13 +68,6 @@ const formSchema = z.object({
     }),
     date: z.string().min(1, {
         message: 'A date for the event is required.',
-    }).refine((dateStr) => {
-        const eventDate = new Date(dateStr + 'T00:00:00');
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        return eventDate >= today;
-    }, {
-        message: 'Event date must be today or in the future.',
     }),
     startTimeHour: z.string(),
     startTimeMinute: z.string(),
@@ -89,10 +92,21 @@ const formSchema = z.object({
     description: z.string().min(10, {
         message: 'Description must be at least 10 characters.',
     }),
-    image: z.any().refine((val) => val !== undefined && val !== null, {
-        message: 'An event image is required.',
-    }),
+    image: z.any().optional(),
 }).superRefine((data, ctx) => {
+    if (!isEdit && data.date) {
+        const eventDate = new Date(data.date + 'T00:00:00');
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        if (eventDate < today) {
+            ctx.addIssue({
+                code: z.ZodIssueCode.custom,
+                message: 'Event date must be today or in the future.',
+                path: ['date']
+            });
+        }
+    }
+
     if (data.category === 'Virtual') {
         if (!data.modality || data.modality.trim() === '') {
             ctx.addIssue({
@@ -119,10 +133,11 @@ const formSchema = z.object({
     }
 
     const getMinutes = (h: string, m: string, ampm: string) => {
-        let hour = parseInt(h);
+        let hour = parseInt(h, 10);
+        if (isNaN(hour)) hour = 12;
         if (ampm === 'PM' && hour !== 12) hour += 12;
         if (ampm === 'AM' && hour === 12) hour = 0;
-        return hour * 60 + parseInt(m);
+        return hour * 60 + (parseInt(m, 10) || 0);
     };
 
     const startTotal = getMinutes(data.startTimeHour, data.startTimeMinute, data.startTimeAmPm);
@@ -211,8 +226,9 @@ export function CreateEventModal({ trigger, initialData, isAdmin, open: external
         if (open && categories.length === 0) {
             api.get('/eventCategories')
                 .then(res => {
-                    if (Array.isArray(res.data)) {
-                        setCategories(res.data);
+                    const fetched = Array.isArray(res.data) ? res.data : (res.data?.data || []);
+                    if (fetched.length > 0) {
+                        setCategories(fetched);
                     }
                 })
                 .catch(err => console.error('Failed to fetch event categories:', err));
@@ -241,7 +257,10 @@ export function CreateEventModal({ trigger, initialData, isAdmin, open: external
         }
     }, [open, psgcData, isLoadingPsgc]);
 
-    const form = useForm<z.infer<typeof formSchema>>({
+    const isEditMode = !!initialData;
+    const formSchema = React.useMemo(() => getFormSchema(isEditMode), [isEditMode]);
+
+    const form = useForm<z.infer<ReturnType<typeof getFormSchema>>>({
         resolver: zodResolver(formSchema),
         defaultValues: {
             title: '',
@@ -265,9 +284,19 @@ export function CreateEventModal({ trigger, initialData, isAdmin, open: external
                 landmark: '',
                 street: '',
             },
-            modality: ''
+            modality: '',
+            image: undefined,
         },
     });
+
+    const getInitialEventCategory = (data?: EventData) => {
+        if (!data) return '';
+        if (typeof data.category === 'string') return data.category;
+        if (typeof data.category === 'object' && (data.category as any)?.eventCategoryName) return (data.category as any).eventCategoryName;
+        if (typeof (data as any).eventCategory === 'object' && (data as any).eventCategory?.eventCategoryName) return (data as any).eventCategory.eventCategoryName;
+        if (typeof (data as any).eventCategory === 'string') return (data as any).eventCategory;
+        return '';
+    };
 
     // Effect to update basic form values when initialData changes or modal opens
     useEffect(() => {
@@ -276,7 +305,7 @@ export function CreateEventModal({ trigger, initialData, isAdmin, open: external
             if (timeStr.includes('AM') || timeStr.includes('PM')) {
                 const [time, ampm] = timeStr.split(' ');
                 const [h, m] = time.split(':');
-                return { hour: (parseInt(h, 10) % 12 || 12).toString(), minute: m, ampm };
+                return { hour: (parseInt(h, 10) % 12 || 12).toString(), minute: m || '00', ampm: ampm || defaultAmpm };
             }
             const [hStr, mStr] = timeStr.split(':');
             if (!hStr || !mStr) return { hour: defaultHour, minute: '00', ampm: defaultAmpm };
@@ -329,8 +358,8 @@ export function CreateEventModal({ trigger, initialData, isAdmin, open: external
             const endParsed = parseTimeStr((initialData as any).endTime, '1', 'PM');
 
             form.reset({
-                title: initialData.title,
-                category: (initialData as any).eventCategory?.eventCategoryName || initialData.category,
+                title: initialData.title || '',
+                category: getInitialEventCategory(initialData),
                 location: {
                     region: (parsedLocation as any)?.region || '',
                     regionCode: (parsedLocation as any)?.regionCode || '',
@@ -344,7 +373,7 @@ export function CreateEventModal({ trigger, initialData, isAdmin, open: external
                     lat: (parsedLocation as any)?.lat || 10.2954,
                     lng: (parsedLocation as any)?.lng || 123.8944,
                 },
-                description: initialData.description,
+                description: initialData.description || (initialData as any).content || '',
                 date: formattedDate,
                 startTimeHour: startParsed.hour,
                 startTimeMinute: startParsed.minute,
@@ -961,28 +990,53 @@ export function CreateEventModal({ trigger, initialData, isAdmin, open: external
         }
     }
 
+    const onInvalid = (errors: any) => {
+        console.error("Event form validation errors:", errors);
+        const getFirstError = (errObj: any): string | null => {
+            for (const key of Object.keys(errObj)) {
+                if (errObj[key]?.message) return String(errObj[key].message);
+                if (typeof errObj[key] === 'object') {
+                    const nested = getFirstError(errObj[key]);
+                    if (nested) return nested;
+                }
+            }
+            return null;
+        };
+        const message = getFirstError(errors) || "Please check the form for required fields.";
+        toast.error(message);
+    };
+
     const handleFileSelect = (url: string) => {
         setPreviewUrl(url);
-        form.setValue('image', url);
+        form.setValue('image', url, { shouldValidate: true });
     };
 
     const handleClearImage = () => {
         setPreviewUrl(null);
-        form.setValue('image', undefined);
+        form.setValue('image', undefined, { shouldValidate: true });
     };
 
     const hours = Array.from({ length: 12 }, (_, i) => (i + 1).toString());
     const minutes = Array.from({ length: 60 }, (_, i) => i.toString().padStart(2, '0'));
     const ampm = ['AM', 'PM'];
 
-    const isEditMode = !!initialData;
+    const availableCategories = React.useMemo(() => {
+        const list = categories.length > 0 ? [...categories] : [...DEFAULT_EVENT_CATEGORIES];
+        const currentCategory = form.watch('category');
+        if (currentCategory && !list.some(c => c.eventCategoryName === currentCategory)) {
+            list.unshift({ id: 'current', eventCategoryName: currentCategory });
+        }
+        return list;
+    }, [categories, form.watch('category')]);
 
     // Return function
     return (
         <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger asChild>
-                {trigger}
-            </DialogTrigger>
+            {trigger && (
+                <DialogTrigger asChild>
+                    {trigger}
+                </DialogTrigger>
+            )}
             <DialogContent className="sm:max-w-[425px] md:max-w-[700px] max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                     <DialogTitle>{isEditMode ? 'Edit Event' : 'Create Event'}</DialogTitle>
@@ -992,7 +1046,7 @@ export function CreateEventModal({ trigger, initialData, isAdmin, open: external
                 </DialogHeader>
 
                 <Form {...form}>
-                    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                    <form onSubmit={form.handleSubmit(onSubmit, onInvalid)} className="space-y-4">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <FormField
                                 control={form.control}
@@ -1025,7 +1079,7 @@ export function CreateEventModal({ trigger, initialData, isAdmin, open: external
                                                 </SelectTrigger>
                                             </FormControl>
                                             <SelectContent>
-                                                {categories.map((category) => (
+                                                {availableCategories.map((category) => (
                                                     <SelectItem
                                                         key={category.id}
                                                         value={category.eventCategoryName}
@@ -1419,19 +1473,26 @@ export function CreateEventModal({ trigger, initialData, isAdmin, open: external
                                 />
                             )}
 
-                            <FormItem className="md:col-span-2">
-                                <FormLabel>Banner Image (Optional)</FormLabel>
-                                <FormControl>
-                                    <div className="space-y-2">
-                                        <ImageUpload
-                                            previewUrl={previewUrl}
-                                            onFileSelect={handleFileSelect}
-                                            onClear={handleClearImage}
-                                            placeholderText="Click or drag to upload event banner"
-                                        />
-                                    </div>
-                                </FormControl>
-                            </FormItem>
+                            <FormField
+                                control={form.control}
+                                name="image"
+                                render={() => (
+                                    <FormItem className="md:col-span-2">
+                                        <FormLabel>Banner Image (Optional)</FormLabel>
+                                        <FormControl>
+                                            <div className="space-y-2">
+                                                <ImageUpload
+                                                    previewUrl={previewUrl}
+                                                    onFileSelect={handleFileSelect}
+                                                    onClear={handleClearImage}
+                                                    placeholderText="Click or drag to upload event banner"
+                                                />
+                                            </div>
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
 
                             <FormField
                                 control={form.control}

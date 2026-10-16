@@ -73,6 +73,8 @@ export function AdminEvents() {
             type: 'Event',
             status: e.eventStatus?.statusName || "Pending",
             description: e.description,
+            image: e.eventImage || null,
+            eventImage: e.eventImage || null,
             category: e.eventCategory?.eventCategoryName || "General",
             isOfficial: e.author?.userStatus?.statusName === 'Official',
             isBanned: e.author?.userStatus?.statusName === 'Banned',

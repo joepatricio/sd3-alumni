@@ -81,7 +81,10 @@ export function AdminBulletins() {
             date: b.bulletinDate,
             type: 'Bulletin',
             status: b.contentStatus?.statusName || "Pending",
+            content: b.content || '',
             description: b.content || '',
+            bulletinImage: b.bulletinImage || null,
+            readTimeMinutes: b.readTimeMinutes || 5,
             category: b.bulletinCategory?.bulletinCategoryName || "Announcements",
             isOfficial: b.author?.userStatus?.statusName === 'Official',
             isBanned: b.author?.userStatus?.statusName === 'Banned',
@@ -114,6 +117,7 @@ export function AdminBulletins() {
             contentType="Bulletin"
             fetchData={fetchData}
             statuses={["All", "For Review", "Pending", "Flagged", "Approved", "Rejected", "Archived"]}
+            assignableStatuses={["Pending", "Flagged", "Approved", "Rejected", "Archived"]}
             primaryColorClass="bg-blue-600 hover:bg-blue-700 text-white"
             outlineColorClass="text-blue-600 border-blue-200 hover:bg-blue-50"
             categories={[

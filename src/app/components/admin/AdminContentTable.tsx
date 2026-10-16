@@ -130,6 +130,7 @@ interface AdminContentTableProps {
     primaryColorClass: string;
     outlineColorClass: string;
     statuses?: string[];
+    assignableStatuses?: string[];
     categories?: string[];
     onStatusChange?: (id: string, newStatus: string) => void | Promise<void>;
 }
@@ -140,6 +141,7 @@ export function AdminContentTable({
     contentType,
     fetchData,
     statuses = ["All", "Pending", "Approved", "Rejected"],
+    assignableStatuses,
     categories,
     onStatusChange
 }: AdminContentTableProps) {
@@ -306,6 +308,7 @@ export function AdminContentTable({
     const getStatusConfig = (status: string) => {
         switch (status) {
             case "All": return { title: `All ${contentType}s`, description: `All ${contentType}s submitted to the platform` };
+            case "For Review": return { title: `For Review ${contentType}s`, description: `${contentType}s flagged or awaiting moderator review` };
             case "Pending": return { title: 'Needs Attention', description: `${contentType}s awaiting moderator approval before publishing` };
             case "Approved": return { title: `Published ${contentType}s`, description: 'Previously approved and currently visible to the public' };
             case "Rejected": return { title: `Rejected ${contentType}s`, description: 'Submissions that did not meet community guidelines' };
@@ -320,6 +323,7 @@ export function AdminContentTable({
     const getStatusClass = (category: string) => {
         switch (category) {
             case "All": return 'bg-gray-100 text-gray-800';
+            case "For Review": return 'bg-amber-100 text-amber-800';
             case "Pending": return 'bg-yellow-100 text-yellow-800';
             case "Approved": return 'bg-green-100 text-green-800';
             case "Rejected": return 'bg-red-100 text-red-800';
@@ -334,6 +338,7 @@ export function AdminContentTable({
     const getStatusIndicator = useCallback((status: string) => {
         switch (status) {
             case "All": return 'bg-gray-400';
+            case "For Review": return 'bg-amber-500';
             case "Pending": return 'bg-yellow-400';
             case "Approved": return 'bg-green-500';
             case "Rejected": return 'bg-red-500';
@@ -346,7 +351,7 @@ export function AdminContentTable({
     }, []);
 
     const getCategoryClass = useCallback((category: string) => {
-        if (category === "All" || category === "Pending" || category === "Approved" || category === "Rejected" || category === "Cancelled" || category === "Archived" || category === "Concluded") {
+        if (category === "All" || category === "For Review" || category === "Pending" || category === "Approved" || category === "Rejected" || category === "Cancelled" || category === "Archived" || category === "Concluded") {
             return getStatusClass(category);
         }
         if (category === "Official") return 'bg-brand-primary text-white';
@@ -354,9 +359,14 @@ export function AdminContentTable({
         return getCategoryColor(category);
     }, []);
 
-    const statusOptions = useMemo(() => statuses.filter(s => s !== "All").map(s => (
-        <option key={s} value={s}>{s}</option>
-    )), [statuses]);
+    const statusOptions = useMemo(() => {
+        const list = assignableStatuses || statuses;
+        return list
+            .filter(s => s !== "All" && s !== "For Review")
+            .map(s => (
+                <option key={s} value={s}>{s}</option>
+            ));
+    }, [assignableStatuses, statuses]);
 
     const renderTable = () => {
         if (isLoading) {
