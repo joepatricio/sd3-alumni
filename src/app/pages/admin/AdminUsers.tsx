@@ -305,16 +305,23 @@ export function AdminUsers() {
     const handleSaveEdit = async () => {
         if (!editingUser) return;
 
+        if (editStatus === 'Suspended' && !editExpiryDate) {
+            toast.error("Suspension expiry date is required.");
+            return;
+        }
+
         try {
             await api.post(`/admin/users/${editingUser.id}/status`, {
                 statusName: editStatus,
                 reason: editReason,
                 expiryDate: editStatus === 'Suspended' ? editExpiryDate : null
             });
+            toast.success(`User status updated to ${editStatus}`);
             setEditingUser(null);
             fetchUsersList();
-        } catch (err) {
+        } catch (err: any) {
             console.error("Failed to update user status:", err);
+            toast.error(err?.response?.data?.error || "Failed to update user status");
         }
     };
 
@@ -470,6 +477,12 @@ export function AdminUsers() {
                 initialExpiry = d.toISOString().split('T')[0];
             }
         }
+        if ((specificStatus || user.status) === 'Suspended' && !initialExpiry) {
+            const defaultDate = new Date();
+            defaultDate.setDate(defaultDate.getDate() + 7);
+            initialExpiry = defaultDate.toISOString().split('T')[0];
+        }
+
         setEditExpiryDate(initialExpiry);
     }, []);
 
@@ -691,7 +704,17 @@ export function AdminUsers() {
                     <div className="space-y-4 py-4">
                         <div className="space-y-2">
                             <Label>Status</Label>
-                            <Select value={editStatus} onValueChange={setEditStatus}>
+                            <Select
+                                value={editStatus}
+                                onValueChange={(val) => {
+                                    setEditStatus(val);
+                                    if (val === 'Suspended' && !editExpiryDate) {
+                                        const defaultDate = new Date();
+                                        defaultDate.setDate(defaultDate.getDate() + 7);
+                                        setEditExpiryDate(defaultDate.toISOString().split('T')[0]);
+                                    }
+                                }}
+                            >
                                 <SelectTrigger>
                                     <SelectValue placeholder="Select status" />
                                 </SelectTrigger>
@@ -706,7 +729,9 @@ export function AdminUsers() {
                             {editStatus === 'Suspended' && (
                                 <div className="space-y-2">
                                     <div className="flex items-center justify-between">
-                                        <Label>Suspension Expiry Date</Label>
+                                        <Label>
+                                            Suspension Expiry Date <span className="text-red-500">*</span>
+                                        </Label>
                                         {editExpiryDate && new Date(editExpiryDate).getFullYear() >= 3000 && (
                                             <Badge className="bg-orange-100 text-orange-800 border-orange-200 text-xs">
                                                 Indefinite
@@ -715,9 +740,14 @@ export function AdminUsers() {
                                     </div>
                                     <Input
                                         type="date"
+                                        required
                                         value={editExpiryDate}
                                         onChange={(e) => setEditExpiryDate(e.target.value)}
+                                        className={!editExpiryDate ? "border-red-300 focus-visible:ring-red-400" : ""}
                                     />
+                                    {!editExpiryDate && (
+                                        <p className="text-xs text-red-500 font-medium">Expiry date is required for suspending a user.</p>
+                                    )}
                                     <div className="flex gap-2 pt-1 flex-wrap">
                                         <Button type="button" variant="outline" size="sm" onClick={() => setPresetDuration(3)}>3 Days</Button>
                                         <Button type="button" variant="outline" size="sm" onClick={() => setPresetDuration(7)}>1 Week</Button>
@@ -748,7 +778,12 @@ export function AdminUsers() {
                     </div>
                     <DialogFooter>
                         <Button variant="outline" onClick={() => setEditingUser(null)}>Cancel</Button>
-                        <Button onClick={handleSaveEdit}>Save Changes</Button>
+                        <Button
+                            onClick={handleSaveEdit}
+                            disabled={editStatus === 'Suspended' && !editExpiryDate}
+                        >
+                            Save Changes
+                        </Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>

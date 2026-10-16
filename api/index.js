@@ -1912,6 +1912,10 @@ const handleAdminUpdateUserStatus = async (req, res) => {
             return res.status(400).json({ error: 'Invalid user status specified' });
         }
 
+        if (statusObj.statusName === 'Suspended' && !expiryDate) {
+            return res.status(400).json({ error: 'Expiry date is required for suspending a user' });
+        }
+
         const dateExpires = expiryDate ? new Date(expiryDate) : null;
         const description = reason || `Status updated to ${statusObj.statusName}`;
         const effectiveAdminId = getAdminId(req);
