@@ -21,10 +21,14 @@ export const setSession = (sessionData: UserSession | string | null, _rememberMe
     } else if (typeof sessionData === 'string') {
         try {
             const decoded: any = jwtDecode(sessionData);
-            currentSession = {
-                userId: decoded.id,
-                email: decoded.email
-            };
+            if (decoded?.role === 'admin') {
+                currentSession = null;
+            } else {
+                currentSession = {
+                    userId: decoded.id,
+                    email: decoded.email
+                };
+            }
         } catch {
             currentSession = null;
         }
@@ -60,7 +64,7 @@ const hydrateSession = async (): Promise<UserSession | null> => {
 
     inFlightAuthMe = api.get('/auth/me')
         .then(res => {
-            if (res.data?.id) {
+            if (res.data?.id && res.data?.role !== 'admin' && !res.data?.isAdmin) {
                 currentSession = {
                     userId: res.data.id,
                     email: res.data.email

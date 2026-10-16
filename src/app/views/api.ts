@@ -57,9 +57,11 @@ api.interceptors.request.use(config => {
         const adminToken = typeof sessionStorage !== 'undefined' ? sessionStorage.getItem('adminToken') : null;
         const userToken = (typeof localStorage !== 'undefined' ? localStorage.getItem('token') : null) ||
             (typeof sessionStorage !== 'undefined' ? sessionStorage.getItem('token') : null);
-        const token = (config.url?.startsWith('admin/') || config.url?.startsWith('api/admin/'))
-            ? (adminToken || userToken)
-            : (userToken || adminToken);
+        const isAdminRoute = config.url?.startsWith('admin/') ||
+            config.url?.startsWith('api/admin/') ||
+            config.url?.startsWith('auth/admin/') ||
+            config.url?.startsWith('api/auth/admin/');
+        const token = isAdminRoute ? adminToken : userToken;
 
         if (token && token !== 'null' && token !== 'undefined') {
             if (headers?.set && typeof headers.set === 'function') {

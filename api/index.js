@@ -246,14 +246,14 @@ const authenticateToken = (req, res, next) => {
     const authHeader = req.headers['authorization'];
     let token = authHeader && authHeader.split(' ')[1];
     if (!token || token === 'null' || token === 'undefined') {
-        token = req.cookies?.token || req.cookies?.adminToken;
+        token = req.cookies?.token;
     }
     if (!token || token === 'null' || token === 'undefined') {
         return res.status(401).json({ error: 'Unauthorized: Authentication token required' });
     }
 
     jwt.verify(token, JWT_SECRET, (err, user) => {
-        if (err) return res.status(403).json({ error: 'Forbidden: Invalid token' });
+        if (err || user.role === 'admin') return res.status(403).json({ error: 'Forbidden: Regular user access required' });
         req.user = user;
         next();
     });
@@ -263,7 +263,7 @@ const authenticateAdminToken = (req, res, next) => {
     const authHeader = req.headers['authorization'];
     let token = authHeader && authHeader.split(' ')[1];
     if (!token || token === 'null' || token === 'undefined') {
-        token = req.cookies?.adminToken || req.cookies?.token;
+        token = req.cookies?.adminToken;
     }
     if (!token || token === 'null' || token === 'undefined') {
         return res.status(401).json({ error: 'Unauthorized: Admin authentication token required' });
@@ -285,7 +285,7 @@ const getAdminId = (req) => {
     const authHeader = req.headers['authorization'];
     let token = authHeader && authHeader.split(' ')[1];
     if (!token || token === 'null' || token === 'undefined') {
-        token = req.cookies?.adminToken || req.cookies?.token;
+        token = req.cookies?.adminToken;
     }
     if (token && token !== 'null' && token !== 'undefined') {
         try {
@@ -673,30 +673,6 @@ app.get('/api/auth/admin/me', authenticateAdminToken, (req, res) => {
 // Get current user profile for auth validation
 app.get('/api/auth/me', authenticateToken, async (req, res) => {
     try {
-        if (req.user?.role === 'admin') {
-            const admin = await prisma.admin.findUnique({
-                where: { id: req.user.id }
-            });
-            if (admin) {
-                return res.json({
-                    id: admin.id,
-                    email: req.user.email || `${admin.username}@usjr.edu.ph`,
-                    role: 'admin',
-                    isAdmin: true,
-                    profileId: admin.id,
-                    name: admin.username,
-                    userStatus: { id: 'admin-status', statusName: 'Official' },
-                    profileStatus: { id: 'admin-profile', statusName: 'Public' },
-                    profile: {
-                        userId: admin.id,
-                        userName: admin.username,
-                        email: req.user.email || `${admin.username}@usjr.edu.ph`,
-                        profileImage: '/uploads/engineer.png'
-                    }
-                });
-            }
-        }
-
         const user = await prisma.user.findUnique({
             where: { id: req.user.id },
             include: {
