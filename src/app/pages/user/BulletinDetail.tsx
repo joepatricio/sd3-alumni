@@ -101,7 +101,7 @@ export function BulletinDetail() {
 
                     const authorUserId = bulletinData.profile?.userId || bulletinData.author?.profile?.userId || bulletinData.authorId || bulletinData.author?.id;
                     const authorUser = allUsers.find((u: any) => String(u.id) === String(authorUserId)) || bulletinData.author;
-                    if (authorUser && authorUser.userStatus?.statusName === 'Banned') {
+                    if (!isPreview && authorUser && authorUser.userStatus?.statusName === 'Banned') {
                         setBulletin(null);
                         setLoading(false);
                         return;

@@ -1639,6 +1639,7 @@ app.get('/api/admin/dashboard-stats', authenticateAdminToken, async (req, res) =
             totalUsersCount,
             pendingBulletinsCount,
             flaggedBulletinsCount,
+            approvedBulletinsCount,
             pendingEventsCount,
             approvedEventsCount,
             completedDonations,
@@ -1657,8 +1658,19 @@ app.get('/api/admin/dashboard-stats', authenticateAdminToken, async (req, res) =
             prisma.user.count(),
             prisma.bulletin.count({ where: { status: { statusName: 'Pending' } } }),
             prisma.bulletin.count({ where: { status: { statusName: 'Flagged' } } }),
+            prisma.bulletin.count({
+                where: {
+                    status: { statusName: 'Approved' },
+                    author: { userStatus: { statusName: { not: 'Banned' } } }
+                }
+            }),
             prisma.event.count({ where: { status: { statusName: 'Pending' } } }),
-            prisma.event.count({ where: { status: { statusName: 'Approved' } } }),
+            prisma.event.count({
+                where: {
+                    status: { statusName: 'Approved' },
+                    author: { userStatus: { statusName: { not: 'Banned' } } }
+                }
+            }),
             prisma.donation.findMany({ where: { status: { statusName: 'Completed' } } }),
             prisma.user.findMany({
                 take: RECENT_ACTIVITY_LENGTH,
@@ -1798,6 +1810,7 @@ app.get('/api/admin/dashboard-stats', authenticateAdminToken, async (req, res) =
             },
             pendingBulletins: pendingBulletinsCount,
             flaggedBulletins: flaggedBulletinsCount,
+            approvedBulletins: approvedBulletinsCount,
             pendingEvents: pendingEventsCount,
             approvedEvents: approvedEventsCount,
             donationsTotal,

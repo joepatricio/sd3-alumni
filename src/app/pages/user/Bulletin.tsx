@@ -21,13 +21,35 @@ const CreateBulletinModal = lazy(loadCreateBulletinModal);
 type ViewMode = 'headline' | 'article';
 const ARTICLE_ITEMS_PER_PAGE = 5;
 const HEADLINE_ITEMS_PER_PAGE = 10;
+const BULLETIN_FILTERS_KEY = 'bulletin_filters';
+
+interface BulletinFilterState {
+    viewMode?: ViewMode;
+    officialOnly?: boolean;
+    dateFrom?: string;
+    dateTo?: string;
+    selectedCategory?: string;
+}
+
+const getStoredBulletinFilters = (): BulletinFilterState => {
+    try {
+        if (typeof window !== 'undefined') {
+            const saved = sessionStorage.getItem(BULLETIN_FILTERS_KEY);
+            if (saved) return JSON.parse(saved);
+        }
+    } catch (e) {
+        console.error('Failed to parse bulletin filters from sessionStorage', e);
+    }
+    return {};
+};
 
 export function Bulletin() {
-    const [viewMode, setViewMode] = useState<ViewMode>('article');
-    const [officialOnly, setOfficialOnly] = useState(false);
-    const [dateFrom, setDateFrom] = useState('');
-    const [dateTo, setDateTo] = useState('');
-    const [visibleCount, setVisibleCount] = useState(ARTICLE_ITEMS_PER_PAGE);
+    const storedFilters = getStoredBulletinFilters();
+    const [viewMode, setViewMode] = useState<ViewMode>(() => storedFilters.viewMode || 'article');
+    const [officialOnly, setOfficialOnly] = useState<boolean>(() => storedFilters.officialOnly ?? false);
+    const [dateFrom, setDateFrom] = useState<string>(() => storedFilters.dateFrom || '');
+    const [dateTo, setDateTo] = useState<string>(() => storedFilters.dateTo || '');
+    const [visibleCount, setVisibleCount] = useState(() => (storedFilters.viewMode === 'headline' ? HEADLINE_ITEMS_PER_PAGE : ARTICLE_ITEMS_PER_PAGE));
 
     const { session } = useAuth();
     const [bulletins, setBulletins] = useState<BulletinData[]>([]);
@@ -36,10 +58,37 @@ export function Bulletin() {
     const [currentUserStatus, setCurrentUserStatus] = useState<string>('');
     const [loading, setLoading] = useState(true);
 
-    const [selectedCategory, setSelectedCategory] = useState<string>('All');
+    const [selectedCategory, setSelectedCategory] = useState<string>(() => storedFilters.selectedCategory || 'All');
     const [categories, setCategories] = useState<{ id: string; bulletinCategoryName: string }[]>([]);
     const [isCreateOpen, setIsCreateOpen] = useState(false);
     const [isCreateLoading, setIsCreateLoading] = useState(false);
+
+    useEffect(() => {
+        try {
+            sessionStorage.setItem(BULLETIN_FILTERS_KEY, JSON.stringify({
+                viewMode,
+                officialOnly,
+                dateFrom,
+                dateTo,
+                selectedCategory
+            }));
+        } catch (e) {
+            console.error('Failed to save bulletin filters to sessionStorage', e);
+        }
+    }, [viewMode, officialOnly, dateFrom, dateTo, selectedCategory]);
+
+    const clearFilters = () => {
+        setSelectedCategory('All');
+        setOfficialOnly(false);
+        setDateFrom('');
+        setDateTo('');
+        setVisibleCount(ITEMS_PER_PAGE);
+        try {
+            sessionStorage.removeItem(BULLETIN_FILTERS_KEY);
+        } catch (e) {
+            console.error('Failed to clear bulletin filters from sessionStorage', e);
+        }
+    };
 
     const handleCreateBulletinClick = async () => {
         if (isCreateLoading || isCreateOpen) return;
@@ -277,6 +326,20 @@ export function Bulletin() {
                                     </div>
                                 </div>
                             </div>
+
+                            {/* Clear Filters */}
+                            {(selectedCategory !== 'All' || officialOnly || dateFrom || dateTo) && (
+                                <div className="mt-6 pt-6 border-t border-gray-200">
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={clearFilters}
+                                        className="w-full text-brand-primary border-brand-primary/30 hover:bg-brand-primary/10 hover:text-brand-primary text-xs font-medium"
+                                    >
+                                        Clear all filters
+                                    </Button>
+                                </div>
+                            )}
                         </div>
                     </div>
 
@@ -419,9 +482,19 @@ export function Bulletin() {
                                 <h3 className="text-xl font-bold mb-2 text-gray-700">
                                     No Bulletin Items Found
                                 </h3>
-                                <p className="text-gray-600">
+                                <p className="text-gray-600 mb-4">
                                     Try adjusting your filters to see more results.
                                 </p>
+                                {(selectedCategory !== 'All' || officialOnly || dateFrom || dateTo) && (
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={clearFilters}
+                                        className="text-brand-primary border-brand-primary/30 hover:bg-brand-primary/10 hover:text-brand-primary text-xs font-medium"
+                                    >
+                                        Clear all filters
+                                    </Button>
+                                )}
                             </div>
                         )}
                     </div>

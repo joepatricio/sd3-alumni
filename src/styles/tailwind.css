@@ -21,6 +21,14 @@
   --color-brand-text-muted: #4b5563;
   --color-brand-footer: #E4E2DC;
 
+  /* Redeclare brand colors as primary colors for shadcn */
+  --color-primary: var(--color-brand-primary);
+  --color-primary-foreground: var(--color-brand-primary-foreground);
+  --color-secondary: var(--color-brand-secondary);
+  --color-secondary-foreground: var(--color-brand-secondary-foreground);
+  --color-accent: var(--color-brand-accent);
+  --color-accent-foreground: var(--color-brand-accent-foreground);
+
   /* System generated */
   --radius-sm: calc(var(--radius) - 4px);
 

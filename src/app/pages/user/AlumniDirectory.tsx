@@ -4,8 +4,29 @@ import { Link } from 'react-router-dom';
 import { api, type DegreeData, type AlumniCard } from '@/app/views/api';
 
 const ITEMS_PER_PAGE = 12;
+const ALUMNI_DIRECTORY_FILTERS_KEY = 'alumni_directory_filters';
+
+interface AlumniFilterState {
+    name?: string;
+    company?: string;
+    year?: string;
+    degreeId?: string;
+}
+
+const getStoredAlumniFilters = (): AlumniFilterState => {
+    try {
+        if (typeof window !== 'undefined') {
+            const saved = sessionStorage.getItem(ALUMNI_DIRECTORY_FILTERS_KEY);
+            if (saved) return JSON.parse(saved);
+        }
+    } catch (e) {
+        console.error('Failed to parse alumni directory filters from sessionStorage', e);
+    }
+    return {};
+};
 
 export function AlumniDirectory() {
+    const storedFilters = getStoredAlumniFilters();
     const [loading, setLoading] = useState(true);
     const [displayedAlumni, setDisplayedAlumni] = useState<AlumniCard[]>([]);
     const [degrees, setDegrees] = useState<DegreeData[]>([]);
@@ -15,18 +36,26 @@ export function AlumniDirectory() {
     const [absoluteTotalAlumni, setAbsoluteTotalAlumni] = useState(0);
 
     // Form states
-    const [searchName, setSearchName] = useState('');
-    const [searchCompany, setSearchCompany] = useState('');
-    const [collegeYear, setCollegeYear] = useState('');
-    const [collegeDegreeId, setCollegeDegreeId] = useState('');
+    const [searchName, setSearchName] = useState(() => storedFilters.name || '');
+    const [searchCompany, setSearchCompany] = useState(() => storedFilters.company || '');
+    const [collegeYear, setCollegeYear] = useState(() => storedFilters.year || '');
+    const [collegeDegreeId, setCollegeDegreeId] = useState(() => storedFilters.degreeId || '');
 
     // Active filters
     const [activeFilters, setActiveFilters] = useState({
-        name: '',
-        company: '',
-        year: '',
-        degreeId: ''
+        name: storedFilters.name || '',
+        company: storedFilters.company || '',
+        year: storedFilters.year || '',
+        degreeId: storedFilters.degreeId || ''
     });
+
+    useEffect(() => {
+        try {
+            sessionStorage.setItem(ALUMNI_DIRECTORY_FILTERS_KEY, JSON.stringify(activeFilters));
+        } catch (e) {
+            console.error('Failed to save alumni directory filters to sessionStorage', e);
+        }
+    }, [activeFilters]);
 
     useEffect(() => {
         api.get<any>('/degrees').then(res => setDegrees(res.data || []));
@@ -117,6 +146,11 @@ export function AlumniDirectory() {
         setCollegeDegreeId('');
         setActiveFilters({ name: '', company: '', year: '', degreeId: '' });
         setCurrentPage(1);
+        try {
+            sessionStorage.removeItem(ALUMNI_DIRECTORY_FILTERS_KEY);
+        } catch (e) {
+            console.error('Failed to clear alumni directory filters from sessionStorage', e);
+        }
     };
 
     // Generate year options (current year back to 1950)

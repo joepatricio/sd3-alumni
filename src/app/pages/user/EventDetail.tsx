@@ -65,7 +65,7 @@ export function EventDetail() {
 
                 if (event?.authorId) {
                     const authorUser = allUsers.find((u: any) => String(u.id) === String(event.authorId));
-                    if (authorUser && authorUser.userStatus?.statusName === 'Banned') {
+                    if (!isPreview && authorUser && authorUser.userStatus?.statusName === 'Banned') {
                         setEventData(null);
                         setLoading(false);
                         return;
@@ -97,15 +97,18 @@ export function EventDetail() {
         );
     }
 
-    const currentStatusName = eventData?.eventStatus?.statusName || "";
-    const isAdminPreview = location.pathname.includes('/admin/preview') && isAdmin;
+    const isPreview = location.pathname.includes('/admin/preview');
+    const isAdminPreview = isPreview || (location.pathname.includes('/admin/preview') && isAdmin);
     const isAuthor = session?.userId && String(session.userId) === String(eventData?.authorId);
+
+    const currentStatusName = eventData?.eventStatus?.statusName || "";
+    const effectiveStatusName = isPreview ? "Approved" : currentStatusName;
 
     if (!eventData || (["Rejected", "Archived"].includes(currentStatusName) && !(isAdminPreview || isAuthor))) {
         return <NotFound />;
     }
 
-    const isPastEvent = new Date(eventData.eventDate) < new Date() || eventData.eventStatus?.statusName === 'Concluded';
+    const isPastEvent = new Date(eventData.eventDate) < new Date() || effectiveStatusName === 'Concluded';
 
     const formatTime = (timeStr: string) => {
         // timeStr might be "16:00:00" or "16:00"
@@ -252,7 +255,7 @@ export function EventDetail() {
     const mapLat = loc?.lat || 10.2954;
     const mapLng = loc?.lng || 123.8944;
 
-    const statusName = eventData.eventStatus?.statusName;
+    const statusName = effectiveStatusName;
 
     const statusMessage = {
         Pending: 'This event is pending admin review. It is not yet accepting RSVPs.',
@@ -266,7 +269,7 @@ export function EventDetail() {
                 <div className="bg-blue-50 px-4 py-3 border-b border-blue-200 text-center flex items-center justify-center gap-2">
                     <Info className="w-4 h-4 text-blue-800" />
                     <p className="text-blue-800 font-medium text-sm">
-                        Admin Preview Mode: Viewing event with status "{currentStatusName}"
+                        Admin Preview Mode: Viewing event detail page as if Approved (Current Status: "{currentStatusName}")
                     </p>
                 </div>
             )}
@@ -453,19 +456,19 @@ export function EventDetail() {
                     <div className="space-y-8 sticky top-24 self-start">
                         {/* RSVP Card */}
                         <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-                            {isPastEvent || currentStatusName === "Archived" || currentStatusName === "Rejected" ? (
+                            {isPastEvent || effectiveStatusName === "Archived" || effectiveStatusName === "Rejected" || effectiveStatusName === "Pending" || effectiveStatusName === "Cancelled" ? (
                                 <Alert className="bg-amber-50 border-amber-200 text-amber-800">
                                     <AlertCircle className="h-4 w-4 text-amber-600" />
                                     <AlertTitle className="font-bold">
-                                        {currentStatusName === "Pending" ? "Event Pending" :
-                                            currentStatusName === "Cancelled" ? "Event Cancelled" :
+                                        {effectiveStatusName === "Pending" ? "Event Pending" :
+                                            effectiveStatusName === "Cancelled" ? "Event Cancelled" :
                                                 "RSVP Unavailable"}
                                     </AlertTitle>
                                     <AlertDescription className="text-amber-700">
                                         {statusMessage}
                                     </AlertDescription>
                                 </Alert>
-                            ) : isLoggedIn ? (
+                            ) : (isLoggedIn || isAdminPreview) ? (
                                 <>
                                     <div className="text-center mb-6">
                                         <h3 className="text-lg font-bold text-gray-900 mb-2">Are you going?</h3>
@@ -474,19 +477,19 @@ export function EventDetail() {
 
                                     <div className="grid grid-cols-2 gap-3 mb-6">
                                         <Button
-                                            disabled={rsvpLoading}
+                                            disabled={isAdminPreview || rsvpLoading}
                                             variant={rsvpStatus === 'going' ? 'default' : 'outline'}
                                             className={`w-full gap-2 ${rsvpStatus === 'going' ? 'bg-brand-primary hover:bg-brand-primary-hover text-white' : 'hover:text-brand-primary hover:border-brand-primary'}`}
-                                            onClick={() => handleRsvp('going')}
+                                            onClick={() => !isAdminPreview && handleRsvp('going')}
                                         >
                                             {rsvpLoading && rsvpStatus === 'going' ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
                                             Going
                                         </Button>
                                         <Button
-                                            disabled={rsvpLoading}
+                                            disabled={isAdminPreview || rsvpLoading}
                                             variant={rsvpStatus === 'not_going' ? 'default' : 'outline'}
                                             className={`w-full gap-2 ${rsvpStatus === 'not_going' ? 'bg-gray-600 hover:bg-gray-700 text-white' : 'hover:text-gray-700 hover:border-gray-400'}`}
-                                            onClick={() => handleRsvp('not_going')}
+                                            onClick={() => !isAdminPreview && handleRsvp('not_going')}
                                         >
                                             {rsvpLoading && rsvpStatus === 'not_going' ? <Loader2 className="w-4 h-4 animate-spin" /> : <XCircle className="w-4 h-4" />}
                                             Not Going
@@ -505,7 +508,7 @@ export function EventDetail() {
                                 </div>
                             )}
 
-                            {isLoggedIn && (
+                            {(isLoggedIn || isAdminPreview) && (
                                 <>
                                     <div className="border-t border-gray-100 pt-6">
                                         <div className="flex items-center justify-between mb-2">

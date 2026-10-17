@@ -13,21 +13,51 @@ import { api, type EventData } from '@/app/views/api';
 import { useAuth } from '@/app/views/auth';
 
 const EVENTS_PER_PAGE = 6;
+const EVENTS_FILTERS_KEY = 'events_filters';
+
+interface EventsFilterState {
+    selectedCategories?: string[];
+    timeRange?: string;
+}
+
+const getStoredEventsFilters = (): EventsFilterState => {
+    try {
+        if (typeof window !== 'undefined') {
+            const saved = sessionStorage.getItem(EVENTS_FILTERS_KEY);
+            if (saved) return JSON.parse(saved);
+        }
+    } catch (e) {
+        console.error('Failed to parse events filters from sessionStorage', e);
+    }
+    return {};
+};
 
 export function Events() {
+    const storedFilters = getStoredEventsFilters();
     const [events, setEvents] = useState<EventData[]>([]);
     const [loading, setLoading] = useState(true);
     const { session } = useAuth();
     const [currentUserStatus, setCurrentUserStatus] = useState<string>('');
 
-    const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
-    const [timeRange, setTimeRange] = useState<string>('Upcoming');
+    const [selectedCategories, setSelectedCategories] = useState<string[]>(() => storedFilters.selectedCategories || []);
+    const [timeRange, setTimeRange] = useState<string>(() => storedFilters.timeRange || 'Upcoming');
     const [visibleCount, setVisibleCount] = useState(EVENTS_PER_PAGE);
 
     const [allCategories, setAllCategories] = useState<string[]>([]);
     const [totalEvents, setTotalEvents] = useState(0);
     const [isCreateOpen, setIsCreateOpen] = useState(false);
     const [isCreateLoading, setIsCreateLoading] = useState(false);
+
+    useEffect(() => {
+        try {
+            sessionStorage.setItem(EVENTS_FILTERS_KEY, JSON.stringify({
+                selectedCategories,
+                timeRange
+            }));
+        } catch (e) {
+            console.error('Failed to save events filters to sessionStorage', e);
+        }
+    }, [selectedCategories, timeRange]);
 
     const handleCreateEventClick = async () => {
         if (isCreateLoading || isCreateOpen) return;
@@ -76,7 +106,8 @@ export function Events() {
                 }
 
                 const whereClause: any = {
-                    status: { statusName: 'Approved' }
+                    status: { statusName: 'Approved' },
+                    author: { userStatus: { statusName: { ne: 'Banned' } } }
                 };
 
                 if (restricted.length > 0) {
@@ -136,6 +167,11 @@ export function Events() {
         setSelectedCategories([]);
         setTimeRange('Upcoming');
         setVisibleCount(EVENTS_PER_PAGE);
+        try {
+            sessionStorage.removeItem(EVENTS_FILTERS_KEY);
+        } catch (e) {
+            console.error('Failed to clear events filters from sessionStorage', e);
+        }
     };
 
     const formatLocation = (loc: any) => {
@@ -353,10 +389,20 @@ export function Events() {
                                 <h3 className="text-xl font-semibold text-gray-600 mb-2">
                                     No Upcoming Events
                                 </h3>
-                                <p className="text-gray-500">
+                                <p className="text-gray-500 mb-4">
                                     Check back soon for new events and opportunities to connect with the
                                     alumni community.
                                 </p>
+                                {(selectedCategories.length > 0 || timeRange !== 'Upcoming') && (
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        className="text-brand-primary border-brand-primary/30 hover:bg-brand-primary/10 hover:text-brand-primary"
+                                        onClick={clearFilters}
+                                    >
+                                        Clear all filters
+                                    </Button>
+                                )}
                             </div>
                         )}
                     </>

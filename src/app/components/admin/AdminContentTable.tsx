@@ -172,7 +172,35 @@ export function AdminContentTable({
     const [appliedSearchCategories, setAppliedSearchCategories] = useState<string[]>(['All']);
 
     // Sorting
-    const [sortConfig, setSortConfig] = useState<{ key: keyof ContentItem; direction: 'asc' | 'desc' } | null>({ key: 'rawDate', direction: 'desc' });
+    const [sortConfig, setSortConfig] = useState<{ key: keyof ContentItem; direction: 'asc' | 'desc' } | null>(() => {
+        const sort = searchParams.get('sort');
+        if (sort === 'asc') return { key: 'rawDate', direction: 'asc' };
+        return { key: 'rawDate', direction: 'desc' };
+    });
+
+    useEffect(() => {
+        const tab = searchParams.get('tab');
+        if (tab) setActiveTab(tab);
+
+        const start = searchParams.get('start');
+        if (start !== null) {
+            setSearchStartDate(start);
+            setAppliedSearchStartDate(start);
+        }
+
+        const end = searchParams.get('end');
+        if (end !== null) {
+            setSearchEndDate(end);
+            setAppliedSearchEndDate(end);
+        }
+
+        const sort = searchParams.get('sort');
+        if (sort === 'asc') {
+            setSortConfig({ key: 'rawDate', direction: 'asc' });
+        } else if (sort === 'desc') {
+            setSortConfig({ key: 'rawDate', direction: 'desc' });
+        }
+    }, [searchParams]);
 
     // Pagination
     const [currentPage, setCurrentPage] = useState(1);

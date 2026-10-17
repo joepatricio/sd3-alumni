@@ -32,6 +32,7 @@ interface DashboardStats {
     };
     pendingBulletins: number;
     flaggedBulletins: number;
+    approvedBulletins?: number;
     pendingEvents: number;
     approvedEvents: number;
     donationsTotal: number;
@@ -132,11 +133,9 @@ const CalendarWidget = ({ events }: { events: EventItem[] }) => {
     const monthName = calendarDate.toLocaleString('default', { month: 'long', year: 'numeric' });
 
     // Filter events of the current month and map to each day
-    // TODO: Include Concluded events
     const monthEventsMap = React.useMemo(() => {
         const map: Record<number, EventItem[]> = {};
         events.forEach(e => {
-            if (e.eventStatus?.statusName !== 'Approved' && e.eventStatus?.statusName !== 'Concluded') return;
             if (!e.eventDate) return;
 
             try {
@@ -244,9 +243,23 @@ const CalendarWidget = ({ events }: { events: EventItem[] }) => {
                                                     {evt.startTime || '09:00'} - {evt.endTime || '17:00'} • {evt.location?.landmark || evt.location?.cityMunicipality || evt.modality || 'Virtual'}
                                                 </p>
                                             </div>
-                                            <Link to={`/admin/events?start=${new Date(evt.eventDate).toISOString()}&end=${new Date(new Date(evt.eventDate).setMonth(new Date(evt.eventDate).getMonth() + 1)).toISOString()}`} className="px-2 py-1 bg-emerald-600 text-white rounded text-[10px] font-bold">
-                                                Manage
-                                            </Link>
+                                            {/* Sort ascending if redirected to Event Management */}
+                                            {(() => {
+                                                const evtDate = new Date(evt.eventDate);
+                                                const y = evtDate.getFullYear();
+                                                const m = evtDate.getMonth();
+                                                const pad = (n: number) => String(n).padStart(2, '0');
+                                                const startOfMonth = `${y}-${pad(m + 1)}-01`;
+                                                const lastDay = new Date(y, m + 1, 0).getDate();
+                                                const endOfMonth = `${y}-${pad(m + 1)}-${pad(lastDay)}`;
+                                                return (
+                                                    <Link
+                                                        to={`/admin/events?start=${startOfMonth}&end=${endOfMonth}&sort=asc`}
+                                                        className="px-2 py-1 bg-emerald-600 text-white rounded text-[10px] font-bold">
+                                                        Manage
+                                                    </Link>
+                                                );
+                                            })()}
                                         </div>
                                     ))}
                                 </div>
@@ -255,7 +268,7 @@ const CalendarWidget = ({ events }: { events: EventItem[] }) => {
                             )}
                         </div>
                     ) : (
-                        <p className="text-xs text-gray-400 text-center py-2">Click any highlighted calendar date to view scheduled event proposals.</p>
+                        <p className="text-xs text-gray-400 text-center py-2">Click any highlighted calendar date to view scheduled events.</p>
                     )}
                 </div>
             </div>
@@ -297,13 +310,20 @@ export function AdminDashboard() {
         setError(null);
 
         try {
-            // Would be better to just query the whole category or status table instead of _include
-            // Joining the tables is easier in the smaller scale, but would be better to just query the whole tables in the long run
-            // Also, would be possible to have separate queries for approved events and status/category analytics
+            // Query approved events sorted by eventDate for calendar, upcoming list, and category analytics
             const [dashRes, bulletinsRes, eventsRes, userStatsRes] = await Promise.allSettled([
                 api.get('/admin/dashboard-stats'),
                 api.get('/bulletins?_include=category,status'),
-                api.get('/events?_include=location,category,status'),
+                api.get('/events', {
+                    params: {
+                        _where: JSON.stringify({
+                            status: { statusName: { in: ['Approved', 'Concluded'] } },
+                            author: { userStatus: { statusName: { ne: 'Banned' } } }
+                        }),
+                        _sort: 'eventDate',
+                        _include: 'location,category,status,author'
+                    }
+                }),
                 api.get('/userStatistics')
             ]);
 
@@ -418,7 +438,7 @@ export function AdminDashboard() {
                 return evtDate >= now && evtDate <= end;
             }
             return true;
-        }).sort((a, b) => new Date(a.eventDate).getTime() - new Date(b.eventDate).getTime());
+        });
     }, [events, eventTimeRange]);
 
     // Generate visual report card
@@ -847,7 +867,7 @@ export function AdminDashboard() {
                                 </div>
                                 <div>
                                     <p className="text-xs text-gray-500 font-medium">Total Bulletins Published</p>
-                                    <p className="text-base font-bold text-gray-900">{platformHealth.totalBulletinsCreated} Active </p>
+                                    <p className="text-base font-bold text-gray-900">{stats?.approvedBulletins ?? 0} Active </p>
                                 </div>
                             </div>
                         </div>
