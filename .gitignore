@@ -9,6 +9,7 @@
 /Lib
 /Scripts
 /Include
+pyvenv.cfg
 
 # testing
 /coverage
