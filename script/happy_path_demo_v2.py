@@ -1076,7 +1076,8 @@ def main():
     parser = argparse.ArgumentParser(
         description="Release Notes Compliant Happy Path Tech Demo Automation Script v2"
     )
-    parser.add_argument("--url", default=DEFAULT_BASE_URL, help=f"Target website base URL (default: {DEFAULT_BASE_URL})")
+    parser.add_argument("--url", default="", help=f"Target website base URL (default: {DEFAULT_BASE_URL}, or {LIVE_BASE_URL} if --live is passed)")
+    parser.add_argument("--live", action="store_true", help=f"Run against live production site ({LIVE_BASE_URL})")
     parser.add_argument("--email", default="", help="Registration email for test user (default: auto-generated unique)")
     parser.add_argument("--name", default=TEST_USER_NAME, help="Full name for test user")
     parser.add_argument("--password", default=TEST_USER_PASSWORD, help="Password for test user")
@@ -1091,6 +1092,10 @@ def main():
     parser.add_argument("--session-cookie", default="", help="Session cookie or token for skipping stages 1-4 (required if --stage > 4)")
 
     args = parser.parse_args()
+
+    # Determine target URL: explicitly supplied --url takes precedence, else --live, else DEFAULT_BASE_URL
+    if not args.url:
+        args.url = LIVE_BASE_URL if args.live else DEFAULT_BASE_URL
 
     # Generate unique email if none specified to avoid database collisions
     test_email = args.email.strip()

@@ -435,15 +435,15 @@ export function Profile() {
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-start">
                         <div className="md:col-span-1 static md:sticky top-24 space-y-4">
                             {!aboutIsEmpty && <>
-                                <div className="bg-white rounded-lg shadow-sm p-5 border border-gray-100">
+                                <div className="bg-white rounded-lg shadow-sm p-4 sm:p-5 border border-gray-100">
                                     <h3 className="font-bold text-lg mb-4 text-gray-900">About</h3>
                                     <div className="space-y-3 text-sm text-gray-600">
                                         {aboutConfig.map(({ icon: Icon, content }, i) => {
                                             if (content === null) return null;
                                             return (
-                                                <div key={i} className="flex items-center gap-3">
-                                                    <Icon className="w-4 h-4 text-gray-900" />
-                                                    <span>{content}</span>
+                                                <div key={i} className="flex items-start gap-3 min-w-0">
+                                                    <Icon className="w-4 h-4 text-gray-900 shrink-0 mt-0.5" />
+                                                    <span className="min-w-0 break-words">{content}</span>
                                                 </div>
                                             )
                                         })}
