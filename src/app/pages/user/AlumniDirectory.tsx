@@ -221,7 +221,12 @@ export function AlumniDirectory() {
                             <div className="md:col-span-1">
                                 <select
                                     value={collegeYear}
-                                    onChange={(e) => setCollegeYear(e.target.value)}
+                                    onChange={(e) => {
+                                        const newYear = e.target.value;
+                                        setCollegeYear(newYear);
+                                        setActiveFilters(prev => ({ ...prev, year: newYear }));
+                                        setCurrentPage(1);
+                                    }}
                                     className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-brand-primary bg-white transition-all"
                                 >
                                     <option value="">All Years</option>
@@ -237,7 +242,12 @@ export function AlumniDirectory() {
                             <div className="md:col-span-1">
                                 <select
                                     value={collegeDegreeId}
-                                    onChange={(e) => setCollegeDegreeId(e.target.value)}
+                                    onChange={(e) => {
+                                        const newDegreeId = e.target.value;
+                                        setCollegeDegreeId(newDegreeId);
+                                        setActiveFilters(prev => ({ ...prev, degreeId: newDegreeId }));
+                                        setCurrentPage(1);
+                                    }}
                                     className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-brand-primary bg-white transition-all"
                                 >
                                     <option value="">All Degree Programs</option>

@@ -239,6 +239,15 @@ export function AdminContentTable({
         setDatePreset(filter);
         setSearchStartDate(start);
         setSearchEndDate(end);
+
+        // Automatically apply filters
+        setAppliedSearchName(searchName);
+        setAppliedSearchAuthor(searchAuthor);
+        setAppliedSearchStartDate(start);
+        setAppliedSearchEndDate(end);
+        setAppliedSearchCategories(searchCategories);
+        setAppliedAccountScope(accountScope);
+        setCurrentPage(1);
     };
 
     const [accountScope, setAccountScope] = useState<AccountScope[]>(['All']);

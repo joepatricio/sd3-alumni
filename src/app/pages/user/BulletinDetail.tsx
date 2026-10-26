@@ -157,9 +157,10 @@ export function BulletinDetail() {
     const isAdminPreview = location.pathname.includes('/admin/preview') && isAdmin;
     const isAuthor = Boolean(session?.userId && bulletin && String(session.userId) === String(bulletin.authorId));
     const effectiveStatus = bulletin?.contentStatus?.statusName || bulletinStatus;
-    const isValidStatus = ['Approved', 'Pending'].includes(effectiveStatus);
+    const isValidStatus = ['Approved'].includes(effectiveStatus);
+    const isHidden = ['Archived'].includes(effectiveStatus);
 
-    if (!bulletin || (!isValidStatus && !isAdminPreview && !isAuthor)) {
+    if (!bulletin || (!isValidStatus && !isAdminPreview && !isAuthor) || isHidden) {
         return <NotFound />;
     }
 

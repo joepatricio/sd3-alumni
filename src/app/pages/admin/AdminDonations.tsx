@@ -184,6 +184,16 @@ export function AdminDonations() {
 
         setStartDate(start);
         setEndDate(end);
+
+        // Automatically apply filters
+        setAppliedSearchDonor(searchDonor);
+        setAppliedSearchRef(searchRef);
+        setAppliedMinAmount(minAmount);
+        setAppliedMaxAmount(maxAmount);
+        setAppliedStartDate(start);
+        setAppliedEndDate(end);
+        setAppliedSearchBankName(searchBankName);
+        setCurrentPage(1);
     };
 
     const applyAmountQuickFilter = (filter: string) => {
@@ -201,6 +211,16 @@ export function AdminDonations() {
 
         setMinAmount(min);
         setMaxAmount(max);
+
+        // Automatically apply filters
+        setAppliedSearchDonor(searchDonor);
+        setAppliedSearchRef(searchRef);
+        setAppliedMinAmount(min);
+        setAppliedMaxAmount(max);
+        setAppliedStartDate(startDate);
+        setAppliedEndDate(endDate);
+        setAppliedSearchBankName(searchBankName);
+        setCurrentPage(1);
     };
 
     const renderSortIcon = (key: keyof Donation) => {

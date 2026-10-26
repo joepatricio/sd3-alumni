@@ -591,6 +591,10 @@ export function AdminUsers() {
                         <div>
                             <Select value={batchRange} onValueChange={(val) => {
                                 setBatchRange(val);
+                                let min = '';
+                                let max = '';
+                                let sBatch = searchBatch;
+
                                 if (val !== 'All Batches' && val !== 'Custom Range') {
                                     const currentYear = new Date();
                                     let yearsToSubtract = 0;
@@ -600,13 +604,26 @@ export function AdminUsers() {
                                     else if (val === 'Past 30') yearsToSubtract = 30;
 
                                     if (yearsToSubtract > 0) {
-                                        setCustomMaxBatch(format(currentYear, 'yyyy'));
-                                        setCustomMinBatch(format(subYears(currentYear, yearsToSubtract), 'yyyy'));
+                                        max = format(currentYear, 'yyyy');
+                                        min = format(subYears(currentYear, yearsToSubtract), 'yyyy');
+                                        setCustomMaxBatch(max);
+                                        setCustomMinBatch(min);
                                     }
                                 } else if (val === 'All Batches') {
                                     setCustomMinBatch('');
                                     setCustomMaxBatch('');
                                     setSearchBatch('');
+                                    sBatch = '';
+                                }
+
+                                if (val !== 'Custom Range') {
+                                    setAppliedSearchTerm(searchTerm);
+                                    setAppliedSearchBatch(sBatch);
+                                    setAppliedSearchReason(searchReason);
+                                    setAppliedBatchRange(val);
+                                    setAppliedCustomMinBatch(min);
+                                    setAppliedCustomMaxBatch(max);
+                                    setCurrentPage(1);
                                 }
                             }}>
                                 <SelectTrigger>

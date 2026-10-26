@@ -103,8 +103,9 @@ export function EventDetail() {
 
     const currentStatusName = eventData?.eventStatus?.statusName || "";
     const effectiveStatusName = isPreview ? "Approved" : currentStatusName;
+    const isHidden = currentStatusName === "Archived";
 
-    if (!eventData || (["Rejected", "Archived"].includes(currentStatusName) && !(isAdminPreview || isAuthor))) {
+    if (!eventData || isHidden || (["Rejected", "Pending"].includes(currentStatusName) && !(isAdminPreview || isAuthor))) {
         return <NotFound />;
     }
 
@@ -284,84 +285,87 @@ export function EventDetail() {
                 </Link>
 
                 <div className="flex flex-wrap items-center gap-2">
-                    {isLoggedIn && isAuthor && eventData.eventStatus?.statusName !== "Concluded" && (
+                    {isLoggedIn && isAuthor && (
                         <>
-                            <CreateEventModal
-                                trigger={
-                                    <Button variant="outline" className="gap-2 text-brand-primary border-brand-primary hover:bg-brand-primary hover:text-white transition-colors">
-                                        <Edit className="w-4 h-4" />
-                                        Edit Event
-                                    </Button>
-                                }
-                                initialData={eventData as any}
-                            />
-
-                            {currentStatusName !== "Concluded" && currentStatusName !== "Cancelled" && currentStatusName !== "Archived" && (
+                            {currentStatusName !== "Concluded" && (
                                 <>
-                                    <AlertDialog>
-                                        <AlertDialogTrigger asChild>
-                                            <Button variant="outline" className="gap-2 text-yellow-600 border-yellow-600 hover:bg-yellow-600 hover:text-white transition-colors">
-                                                <Ban className="w-4 h-4" />
-                                                Cancel Event
-                                            </Button>
-                                        </AlertDialogTrigger>
-                                        <AlertDialogContent>
-                                            <AlertDialogHeader>
-                                                <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                                                <AlertDialogDescription>
-                                                    This will cancel the event. It will still be visible, but RSVPs will be disabled.
-                                                </AlertDialogDescription>
-                                            </AlertDialogHeader>
-                                            <AlertDialogFooter>
-                                                <AlertDialogCancel>Go Back</AlertDialogCancel>
-                                                <AlertDialogAction onClick={() => handleStatusChange('Cancelled')} className="bg-yellow-600 hover:bg-yellow-700">Yes, Cancel Event</AlertDialogAction>
-                                            </AlertDialogFooter>
-                                        </AlertDialogContent>
-                                    </AlertDialog>
-
-                                    <AlertDialog>
-                                        <AlertDialogTrigger asChild>
+                                    <CreateEventModal
+                                        trigger={
                                             <Button variant="outline" className="gap-2 text-brand-primary border-brand-primary hover:bg-brand-primary hover:text-white transition-colors">
-                                                <CheckCircle2 className="w-4 h-4" />
-                                                Conclude Event
+                                                <Edit className="w-4 h-4" />
+                                                Edit Event
                                             </Button>
-                                        </AlertDialogTrigger>
-                                        <AlertDialogContent>
-                                            <AlertDialogHeader>
-                                                <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                                                <AlertDialogDescription>
-                                                    This will conclude the event. This action cannot be undone.
-                                                </AlertDialogDescription>
-                                            </AlertDialogHeader>
-                                            <AlertDialogFooter>
-                                                <AlertDialogCancel>Go Back</AlertDialogCancel>
-                                                <AlertDialogAction onClick={handleConcludeEvent} className="bg-yellow-600 hover:bg-yellow-700">Yes, Conclude Event</AlertDialogAction>
-                                            </AlertDialogFooter>
-                                        </AlertDialogContent>
-                                    </AlertDialog>
+                                        }
+                                        initialData={eventData as any}
+                                    />
+                                    {currentStatusName !== "Cancelled" && (
+                                        <>
+                                            <AlertDialog>
+                                                <AlertDialogTrigger asChild>
+                                                    <Button variant="outline" className="gap-2 text-yellow-600 border-yellow-600 hover:bg-yellow-600 hover:text-white transition-colors">
+                                                        <Ban className="w-4 h-4" />
+                                                        Cancel Event
+                                                    </Button>
+                                                </AlertDialogTrigger>
+                                                <AlertDialogContent>
+                                                    <AlertDialogHeader>
+                                                        <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                                                        <AlertDialogDescription>
+                                                            This will cancel the event. It will still be visible, but RSVPs will be disabled.
+                                                        </AlertDialogDescription>
+                                                    </AlertDialogHeader>
+                                                    <AlertDialogFooter>
+                                                        <AlertDialogCancel>Go Back</AlertDialogCancel>
+                                                        <AlertDialogAction onClick={() => handleStatusChange('Cancelled')} className="bg-yellow-600 hover:bg-yellow-700">Yes, Cancel Event</AlertDialogAction>
+                                                    </AlertDialogFooter>
+                                                </AlertDialogContent>
+                                            </AlertDialog>
 
-                                    <AlertDialog>
-                                        <AlertDialogTrigger asChild>
-                                            <Button variant="outline" className="gap-2 text-red-600 border-red-600 hover:bg-red-600 hover:text-white transition-colors">
-                                                <Trash2 className="w-4 h-4" />
-                                                Delete Event
-                                            </Button>
-                                        </AlertDialogTrigger>
-                                        <AlertDialogContent>
-                                            <AlertDialogHeader>
-                                                <AlertDialogTitle>Delete Event?</AlertDialogTitle>
-                                                <AlertDialogDescription>
-                                                    This will archive the event and remove it from the active events list. This action cannot be undone.
-                                                </AlertDialogDescription>
-                                            </AlertDialogHeader>
-                                            <AlertDialogFooter>
-                                                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                                <AlertDialogAction onClick={() => handleStatusChange('Archived')} className="bg-red-600 hover:bg-red-700">Delete</AlertDialogAction>
-                                            </AlertDialogFooter>
-                                        </AlertDialogContent>
-                                    </AlertDialog>
+                                            <AlertDialog>
+                                                <AlertDialogTrigger asChild>
+                                                    <Button variant="outline" className="gap-2 text-brand-primary border-brand-primary hover:bg-brand-primary hover:text-white transition-colors">
+                                                        <CheckCircle2 className="w-4 h-4" />
+                                                        Conclude Event
+                                                    </Button>
+                                                </AlertDialogTrigger>
+                                                <AlertDialogContent>
+                                                    <AlertDialogHeader>
+                                                        <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                                                        <AlertDialogDescription>
+                                                            This will conclude the event. This action cannot be undone.
+                                                        </AlertDialogDescription>
+                                                    </AlertDialogHeader>
+                                                    <AlertDialogFooter>
+                                                        <AlertDialogCancel>Go Back</AlertDialogCancel>
+                                                        <AlertDialogAction onClick={handleConcludeEvent} className="bg-yellow-600 hover:bg-yellow-700">Yes, Conclude Event</AlertDialogAction>
+                                                    </AlertDialogFooter>
+                                                </AlertDialogContent>
+                                            </AlertDialog>
+                                        </>
+                                    )}
                                 </>
                             )}
+
+                            <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                    <Button variant="outline" className="gap-2 text-red-600 border-red-600 hover:bg-red-600 hover:text-white transition-colors">
+                                        <Trash2 className="w-4 h-4" />
+                                        Delete Event
+                                    </Button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                    <AlertDialogHeader>
+                                        <AlertDialogTitle>Delete Event?</AlertDialogTitle>
+                                        <AlertDialogDescription>
+                                            This will remove the event from the active events list. This action cannot be undone.
+                                        </AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                        <AlertDialogAction onClick={() => handleStatusChange('Archived')} className="bg-red-600 hover:bg-red-700">Delete</AlertDialogAction>
+                                    </AlertDialogFooter>
+                                </AlertDialogContent>
+                            </AlertDialog>
                         </>
                     )}
                 </div>
