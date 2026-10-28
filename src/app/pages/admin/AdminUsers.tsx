@@ -60,11 +60,11 @@ const UserTableRow = memo(({ user, openEditModal }: { user: User, openEditModal:
             </td>
             <td className="px-6 py-4">
                 <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold ${user.status === 'Official' ? 'bg-blue-100 text-blue-800 border-transparent' :
-                        user.status === 'Regular' ? 'bg-green-100 text-green-800 border-transparent' :
-                            user.status === 'Pending' ? 'bg-yellow-100 text-yellow-800 border-transparent' :
-                                user.status === 'Suspended' ? 'bg-orange-100 text-orange-800 border-transparent' :
-                                    user.status === 'Banned' ? 'bg-red-100 text-red-800 border-transparent' :
-                                        'bg-gray-100 text-gray-800 border-transparent'
+                    user.status === 'Regular' ? 'bg-green-100 text-green-800 border-transparent' :
+                        user.status === 'Pending' ? 'bg-yellow-100 text-yellow-800 border-transparent' :
+                            user.status === 'Suspended' ? 'bg-orange-100 text-orange-800 border-transparent' :
+                                user.status === 'Banned' ? 'bg-red-100 text-red-800 border-transparent' :
+                                    'bg-gray-100 text-gray-800 border-transparent'
                     }`}>
                     {user.status}
                 </span>
@@ -147,6 +147,7 @@ export function AdminUsers() {
                     api.get('/userStatuses'),
                     api.get('/degrees')
                 ]);
+                // Flagged for vague typing
                 const statusData = statusRes.data.data || statusRes.data || [];
                 const degreeData = degreeRes.data.data || degreeRes.data || [];
                 setDbStatuses(statusData);
@@ -251,6 +252,7 @@ export function AdminUsers() {
                 }
             });
 
+            // Flagged for vague typing
             const data = res.data.data || res.data;
 
             const mapped = data.map((u: any) => {
@@ -400,6 +402,7 @@ export function AdminUsers() {
                 }
             });
 
+            // Flagged for vague typing
             const data = res.data.data || res.data;
             const total = res.data.items || data.length;
 

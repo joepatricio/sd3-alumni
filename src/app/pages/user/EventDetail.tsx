@@ -72,6 +72,7 @@ export function EventDetail() {
                     }
 
                     const profRes = await api.get(`/profiles?userId=${event.authorId}`);
+                    // Flagged for vague typing
                     const profData = Array.isArray(profRes.data) ? profRes.data : profRes.data.data;
                     if (profData && profData.length > 0) {
                         setOrganizer(profData[0]);
@@ -203,6 +204,7 @@ export function EventDetail() {
         if (!eventData) return;
         try {
             const statusRes = await api.get(`/eventStatuses?statusName=${newStatusName}`);
+            // Flagged for vague typing
             const statusData = Array.isArray(statusRes.data) ? statusRes.data : statusRes.data.data;
             const statusObj = statusData?.[0];
             if (statusObj) {

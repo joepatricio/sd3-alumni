@@ -50,8 +50,8 @@ export function AdminBulletins() {
             else if (sortKey === 'status') sortKey = 'status.statusName';
 
             sortStr = params.sort.direction === 'desc' ? `-${sortKey}` : sortKey;
-        } 
-        
+        }
+
         // If on the 'For Review' tab, ensure we always group Flagged items first
         if (params.status === 'For Review') {
             if (sortStr && !sortStr.includes('status.statusName')) {
@@ -70,6 +70,7 @@ export function AdminBulletins() {
             }
         });
 
+        // Flagged for vague typing
         const data = response.data.data || response.data;
         const total = response.data.items || data.length;
 

@@ -25,6 +25,7 @@ export function EventsFeed() {
             })
           }
         });
+        // Flagged for vague typing
         const data = Array.isArray(res.data) ? res.data : res.data.data;
         setEvents(data || []);
       } catch (error) {

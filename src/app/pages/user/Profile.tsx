@@ -413,7 +413,7 @@ export function Profile() {
                     onEdit={isOwner ? () => navigate('/profile/edit') : undefined}
                     activeTab={activeTab}
                     onTabChange={setActiveTab}
-                    statsData={statsData}
+                    // statsData={statsData}
                     isOwner={isOwner}
                     connectionStatus={connection?.status?.connectionName}
                     pendingRequestsCount={pendingRequestsCount}

@@ -40,6 +40,7 @@ export function UserEvents() {
                 setProfile(profileRes.data);
 
                 const rsvpRes = await api.get('/userRsvps', { params: { userId: profileId, isAttending: true } });
+                // Flagged for vague typing
                 const rsvps = rsvpRes.data.data || rsvpRes.data || [];
                 const eventIds = rsvps.map((r: any) => r.eventId).filter(Boolean);
 
@@ -50,6 +51,7 @@ export function UserEvents() {
                             _include: 'location'
                         }
                     });
+                    // Flagged for vague typing
                     const evts = eventsRes.data.data || eventsRes.data || [];
                     setUserEvents(evts);
                 } else {

@@ -206,6 +206,7 @@ export function BulletinDetail() {
         if (!bulletin) return;
         try {
             const statusRes = await api.get(`/contentStatuses?statusName=Archived`);
+            // Flagged for vague typing
             const statusData = Array.isArray(statusRes.data) ? statusRes.data : statusRes.data.data;
             const statusObj = statusData?.[0];
             if (statusObj) {

@@ -280,6 +280,7 @@ export function AdminDonations() {
                 }
             });
 
+            // Flagged for vague typing
             const data = res.data.data || res.data;
 
             const headers = ['Date', 'Donor', 'Amount', 'Status', 'Bank Name', 'Reference'];
@@ -364,6 +365,7 @@ export function AdminDonations() {
                     }
                 });
 
+                // Flagged for vague typing
                 const data = res.data.data || res.data;
                 const total = res.data.items || data.length;
 

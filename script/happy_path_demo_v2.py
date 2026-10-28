@@ -45,7 +45,6 @@ LIVE_BASE_URL = "https://najealp.top"
 TEST_USER_NAME = "Jose Hortelano"
 TEST_USER_PASSWORD = "Password123!"
 TEST_USER_BATCH = 2024
-TEST_USER_DEGREE = "Bachelor of Science in Computer Engineering"
 TEST_USER_GENDER = "Male"
 
 ADMIN_USERNAME = "admin1"
@@ -57,10 +56,11 @@ VIEWPORT_HEIGHT = 1080
 # Fullscreen display option (can also be enabled via --fullscreen)
 FULLSCREEN = False
 
-# Session Cookie/token for skipping directly to post-login stages (Stages 5-9)
+# Session Cookie/token for skipping directly to post-registration stages (Stages 4-9)
 SESSION_COOKIE = os.getenv(
     "SESSION_COOKIE",
-    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IkI3X3RTbWlXSnUiLCJlbWFpbCI6ImJlYS5zYW50b3MzN0BleGFtcGxlLmNvbSIsImlhdCI6MTc5Mjk5NzU1NywiZXhwIjoxNzkzMDgzOTU3fQ.woF4NlHqrdmCdBeisjYiVED8ojP-TaF2X_fi1gYnfeI"
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImNmNGY1MzcwLTQ2NjgtNGRlZS05ZWJjLTdjMGYzMDJhMGRjMyIsImVtYWlsIjoiZGVtby4xNzkzMDU0ODQwQGV4YW1wbGUuY29tIiwiaWF0IjoxNzkzMDU2MzgyLCJleHAiOjE3OTMxNDI3ODJ9.M1YEcWn6QyWj3YNsKKw5zjJlgtyeLEgzebxKVpXV17I"
+    # "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IkI3X3RTbWlXSnUiLCJlbWFpbCI6ImJlYS5zYW50b3MzN0BleGFtcGxlLmNvbSIsImlhdCI6MTc5Mjk5NzU1NywiZXhwIjoxNzkzMDgzOTU3fQ.woF4NlHqrdmCdBeisjYiVED8ojP-TaF2X_fi1gYnfeI"
 )
 
 # Default Event Location for Stage 9
@@ -194,7 +194,7 @@ def validate_and_extract_token(base_url: str, session_cookie_str: str) -> tuple[
     """
     cookie_str = session_cookie_str.strip()
     if not cookie_str:
-        raise ValueError("SESSION_COOKIE cannot be empty when executing stages beyond Stage 4.")
+        raise ValueError("SESSION_COOKIE cannot be empty when executing stages beyond Stage 3.")
 
     # Extract raw token if passed as "token=xyz" or "Cookie: token=xyz"
     raw_token = cookie_str
@@ -449,41 +449,44 @@ def stage_3_member_registration(page: Page, base_url: str, user_name: str, user_
 # ==============================================================================
 # STAGE 4: Member Authentication & Profile Dashboard
 # ==============================================================================
-def stage_4_member_login(page: Page, base_url: str, user_email: str, user_password: str, pacing: dict, user_name: str = TEST_USER_NAME):
+def stage_4_member_login(page: Page, base_url: str, user_email: str, user_password: str, pacing: dict, user_name: str = TEST_USER_NAME, is_session_authenticated: bool = False):
     log_step(4, "Member Authentication & Profile Dashboard",
              "Log in as newly registered Regular member and customize profile details.")
-    if "/login" not in page.url:
-        page.goto(f"{base_url}/login", wait_until="networkidle")
+    if is_session_authenticated:
+        print("[INFO] Session cookie detected. Skipping login form submission and navigating directly to profile...")
+    else:
+        if "/login" not in page.url:
+            page.goto(f"{base_url}/login", wait_until="networkidle")
 
-    # Enter Email & Password with admission polling retry
-    max_retries = 6
-    logged_in = False
-    for attempt in range(1, max_retries + 1):
-        email_input = page.locator("input[placeholder*='alumni@example.com' i], input[name='email'], input[type='email']").first
-        email_input.fill(user_email)
+        # Enter Email & Password with admission polling retry
+        max_retries = 6
+        logged_in = False
+        for attempt in range(1, max_retries + 1):
+            email_input = page.locator("input[placeholder*='alumni@example.com' i], input[name='email'], input[type='email']").first
+            email_input.fill(user_email)
 
-        pwd_input = page.locator("input[type='password']").first
-        pwd_input.fill(user_password)
+            pwd_input = page.locator("input[type='password']").first
+            pwd_input.fill(user_password)
 
-        login_btn = page.locator("button[type='submit']:has-text('Sign In')").first
-        login_btn.click()
-        print(f"[OK] Submitted login credentials (attempt {attempt}/{max_retries}).")
+            login_btn = page.locator("button[type='submit']:has-text('Sign In')").first
+            login_btn.click()
+            print(f"[OK] Submitted login credentials (attempt {attempt}/{max_retries}).")
 
-        try:
-            page.wait_for_url(lambda u: "/login" not in u, timeout=5000)
-            logged_in = True
-            break
-        except Exception:
-            # Check if pending alert is showing
-            error_msg = page.locator("text='pending admin approval'").first
-            if error_msg.is_visible():
-                print(f"[INFO] Account is still processing automated AI approval. Retrying in 60s...")
-                safe_wait(60)
-            else:
-                safe_wait(1.5)
+            try:
+                page.wait_for_url(lambda u: "/login" not in u, timeout=5000)
+                logged_in = True
+                break
+            except Exception:
+                # Check if pending alert is showing
+                error_msg = page.locator("text='pending admin approval'").first
+                if error_msg.is_visible():
+                    print(f"[INFO] Account is still processing automated AI approval. Retrying in 60s...")
+                    safe_wait(60)
+                else:
+                    safe_wait(1.5)
 
-    if not logged_in:
-        print("[WARNING] Could not confirm automatic redirect; attempting navigation to /profile...")
+        if not logged_in:
+            print("[WARNING] Could not confirm automatic redirect; attempting navigation to /profile...")
 
     # Visit Profile to inspect member details
     page.goto(f"{base_url}/profile", wait_until="networkidle")
@@ -556,14 +559,14 @@ def stage_4_member_login(page: Page, base_url: str, user_email: str, user_passwo
     # Current Job
     job_input = page.locator("input[placeholder='Current Job'], input[name='currentJob']").first
     if job_input.is_visible():
-        job_input.fill("Senior Systems Software Engineer")
-        print("[OK] Populated Current Job: 'Senior Systems Software Engineer'.")
+        job_input.fill("Mechanical Engineer")
+        print("[OK] Populated Current Job: 'Mechanical Engineer'.")
 
     # Company
     comp_input = page.locator("input[placeholder='Company'], input[name='company']").first
     if comp_input.is_visible():
-        comp_input.fill("Accenture Advanced Technology Centers")
-        print("[OK] Populated Company: 'Accenture Advanced Technology Centers'.")
+        comp_input.fill("JGC Philippines, Inc.")
+        print("[OK] Populated Company: 'JGC Philippines, Inc.'.")
 
     # Birthday
     bday_input = page.locator("input[type='date'], input[name='birthday']").first
@@ -572,42 +575,75 @@ def stage_4_member_login(page: Page, base_url: str, user_email: str, user_passwo
         print("[OK] Populated Birthday: '1998-08-28'.")
 
     # Profile Visibility (Public)
-    vis_trigger = page.locator("button[role='combobox']:has-text('visibility'), button[role='combobox']:has-text('Select visibility'), button[role='combobox']:has-text('Public'), button[role='combobox']:has-text('Private'), button[role='combobox']:has-text('Connections')").first
+    vis_trigger = page.locator(
+        "button[role='combobox']:has-text('visibility'), "
+        "button[role='combobox']:has-text('Select visibility'), "
+        "button[role='combobox']:has-text('Public'), "
+        "button[role='combobox']:has-text('Private'), "
+        "button[role='combobox']:has-text('Connections')"
+    ).first
+
     if vis_trigger.is_visible():
         try:
             vis_trigger.click()
-            page.wait_for_selector("div[role='option']", state="visible", timeout=5000)
-            public_opt = page.locator("div[role='option']:has-text('Public')").first
+            page.wait_for_selector(
+                "div[role='option']", state="visible", timeout=5000
+            )
+            public_opt = page.locator(
+                "div[role='option']:has-text('Public')"
+            ).first
+
             if public_opt.is_visible():
                 public_opt.click()
             else:
                 page.locator("div[role='option']").first.click()
+
             print("[OK] Selected Profile Visibility: Public.")
             safe_wait(pacing["pause_short"])
+
         except Exception as e:
             print(f"[INFO] Profile Visibility select note: {e}")
 
-    # Gender (Male or configured gender)
-    gender_trigger = page.locator("button[role='combobox']:has-text('gender'), button[role='combobox']:has-text('Select your gender'), button[role='combobox']:has-text('Male'), button[role='combobox']:has-text('Female'), button[role='combobox']:has-text('Custom')").first
+    # Gender
+    gender_trigger = page.locator(
+        "button[role='combobox']:has-text('gender'), "
+        "button[role='combobox']:has-text('Select your gender'), "
+        "button[role='combobox']:has-text('Male'), "
+        "button[role='combobox']:has-text('Female'), "
+        "button[role='combobox']:has-text('Custom')"
+    ).first
+
     if gender_trigger.is_visible():
         try:
             gender_trigger.click()
-            page.wait_for_selector("div[role='option']", state="visible", timeout=5000)
-            gender_opt = page.locator(f"div[role='option']:has-text('{TEST_USER_GENDER}')").first
+            page.wait_for_selector(
+                "div[role='option']", state="visible", timeout=5000
+            )
+            gender_opt = page.locator(
+                f"div[role='option']:has-text('{TEST_USER_GENDER}')"
+            ).first
+
             if gender_opt.is_visible():
                 gender_opt.click()
             else:
                 page.locator("div[role='option']").first.click()
+
             print(f"[OK] Selected Gender: {TEST_USER_GENDER}.")
             safe_wait(pacing["pause_short"])
+
         except Exception as e:
             print(f"[INFO] Gender select note: {e}")
 
     # Bio
-    bio_input = page.locator("textarea[placeholder='Bio'], textarea[name='bio']").first
+    bio_input = page.locator(
+        "textarea[placeholder='Bio'], textarea[name='bio']"
+    ).first
+
     if bio_input.is_visible():
-        bio_text = ("USJ-R Computer Engineering alumnus dedicated to software innovation, "
-                    "cloud infrastructure architecture, and advancing alumni community networking. Adelante Josenians!")
+        bio_text = (
+            "Mechanical Engineering graduate dedicated to continuous learning, practical innovation.\n\n"
+            "Engineer. Visionary. Future husband."
+        )
         bio_input.fill(bio_text)
         print("[OK] Populated Bio details.")
 
@@ -1089,7 +1125,7 @@ def main():
     parser.add_argument("--pause-at-checkout", action="store_true", help="Pause at PayMongo checkout for inspection")
     parser.add_argument("--step-by-step", action="store_true", help="Prompt before proceeding to each stage")
     parser.add_argument("--stage", type=int, choices=range(1, 10), help="Execute only a specific stage (1-9)")
-    parser.add_argument("--session-cookie", default="", help="Session cookie or token for skipping stages 1-4 (required if --stage > 4)")
+    parser.add_argument("--session-cookie", default="", help="Session cookie or token for skipping stages 1-3 (required if --stage >= 4)")
 
     args = parser.parse_args()
 
@@ -1105,11 +1141,11 @@ def main():
     pacing = get_pacing(args.headless, args.pace)
     is_fullscreen = args.fullscreen or FULLSCREEN
 
-    # Handle SESSION_COOKIE validation when skipping stages beyond Stage 4
+    # Handle SESSION_COOKIE validation when skipping stages (Stage 4 and beyond)
     auth_member_name = args.name
     raw_session_token = ""
 
-    if args.stage and args.stage > 4:
+    if args.stage and args.stage >= 4:
         cookie_to_use = (args.session_cookie or SESSION_COOKIE).strip()
         if not cookie_to_use:
             raise ValueError(
@@ -1128,8 +1164,8 @@ def main():
     print(f"  Test Member:   {auth_member_name} ({test_email})")
     print(f"  Admin User:    {args.admin_user}")
     print(f"  Execution:     Headless={args.headless}, Fullscreen={is_fullscreen}, Pacing={args.pace}, slow_mo={pacing['slow_mo']}ms")
-    if args.stage and args.stage > 4:
-        print(f"  Session Auth:  Enabled via validated SESSION_COOKIE (Skipping Stages 1-4)")
+    if args.stage and args.stage >= 4:
+        print(f"  Session Auth:  Enabled via validated SESSION_COOKIE (Skipping Stages 1-3)")
     print("=" * 78)
 
     with sync_playwright() as p:
@@ -1151,8 +1187,8 @@ def main():
 
         context = browser.new_context(**context_kwargs)
 
-        # Apply SESSION_COOKIE only if running beyond Stage 4
-        if args.stage and args.stage > 4 and raw_session_token:
+        # Apply SESSION_COOKIE if running at or beyond Stage 4
+        if args.stage and args.stage >= 4 and raw_session_token:
             context.add_cookies([
                 {
                     "name": "token",
@@ -1190,7 +1226,11 @@ def main():
 
             # Stage 4: Authentication & Profile Dashboard
             if not args.stage or args.stage == 4:
-                stage_4_member_login(user_page, args.url, test_email, args.password, pacing, args.name)
+                is_session_authenticated = bool(args.stage and args.stage >= 4 and raw_session_token)
+                stage_4_member_login(
+                    user_page, args.url, test_email, args.password, pacing,
+                    args.name, is_session_authenticated=is_session_authenticated
+                )
                 if args.step_by_step: prompt_step("Completed Stage 4.")
 
             # Stage 5: Bulletin & Comments

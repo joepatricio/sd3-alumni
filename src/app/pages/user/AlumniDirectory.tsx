@@ -66,7 +66,7 @@ export function AlumniDirectory() {
                 }),
                 _include: "userStatus"
             }
-        }).then(res => setAbsoluteTotalAlumni(res.data.items || res.data.length || 0));
+        }).then(res => setAbsoluteTotalAlumni(res.data.items || res.data.length || 0)); // Flagged for vague typing
     }, []);
 
     useEffect(() => {
@@ -100,6 +100,7 @@ export function AlumniDirectory() {
                     }
                 });
 
+                // Flagged for vague typing
                 const data = res.data.data || res.data;
                 const total = res.data.items || data.length;
 

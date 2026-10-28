@@ -147,7 +147,7 @@ export function Events() {
 
                 const data = Array.isArray(res.data) ? res.data : (res.data?.data || []);
                 setEvents(data);
-                setTotalEvents(res.data?.items !== undefined ? res.data.items : data.length);
+                setTotalEvents(res.data?.items !== undefined ? res.data.items : data.length); // Flagged for vague typing
             } catch (error) {
                 console.error("Failed to fetch events:", error);
             } finally {

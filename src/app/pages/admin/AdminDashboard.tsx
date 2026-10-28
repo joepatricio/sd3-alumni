@@ -335,6 +335,7 @@ export function AdminDashboard() {
 
             // Process Bulletins for Category Distribution Graph (checks both bulletinCategory & category)
             if (bulletinsRes.status === 'fulfilled') {
+                // Flagged for vague typing
                 const bData = bulletinsRes.value.data.data || bulletinsRes.value.data || [];
                 const catCounts: Record<string, number> = {};
                 bData.forEach((b: BulletinItem) => {
@@ -347,6 +348,7 @@ export function AdminDashboard() {
 
             // Process Events for Map, Calendar & Category Distribution
             if (eventsRes.status === 'fulfilled') {
+                // Flagged for vague typing
                 const eData = eventsRes.value.data.data || eventsRes.value.data || [];
                 setEvents(eData);
 
@@ -361,6 +363,7 @@ export function AdminDashboard() {
 
             // Process Platform Health from userStatistics
             if (userStatsRes.status === 'fulfilled') {
+                // Flagged for vague typing
                 const uStats = userStatsRes.value.data.data || userStatsRes.value.data || [];
                 let conns = 0, buls = 0, comms = 0;
                 uStats.forEach((s: UserStatisticItem) => {

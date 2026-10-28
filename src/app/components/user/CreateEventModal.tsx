@@ -927,10 +927,11 @@ export function CreateEventModal({ trigger, initialData, isAdmin, open: external
 
             if (isEditMode && initialData?.id) {
                 const patchEndpoint = isAdmin ? `/admin/events/${initialData.id}` : `/events/${initialData.id}`;
-                
+
                 if (!isAdmin) {
                     try {
                         const statusRes = await api.get('/eventStatuses?statusName=Pending');
+                        // Flagged for vague typing
                         const statusData = Array.isArray(statusRes.data) ? statusRes.data : statusRes.data.data;
                         const pendingStatus = statusData?.[0];
                         if (pendingStatus) {
@@ -942,7 +943,7 @@ export function CreateEventModal({ trigger, initialData, isAdmin, open: external
                 }
 
                 await api.patch(patchEndpoint, payload);
-                
+
                 // If it was valid and now it's pending (because !isAdmin), decrement eventsCreated
                 if (!isAdmin && session?.userId) {
                     const validStatuses = ['Approved', 'Concluded'];

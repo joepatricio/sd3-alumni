@@ -61,6 +61,7 @@ export function AdminEvents() {
             }
         });
 
+        // Flagged for vague typing
         const data = response.data.data || response.data;
         const total = response.data.items || data.length;
 

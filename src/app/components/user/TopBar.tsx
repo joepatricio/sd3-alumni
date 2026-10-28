@@ -21,6 +21,7 @@ export function TopBar({
     if (isLoggedIn && session?.userId) {
       api.get('/notifications', { params: { userId: session.userId, isRead: false } })
         .then(res => {
+          // Flagged for vague typing
           const count = Array.isArray(res.data) ? res.data.length : (res.data?.data?.length || 0);
           setUnreadCount(count);
         })

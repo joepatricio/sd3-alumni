@@ -187,6 +187,7 @@ export function CreateBulletinModal({ trigger, initialData, isAdmin = false, ope
         if (!isAdmin) {
             try {
                 const statusRes = await api.get('/contentStatuses?statusName=Pending');
+                // Flagged for vague typing
                 const statusData = Array.isArray(statusRes.data) ? statusRes.data : statusRes.data.data;
                 const pendingStatus = statusData?.[0];
                 if (pendingStatus) {
