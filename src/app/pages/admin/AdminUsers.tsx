@@ -243,6 +243,7 @@ export function AdminUsers() {
             const res = await api.get('/users', {
                 params: {
                     _sort: sortStr,
+                    _include: 'profile,userStatus,profileStatus,records',
                     _where: Object.keys(whereClause).length > 0 ? JSON.stringify(whereClause) : undefined
                 }
             });
@@ -393,6 +394,7 @@ export function AdminUsers() {
                     _page: currentPage,
                     _per_page: itemsPerPage,
                     _sort: sortStr,
+                    _include: 'profile,userStatus,profileStatus,records',
                     _where: Object.keys(whereClause).length > 0 ? JSON.stringify(whereClause) : undefined
                 }
             });

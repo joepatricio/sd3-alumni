@@ -2002,42 +2002,96 @@ app.put('/api/admin/users/:id/status', authenticateAdminToken, handleAdminUpdate
 // Add new tables here
 const tableToModel = {
     degrees: 'degree',
+    degree: 'degree',
+    connectionstatuses: 'connectionStatus',
+    connectionstatus: 'connectionStatus',
     connectionStatuses: 'connectionStatus',
+    connectionStatus: 'connectionStatus',
+    contentstatuses: 'contentStatus',
+    contentstatus: 'contentStatus',
     contentStatuses: 'contentStatus',
     contentStatus: 'contentStatus',
+    userstatuses: 'userStatus',
+    userstatus: 'userStatus',
     userStatuses: 'userStatus',
+    userStatus: 'userStatus',
+    donationstatuses: 'donationStatus',
+    donationstatus: 'donationStatus',
     donationStatuses: 'donationStatus',
+    donationStatus: 'donationStatus',
+    eventstatuses: 'eventStatus',
+    eventstatus: 'eventStatus',
     eventStatuses: 'eventStatus',
     eventStatus: 'eventStatus',
+    eventcategories: 'eventCategory',
+    eventcategory: 'eventCategory',
     eventCategories: 'eventCategory',
     eventCategory: 'eventCategory',
+    bulletincategories: 'bulletinCategory',
+    bulletincategory: 'bulletinCategory',
     bulletinCategories: 'bulletinCategory',
     bulletinCategory: 'bulletinCategory',
+    profilestatuses: 'profileStatus',
+    profilestatus: 'profileStatus',
     profileStatuses: 'profileStatus',
+    profileStatus: 'profileStatus',
+    userconnections: 'userConnection',
+    userconnection: 'userConnection',
     userConnections: 'userConnection',
+    userConnection: 'userConnection',
+    userstatistics: 'userStatistic',
+    userstatistic: 'userStatistic',
     userStatistics: 'userStatistic',
+    userStatistic: 'userStatistic',
+    userachievements: 'userAchievement',
+    userachievement: 'userAchievement',
     userAchievements: 'userAchievement',
+    userAchievement: 'userAchievement',
+    userrsvps: 'userRsvp',
+    userrsvp: 'userRsvp',
     userRsvps: 'userRsvp',
+    userRsvp: 'userRsvp',
+    userauths: 'userAuth',
+    userauth: 'userAuth',
     userAuths: 'userAuth',
+    userAuth: 'userAuth',
     profiles: 'profile',
+    profile: 'profile',
     users: 'user',
+    user: 'user',
     records: 'record',
+    record: 'record',
     bulletins: 'bulletin',
+    bulletin: 'bulletin',
     events: 'event',
+    event: 'event',
     comments: 'comment',
+    comment: 'comment',
     donations: 'donation',
+    donation: 'donation',
     locations: 'location',
+    location: 'location',
     achievements: 'achievement',
+    achievement: 'achievement',
+    bulletinlikes: 'bulletinLike',
+    bulletinlike: 'bulletinLike',
     bulletinLikes: 'bulletinLike',
+    bulletinLike: 'bulletinLike',
+    commentlikes: 'commentLike',
+    commentlike: 'commentLike',
     commentLikes: 'commentLike',
+    commentLike: 'commentLike',
     notifications: 'notification',
+    notification: 'notification',
+    cleflogs: 'clefLog',
+    cleflog: 'clefLog',
     clefLogs: 'clefLog',
     clefLog: 'clefLog'
 };
 
 const defaultIncludes = {
     profile: { degree: true, user: true },
-    user: { profile: { include: { degree: true } }, userStatus: true, profileStatus: true, records: { include: { userStatus: true, admin: true }, orderBy: { dateCreated: 'desc' } } },
+    user: { profile: { include: { degree: true } }, userStatus: true, profileStatus: true, records: { include: { userStatus: true, admin: { select: { id: true, username: true } } }, orderBy: { dateCreated: 'desc' } } },
     bulletin: { comments: { include: { user: { include: { profile: true } }, likesList: true } }, status: true, category: true, author: { include: { profile: true, userStatus: true } }, likes: true, admin: true },
     event: { location: true, rsvps: true, status: true, category: true, author: { include: { profile: true, userStatus: true } }, admin: true },
     userConnection: { status: true, user: { include: { profile: { include: { degree: true } } } }, friend: { include: { profile: { include: { degree: true } } } } },
@@ -2058,6 +2112,22 @@ const defaultIncludes = {
 
 // Map database entities/relations to json-server expected shapes
 function formatOutput(modelName, data) {
+    const sanitizeSensitive = (obj) => {
+        if (!obj || typeof obj !== 'object') return;
+        if (Array.isArray(obj)) {
+            obj.forEach(sanitizeSensitive);
+            return;
+        }
+        if ('passwordHash' in obj) {
+            delete obj.passwordHash;
+        }
+        for (const k of Object.keys(obj)) {
+            if (typeof obj[k] === 'object' && obj[k] !== null) {
+                sanitizeSensitive(obj[k]);
+            }
+        }
+    };
+
     const mapItem = (item) => {
         if (!item) return item;
 
@@ -2106,9 +2176,13 @@ function formatOutput(modelName, data) {
     };
 
     if (Array.isArray(data)) {
-        return data.map(mapItem);
+        const res = data.map(mapItem);
+        sanitizeSensitive(res);
+        return res;
     }
-    return mapItem(data);
+    const res = mapItem(data);
+    sanitizeSensitive(res);
+    return res;
 }
 
 function filterModelFields(modelName, data) {
@@ -2323,7 +2397,7 @@ app.get('/api/donations/summary', async (req, res) => {
 // Generic GET all
 app.get('/api/:table', async (req, res, next) => {
     const { table } = req.params;
-    const modelName = tableToModel[table];
+    const modelName = tableToModel[table] || tableToModel[table?.toLowerCase()];
     if (!modelName) return next();
 
     try {
@@ -2334,9 +2408,10 @@ app.get('/api/:table', async (req, res, next) => {
         const orderBy = parseSort(req.query._sort);
 
         let includes;
-        if (req.query._include !== undefined) {
+        const rawInclude = req.query._include ?? req.query._embed ?? req.query._expand;
+        if (rawInclude !== undefined) {
             includes = {};
-            const includeFields = typeof req.query._include === 'string' ? req.query._include.split(',') : [];
+            const includeFields = typeof rawInclude === 'string' ? rawInclude.split(',') : (Array.isArray(rawInclude) ? rawInclude : [rawInclude]);
             includeFields.forEach(field => {
                 let f = field.trim();
                 if (modelName === 'bulletin') {
@@ -2345,6 +2420,10 @@ app.get('/api/:table', async (req, res, next) => {
                 } else if (modelName === 'event') {
                     if (f === 'eventCategory') f = 'category';
                     else if (f === 'eventStatus') f = 'status';
+                } else if (modelName === 'user') {
+                    if (f.toLowerCase() === 'user_achievement' || f.toLowerCase() === 'userachievement' || f.toLowerCase() === 'userachievements') {
+                        f = 'achievements';
+                    }
                 }
                 if (f && f !== 'none') {
                     if (defaultIncludes[modelName] && defaultIncludes[modelName][f]) {
@@ -2412,6 +2491,9 @@ app.get('/api/:table', async (req, res, next) => {
         }
     } catch (error) {
         console.error(`Generic GET /api/${table} failed:`, error);
+        if (error.name === 'PrismaClientValidationError' || error.code?.startsWith('P20')) {
+            return res.status(400).json({ error: `Invalid query parameters: ${error.message}` });
+        }
         res.status(500).json({ error: `Failed to fetch ${table}` });
     }
 });
@@ -2419,7 +2501,7 @@ app.get('/api/:table', async (req, res, next) => {
 // Generic GET one
 app.get('/api/:table/:id', async (req, res, next) => {
     const { table, id } = req.params;
-    const modelName = tableToModel[table];
+    const modelName = tableToModel[table] || tableToModel[table?.toLowerCase()];
     if (!modelName) return next();
 
     try {
@@ -2427,11 +2509,23 @@ app.get('/api/:table/:id', async (req, res, next) => {
         if (!delegate) return res.status(404).json({ error: `Model for ${table} not found` });
 
         let includes;
-        if (req.query._include !== undefined) {
+        const rawInclude = req.query._include ?? req.query._embed ?? req.query._expand;
+        if (rawInclude !== undefined) {
             includes = {};
-            const includeFields = typeof req.query._include === 'string' ? req.query._include.split(',') : [];
+            const includeFields = typeof rawInclude === 'string' ? rawInclude.split(',') : (Array.isArray(rawInclude) ? rawInclude : [rawInclude]);
             includeFields.forEach(field => {
-                const f = field.trim();
+                let f = field.trim();
+                if (modelName === 'bulletin') {
+                    if (f === 'categories' || f === 'bulletinCategory') f = 'category';
+                    else if (f === 'contentStatus') f = 'status';
+                } else if (modelName === 'event') {
+                    if (f === 'eventCategory') f = 'category';
+                    else if (f === 'eventStatus') f = 'status';
+                } else if (modelName === 'user') {
+                    if (f.toLowerCase() === 'user_achievement' || f.toLowerCase() === 'userachievement' || f.toLowerCase() === 'userachievements') {
+                        f = 'achievements';
+                    }
+                }
                 if (f && f !== 'none') {
                     if (defaultIncludes[modelName] && defaultIncludes[modelName][f]) {
                         includes[f] = defaultIncludes[modelName][f];
@@ -2462,7 +2556,7 @@ app.get('/api/:table/:id', async (req, res, next) => {
 // Generic POST
 app.post('/api/:table', contentLimiter, async (req, res, next) => {
     const { table } = req.params;
-    const modelName = tableToModel[table];
+    const modelName = tableToModel[table] || tableToModel[table?.toLowerCase()];
     if (!modelName) return next();
 
     try {
@@ -2507,7 +2601,7 @@ app.post('/api/:table', contentLimiter, async (req, res, next) => {
 // Generic PATCH
 app.patch('/api/:table/:id', async (req, res, next) => {
     const { table, id } = req.params;
-    const modelName = tableToModel[table];
+    const modelName = tableToModel[table] || tableToModel[table?.toLowerCase()];
     if (!modelName) return next();
 
     try {
@@ -2550,7 +2644,7 @@ app.patch('/api/:table/:id', async (req, res, next) => {
 // Generic PUT
 app.put('/api/:table/:id', async (req, res, next) => {
     const { table, id } = req.params;
-    const modelName = tableToModel[table];
+    const modelName = tableToModel[table] || tableToModel[table?.toLowerCase()];
     if (!modelName) return next();
 
     try {
@@ -2594,7 +2688,7 @@ app.put('/api/:table/:id', async (req, res, next) => {
 // Generic DELETE
 app.delete('/api/:table/:id', async (req, res, next) => {
     const { table, id } = req.params;
-    const modelName = tableToModel[table];
+    const modelName = tableToModel[table] || tableToModel[table?.toLowerCase()];
     if (!modelName) return next();
 
     try {
@@ -2858,6 +2952,11 @@ setInterval(async () => {
 }, 1000 * 60 * 60); // Every hour
 
 // Webhook handles reconciliation of PayMongo donations now.
+// Catch unhandled /api/* requests and return JSON 404
+app.use('/api', (req, res) => {
+    res.status(404).json({ error: 'Endpoint not found' });
+});
+
 // Catch-all route for the React Single Page Application (SPA)
 // Must be placed after all API routes!
 if (process.env.NODE_ENV === 'production') {
