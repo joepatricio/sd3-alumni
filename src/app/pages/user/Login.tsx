@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Mail, Lock, Eye, EyeOff, User, Loader2 } from 'lucide-react';
-import { useForm } from 'react-hook-form';
+import { useForm, type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { toast } from 'sonner';
@@ -43,7 +43,7 @@ export function Login() {
     }, [isLoggedIn, navigate]);
 
     const form = useForm<z.infer<typeof loginSchema>>({
-        resolver: zodResolver(loginSchema) as any,
+        resolver: zodResolver(loginSchema) as unknown as Resolver<z.infer<typeof loginSchema>>,
         defaultValues: {
             email: "",
             password: "",
@@ -69,9 +69,10 @@ export function Login() {
             });
             const from = location.state?.from || '/profile';
             navigate(from, { replace: true });
-        } catch (error: any) {
+        } catch (error: unknown) {
+            const err = error as { response?: { data?: { error?: string } } };
             console.error("Login error:", error);
-            const msg = error.response?.data?.error || "An unexpected error occurred.";
+            const msg = err.response?.data?.error || "An unexpected error occurred.";
             if (msg.toLowerCase().includes('disable')) {
                 toast.error("Account disabled", { description: "Please request reactivation from an admin." });
             } else {

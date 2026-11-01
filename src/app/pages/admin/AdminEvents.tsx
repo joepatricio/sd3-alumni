@@ -1,14 +1,15 @@
 import { useCallback } from 'react';
 import { AdminContentTable } from '@components/admin/AdminContentTable';
 
-import { api } from '@/app/views/api';
+import { api, unwrapListResponse, type EventData } from '@/app/views/api';
+import type { ContentItem } from '@components/admin/AdminContentTable';
 
 export function AdminEvents() {
     // Statuses based on the EventStatus table
     const EVENT_STATUSES = ["All", "Pending", "Approved", "Rejected", "Cancelled", "Concluded", "Archived"];
 
-    const fetchData = useCallback(async (params: any) => {
-        const whereClause: any = {};
+    const fetchData: React.ComponentProps<typeof AdminContentTable>['fetchData'] = useCallback(async (params) => {
+        const whereClause: Record<string, unknown> = {};
         if (params.status !== 'All') {
             whereClause.status = { statusName: params.status };
         }
@@ -17,19 +18,19 @@ export function AdminEvents() {
         }
         const hasActiveAccountScope = params.accountScope && params.accountScope.length > 0 && !params.accountScope.includes('All');
         if (hasActiveAccountScope || params.searchAuthor) {
-            whereClause.author = {};
+            whereClause.author = {} as Record<string, unknown>;
             if (params.searchAuthor) {
-                whereClause.author.profile = { userName: { contains: params.searchAuthor } };
+                (whereClause.author as Record<string, unknown>).profile = { userName: { contains: params.searchAuthor } };
             }
             if (hasActiveAccountScope) {
-                whereClause.author.userStatus = { statusName: { in: params.accountScope } };
+                (whereClause.author as Record<string, unknown>).userStatus = { statusName: { in: params.accountScope } };
             }
         }
         if (params.categories && params.categories.length > 0 && !params.categories.includes('All')) {
             whereClause.category = { eventCategoryName: { in: params.categories } };
         }
         if (params.searchStartDate || params.searchEndDate) {
-            const dateClause: any = {};
+            const dateClause: Record<string, unknown> = {};
             if (params.searchStartDate) {
                 const start = new Date(params.searchStartDate);
                 dateClause.gte = start.toISOString();
@@ -61,11 +62,9 @@ export function AdminEvents() {
             }
         });
 
-        // Flagged for vague typing
-        const data = response.data.data || response.data;
-        const total = response.data.items || data.length;
+        const { items: data, total } = unwrapListResponse<EventData>(response);
 
-        const mappedEvents = data.map((e: any) => ({
+        const mappedEvents: ContentItem[] = data.map((e: EventData) => ({
             ...e,
             id: e.id,
             title: e.title,

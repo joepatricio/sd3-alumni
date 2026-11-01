@@ -23,8 +23,9 @@ export function AdminLogin() {
         try {
             await api.post('/auth/admin/login', { username, password });
             navigate('/admin');
-        } catch (err: any) {
-            setError(err.response?.data?.error || 'Invalid credentials. Please try again.');
+        } catch (err: unknown) {
+            const message = (err as { response?: { data?: { error?: string } } })?.response?.data?.error || 'Invalid credentials. Please try again.';
+            setError(message);
         } finally {
             setIsLoading(false);
         }

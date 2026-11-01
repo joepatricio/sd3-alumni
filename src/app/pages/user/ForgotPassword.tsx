@@ -39,7 +39,7 @@ export function ForgotPassword() {
     }, [isLoggedIn, navigate]);
 
     const form = useForm<z.infer<typeof forgotPasswordSchema>>({
-        resolver: zodResolver(forgotPasswordSchema) as any,
+        resolver: zodResolver(forgotPasswordSchema),
         defaultValues: {
             email: "",
         },
@@ -67,7 +67,7 @@ export function ForgotPassword() {
                 </div>
                 <h1 className="text-3xl font-bold mb-2">Forgot Password?</h1>
                 <p className="text-gray-600">
-                    No worries, we'll send you reset instructions.
+                    No worries, we&apos;ll send you reset instructions.
                 </p>
             </div>
 

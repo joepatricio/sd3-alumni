@@ -293,7 +293,9 @@ const getAdminId = (req) => {
             if (decoded?.role === 'admin' && decoded.id) {
                 return decoded.id;
             }
-        } catch { }
+        } catch {
+            // Ignore invalid token, fallback to body
+        }
     }
     return req.body?.adminId || null;
 };
@@ -330,7 +332,7 @@ const contentLimiter = rateLimit({
                 if (decoded && (decoded.id || decoded.userId)) {
                     return decoded.id || decoded.userId;
                 }
-            } catch (err) {
+            } catch {
                 // Ignore token errors here, fallback to IP
             }
         }
@@ -711,9 +713,6 @@ app.post('/api/connections/action', authenticateToken, async (req, res) => {
     try {
         const c1 = await prisma.userConnection.findFirst({
             where: { userId: currentUserId, friendId: profileId }
-        });
-        const c2 = await prisma.userConnection.findFirst({
-            where: { userId: profileId, friendId: currentUserId }
         });
 
         const connStatuses = await prisma.connectionStatus.findMany();
@@ -1944,7 +1943,7 @@ const handleAdminUpdateUserStatus = async (req, res) => {
                 }
             });
 
-            const updatedUsr = await tx.user.update({
+            await tx.user.update({
                 where: { id },
                 data: {
                     userStatusId: statusObj.id,

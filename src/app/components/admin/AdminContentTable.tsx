@@ -9,6 +9,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { getCategoryColor, formatDate } from '@/app/views/formatters';
 import { startOfWeek, endOfWeek, startOfMonth, endOfMonth, startOfYear, endOfYear, format } from 'date-fns';
 
+import type { EventModalInitialData } from '@components/user/CreateEventModal';
+import type { BulletinModalInitialData } from '@components/user/CreateBulletinModal';
+
 const loadCreateEventModal = () => import('@components/user/CreateEventModal').then(m => ({ default: m.CreateEventModal }));
 const CreateEventModal = lazy(loadCreateEventModal);
 
@@ -32,7 +35,19 @@ export interface ContentItem {
     isSuspended: boolean;
 }
 
+interface ContentTableRowProps {
+    item: ContentItem;
+    getCategoryClass: (category: string) => string;
+    getStatusIndicator: (status: string) => React.ReactNode;
+    handleStatusUpdate: (id: string, status: string, type: "Event" | "Bulletin") => void;
+    statusOptions: string[];
+    setEditingItem: (item: ContentItem) => void;
+    loadCreateEventModal: () => Promise<unknown>;
+    loadCreateBulletinModal: () => Promise<unknown>;
+}
+
 const ContentTableRow = memo(({
+
     item,
     getCategoryClass,
     getStatusIndicator,
@@ -41,7 +56,7 @@ const ContentTableRow = memo(({
     setEditingItem,
     loadCreateEventModal,
     loadCreateBulletinModal
-}: any) => (
+}: ContentTableRowProps) => (
     <tr className="border-t">
         <td className="px-6 py-4">
             <div className="font-semibold text-gray-900 flex items-center gap-2">
@@ -108,6 +123,7 @@ const ContentTableRow = memo(({
         </td>
     </tr>
 ));
+ContentTableRow.displayName = 'ContentTableRow';
 
 
 
@@ -546,7 +562,7 @@ export function AdminContentTable({
 
                         <div className="flex items-center gap-2 flex-1 col-span-3">
                             <span className="text-sm text-gray-500 shrink-0">Date:</span>
-                            <Select value={datePreset} onValueChange={(val: any) => {
+                            <Select value={datePreset} onValueChange={(val: string) => {
                                 setDatePreset(val);
                                 if (val !== 'custom') applyQuickFilter(val);
                             }}>
@@ -725,7 +741,7 @@ export function AdminContentTable({
                 {editingItem && contentType === 'Event' && (
                     <CreateEventModal
                         isAdmin={true}
-                        initialData={editingItem as any}
+                        initialData={editingItem as unknown as EventModalInitialData}
                         open={true}
                         onOpenChange={(isOpen) => {
                             if (!isOpen) {
@@ -738,7 +754,7 @@ export function AdminContentTable({
                 {editingItem && contentType === 'Bulletin' && (
                     <CreateBulletinModal
                         isAdmin={true}
-                        initialData={editingItem as any}
+                        initialData={editingItem as unknown as BulletinModalInitialData}
                         open={true}
                         onOpenChange={(isOpen) => {
                             if (!isOpen) {

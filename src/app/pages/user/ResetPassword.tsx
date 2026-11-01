@@ -49,7 +49,7 @@ export function ResetPassword() {
     const email = location.state?.email;
 
     const form = useForm<z.infer<typeof resetPasswordSchema>>({
-        resolver: zodResolver(resetPasswordSchema) as any,
+        resolver: zodResolver(resetPasswordSchema),
         defaultValues: {
             password: "",
             confirmPassword: "",

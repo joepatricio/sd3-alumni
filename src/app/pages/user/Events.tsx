@@ -9,7 +9,7 @@ import { getCategoryColor, formatDate } from '@/app/views/formatters';
 const loadCreateEventModal = () => import('@components/user/CreateEventModal').then(m => ({ default: m.CreateEventModal }));
 const CreateEventModal = lazy(loadCreateEventModal);
 
-import { api, type EventData } from '@/app/views/api';
+import { api, unwrapListResponse, type EventData, type EventCategoryData, type User, type LocationData } from '@/app/views/api';
 import { useAuth } from '@/app/views/auth';
 
 const EVENTS_PER_PAGE = 6;
@@ -76,8 +76,8 @@ export function Events() {
         const fetchCategories = async () => {
             try {
                 const res = await api.get('/eventCategories');
-                const data = Array.isArray(res.data) ? res.data : (res.data?.data || []);
-                setAllCategories(data.map((c: any) => c.eventCategoryName));
+                const data = unwrapListResponse<EventCategoryData>(res).items;
+                setAllCategories(data.map(c => c.eventCategoryName));
             } catch (err) {
                 console.error("Failed to fetch event categories", err);
             }
@@ -93,19 +93,19 @@ export function Events() {
                     api.get('/users')
                 ]);
 
-                const allUsers = Array.isArray(usersRes.data) ? usersRes.data : (usersRes.data?.data || []);
+                const allUsers = unwrapListResponse<User>(usersRes).items;
                 const restricted = allUsers
-                    .filter((u: any) => u.userStatus?.statusName === 'Banned' || u.userStatus?.statusName === 'Suspended')
-                    .map((u: any) => String(u.id));
+                    .filter((u: User) => u.userStatus?.statusName === 'Banned' || u.userStatus?.statusName === 'Suspended')
+                    .map((u: User) => String(u.id));
 
                 if (session?.userId) {
-                    const currentU = allUsers.find((u: any) => String(u.id) === String(session.userId));
+                    const currentU = allUsers.find((u: User) => String(u.id) === String(session.userId));
                     if (currentU) {
                         setCurrentUserStatus(currentU.userStatus?.statusName || '');
                     }
                 }
 
-                const whereClause: any = {
+                const whereClause: Record<string, unknown> = {
                     status: { statusName: 'Approved' },
                     author: { userStatus: { statusName: { ne: 'Banned' } } }
                 };
@@ -145,9 +145,9 @@ export function Events() {
                     }
                 });
 
-                const data = Array.isArray(res.data) ? res.data : (res.data?.data || []);
+                const { items: data, total } = unwrapListResponse<EventData>(res);
                 setEvents(data);
-                setTotalEvents(res.data?.items !== undefined ? res.data.items : data.length); // Flagged for vague typing
+                setTotalEvents(total);
             } catch (error) {
                 console.error("Failed to fetch events:", error);
             } finally {
@@ -174,7 +174,7 @@ export function Events() {
         }
     };
 
-    const formatLocation = (loc: any) => {
+    const formatLocation = (loc: string | LocationData | null | undefined) => {
         if (!loc) return 'TBA';
         if (typeof loc === 'string') return loc;
         const parts = [loc.landmark, loc.barangay, loc.cityMunicipality, loc.province].filter(Boolean);

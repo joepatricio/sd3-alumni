@@ -70,7 +70,7 @@ export function About() {
                             and Elementary departments. By fostering a strong
                             and inclusive alumni network, the office ensures
                             that every former student, regardless of level,
-                            remains connected to the university's mission and
+                            remains connected to the university&apos;s mission and
                             legacy.
                         </p>
                         <p>
@@ -94,9 +94,9 @@ export function About() {
                                 Our Vision
                             </h3>
                             <p className="text-gray-700 italic">
-                                "A Recoletos University renowned for Education
+                                &ldquo;A Recoletos University renowned for Education
                                 Excellence, Research Impact, and Community
-                                Transformation"
+                                Transformation&rdquo;
                             </p>
                         </div>
                         <div className="w-full h-px bg-gray-100"></div>
@@ -105,9 +105,9 @@ export function About() {
                                 Our Mission
                             </h3>
                             <p className="text-gray-700 italic">
-                                "Imbued with the spirit of “Caritas et
-                                Scientia”, we provide the highest level of
-                                Quality Christian Community-oriented Education."
+                                &ldquo;Imbued with the spirit of &lsquo;Caritas et
+                                Scientia&rsquo;, we provide the highest level of
+                                Quality Christian Community-oriented Education.&rdquo;
                             </p>
                         </div>
                     </div>

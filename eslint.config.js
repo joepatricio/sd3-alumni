@@ -36,9 +36,18 @@ export default defineConfig([
         version: "19.0"
       }
     },
+
     rules: {
       "@typescript-eslint/no-explicit-any": "warn",
-      "react/no-unescaped-entities": "warn"
+      "react/no-unescaped-entities": "warn",
+      "@typescript-eslint/no-unused-vars": [
+        "error",
+        {
+          argsIgnorePattern: "^_",
+          varsIgnorePattern: "^_",
+          caughtErrorsIgnorePattern: "^_",
+        },
+      ]
     }
   }
 ]);

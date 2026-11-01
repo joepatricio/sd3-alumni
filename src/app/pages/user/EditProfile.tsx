@@ -16,7 +16,7 @@ import {
 import { Input } from '@components/ui/input';
 import { Textarea } from '@components/ui/textarea';
 import { useAuth } from '@/app/views/auth';
-import { api } from '@/app/views/api';
+import { api, unwrapListResponse, type ProfileData, type User, type DegreeData, type ProfileStatusData } from '@/app/views/api';
 import { useEffect, useState } from 'react';
 import { ImageUpload } from '@components/user/ImageUpload';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@components/ui/select';
@@ -42,14 +42,14 @@ export function EditProfile() {
     const { session } = useAuth();
 
     const [loading, setLoading] = useState(true);
-    const [profile, setProfile] = useState<any>(null);
-    const [userRecord, setUserRecord] = useState<any>(null);
-    const [degreeInfo, setDegreeInfo] = useState<any>(null);
+    const [profile, setProfile] = useState<ProfileData | null>(null);
+    const [userRecord, setUserRecord] = useState<User | null>(null);
+    const [degreeInfo, setDegreeInfo] = useState<DegreeData | null>(null);
     const [profileImageUrl, setProfileImageUrl] = useState<string | null>(null);
-    const [profileStatuses, setProfileStatuses] = useState<any[]>([]);
+    const [profileStatuses, setProfileStatuses] = useState<ProfileStatusData[]>([]);
 
     const form = useForm<ProfileFormValues>({
-        resolver: zodResolver(profileSchema) as any,
+        resolver: zodResolver(profileSchema),
         defaultValues: {
             name: '',
             email: '',
@@ -75,18 +75,17 @@ export function EditProfile() {
                     api.get(`/profileStatuses`)
                 ]);
 
-                if (statusRes.data) {
-                    setProfileStatuses(statusRes.data);
-                }
+                const statusStatuses = unwrapListResponse<ProfileStatusData>(statusRes).items;
+                setProfileStatuses(statusStatuses);
 
                 const uData = userRes.data;
                 let defaultStatusId = '';
                 if (uData && uData.length > 0) {
                     setUserRecord(uData[0]);
                     defaultStatusId = uData[0].profileStatusId;
-                } else if (statusRes.data && statusRes.data.length > 0) {
-                    const privateStatus = statusRes.data.find((s: any) => s.statusName === 'Private');
-                    defaultStatusId = privateStatus ? privateStatus.id : statusRes.data[0].id;
+                } else if (statusStatuses.length > 0) {
+                    const privateStatus = statusStatuses.find((s: ProfileStatusData) => s.statusName === 'Private');
+                    defaultStatusId = privateStatus ? privateStatus.id : statusStatuses[0].id;
                 }
 
                 const data = profileRes.data;
@@ -134,8 +133,10 @@ export function EditProfile() {
         fetchProfile();
     }, [session, form]);
 
-    const handleImageSelect = (url: string) => {
-        setProfileImageUrl(url);
+    const handleImageSelect = (fileOrUrl: string | File) => {
+        if (typeof fileOrUrl === 'string') {
+            setProfileImageUrl(fileOrUrl);
+        }
     };
 
     const onSubmit = async (values: ProfileFormValues) => {

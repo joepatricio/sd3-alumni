@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ProfileHeader } from '@components/user/ProfileHeader';
-import { api, AchievementIconMap, useProfileRoute, type ProfileData, type UserStatisticsData } from '@/app/views/api';
+import { api, AchievementIconMap, useProfileRoute, unwrapListResponse, type ProfileData, type UserStatisticsData, type UserAchievementData } from '@/app/views/api';
 import { NotFound } from '@pages/NotFound';
 import { Trophy, Loader2 } from 'lucide-react';
 import { formatDate } from '@/app/views/formatters';
@@ -13,24 +13,22 @@ export function Achievements() {
     const [loading, setLoading] = useState(true);
     const [profile, setProfile] = useState<ProfileData | null>(null);
     const [statsData, setStatsData] = useState<UserStatisticsData | null>(null);
-    const [achievements, setAchievements] = useState<any[]>([]);
+    const [achievements, setAchievements] = useState<UserAchievementData[]>([]);
 
     useEffect(() => {
         const fetchAchievementsData = async () => {
             try {
                 setLoading(true);
                 const [profileRes, statsRes, achUserRes] = await Promise.all([
-                    api.get<any>('/profiles', { params: { 'userId': profileId, } }),
-                    api.get<any>('/userStatistics', { params: { 'userId': profileId } }),
-                    api.get(`/userAchievements`, { params: { 'userId': profileId, } })
+                    api.get("/profiles", { params: { "userId": profileId } }),
+                    api.get("/userStatistics", { params: { "userId": profileId } }),
+                    api.get("/userAchievements", { params: { "userId": profileId } })
                 ]);
 
-                const profile = Array.isArray(profileRes.data) ? profileRes.data[0] : profileRes.data;
-
+                const profile = unwrapListResponse<ProfileData>(profileRes).items[0] || null;
                 setProfile(profile);
-                setStatsData(Array.isArray(statsRes.data) ? statsRes.data[0] : statsRes.data);
-
-                const userAchs = achUserRes.data || [];
+                setStatsData(unwrapListResponse<UserStatisticsData>(statsRes).items[0] || null);
+                const userAchs = unwrapListResponse<UserAchievementData>(achUserRes).items;
                 setAchievements(userAchs);
             } catch (err) {
                 console.error("Failed to load achievements", err);
@@ -71,7 +69,7 @@ export function Achievements() {
                     onEdit={isOwner ? () => navigate('/profile/edit') : undefined}
                     activeTab="achievements"
                     onTabChange={handleTabChange}
-                    statsData={statsData as any}
+                    statsData={statsData || undefined}
                 />
 
                 <div className="bg-white rounded-lg shadow-md p-6 md:p-8">
@@ -85,7 +83,7 @@ export function Achievements() {
                         </div>
                     ) : (
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            {Object.values(achievements.reduce((acc: any, achv: any) => {
+                            {Object.values(achievements.reduce<Record<number, UserAchievementData>>((acc, achv) => {
                                 const cat = achv.achievement?.achievementCategory;
                                 if (cat !== undefined) {
                                     if (!acc[cat] || acc[cat].achievementTier < achv.achievementTier) {
@@ -93,7 +91,7 @@ export function Achievements() {
                                     }
                                 }
                                 return acc;
-                            }, {})).sort((a: any, b: any) => new Date(b.achievedDate).getTime() - new Date(a.achievedDate).getTime()).map((achv: any, i) => {
+                            }, {})).sort((a, b) => new Date(b.achievedDate).getTime() - new Date(a.achievedDate).getTime()).map((achv, i) => {
                                 const achievement = achv.achievement;
                                 if (!achievement) return null;
                                 const Icon = AchievementIconMap[achievement.achievementIcon] || Trophy;

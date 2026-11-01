@@ -11,7 +11,7 @@ import {
 import { Button } from '@components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@components/ui/select';
 import { LazyImage } from '@components/user/LazyImage';
-import { api, type BulletinData, type ProfileData } from '@/app/views/api';
+import { api, unwrapListResponse, type BulletinData, type ProfileData } from '@/app/views/api';
 import { useAuth } from '@/app/views/auth';
 import { formatDate, getCategoryColor } from '@/app/views/formatters';
 
@@ -130,7 +130,7 @@ export function Bulletin() {
         const fetchData = async () => {
             setLoading(true);
             try {
-                const whereClause: any = {
+                const whereClause: Record<string, unknown> = {
                     status: { statusName: 'Approved' }
                 };
 
@@ -145,12 +145,12 @@ export function Bulletin() {
                 }
 
                 if (dateFrom || dateTo) {
-                    whereClause.bulletinDate = {};
-                    if (dateFrom) whereClause.bulletinDate.gte = new Date(dateFrom).toISOString();
+                    whereClause.bulletinDate = {} as Record<string, string>;
+                    if (dateFrom) (whereClause.bulletinDate as Record<string, string>).gte = new Date(dateFrom).toISOString();
                     if (dateTo) {
                         const toDate = new Date(dateTo);
                         toDate.setHours(23, 59, 59, 999);
-                        whereClause.bulletinDate.lte = toDate.toISOString();
+                        (whereClause.bulletinDate as Record<string, string>).lte = toDate.toISOString();
                     }
                 }
 
@@ -163,9 +163,9 @@ export function Bulletin() {
                     }
                 });
 
-                const bData = Array.isArray(bRes.data) ? bRes.data : (bRes.data?.data || []);
-                setBulletins(bData || []);
-                setTotalBulletins(bRes.data?.items !== undefined ? bRes.data.items : bData.length);
+                const { items: bData, total } = unwrapListResponse<BulletinData>(bRes);
+                setBulletins(bData);
+                setTotalBulletins(total);
 
                 const pMap: Record<string, ProfileData> = {};
                 (bData || []).forEach((b: BulletinData) => {

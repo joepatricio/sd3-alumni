@@ -4,7 +4,7 @@ import { ProfileHeader } from '@components/user/ProfileHeader';
 import { Calendar, MapPin, Clock, Loader2 } from 'lucide-react';
 import { LazyImage } from '@components/user/LazyImage';
 import { formatDate } from '@/app/views/formatters';
-import { api, useProfileRoute, type ProfileData } from '@/app/views/api';
+import { api, useProfileRoute, unwrapListResponse, type ProfileData, type RSVPData } from '@/app/views/api';
 
 interface EventItem {
     id: string;
@@ -40,9 +40,8 @@ export function UserEvents() {
                 setProfile(profileRes.data);
 
                 const rsvpRes = await api.get('/userRsvps', { params: { userId: profileId, isAttending: true } });
-                // Flagged for vague typing
-                const rsvps = rsvpRes.data.data || rsvpRes.data || [];
-                const eventIds = rsvps.map((r: any) => r.eventId).filter(Boolean);
+                const rsvps = unwrapListResponse<RSVPData>(rsvpRes).items;
+                const eventIds = rsvps.map((r: RSVPData) => r.eventId).filter(Boolean);
 
                 if (eventIds.length > 0) {
                     const eventsRes = await api.get('/events', {
@@ -51,8 +50,7 @@ export function UserEvents() {
                             _include: 'location'
                         }
                     });
-                    // Flagged for vague typing
-                    const evts = eventsRes.data.data || eventsRes.data || [];
+                    const evts = unwrapListResponse<EventItem>(eventsRes).items;
                     setUserEvents(evts);
                 } else {
                     setUserEvents([]);

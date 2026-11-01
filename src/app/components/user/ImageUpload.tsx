@@ -6,7 +6,7 @@ import { api } from '@/app/views/api';
 
 interface ImageUploadProps {
     previewUrl: string | null;
-    onFileSelect: (fileOrUrl: any) => void;
+    onFileSelect: (fileOrUrl: string | File) => void;
     onClear: () => void;
     placeholderText?: string;
 }

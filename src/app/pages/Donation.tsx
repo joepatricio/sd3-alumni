@@ -98,10 +98,12 @@ export function Donation() {
             } else {
                 throw new Error("Invalid checkout response");
             }
-        } catch (error: any) {
+        } catch (error: unknown) {
             setIsSubmitting(false);
-            if (error.response?.data?.error) {
-                toast.error(error.response.data.error);
+            const axiosErr = error as { response?: { data?: { error?: string } } };
+            if (axiosErr.response?.data?.error) {
+                toast.error(axiosErr.response.data.error);
+                
             } else {
                 toast.error("Failed to initiate checkout. Please try again.");
             }
@@ -197,7 +199,7 @@ export function Donation() {
                                 ) : (
                                     <div className="bg-brand-primary p-6 text-white flex items-center justify-between gap-4">
                                         <div className="flex items-center gap-3">
-                                            {!!profileImage ? (
+                                            {profileImage ? (
                                                 <img
                                                     src={profileImage}
                                                     alt={userName || "User"}

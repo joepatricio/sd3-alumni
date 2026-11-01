@@ -8,7 +8,7 @@ import { Input } from '@components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@components/ui/select';
 import { formatCurrency, getBankColor, formatDate } from '@/app/views/formatters';
 import { Printer, Download, Search, ArrowUp, ArrowDown, ArrowUpDown, ChevronLeft, ChevronRight, Loader2, Info, Mail, MapPin, GraduationCap, Briefcase } from 'lucide-react';
-import { api, type Donation } from '@/app/views/api';
+import { api, unwrapListResponse, type Donation, type DonationData, type DonorLeaderboardEntry } from '@/app/views/api';
 import { PieChart, Pie, Cell, Tooltip as RechartsTooltip, ResponsiveContainer } from 'recharts';
 import { Link } from 'react-router-dom';
 import { toPng } from 'html-to-image';
@@ -21,7 +21,7 @@ const STATUS_COLORS: Record<string, string> = {
     Other: '#9ca3af' // Gray
 };
 
-const DonationTableRow = memo(({ donation }: { donation: any }) => (
+const DonationTableRow = memo(({ donation }: { donation: Donation }) => (
     <tr className="border-t hover:bg-gray-50/50 transition-colors">
         <td className="px-6 py-4 whitespace-nowrap text-gray-600">{donation.date}</td>
         <td className="px-6 py-4 font-medium text-gray-900">{donation.donor}</td>
@@ -40,6 +40,7 @@ const DonationTableRow = memo(({ donation }: { donation: any }) => (
         <td className="px-6 py-4 text-gray-500 font-mono text-xs">{donation.donationReference}</td>
     </tr>
 ));
+DonationTableRow.displayName = 'DonationTableRow';
 
 export function AdminDonations() {
     const [itemsPerPage, setItemsPerPage] = useState(20);
@@ -71,9 +72,9 @@ export function AdminDonations() {
 
     // Enhanced Top Donors Data
     const [leaderboards, setLeaderboards] = useState<{
-        topLTV: any[];
-        topAvgDonation: any[];
-        topFrequency: any[];
+        topLTV: DonorLeaderboardEntry[];
+        topAvgDonation: DonorLeaderboardEntry[];
+        topFrequency: DonorLeaderboardEntry[];
     }>({ topLTV: [], topAvgDonation: [], topFrequency: [] });
     const [activeLeaderboardTab, setActiveLeaderboardTab] = useState('Top LTV');
 
@@ -113,7 +114,7 @@ export function AdminDonations() {
             try {
                 const statusesRes = await api.get('/donationStatuses');
                 if (statusesRes.data && Array.isArray(statusesRes.data)) {
-                    setDbStatuses(statusesRes.data.map((s: any) => s.statusName));
+                    setDbStatuses(statusesRes.data.map((s: { statusName: string }) => s.statusName));
                 }
             } catch (err) {
                 console.error("Failed to fetch donation statuses", err);
@@ -230,7 +231,7 @@ export function AdminDonations() {
 
     const handleExportCSV = async () => {
         try {
-            const whereClause: any = {};
+            const whereClause: Record<string, unknown> = {};
             if (activeTab !== 'All') {
                 whereClause.donationStatus = { statusName: activeTab };
             }
@@ -241,18 +242,20 @@ export function AdminDonations() {
                 whereClause.donationReference = { contains: appliedSearchRef };
             }
             if (appliedMinAmount || appliedMaxAmount) {
-                whereClause.donationAmount = {};
-                if (appliedMinAmount) whereClause.donationAmount.gte = parseFloat(appliedMinAmount);
-                if (appliedMaxAmount) whereClause.donationAmount.lte = parseFloat(appliedMaxAmount);
+                const amountFilter: Record<string, number> = {};
+                if (appliedMinAmount) amountFilter.gte = parseFloat(appliedMinAmount);
+                if (appliedMaxAmount) amountFilter.lte = parseFloat(appliedMaxAmount);
+                whereClause.donationAmount = amountFilter;
             }
             if (appliedStartDate || appliedEndDate) {
-                whereClause.donationDate = {};
-                if (appliedStartDate) whereClause.donationDate.gte = new Date(appliedStartDate).toISOString();
+                const dateFilter: Record<string, string> = {};
+                if (appliedStartDate) dateFilter.gte = new Date(appliedStartDate).toISOString();
                 if (appliedEndDate) {
                     const end = new Date(appliedEndDate);
                     end.setDate(end.getDate() + 1);
-                    whereClause.donationDate.lt = end.toISOString();
+                    dateFilter.lt = end.toISOString();
                 }
+                whereClause.donationDate = dateFilter;
             }
             if (appliedSearchBankName && appliedSearchBankName !== 'All') {
                 if (appliedSearchBankName === 'N/A') {
@@ -280,11 +283,10 @@ export function AdminDonations() {
                 }
             });
 
-            // Flagged for vague typing
-            const data = res.data.data || res.data;
+            const { items: data } = unwrapListResponse<DonationData>(res);
 
             const headers = ['Date', 'Donor', 'Amount', 'Status', 'Bank Name', 'Reference'];
-            const csvContent = data.map((d: any) => {
+            const csvContent = data.map((d: DonationData) => {
                 const date = formatDate(d.donationDate, 'short');
                 const donor = !d.user?.profile?.userName ? 'Anonymous' : d.user.profile.userName;
                 const status = d.donationStatus?.statusName || 'Unknown';
@@ -312,7 +314,7 @@ export function AdminDonations() {
         const fetchDonations = async () => {
             setIsTableLoading(true);
             try {
-                const whereClause: any = {};
+                const whereClause: Record<string, unknown> = {};
                 if (activeTab !== 'All') {
                     whereClause.donationStatus = { statusName: activeTab };
                 }
@@ -323,18 +325,20 @@ export function AdminDonations() {
                     whereClause.donationReference = { contains: appliedSearchRef };
                 }
                 if (appliedMinAmount || appliedMaxAmount) {
-                    whereClause.donationAmount = {};
-                    if (appliedMinAmount) whereClause.donationAmount.gte = parseFloat(appliedMinAmount);
-                    if (appliedMaxAmount) whereClause.donationAmount.lte = parseFloat(appliedMaxAmount);
+                    const amountFilter: Record<string, number> = {};
+                    if (appliedMinAmount) amountFilter.gte = parseFloat(appliedMinAmount);
+                    if (appliedMaxAmount) amountFilter.lte = parseFloat(appliedMaxAmount);
+                    whereClause.donationAmount = amountFilter;
                 }
                 if (appliedStartDate || appliedEndDate) {
-                    whereClause.donationDate = {};
-                    if (appliedStartDate) whereClause.donationDate.gte = new Date(appliedStartDate).toISOString();
+                    const dateFilter: Record<string, string> = {};
+                    if (appliedStartDate) dateFilter.gte = new Date(appliedStartDate).toISOString();
                     if (appliedEndDate) {
                         const end = new Date(appliedEndDate);
                         end.setDate(end.getDate() + 1);
-                        whereClause.donationDate.lt = end.toISOString();
+                        dateFilter.lt = end.toISOString();
                     }
+                    whereClause.donationDate = dateFilter;
                 }
                 if (appliedSearchBankName && appliedSearchBankName !== 'All') {
                     if (appliedSearchBankName === 'N/A') {
@@ -365,19 +369,17 @@ export function AdminDonations() {
                     }
                 });
 
-                // Flagged for vague typing
-                const data = res.data.data || res.data;
-                const total = res.data.items || data.length;
+                const { items: data, total } = unwrapListResponse<DonationData>(res);
 
-                const mapped = data.map((d: any) => ({
+                const mapped = data.map((d: DonationData) => ({
                     id: d.id,
                     date: formatDate(d.donationDate, 'short'),
-                    donor: !d.userId ? 'Anonymous' : d.user?.profile?.userName,
+                    donor: !d.userId ? 'Anonymous' : (d.user?.profile?.userName || 'Unknown'),
                     amount: formatCurrency(d.donationAmount),
                     status: d.donationStatus?.statusName || 'Unknown',
                     rawAmount: d.donationAmount,
-                    bankName: d.bankName,
-                    donationReference: d.donationReference,
+                    bankName: d.bankName || 'N/A',
+                    donationReference: d.donationReference || '',
                     rawDate: new Date(d.donationDate).getTime(),
                     userId: d.userId
                 }));
@@ -431,11 +433,11 @@ export function AdminDonations() {
         handleApplyFilters();
     };
 
-    const handleStatusLegendClick = (e: any) => {
+    const handleStatusLegendClick = (e: { value: string }) => {
         setActiveStatus(prev => prev === e.value ? null : e.value);
     };
 
-    const handleBankLegendClick = (e: any) => {
+    const handleBankLegendClick = (e: { value: string }) => {
         setActiveBank(prev => prev === e.value ? null : e.value);
     };
 
@@ -606,7 +608,7 @@ export function AdminDonations() {
                                                         />
                                                     ))}
                                                 </Pie>
-                                                <RechartsTooltip formatter={(val: any) => [`${val} transactions`, 'Count']} contentStyle={{ backgroundColor: 'white', color: 'black', borderRadius: '8px', borderColor: '#e2e8f0', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }} />
+                                                <RechartsTooltip formatter={(val: unknown) => [`${val} transactions`, 'Count']} contentStyle={{ backgroundColor: 'white', color: 'black', borderRadius: '8px', borderColor: '#e2e8f0', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }} />
                                             </PieChart>
                                         </ResponsiveContainer>
                                         {activeStatus && (
@@ -667,7 +669,7 @@ export function AdminDonations() {
                                                         />
                                                     ))}
                                                 </Pie>
-                                                <RechartsTooltip formatter={(val: any) => [`${val} transactions`, 'Count']} contentStyle={{ backgroundColor: 'white', color: 'black', borderRadius: '8px', borderColor: '#e2e8f0', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }} />
+                                                <RechartsTooltip formatter={(val: unknown) => [`${val} transactions`, 'Count']} contentStyle={{ backgroundColor: 'white', color: 'black', borderRadius: '8px', borderColor: '#e2e8f0', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }} />
                                             </PieChart>
                                         </ResponsiveContainer>
                                         {activeBank && (
@@ -715,7 +717,7 @@ export function AdminDonations() {
                             </div>
                             <div className="px-6 pb-6 flex-1 p-0" >
                                 <div className="flex flex-col divide-y divide-gray-100">
-                                    {(activeLeaderboardTab === 'Top LTV' ? leaderboards.topLTV : activeLeaderboardTab === 'Top Avg Donation' ? leaderboards.topAvgDonation : leaderboards.topFrequency).map((d: any, idx: number) => (
+                                    {(activeLeaderboardTab === 'Top LTV' ? leaderboards.topLTV : activeLeaderboardTab === 'Top Avg Donation' ? leaderboards.topAvgDonation : leaderboards.topFrequency).map((d: DonorLeaderboardEntry, idx: number) => (
                                         <div
                                             key={idx}
                                             className="flex items-center justify-between gap-4 p-4 hover:bg-gray-50/30 transition-colors"
@@ -865,9 +867,9 @@ export function AdminDonations() {
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                             <div className="flex items-center justify-between lg:col-span-2 gap-2">
                                 <span className="text-sm text-gray-500 shrink-0">Date:</span>
-                                <Select value={datePreset} onValueChange={(val: any) => {
+                                <Select value={datePreset} onValueChange={(val: string) => {
                                     setDatePreset(val);
-                                    if (val !== 'custom') applyQuickFilter(val);
+                                    if (val !== 'custom') applyQuickFilter(val as 'all' | 'this_week' | 'this_month' | 'this_year');
                                 }}>
                                     <SelectTrigger className="w-[140px] h-10 bg-white text-gray-700 border border-gray-300 shrink-0">
                                         <SelectValue placeholder="Preset Dates" />

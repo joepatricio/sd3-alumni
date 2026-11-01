@@ -86,9 +86,10 @@ export function CreateUserModal({
             resetForm();
             onUserCreated();
             onClose();
-        } catch (err: any) {
+        } catch (err: unknown) {
             console.error(err);
-            setCreateError(err.response?.data?.error || 'Failed to create user.');
+            const message = (err as { response?: { data?: { error?: string } } })?.response?.data?.error || 'Failed to create user.';
+            setCreateError(message);
         }
     };
 

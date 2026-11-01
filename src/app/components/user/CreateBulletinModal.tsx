@@ -5,7 +5,8 @@ import * as z from 'zod';
 import { Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { ImageUpload } from './ImageUpload';
-import { api } from '@/app/views/api';
+import { api, unwrapListResponse, type BulletinCategoryData } from '@/app/views/api';
+import type { FieldErrors } from 'react-hook-form';
 import { useAuth } from '@/app/views/auth';
 
 import { Button } from '@components/ui/button';
@@ -50,7 +51,7 @@ const formSchema = z.object({
     readTimeMinutes: z.number().min(1),
 });
 
-export interface BulletinData {
+export interface BulletinModalInitialData {
     id?: string;
     title: string;
     bulletinDate?: string;
@@ -58,12 +59,14 @@ export interface BulletinData {
     description?: string;
     bulletinImage?: string | File | null;
     readTimeMinutes?: number;
-    category?: any;
+    category?: string | BulletinCategoryData;
     contentStatus?: { id: string; statusName: string };
     status?: { id: string; statusName: string };
-    bulletinCategory?: any;
+    bulletinCategory?: string | BulletinCategoryData;
     bulletinCategoryId?: string;
 }
+
+export type BulletinData = BulletinModalInitialData;
 
 interface CreateBulletinModalProps {
     trigger?: React.ReactNode;
@@ -112,24 +115,21 @@ export function CreateBulletinModal({ trigger, initialData, isAdmin = false, ope
         },
     });
 
-    const getInitialCategory = (data?: BulletinData) => {
-        if (!data) return '';
-        if (typeof data.category === 'string') return data.category;
-        if (typeof data.category === 'object' && (data.category as any)?.bulletinCategoryName) {
-            return (data.category as any).bulletinCategoryName;
+    const getInitialCategory = (data?: BulletinModalInitialData) => {
+        if (!data) return "";
+        if (typeof data.category === "string") return data.category;
+        if (typeof data.category === "object" && data.category?.bulletinCategoryName) {
+            return data.category.bulletinCategoryName;
         }
         if (data.bulletinCategory) {
-            if (typeof data.bulletinCategory === 'object' && data.bulletinCategory.bulletinCategoryName) {
+            if (typeof data.bulletinCategory === "object" && data.bulletinCategory.bulletinCategoryName) {
                 return data.bulletinCategory.bulletinCategoryName;
             }
-            if (typeof data.bulletinCategory === 'string') {
+            if (typeof data.bulletinCategory === "string") {
                 return data.bulletinCategory;
             }
         }
-        if ((data as any).bulletinCategoryName) {
-            return (data as any).bulletinCategoryName;
-        }
-        return '';
+        return "";
     };
 
     // Effect to update form values when initialData changes or modal opens
@@ -171,7 +171,7 @@ export function CreateBulletinModal({ trigger, initialData, isAdmin = false, ope
     }, [categories, form.watch('category')]);
 
     async function onSubmit(values: z.infer<typeof formSchema>) {
-        const payload: any = { ...values, bulletinImage: previewUrl };
+        const payload: Record<string, unknown> = { ...values, bulletinImage: previewUrl };
 
         if (!initialData) {
             payload.bulletinDate = new Date().toISOString();
@@ -187,8 +187,7 @@ export function CreateBulletinModal({ trigger, initialData, isAdmin = false, ope
         if (!isAdmin) {
             try {
                 const statusRes = await api.get('/contentStatuses?statusName=Pending');
-                // Flagged for vague typing
-                const statusData = Array.isArray(statusRes.data) ? statusRes.data : statusRes.data.data;
+                const statusData = unwrapListResponse<{ id: string; statusName: string }>(statusRes).items;
                 const pendingStatus = statusData?.[0];
                 if (pendingStatus) {
                     payload.contentStatusId = pendingStatus.id;
@@ -245,151 +244,153 @@ export function CreateBulletinModal({ trigger, initialData, isAdmin = false, ope
         }
     }
 
-    const onInvalid = (errors: any) => {
+    const onInvalid = (errors: FieldErrors<z.infer<typeof formSchema>>) => {
         console.error("Bulletin form validation errors:", errors);
-        const getFirstError = (errObj: any): string | null => {
+        const getFirstError = (errObj: Record<string, unknown>): string | null => {
             for (const key of Object.keys(errObj)) {
-                if (errObj[key]?.message) return String(errObj[key].message);
+                const val = errObj[key] as Record<string, unknown> | undefined;
+                if (val && typeof val.message === 'string') return val.message;
                 if (typeof errObj[key] === 'object') {
-                    const nested = getFirstError(errObj[key]);
+                    const nested = val ? getFirstError(val) : null;
                     if (nested) return nested;
                 }
             }
             return null;
         };
-        const message = getFirstError(errors) || "Please check the form for required fields.";
+        const message = getFirstError(errors as unknown as Record<string, unknown>) || "Please check the form for required fields.";
         toast.error(message);
     };
 
-    const handleFileSelect = (url: string) => {
-        setPreviewUrl(url);
-        form.setValue('bulletinImage', url, { shouldValidate: true });
-    };
+        const handleFileSelect = (url: string | File) => {
+            if (typeof url !== 'string') return;
+            setPreviewUrl(url);
+            form.setValue('bulletinImage', url, { shouldValidate: true });
+        };
 
-    const handleClearImage = () => {
-        setPreviewUrl(null);
-        form.setValue('bulletinImage', null, { shouldValidate: true });
-    };
+        const handleClearImage = () => {
+            setPreviewUrl(null);
+            form.setValue('bulletinImage', null, { shouldValidate: true });
+        };
 
-    const isEditMode = !!initialData;
+        const isEditMode = !!initialData;
 
-    return (
-        <Dialog open={open} onOpenChange={setOpen}>
-            {trigger && (
-                <DialogTrigger asChild>
-                    {trigger}
-                </DialogTrigger>
-            )}
-            <DialogContent className="sm:max-w-[425px] md:max-w-[600px] max-h-[90vh] overflow-y-auto">
-                <DialogHeader>
-                    <DialogTitle>{isEditMode ? 'Edit Bulletin' : 'Create Bulletin'}</DialogTitle>
-                    <DialogDescription>
-                        {isEditMode ? 'Update bulletin details.' : 'Share news and announcements with the alumni community.'}
-                    </DialogDescription>
-                </DialogHeader>
+        return (
+            <Dialog open={open} onOpenChange={setOpen}>
+                {trigger && (
+                    <DialogTrigger asChild>
+                        {trigger}
+                    </DialogTrigger>
+                )}
+                <DialogContent className="sm:max-w-[425px] md:max-w-[600px] max-h-[90vh] overflow-y-auto">
+                    <DialogHeader>
+                        <DialogTitle>{isEditMode ? 'Edit Bulletin' : 'Create Bulletin'}</DialogTitle>
+                        <DialogDescription>
+                            {isEditMode ? 'Update bulletin details.' : 'Share news and announcements with the alumni community.'}
+                        </DialogDescription>
+                    </DialogHeader>
 
-                <Form {...form}>
-                    <form onSubmit={form.handleSubmit(onSubmit, onInvalid)} className="space-y-4">
-                        {/* Title */}
-                        <FormField
-                            control={form.control}
-                            name="title"
-                            render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>Title</FormLabel>
-                                    <FormControl>
-                                        <Input className="selection:bg-blue-500 selection:text-white" placeholder="Enter bulletin title" {...field} />
-                                    </FormControl>
-                                    <FormMessage />
-                                </FormItem>
-                            )}
-                        />
-
-                        {/* Category */}
-                        <FormField
-                            control={form.control}
-                            name="category"
-                            render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>Category</FormLabel>
-                                    <Select onValueChange={field.onChange} value={field.value || undefined}>
+                    <Form {...form}>
+                        <form onSubmit={form.handleSubmit(onSubmit, onInvalid)} className="space-y-4">
+                            {/* Title */}
+                            <FormField
+                                control={form.control}
+                                name="title"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Title</FormLabel>
                                         <FormControl>
-                                            <SelectTrigger>
-                                                <SelectValue placeholder="Select bulletin category" />
-                                            </SelectTrigger>
+                                            <Input className="selection:bg-blue-500 selection:text-white" placeholder="Enter bulletin title" {...field} />
                                         </FormControl>
-                                        <SelectContent>
-                                            {availableCategories.map((cat) => (
-                                                <SelectItem
-                                                    key={cat.id || cat.bulletinCategoryName}
-                                                    value={cat.bulletinCategoryName}
-                                                    className="cursor-pointer transition-colors hover:bg-brand-primary hover:text-white focus:bg-brand-primary focus:text-white data-[highlighted]:bg-brand-primary data-[highlighted]:text-white data-[highlighted]:[&_svg]:text-white hover:[&_svg]:text-white focus:[&_svg]:text-white"
-                                                >
-                                                    {cat.bulletinCategoryName}
-                                                </SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
-                                    <FormMessage />
-                                </FormItem>
-                            )}
-                        />
-
-                        {/* Banner Image */}
-                        <FormField
-                            control={form.control}
-                            name="bulletinImage"
-                            render={() => (
-                                <FormItem>
-                                    <FormLabel>Banner Image (Optional)</FormLabel>
-                                    <FormControl>
-                                        <div className="space-y-2">
-                                            <ImageUpload
-                                                previewUrl={previewUrl}
-                                                onFileSelect={handleFileSelect}
-                                                onClear={handleClearImage}
-                                                placeholderText="Click or drag to upload bulletin banner"
-                                            />
-                                        </div>
-                                    </FormControl>
-                                    <FormMessage />
-                                </FormItem>
-                            )}
-                        />
-
-                        {/* Content */}
-                        <FormField
-                            control={form.control}
-                            name="content"
-                            render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>Content</FormLabel>
-                                    <FormControl>
-                                        <Textarea
-                                            placeholder="Write your bulletin content here..."
-                                            className="min-h-[150px]"
-                                            {...field}
-                                        />
-                                    </FormControl>
-                                    <FormMessage />
-                                </FormItem>
-                            )}
-                        />
-
-                        {/* Footer */}
-                        <DialogFooter>
-                            <Button className="bg-brand-primary hover:bg-brand-primary-hover" type="submit" disabled={form.formState.isSubmitting}>
-                                {form.formState.isSubmitting && (
-                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                        <FormMessage />
+                                    </FormItem>
                                 )}
-                                {form.formState.isSubmitting
-                                    ? (isEditMode ? 'Saving Changes...' : 'Creating Bulletin...')
-                                    : (isEditMode ? 'Save Changes' : 'Create Bulletin')}
-                            </Button>
-                        </DialogFooter>
-                    </form>
-                </Form>
-            </DialogContent>
-        </Dialog>
-    );
-}
+                            />
+
+                            {/* Category */}
+                            <FormField
+                                control={form.control}
+                                name="category"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Category</FormLabel>
+                                        <Select onValueChange={field.onChange} value={field.value || undefined}>
+                                            <FormControl>
+                                                <SelectTrigger>
+                                                    <SelectValue placeholder="Select bulletin category" />
+                                                </SelectTrigger>
+                                            </FormControl>
+                                            <SelectContent>
+                                                {availableCategories.map((cat) => (
+                                                    <SelectItem
+                                                        key={cat.id || cat.bulletinCategoryName}
+                                                        value={cat.bulletinCategoryName}
+                                                        className="cursor-pointer transition-colors hover:bg-brand-primary hover:text-white focus:bg-brand-primary focus:text-white data-[highlighted]:bg-brand-primary data-[highlighted]:text-white data-[highlighted]:[&_svg]:text-white hover:[&_svg]:text-white focus:[&_svg]:text-white"
+                                                    >
+                                                        {cat.bulletinCategoryName}
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+
+                            {/* Banner Image */}
+                            <FormField
+                                control={form.control}
+                                name="bulletinImage"
+                                render={() => (
+                                    <FormItem>
+                                        <FormLabel>Banner Image (Optional)</FormLabel>
+                                        <FormControl>
+                                            <div className="space-y-2">
+                                                <ImageUpload
+                                                    previewUrl={previewUrl}
+                                                    onFileSelect={handleFileSelect}
+                                                    onClear={handleClearImage}
+                                                    placeholderText="Click or drag to upload bulletin banner"
+                                                />
+                                            </div>
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+
+                            {/* Content */}
+                            <FormField
+                                control={form.control}
+                                name="content"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Content</FormLabel>
+                                        <FormControl>
+                                            <Textarea
+                                                placeholder="Write your bulletin content here..."
+                                                className="min-h-[150px]"
+                                                {...field}
+                                            />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+
+                            {/* Footer */}
+                            <DialogFooter>
+                                <Button className="bg-brand-primary hover:bg-brand-primary-hover" type="submit" disabled={form.formState.isSubmitting}>
+                                    {form.formState.isSubmitting && (
+                                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                    )}
+                                    {form.formState.isSubmitting
+                                        ? (isEditMode ? 'Saving Changes...' : 'Creating Bulletin...')
+                                        : (isEditMode ? 'Save Changes' : 'Create Bulletin')}
+                                </Button>
+                            </DialogFooter>
+                        </form>
+                    </Form>
+                </DialogContent>
+            </Dialog>
+        );
+    }

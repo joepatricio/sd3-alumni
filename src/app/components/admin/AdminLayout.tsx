@@ -13,7 +13,7 @@ function AdminClock() {
     const [timeSource, setTimeSource] = useState<string>('System Time');
 
     useEffect(() => {
-        let timer: any;
+        let timer: ReturnType<typeof setInterval> | null = null;
         const syncTime = async () => {
             try {
                 const res = await api.get('/server-time');
@@ -116,7 +116,7 @@ export function AdminLayout() {
     // Idle-prefetch all admin page chunks after layout mounts to eliminate transition delays
     useEffect(() => {
         if ('requestIdleCallback' in window) {
-            (window as any).requestIdleCallback(() => {
+            (window as unknown as { requestIdleCallback: (cb: () => void) => void }).requestIdleCallback(() => {
                 prefetchAdminRoutes();
             });
         } else {
@@ -128,7 +128,9 @@ export function AdminLayout() {
     const handleLogout = async () => {
         try {
             await api.post('/auth/admin/logout');
-        } catch {}
+        } catch {
+            // Hard redirect to clear session even if logout API fails
+        }
         window.location.href = '/admin/login'; // Hard redirect to clear session completely
     };
 

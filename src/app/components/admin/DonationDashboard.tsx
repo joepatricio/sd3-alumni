@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle, } from '@components/ui/card';
 import { Button } from '@components/ui/button';
 import { formatCurrency, getBankColor, formatDate } from '@/app/views/formatters';
 import { Printer, Info, Mail, MapPin, GraduationCap, Briefcase, Loader2 } from 'lucide-react';
-import { api } from '@/app/views/api';
+import { api, type DonorLeaderboardEntry } from '@/app/views/api';
 import { Tabs, TabsList, TabsTrigger } from '@components/ui/tabs';
 import { PieChart, Pie, Cell, Tooltip as RechartsTooltip, ResponsiveContainer } from 'recharts';
 import { Link } from 'react-router-dom';
@@ -43,9 +43,9 @@ export function DonationDashboard() {
 
     // Enhanced Top Donors Data
     const [leaderboards, setLeaderboards] = useState<{
-        topLTV: any[];
-        topAvgDonation: any[];
-        topFrequency: any[];
+        topLTV: DonorLeaderboardEntry[];
+        topAvgDonation: DonorLeaderboardEntry[];
+        topFrequency: DonorLeaderboardEntry[];
     }>({ topLTV: [], topAvgDonation: [], topFrequency: [] });
     const [activeLeaderboardTab, setActiveLeaderboardTab] = useState('Top LTV');
 
@@ -86,7 +86,7 @@ export function DonationDashboard() {
             try {
                 const statusesRes = await api.get('/donationStatuses');
                 if (statusesRes.data && Array.isArray(statusesRes.data)) {
-                    setDbStatuses(statusesRes.data.map((s: any) => s.statusName));
+                    setDbStatuses(statusesRes.data.map((s: { statusName: string }) => s.statusName));
                 }
             } catch (err) {
                 console.error("Failed to fetch donation statuses", err);
@@ -102,26 +102,26 @@ export function DonationDashboard() {
         fetchStats();
     }, []);
 
-    const handleStatusLegendClick = (e: any) => {
+    const handleStatusLegendClick = (e: { value: string }) => {
         setActiveStatus(prev => prev === e.value ? null : e.value);
     };
 
-    const handleBankLegendClick = (e: any) => {
+    const handleBankLegendClick = (e: { value: string }) => {
         setActiveBank(prev => prev === e.value ? null : e.value);
     };
 
-    const renderCustomTooltip = ({ active, payload }: any, totalKey: string) => {
-        if (active && payload && payload.length) {
+    const renderCustomTooltip = ({ active, payload }: { active?: boolean; payload?: ReadonlyArray<{ payload?: { name?: string; value?: number } }> }, totalKey: string) => {
+        if (active && payload && payload.length && payload[0]?.payload) {
             const data = payload[0].payload;
-            const sum = totalKey === 'status' 
+            const sum = totalKey === 'status'
                 ? statusData.reduce((acc, curr) => acc + curr.value, 0)
                 : bankData.reduce((acc, curr) => acc + curr.value, 0);
 
-            const percent = sum > 0 ? ((data.value / sum) * 100).toFixed(1) : '0.0';
+            const percent = sum > 0 && typeof data.value === 'number' ? ((data.value / sum) * 100).toFixed(1) : '0.0';
 
             return (
                 <div className="bg-white border border-gray-200 shadow-sm rounded-md p-2 text-xs">
-                    <span className="font-semibold">{data.name}</span>: {data.value} ({percent}%)
+                    <span className="font-semibold">{data.name || 'Unknown'}</span>: {data.value || 0} ({percent}%)
                 </div>
             );
         }
@@ -403,7 +403,7 @@ export function DonationDashboard() {
                             </CardHeader>
                             <CardContent className="flex-1 p-0">
                                 <div className="flex flex-col divide-y divide-gray-100">
-                                    {(activeLeaderboardTab === 'Top LTV' ? leaderboards.topLTV : activeLeaderboardTab === 'Top Avg Donation' ? leaderboards.topAvgDonation : leaderboards.topFrequency).map((d: any, idx: number) => (
+                                    {(activeLeaderboardTab === 'Top LTV' ? leaderboards.topLTV : activeLeaderboardTab === 'Top Avg Donation' ? leaderboards.topAvgDonation : leaderboards.topFrequency).map((d: DonorLeaderboardEntry, idx: number) => (
                                         <div
                                             key={idx}
                                             className="flex items-center justify-between gap-4 p-4 hover:bg-gray-50/30 transition-colors"

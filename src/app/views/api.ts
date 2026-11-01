@@ -4,10 +4,10 @@ import { useAuth } from '@/app/views/auth';
 import {
     Star, Award, Trophy, BookOpen, Heart, HeartPulse, HandCoins,
     Calendar1, Calendar, CalendarDays, MessageSquare, MessagesSquare,
-    Sparkle, Sparkles, Newspaper, Cog, Landmark
+    Sparkle, Sparkles, Newspaper, Cog, Landmark, type LucideIcon
 } from 'lucide-react';
 
-export const AchievementIconMap: Record<string, any> = {
+export const AchievementIconMap: Record<string, LucideIcon> = {
     Star, Award, Trophy, BookOpen, Heart, HeartPulse, HandCoins,
     Calendar1, Calendar, CalendarDays, MessageSquare, MessagesSquare,
     Sparkle, Sparkles, Newspaper, Cog, Landmark
@@ -42,8 +42,9 @@ api.interceptors.request.use(config => {
         config.url = config.url.substring(1);
     }
 
-    const headers = config.headers as any;
-    const existingAuth = headers?.Authorization || headers?.authorization || (headers?.get && headers.get('Authorization'));
+    const headers = config.headers as unknown as Record<string, unknown>;
+    const rawAuth = headers?.Authorization || headers?.authorization;
+    const existingAuth = typeof rawAuth === 'string' ? rawAuth : undefined;
     if (existingAuth === 'Bearer null' || existingAuth === 'Bearer undefined') {
         if (headers?.set && typeof headers.set === 'function') {
             headers.set('Authorization', undefined);
@@ -154,7 +155,7 @@ export interface BulletinCommentData {
     likes: number;
 
     profile?: ProfileData;
-    likesList?: any[];
+    likesList?: { id?: string; userId: string; isLiked: boolean }[];
 }
 
 export interface BulletinCategoryData {
@@ -269,4 +270,113 @@ export interface Donation {
     rawDate: number;
     bankName: string;
     donationReference: string;
+}
+
+export interface AchievementData {
+    id: string;
+    achievementCategory: number;
+    achievementTier: number;
+    achievementTitle: string;
+    achievementDescription: string;
+    achievementIcon: string;
+}
+
+export interface UserAchievementData {
+    id: string;
+    userId: string;
+    achievementId: string;
+    achievementTier: number;
+    achievedDate: string;
+    achievement?: AchievementData;
+}
+
+export interface RecordData {
+    id: string;
+    userId: string;
+    adminId?: string | null;
+    userStatusId: string;
+    dateCreated: string;
+    description: string;
+    dateExpires?: string | null;
+
+    expirationDate?: string | null;
+    userStatus?: UserStatusData;
+}
+
+export interface DonationData {
+    id: string;
+    userId?: string | null;
+    donationAmount: number;
+    donationDate: string;
+    bankName?: string | null;
+    donationReference?: string | null;
+    donationStatusId: string;
+    donationStatus?: DonationStatusData;
+    user?: { profile?: ProfileData };
+}
+
+export interface DonorLeaderboardEntry {
+    donor: string;
+    amount: number;
+    avgDonation: number;
+    frequency: number;
+    userId: string;
+    profileImage: string;
+    career: string;
+    email: string;
+    location: string;
+    batch: string;
+}
+
+export interface AdminUserRow {
+    id: string;
+    name: string;
+    email: string;
+    batch: string;
+    status: string;
+    reason?: string;
+    grantedDate?: string;
+    rawGrantedDate?: number;
+    expiryDate?: string;
+    rawExpiryDate?: number;
+}
+
+export interface PaginatedResponse<T> {
+    first?: number;
+    prev?: number | null;
+    next?: number | null;
+    last?: number;
+    pages?: number;
+    items?: number;
+    data: T[];
+}
+
+export type ApiResponse<T> = PaginatedResponse<T> | T[];
+
+export interface ListResult<T> {
+    items: T[];
+    total: number;
+}
+
+export function unwrapListResponse<T>(resData: unknown): ListResult<T> {
+    if (!resData) return { items: [], total: 0 };
+
+    const candidate = (typeof resData === "object" && resData !== null && "data" in resData)
+        ? (resData as { data: unknown }).data
+        : resData;
+
+    if (Array.isArray(candidate)) {
+        return { items: candidate as T[], total: candidate.length };
+    }
+
+    if (candidate && typeof candidate === "object") {
+        const obj = candidate as Record<string, unknown>;
+        if (Array.isArray(obj.data)) {
+            const items = obj.data as T[];
+            const total = typeof obj.items === "number" ? obj.items : items.length;
+            return { items, total };
+        }
+    }
+
+    return { items: [], total: 0 };
 }

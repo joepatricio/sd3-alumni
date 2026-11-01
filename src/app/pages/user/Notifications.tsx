@@ -5,9 +5,18 @@ import { api } from '@/app/views/api';
 import { useAuth } from '@/app/views/auth';
 import { formatDate } from '@/app/views/formatters';
 
+interface NotificationItem {
+    id: string;
+    userId: string;
+    notificationDate: string;
+    notificationMessage: string;
+    isRead: boolean;
+    notificationTypeId?: string;
+}
+
 export function Notifications() {
     const { session } = useAuth();
-    const [notifications, setNotifications] = useState<any[]>([]);
+    const [notifications, setNotifications] = useState<NotificationItem[]>([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -90,7 +99,7 @@ export function Notifications() {
                             let parsedMessage = { text: n.notificationMessage, link: null };
                             try {
                                 parsedMessage = JSON.parse(n.notificationMessage);
-                            } catch (e) {
+                            } catch {
                                 // Ignore
                             }
 

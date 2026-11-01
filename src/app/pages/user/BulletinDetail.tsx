@@ -16,7 +16,7 @@ import {
     Check,
     X
 } from 'lucide-react';
-import { CreateBulletinModal } from '@components/user/CreateBulletinModal';
+import { CreateBulletinModal, type BulletinModalInitialData } from '@components/user/CreateBulletinModal';
 import { Button } from '@components/ui/button';
 import { NotFound } from '@pages/NotFound';
 import { LazyImage } from '@components/user/LazyImage';
@@ -32,7 +32,7 @@ import {
     AlertDialogTrigger,
 } from '@components/ui/alert-dialog';
 import { useAuth } from '@/app/views/auth';
-import { api, type BulletinData, type BulletinCommentData, type ProfileData } from '@/app/views/api';
+import { api, unwrapListResponse, type BulletinData, type BulletinCommentData, type ProfileData, type ContentStatusData } from '@/app/views/api';
 import { formatDate, getCategoryColor } from '@/app/views/formatters';
 
 export function BulletinDetail() {
@@ -100,7 +100,7 @@ export function BulletinDetail() {
                     setBulletinStatus(statusName);
 
                     const authorUserId = bulletinData.profile?.userId || bulletinData.author?.profile?.userId || bulletinData.authorId || bulletinData.author?.id;
-                    const authorUser = allUsers.find((u: any) => String(u.id) === String(authorUserId)) || bulletinData.author;
+                    const authorUser = (allUsers as Array<{ id: string | number; userStatus?: { statusName?: string } }>).find(u => String(u.id) === String(authorUserId)) || bulletinData.author;
                     if (!isPreview && authorUser && authorUser.userStatus?.statusName === 'Banned') {
                         setBulletin(null);
                         setLoading(false);
@@ -109,7 +109,7 @@ export function BulletinDetail() {
                 }
 
                 if (session?.userId) {
-                    const currentU = allUsers.find((u: any) => String(u.id) === String(session.userId));
+                    const currentU = (allUsers as Array<{ id: string | number; userStatus?: { statusName?: string } }>).find(u => String(u.id) === String(session.userId));
                     if (currentU && currentU.userStatus?.statusName === 'Suspended') {
                         setIsSuspended(true);
                         toast.error('You are suspended from commenting.');
@@ -206,8 +206,7 @@ export function BulletinDetail() {
         if (!bulletin) return;
         try {
             const statusRes = await api.get(`/contentStatuses?statusName=Archived`);
-            // Flagged for vague typing
-            const statusData = Array.isArray(statusRes.data) ? statusRes.data : statusRes.data.data;
+            const statusData = unwrapListResponse<ContentStatusData>(statusRes).items;
             const statusObj = statusData?.[0];
             if (statusObj) {
                 await api.patch(`/bulletins/${bulletin.id}`, { contentStatusId: statusObj.id });
@@ -316,7 +315,7 @@ export function BulletinDetail() {
                 <div className="bg-blue-50 px-4 py-3 border-b border-blue-200 text-center flex items-center justify-center gap-2">
                     <Info className="w-4 h-4 text-blue-800" />
                     <p className="text-blue-800 font-medium text-sm">
-                        Admin Preview Mode: Viewing bulletin with status "{bulletinStatus}"
+                        Admin Preview Mode: Viewing bulletin with status &quot;{bulletinStatus}&quot;
                     </p>
                 </div>
             )}
@@ -340,7 +339,7 @@ export function BulletinDetail() {
                                     Edit Bulletin
                                 </Button>
                             }
-                            initialData={bulletin as any}
+                            initialData={bulletin as unknown as BulletinModalInitialData}
                         />
 
                         <AlertDialog>
@@ -563,7 +562,7 @@ export function BulletinDetail() {
                                         to={`/profile/${commentItem.userId}`}
                                         className="flex-shrink-0 hover:opacity-80 transition-opacity"
                                     >
-                                        {!!commenterProfile ? (
+                                        {commenterProfile ? (
                                             <img
                                                 src={commenterProfile?.profileImage}
                                                 alt={commenterProfile?.userName}

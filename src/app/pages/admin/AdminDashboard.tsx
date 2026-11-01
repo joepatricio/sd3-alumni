@@ -6,7 +6,7 @@ import {
     PieChart as PieChartIcon, MessageSquare, ChevronLeft, ChevronRight, Eye
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { api } from '@/app/views/api';
+import { api, unwrapListResponse } from '@/app/views/api';
 import { toPng } from 'html-to-image';
 import { PieChart, Pie, Cell, Tooltip as RechartsTooltip, ResponsiveContainer } from 'recharts';
 import { formatCurrency, formatDate, getCategoryColor } from '@/app/views/formatters';
@@ -335,8 +335,7 @@ export function AdminDashboard() {
 
             // Process Bulletins for Category Distribution Graph (checks both bulletinCategory & category)
             if (bulletinsRes.status === 'fulfilled') {
-                // Flagged for vague typing
-                const bData = bulletinsRes.value.data.data || bulletinsRes.value.data || [];
+                const bData = unwrapListResponse<BulletinItem>(bulletinsRes.value).items;
                 const catCounts: Record<string, number> = {};
                 bData.forEach((b: BulletinItem) => {
                     const catName = b.bulletinCategory?.bulletinCategoryName || b.category?.bulletinCategoryName || 'General';
@@ -348,8 +347,7 @@ export function AdminDashboard() {
 
             // Process Events for Map, Calendar & Category Distribution
             if (eventsRes.status === 'fulfilled') {
-                // Flagged for vague typing
-                const eData = eventsRes.value.data.data || eventsRes.value.data || [];
+                const eData = unwrapListResponse<EventItem>(eventsRes.value).items;
                 setEvents(eData);
 
                 const eCatCounts: Record<string, number> = {};
@@ -363,8 +361,7 @@ export function AdminDashboard() {
 
             // Process Platform Health from userStatistics
             if (userStatsRes.status === 'fulfilled') {
-                // Flagged for vague typing
-                const uStats = userStatsRes.value.data.data || userStatsRes.value.data || [];
+                const uStats = unwrapListResponse<UserStatisticItem>(userStatsRes.value).items;
                 let conns = 0, buls = 0, comms = 0;
                 uStats.forEach((s: UserStatisticItem) => {
                     conns += s.userConnections || 0;
@@ -378,9 +375,10 @@ export function AdminDashboard() {
                     totalRsvps: uStats.length
                 });
             }
-        } catch (err: any) {
+        } catch (err: unknown) {
+            const axiosErr = err as { response?: { status?: number } };
             console.error('Failed to load dashboard stats from backend API:', err);
-            const statusMsg = err.response?.status ? ` (HTTP ${err.response.status})` : '';
+            const statusMsg = axiosErr?.response?.status ? ` (HTTP ${axiosErr.response.status})` : '';
             setError(`Failed to fetch real-time dashboard data from database${statusMsg}. Please check your connection or session.`);
         } finally {
             setLoading(false);
@@ -670,7 +668,7 @@ export function AdminDashboard() {
                                                 </Pie>
                                                 <RechartsTooltip
                                                     contentStyle={{ backgroundColor: 'white', color: 'black', borderRadius: '8px', borderColor: '#e2e8f0', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }}
-                                                    formatter={(val: any) => [`${val} users`, 'Count']}
+                                                    formatter={(val: unknown) => [`${val} users`, 'Count']}
                                                 />
                                             </PieChart>
                                         </ResponsiveContainer>
@@ -738,7 +736,7 @@ export function AdminDashboard() {
                                                     ))}
                                                 </Pie>
                                                 <RechartsTooltip
-                                                    formatter={(val: any) => [`${val} members`, 'Count']}
+                                                    formatter={(val: unknown) => [`${val} members`, 'Count']}
                                                     contentStyle={{ backgroundColor: 'white', color: 'black', borderRadius: '8px', borderColor: '#e2e8f0', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }}
                                                 />
                                             </PieChart>
@@ -806,7 +804,7 @@ export function AdminDashboard() {
                                                     ))}
                                                 </Pie>
                                                 <RechartsTooltip
-                                                    formatter={(val: any) => [`${val} profiles`, 'Count']}
+                                                    formatter={(val: unknown) => [`${val} profiles`, 'Count']}
                                                     contentStyle={{ backgroundColor: 'white', color: 'black', borderRadius: '8px', borderColor: '#e2e8f0', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }}
                                                 />
                                             </PieChart>
@@ -951,7 +949,7 @@ export function AdminDashboard() {
                                                         ))}
                                                     </Pie>
                                                     <RechartsTooltip
-                                                        formatter={(val: any) => [`${val} bulletins`, 'Count']}
+                                                        formatter={(val: unknown) => [`${val} bulletins`, 'Count']}
                                                         contentStyle={{ backgroundColor: '#ffffff', borderRadius: '8px', borderColor: '#e2e8f0', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }}
                                                     />
                                                 </PieChart>
@@ -1021,7 +1019,7 @@ export function AdminDashboard() {
                                                         ))}
                                                     </Pie>
                                                     <RechartsTooltip
-                                                        formatter={(val: any) => [`${val} events`, 'Count']}
+                                                        formatter={(val: unknown) => [`${val} events`, 'Count']}
                                                         contentStyle={{ backgroundColor: '#ffffff', borderRadius: '8px', borderColor: '#e2e8f0', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }}
                                                     />
                                                 </PieChart>

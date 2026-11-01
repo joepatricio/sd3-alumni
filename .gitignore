@@ -25,7 +25,6 @@ db.json
 
 # misc
 .DS_Store
-.agents
 .env
 .env.production
 .env.local

@@ -2,8 +2,10 @@ import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Ban, UserMinus, Loader2, Search, UserCheck, X, Unlock } from 'lucide-react';
 import { ProfileHeader } from '@components/user/ProfileHeader';
-import { api, useProfileRoute, type ProfileData } from '@/app/views/api';
+import { api, useProfileRoute, unwrapListResponse, type ProfileData, type UserConnectionData } from '@/app/views/api';
 import { handleConnection } from '@/app/views/user';
+
+export type EnrichedConnection = ProfileData & { _connection?: UserConnectionData };
 
 export function Connections() {
     const navigate = useNavigate();
@@ -14,7 +16,7 @@ export function Connections() {
     const [loading, setLoading] = useState(true);
     const [actionLoading, setActionLoading] = useState<Record<string, boolean>>({});
     const [profile, setProfile] = useState<ProfileData | null>(null);
-    const [connections, setConnections] = useState<any[]>([]);
+    const [connections, setConnections] = useState<EnrichedConnection[]>([]);
     const [searchTerm, setSearchTerm] = useState('');
     const [activeTab, setActiveTab] = useState(location.state?.tab || 'friends');
 
@@ -67,12 +69,12 @@ export function Connections() {
                     }
                 });
 
-                const connData = Array.isArray(connectionsRes.data) ? connectionsRes.data : (connectionsRes.data?.data || []);
+                const connData = unwrapListResponse<UserConnectionData>(connectionsRes).items;
 
                 if (connData.length > 0) {
-                    const friendIds = connData.map((c: any) => c.friendId);
+                    const friendIds = connData.map((c: UserConnectionData) => c.friendId);
 
-                    const whereClause: any = { userId: { in: friendIds } };
+                    const whereClause: Record<string, unknown> = { userId: { in: friendIds } };
                     if (debouncedSearchTerm) {
                         whereClause.OR = [
                             { userName: { contains: debouncedSearchTerm } },
@@ -89,12 +91,11 @@ export function Connections() {
                         }
                     });
 
-                    const responseData = friendsRes.data?.data || friendsRes.data;
-                    const friendsArray = Array.isArray(responseData) ? responseData : [];
+                    const friendsArray = unwrapListResponse<ProfileData>(friendsRes).items;
 
                     // Attach the connection record to the profile data so we have the IDs for actions
-                    const enrichedConnections = friendsArray.map((friend: any) => {
-                        const conn = connData.find((c: any) => String(c.friendId) === String(friend.userId));
+                    const enrichedConnections: EnrichedConnection[] = friendsArray.map((friend: ProfileData) => {
+                        const conn = connData.find((c: UserConnectionData) => String(c.friendId) === String(friend.userId));
                         return { ...friend, _connection: conn };
                     });
 
@@ -153,10 +154,10 @@ export function Connections() {
         };
     }, [hasMore, loading, loadingMore]);
 
-    const handleAction = async (action: string, friendId: string) => {
+    const handleAction = async (action: 'add' | 'remove' | 'accept' | 'unblock' | 'block' | 'reject', friendId: string) => {
         setActionLoading(prev => ({ ...prev, [friendId]: true }));
         try {
-            await handleConnection(action as any, profileId, friendId);
+            await handleConnection(action, profileId, friendId);
             setConnections(prev => prev.filter(c => c.userId !== friendId));
         } catch (err) {
             console.error(`Action ${action} failed`, err);
@@ -257,7 +258,7 @@ export function Connections() {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             {filteredConnections.map((connection) => {
                                 const isActionLoading = actionLoading[connection.userId];
-                                const isValidString = (val: any) => Boolean(val && String(val).trim() !== '' && String(val).trim() !== 'null' && String(val).trim() !== 'undefined');
+                                const isValidString = (val: unknown) => Boolean(val && String(val).trim() !== '' && String(val).trim() !== 'null' && String(val).trim() !== 'undefined');
 
                                 return (
                                     <div key={connection.userId} className={`border border-gray-100 rounded-xl p-4 flex items-center justify-between hover:shadow-md transition-all group ${isActionLoading ? 'opacity-50 pointer-events-none' : ''}`}>

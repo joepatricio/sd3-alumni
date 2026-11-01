@@ -28,12 +28,12 @@ const Achievements = lazy(() => import('@pages/user/Achievements').then(m => ({ 
 const AlumniDirectory = lazy(() => import('@pages/user/AlumniDirectory').then(m => ({ default: m.AlumniDirectory })));
 const Notifications = lazy(() => import('@pages/user/Notifications').then(m => ({ default: m.Notifications })));
 
-export const adminLoaders: Record<string, () => Promise<any>> = {
+    export const adminLoaders: Record<string, () => Promise < { default: ComponentType } >> = {
     '/admin': () => import('@pages/admin/AdminDashboard').then(m => ({ default: m.AdminDashboard })),
-    '/admin/users': () => import('@pages/admin/AdminUsers').then(m => ({ default: m.AdminUsers })),
-    '/admin/events': () => import('@pages/admin/AdminEvents').then(m => ({ default: m.AdminEvents })),
-    '/admin/bulletins': () => import('@pages/admin/AdminBulletins').then(m => ({ default: m.AdminBulletins })),
-    '/admin/donations': () => import('@pages/admin/AdminDonations').then(m => ({ default: m.AdminDonations }))
+        '/admin/users': () => import('@pages/admin/AdminUsers').then(m => ({ default: m.AdminUsers })),
+            '/admin/events': () => import('@pages/admin/AdminEvents').then(m => ({ default: m.AdminEvents })),
+                '/admin/bulletins': () => import('@pages/admin/AdminBulletins').then(m => ({ default: m.AdminBulletins })),
+                    '/admin/donations': () => import('@pages/admin/AdminDonations').then(m => ({ default: m.AdminDonations }))
 };
 
 export const prefetchAdminRoutes = () => {

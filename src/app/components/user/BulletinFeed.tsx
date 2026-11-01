@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { FileText, Calendar } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { api, type BulletinData, type ProfileData } from '@/app/views/api';
+import { api, unwrapListResponse, type BulletinData, type ProfileData } from '@/app/views/api';
 import { DEFAULT_PROFILE, formatDate, getCategoryColor } from '@/app/views/formatters';
 
 export function BulletinFeed() {
@@ -26,12 +26,12 @@ export function BulletinFeed() {
             }
           })
         ]);
-        const bData = bRes.data.data;
+        const bData = unwrapListResponse<BulletinData>(bRes).items;
 
         setBulletins(bData || []);
         const pMap: Record<string, ProfileData> = {};
-        (bData || []).forEach((b: any) => {
-          if (b.author.profile) pMap[b.authorId] = b.author.profile;
+        (bData || []).forEach((b: BulletinData) => {
+          if (b.author?.profile) pMap[b.authorId] = b.author.profile;
         });
         setProfilesMap(pMap);
       } catch (err) {

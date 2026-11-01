@@ -1,9 +1,10 @@
 import { AdminContentTable } from '@components/admin/AdminContentTable';
-import { api } from '@/app/views/api';
+import { api, unwrapListResponse, type BulletinData } from '@/app/views/api';
+import type { ContentItem } from '@components/admin/AdminContentTable';
 
 export function AdminBulletins() {
-    const fetchData = async (params: any) => {
-        const whereClause: any = {};
+    const fetchData: React.ComponentProps<typeof AdminContentTable>['fetchData'] = async (params) => {
+        const whereClause: Record<string, unknown> = {};
         if (params.status !== 'All') {
             if (params.status === 'For Review') {
                 whereClause.status = { statusName: { in: ['Flagged', 'Pending'] } };
@@ -16,12 +17,12 @@ export function AdminBulletins() {
         }
         const hasActiveAccountScope = params.accountScope && params.accountScope.length > 0 && !params.accountScope.includes('All');
         if (hasActiveAccountScope || params.searchAuthor) {
-            whereClause.author = {};
+            whereClause.author = {} as Record<string, unknown>;
             if (params.searchAuthor) {
-                whereClause.author.profile = { userName: { contains: params.searchAuthor } };
+                (whereClause.author as Record<string, unknown>).profile = { userName: { contains: params.searchAuthor } };
             }
             if (hasActiveAccountScope) {
-                whereClause.author.userStatus = { statusName: { in: params.accountScope } };
+                (whereClause.author as Record<string, unknown>).userStatus = { statusName: { in: params.accountScope } };
             }
         }
 
@@ -29,7 +30,7 @@ export function AdminBulletins() {
             whereClause.category = { bulletinCategoryName: { in: params.categories } };
         }
         if (params.searchStartDate || params.searchEndDate) {
-            const dateClause: any = {};
+            const dateClause: Record<string, unknown> = {};
             if (params.searchStartDate) {
                 const start = new Date(params.searchStartDate);
                 dateClause.gte = start.toISOString();
@@ -70,11 +71,9 @@ export function AdminBulletins() {
             }
         });
 
-        // Flagged for vague typing
-        const data = response.data.data || response.data;
-        const total = response.data.items || data.length;
+        const { items: data, total } = unwrapListResponse<BulletinData>(response);
 
-        const mappedBulletins = data.map((b: any) => ({
+        const mappedBulletins: ContentItem[] = data.map((b: BulletinData) => ({
             ...b,
             id: b.id,
             title: b.title,

@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@components/ui/textarea';
 import { ArrowUp, ArrowDown, ArrowUpDown, ChevronLeft, ChevronRight, Search, Plus, FileText, Eye } from 'lucide-react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { api, type DegreeData, type UserStatusData } from '@/app/views/api';
+import { api, unwrapListResponse, type DegreeData, type UserStatusData, type ProfileData, type RecordData, type AdminUserRow } from '@/app/views/api';
 import { formatDate } from '@/app/views/formatters';
 import { Badge } from '@/app/components/ui/badge';
 import { toast } from 'sonner';
@@ -18,20 +18,15 @@ import { toast } from 'sonner';
 const loadCreateUserModal = () => import('@components/admin/CreateUserModal').then(m => ({ default: m.CreateUserModal }));
 const CreateUserModal = lazy(loadCreateUserModal);
 
-interface User {
+interface AdminUserApiItem {
     id: string;
-    name: string;
-    email: string;
-    batch: string;
-    status: string;
-    reason?: string;
-    grantedDate?: string;
-    rawGrantedDate?: number;
-    expiryDate?: string;
-    rawExpiryDate?: number;
+    currentRecordId?: string;
+    profile?: ProfileData;
+    userStatus?: UserStatusData;
+    records?: RecordData[];
 }
 
-const UserTableRow = memo(({ user, openEditModal }: { user: User, openEditModal: (user: User, status?: string) => void }) => {
+const UserTableRow = memo(({ user, openEditModal }: { user: AdminUserRow, openEditModal: (user: AdminUserRow, status?: string) => void }) => {
     const showRestoreUnbanActivate = ['Suspended', 'Banned', 'Deactivated'].includes(user.status);
     const showSuspend = user.status === 'Official' || user.status === 'Regular';
     const showBan = user.status === 'Official' || user.status === 'Regular' || user.status === 'Suspended';
@@ -97,6 +92,7 @@ const UserTableRow = memo(({ user, openEditModal }: { user: User, openEditModal:
         </tr>
     );
 });
+UserTableRow.displayName = 'UserTableRow';
 
 export function AdminUsers() {
     const [itemsPerPage, setItemsPerPage] = useState(20);
@@ -104,7 +100,7 @@ export function AdminUsers() {
     const [searchParams, setSearchParams] = useSearchParams();
     const [dbStatuses, setDbStatuses] = useState<UserStatusData[]>([]);
     const [degrees, setDegrees] = useState<DegreeData[]>([]);
-    const [users, setUsers] = useState<User[]>([]);
+    const [users, setUsers] = useState<AdminUserRow[]>([]);
     const [totalUsers, setTotalUsers] = useState(0);
     const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'All');
 
@@ -131,7 +127,7 @@ export function AdminUsers() {
     const [currentPage, setCurrentPage] = useState(1);
 
     // Editing
-    const [editingUser, setEditingUser] = useState<User | null>(null);
+    const [editingUser, setEditingUser] = useState<AdminUserRow | null>(null);
     const [editStatus, setEditStatus] = useState<string>('');
     const [editReason, setEditReason] = useState<string>('');
     const [editExpiryDate, setEditExpiryDate] = useState<string>('');
@@ -147,9 +143,8 @@ export function AdminUsers() {
                     api.get('/userStatuses'),
                     api.get('/degrees')
                 ]);
-                // Flagged for vague typing
-                const statusData = statusRes.data.data || statusRes.data || [];
-                const degreeData = degreeRes.data.data || degreeRes.data || [];
+                const statusData = unwrapListResponse<UserStatusData>(statusRes).items;
+                const degreeData = unwrapListResponse<DegreeData>(degreeRes).items;
                 setDbStatuses(statusData);
                 setDegrees(degreeData);
             } catch (err) {
@@ -169,7 +164,7 @@ export function AdminUsers() {
         setSortConfig({ key, direction });
     };
 
-    const renderSortIcon = (key: keyof User) => {
+    const renderSortIcon = (key: keyof AdminUserRow) => {
         if (sortConfig?.key !== key) return <ArrowUpDown size={14} className="text-gray-400" />;
         return sortConfig.direction === 'asc' ? <ArrowUp size={14} className="text-gray-700" /> : <ArrowDown size={14} className="text-gray-700" />;
     };
@@ -202,7 +197,7 @@ export function AdminUsers() {
 
     const handleExportCSV = async () => {
         try {
-            const whereClause: any = {};
+            const whereClause: Record<string, unknown> = {};
             if (activeTab !== 'All') {
                 whereClause.userStatus = { statusName: activeTab };
             }
@@ -211,7 +206,7 @@ export function AdminUsers() {
             }
 
             const currentYear = new Date().getFullYear();
-            let batchFilter: any = undefined;
+            let batchFilter: Record<string, unknown> | number | undefined = undefined;
             if (appliedBatchRange === 'Past 3') { batchFilter = { gte: currentYear - 3 }; }
             else if (appliedBatchRange === 'Past 5') { batchFilter = { gte: currentYear - 5 }; }
             else if (appliedBatchRange === 'Past 10') { batchFilter = { gte: currentYear - 10 }; }
@@ -252,11 +247,10 @@ export function AdminUsers() {
                 }
             });
 
-            // Flagged for vague typing
-            const data = res.data.data || res.data;
+            const { items: data } = unwrapListResponse<AdminUserApiItem>(res);
 
-            const mapped = data.map((u: any) => {
-                const currentRecord = u.records?.find((r: any) => r.id === u.currentRecordId) || u.records?.[0];
+            const mapped = data.map((u: AdminUserApiItem) => {
+                const currentRecord = u.records?.find((r: RecordData) => r.id === u.currentRecordId) || u.records?.[0];
                 let formattedGranted = undefined;
                 let formattedExpiry = undefined;
                 if (currentRecord?.dateCreated) {
@@ -283,7 +277,7 @@ export function AdminUsers() {
             });
 
             const headers = ['Name', 'Email', 'Batch', 'Status', 'Granted Date', 'Expiry Date', 'Reason'];
-            const csvContent = mapped.map((u: any) =>
+            const csvContent = mapped.map((u: Record<string, unknown>) =>
                 `"${u.name}","${u.email}","${u.batch}","${u.status}","${u.grantedDate || ''}","${u.expiryDate || ''}","${u.reason || ''}"`
             );
 
@@ -321,9 +315,10 @@ export function AdminUsers() {
             toast.success(`User status updated to ${editStatus}`);
             setEditingUser(null);
             fetchUsersList();
-        } catch (err: any) {
+        } catch (err: unknown) {
+            const axiosErr = err as { response?: { data?: { error?: string } } };
             console.error("Failed to update user status:", err);
-            toast.error(err?.response?.data?.error || "Failed to update user status");
+            toast.error(axiosErr?.response?.data?.error || "Failed to update user status");
         }
     };
 
@@ -341,7 +336,7 @@ export function AdminUsers() {
 
     const fetchUsersList = async () => {
         try {
-            const whereClause: any = {};
+            const whereClause: Record<string, unknown> = {};
             if (activeTab !== 'All') {
                 whereClause.userStatus = { statusName: activeTab };
             }
@@ -350,7 +345,7 @@ export function AdminUsers() {
             }
 
             const currentYear = new Date().getFullYear();
-            let batchFilter: any = undefined;
+            let batchFilter: Record<string, unknown> | number | undefined = undefined;
 
             if (appliedBatchRange === 'Past 3') {
                 batchFilter = { gte: currentYear - 3 };
@@ -402,12 +397,10 @@ export function AdminUsers() {
                 }
             });
 
-            // Flagged for vague typing
-            const data = res.data.data || res.data;
-            const total = res.data.items || data.length;
+            const { items: data, total } = unwrapListResponse<AdminUserApiItem>(res);
 
-            const mapped = data.map((u: any) => {
-                const currentRecord = u.records?.find((r: any) => r.id === u.currentRecordId) || u.records?.[0];
+            const mapped = data.map((u: AdminUserApiItem) => {
+                const currentRecord = u.records?.find((r: RecordData) => r.id === u.currentRecordId) || u.records?.[0];
 
                 let formattedGranted = undefined;
                 let rawGranted = 0;
@@ -463,366 +456,366 @@ export function AdminUsers() {
         setSearchParams({ tab: val }, { replace: true });
     };
 
-    const openEditModal = useCallback((user: User, specificStatus?: string) => {
-        setEditingUser(user);
-        setEditStatus(specificStatus || user.status);
-        setEditReason(user.reason || '');
+        const openEditModal = useCallback((user: AdminUserRow, specificStatus?: string) => {
+            setEditingUser(user);
+            setEditStatus(specificStatus || user.status);
+            setEditReason(user.reason || '');
 
-        let initialExpiry = '';
-        if (user.rawExpiryDate) {
-            const d = new Date(user.rawExpiryDate);
-            if (!isNaN(d.getTime())) {
-                initialExpiry = d.toISOString().split('T')[0];
+            let initialExpiry = '';
+            if (user.rawExpiryDate) {
+                const d = new Date(user.rawExpiryDate);
+                if (!isNaN(d.getTime())) {
+                    initialExpiry = d.toISOString().split('T')[0];
+                }
+            } else if (user.expiryDate && user.expiryDate !== 'Indefinite') {
+                const d = new Date(user.expiryDate);
+                if (!isNaN(d.getTime())) {
+                    initialExpiry = d.toISOString().split('T')[0];
+                }
             }
-        } else if (user.expiryDate && user.expiryDate !== 'Indefinite') {
-            const d = new Date(user.expiryDate);
-            if (!isNaN(d.getTime())) {
-                initialExpiry = d.toISOString().split('T')[0];
+            if ((specificStatus || user.status) === 'Suspended' && !initialExpiry) {
+                const defaultDate = new Date();
+                defaultDate.setDate(defaultDate.getDate() + 7);
+                initialExpiry = defaultDate.toISOString().split('T')[0];
             }
-        }
-        if ((specificStatus || user.status) === 'Suspended' && !initialExpiry) {
-            const defaultDate = new Date();
-            defaultDate.setDate(defaultDate.getDate() + 7);
-            initialExpiry = defaultDate.toISOString().split('T')[0];
-        }
 
-        setEditExpiryDate(initialExpiry);
-    }, []);
+            setEditExpiryDate(initialExpiry);
+        }, []);
 
 
 
-    const renderTable = () => {
-        if (users.length === 0) {
+        const renderTable = () => {
+            if (users.length === 0) {
+                return (
+                    <div className="py-8 text-center border rounded-md border-dashed text-gray-500">
+                        No users found for this category or search criteria.
+                    </div>
+                );
+            }
+
             return (
-                <div className="py-8 text-center border rounded-md border-dashed text-gray-500">
-                    No users found for this category or search criteria.
-                </div>
-            );
-        }
-
-        return (
-            <div className="space-y-4">
-                <div className="flex flex-col sm:flex-row items-center justify-between pb-2 gap-4">
-                    <div className="flex items-center gap-2">
-                        <span className="text-sm text-gray-500">Showing</span>
-                        <Select value={itemsPerPage.toString()} onValueChange={(val) => { setItemsPerPage(Number(val)); setCurrentPage(1); }}>
-                            <SelectTrigger className="w-20 h-8 text-xs">
-                                <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="10">10</SelectItem>
-                                <SelectItem value="20">20</SelectItem>
-                                <SelectItem value="50">50</SelectItem>
-                                <SelectItem value="100">100</SelectItem>
-                            </SelectContent>
-                        </Select>
-                        <span className="text-sm text-gray-500">entries. {(currentPage - 1) * itemsPerPage + 1} to {Math.min(currentPage * itemsPerPage, totalUsers)} of {totalUsers} total.</span>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                        <Button variant="outline" size="sm" onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1}>
-                            <ChevronLeft className="h-4 w-4" />
-                        </Button>
-                        <div className="text-sm font-medium px-2">
-                            Page {currentPage} of {totalPages}
-                        </div>
-                        <Button variant="outline" size="sm" onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages}>
-                            <ChevronRight className="h-4 w-4" />
-                        </Button>
-                    </div>
-                </div>
-                <div className="border rounded-md bg-white overflow-x-auto">
-                    <table className="w-full text-sm text-left">
-                        <thead className="bg-gray-50 text-gray-700">
-                            <tr>
-                                <th className="px-6 py-3 cursor-pointer hover:bg-gray-100 transition-colors" onClick={() => handleSort('name')}>
-                                    <div className="flex items-center gap-1">Name {renderSortIcon('name')}</div>
-                                </th>
-                                <th className="px-6 py-3 cursor-pointer hover:bg-gray-100 transition-colors" onClick={() => handleSort('email')}>
-                                    <div className="flex items-center gap-1">Email {renderSortIcon('email')}</div>
-                                </th>
-                                <th className="px-6 py-3 cursor-pointer hover:bg-gray-100 transition-colors" onClick={() => handleSort('batch')}>
-                                    <div className="flex items-center gap-1">Batch {renderSortIcon('batch')}</div>
-                                </th>
-                                <th className="px-6 py-3 cursor-pointer hover:bg-gray-100 transition-colors" onClick={() => handleSort('grantedDate')}>
-                                    <div className="flex items-center gap-1">Granted/Expiry Date {renderSortIcon('grantedDate')}</div>
-                                </th>
-                                <th className="px-6 py-3">Status</th>
-                                <th className="px-8 py-3 text-left">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {paginatedUsers.map((user) => (
-                                <UserTableRow key={user.id} user={user} openEditModal={openEditModal} />
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        );
-    };
-
-    return (
-        <div className="space-y-6 animate-in fade-in duration-500">
-            <div className="flex flex-col gap-2">
-                <h1 className="text-3xl font-bold tracking-tight text-gray-900">User Management</h1>
-                <p className="text-gray-500">Manage roles, and monitor user statuses.</p>
-            </div>
-
-            <Tabs value={activeTab} onValueChange={onTabChange} className="w-full">
-                <div className="overflow-x-auto pb-2 flex justify-between items-center gap-4">
-                    <TabsList className="mb-4 inline-flex min-w-full sm:min-w-0 flex-1">
-                        {statuses.map(status => (
-                            <TabsTrigger key={status} value={status}>
-                                {status === 'All' ? 'All Users' : status}
-                            </TabsTrigger>
-                        ))}
-                    </TabsList>
-                </div>
-                <div className="p-4 bg-white border rounded-md shadow-sm mb-6 flex flex-col gap-4">
-                    <div className="text-sm font-medium text-gray-700">Filters</div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-6 gap-4 items-center">
-                        <div className="col-span-2 relative">
-                            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
-                            <Input
-                                placeholder="Search user by name..."
-                                className="pl-9"
-                                value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
-                                onKeyDown={(e) => { if (e.key === 'Enter') handleApplyFilters(); }}
-                            />
-                        </div>
-                        <div>
-                            <Select value={batchRange} onValueChange={(val) => {
-                                setBatchRange(val);
-                                let min = '';
-                                let max = '';
-                                let sBatch = searchBatch;
-
-                                if (val !== 'All Batches' && val !== 'Custom Range') {
-                                    const currentYear = new Date();
-                                    let yearsToSubtract = 0;
-                                    if (val === 'Past 3') yearsToSubtract = 3;
-                                    else if (val === 'Past 5') yearsToSubtract = 5;
-                                    else if (val === 'Past 10') yearsToSubtract = 10;
-                                    else if (val === 'Past 30') yearsToSubtract = 30;
-
-                                    if (yearsToSubtract > 0) {
-                                        max = format(currentYear, 'yyyy');
-                                        min = format(subYears(currentYear, yearsToSubtract), 'yyyy');
-                                        setCustomMaxBatch(max);
-                                        setCustomMinBatch(min);
-                                    }
-                                } else if (val === 'All Batches') {
-                                    setCustomMinBatch('');
-                                    setCustomMaxBatch('');
-                                    setSearchBatch('');
-                                    sBatch = '';
-                                }
-
-                                if (val !== 'Custom Range') {
-                                    setAppliedSearchTerm(searchTerm);
-                                    setAppliedSearchBatch(sBatch);
-                                    setAppliedSearchReason(searchReason);
-                                    setAppliedBatchRange(val);
-                                    setAppliedCustomMinBatch(min);
-                                    setAppliedCustomMaxBatch(max);
-                                    setCurrentPage(1);
-                                }
-                            }}>
-                                <SelectTrigger>
-                                    <SelectValue placeholder="All Batches" />
+                <div className="space-y-4">
+                    <div className="flex flex-col sm:flex-row items-center justify-between pb-2 gap-4">
+                        <div className="flex items-center gap-2">
+                            <span className="text-sm text-gray-500">Showing</span>
+                            <Select value={itemsPerPage.toString()} onValueChange={(val) => { setItemsPerPage(Number(val)); setCurrentPage(1); }}>
+                                <SelectTrigger className="w-20 h-8 text-xs">
+                                    <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem value="All Batches">All Batches</SelectItem>
-                                    <SelectItem value="Past 3">Past 3</SelectItem>
-                                    <SelectItem value="Past 5">Past 5</SelectItem>
-                                    <SelectItem value="Past 10">Past 10</SelectItem>
-                                    <SelectItem value="Past 30">Past 30</SelectItem>
-                                    <SelectItem value="Custom Range">Custom Range</SelectItem>
+                                    <SelectItem value="10">10</SelectItem>
+                                    <SelectItem value="20">20</SelectItem>
+                                    <SelectItem value="50">50</SelectItem>
+                                    <SelectItem value="100">100</SelectItem>
                                 </SelectContent>
                             </Select>
+                            <span className="text-sm text-gray-500">entries. {(currentPage - 1) * itemsPerPage + 1} to {Math.min(currentPage * itemsPerPage, totalUsers)} of {totalUsers} total.</span>
                         </div>
-                        {batchRange === 'All Batches' ? (
-                            <div>
-                                <Input
-                                    placeholder="Batch year..."
-                                    value={searchBatch}
-                                    onChange={(e) => setSearchBatch(e.target.value)}
-                                    onKeyDown={(e) => { if (e.key === 'Enter') handleApplyFilters(); }}
-                                />
+                        <div className="flex items-center space-x-2">
+                            <Button variant="outline" size="sm" onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1}>
+                                <ChevronLeft className="h-4 w-4" />
+                            </Button>
+                            <div className="text-sm font-medium px-2">
+                                Page {currentPage} of {totalPages}
                             </div>
-                        ) : (
-                            // The earliest possible batch for Engineering is 1966.
-                            // For simplicity sake, the range entered here will not be validated.
-                            <div className="flex gap-2 items-center">
-                                <Input
-                                    placeholder="Min"
-                                    type="number"
-                                    value={customMinBatch}
-                                    onChange={(e) => setCustomMinBatch(e.target.value)}
-                                    disabled={batchRange !== 'Custom Range'}
-                                    className="w-full"
-                                />
-                                <span className="text-gray-400">-</span>
-                                <Input
-                                    placeholder="Max"
-                                    type="number"
-                                    value={customMaxBatch}
-                                    onChange={(e) => setCustomMaxBatch(e.target.value)}
-                                    disabled={batchRange !== 'Custom Range'}
-                                    className="w-full"
-                                />
-                            </div>
-                        )}
-                        <div className="col-span-2 flex justify-end gap-2">
-                            <Button variant="outline" onClick={handleClearFilters}>Clear</Button>
-                            <Button className="bg-brand-primary hover:bg-brand-primary-hover" onClick={handleApplyFilters}>Submit</Button>
-                            <Button
-                                className="ml-auto bg-brand-secondary hover:bg-brand-secondary-hover hover:text-white"
-                                onMouseEnter={loadCreateUserModal}
-                                onFocus={loadCreateUserModal}
-                                onClick={() => {
-                                    loadCreateUserModal();
-                                    setIsCreateOpen(true);
-                                }}
-                            >
-                                <Plus className="mr-1 h-4 w-4" /> Create User
+                            <Button variant="outline" size="sm" onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages}>
+                                <ChevronRight className="h-4 w-4" />
                             </Button>
                         </div>
                     </div>
+                    <div className="border rounded-md bg-white overflow-x-auto">
+                        <table className="w-full text-sm text-left">
+                            <thead className="bg-gray-50 text-gray-700">
+                                <tr>
+                                    <th className="px-6 py-3 cursor-pointer hover:bg-gray-100 transition-colors" onClick={() => handleSort('name')}>
+                                        <div className="flex items-center gap-1">Name {renderSortIcon('name')}</div>
+                                    </th>
+                                    <th className="px-6 py-3 cursor-pointer hover:bg-gray-100 transition-colors" onClick={() => handleSort('email')}>
+                                        <div className="flex items-center gap-1">Email {renderSortIcon('email')}</div>
+                                    </th>
+                                    <th className="px-6 py-3 cursor-pointer hover:bg-gray-100 transition-colors" onClick={() => handleSort('batch')}>
+                                        <div className="flex items-center gap-1">Batch {renderSortIcon('batch')}</div>
+                                    </th>
+                                    <th className="px-6 py-3 cursor-pointer hover:bg-gray-100 transition-colors" onClick={() => handleSort('grantedDate')}>
+                                        <div className="flex items-center gap-1">Granted/Expiry Date {renderSortIcon('grantedDate')}</div>
+                                    </th>
+                                    <th className="px-6 py-3">Status</th>
+                                    <th className="px-8 py-3 text-left">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {paginatedUsers.map((user) => (
+                                    <UserTableRow key={user.id} user={user} openEditModal={openEditModal} />
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            );
+        };
+
+        return (
+            <div className="space-y-6 animate-in fade-in duration-500">
+                <div className="flex flex-col gap-2">
+                    <h1 className="text-3xl font-bold tracking-tight text-gray-900">User Management</h1>
+                    <p className="text-gray-500">Manage roles, and monitor user statuses.</p>
                 </div>
 
-                {statuses.map(status => (
-                    <TabsContent key={status} value={status}>
-                        <Card className="border-none shadow-md">
-                            <CardHeader className="flex flex-row items-center justify-between">
-                                <div>
-                                    <CardTitle>{status === 'All' ? 'All Users' : `${status} Users`}</CardTitle>
-                                    <CardDescription>
-                                        {status === 'All' ? 'Manage all accounts across the platform' : `Manage ${status.toLowerCase()} accounts`}
-                                    </CardDescription>
-                                </div>
-                                <Button variant="outline" onClick={handleExportCSV}>Export CSV</Button>
-                            </CardHeader>
-                            <CardContent>
-                                {renderTable()}
-                            </CardContent>
-                        </Card>
-                    </TabsContent>
-                ))}
-            </Tabs>
+                <Tabs value={activeTab} onValueChange={onTabChange} className="w-full">
+                    <div className="overflow-x-auto pb-2 flex justify-between items-center gap-4">
+                        <TabsList className="mb-4 inline-flex min-w-full sm:min-w-0 flex-1">
+                            {statuses.map(status => (
+                                <TabsTrigger key={status} value={status}>
+                                    {status === 'All' ? 'All Users' : status}
+                                </TabsTrigger>
+                            ))}
+                        </TabsList>
+                    </div>
+                    <div className="p-4 bg-white border rounded-md shadow-sm mb-6 flex flex-col gap-4">
+                        <div className="text-sm font-medium text-gray-700">Filters</div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-6 gap-4 items-center">
+                            <div className="col-span-2 relative">
+                                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
+                                <Input
+                                    placeholder="Search user by name..."
+                                    className="pl-9"
+                                    value={searchTerm}
+                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                    onKeyDown={(e) => { if (e.key === 'Enter') handleApplyFilters(); }}
+                                />
+                            </div>
+                            <div>
+                                <Select value={batchRange} onValueChange={(val) => {
+                                    setBatchRange(val);
+                                    let min = '';
+                                    let max = '';
+                                    let sBatch = searchBatch;
 
-            {/* Edit / Status Change Modal */}
-            <Dialog open={!!editingUser} onOpenChange={(open) => !open && setEditingUser(null)}>
-                <DialogContent>
-                    <DialogHeader>
-                        <DialogTitle>Edit User Status: {editingUser?.name}</DialogTitle>
-                        <DialogDescription>
-                            Update user account status, duration, and administrative record.
-                        </DialogDescription>
-                    </DialogHeader>
-                    <div className="space-y-4 py-4">
-                        <div className="space-y-2">
-                            <Label>Status</Label>
-                            <Select
-                                value={editStatus}
-                                onValueChange={(val) => {
-                                    setEditStatus(val);
-                                    if (val === 'Suspended' && !editExpiryDate) {
-                                        const defaultDate = new Date();
-                                        defaultDate.setDate(defaultDate.getDate() + 7);
-                                        setEditExpiryDate(defaultDate.toISOString().split('T')[0]);
+                                    if (val !== 'All Batches' && val !== 'Custom Range') {
+                                        const currentYear = new Date();
+                                        let yearsToSubtract = 0;
+                                        if (val === 'Past 3') yearsToSubtract = 3;
+                                        else if (val === 'Past 5') yearsToSubtract = 5;
+                                        else if (val === 'Past 10') yearsToSubtract = 10;
+                                        else if (val === 'Past 30') yearsToSubtract = 30;
+
+                                        if (yearsToSubtract > 0) {
+                                            max = format(currentYear, 'yyyy');
+                                            min = format(subYears(currentYear, yearsToSubtract), 'yyyy');
+                                            setCustomMaxBatch(max);
+                                            setCustomMinBatch(min);
+                                        }
+                                    } else if (val === 'All Batches') {
+                                        setCustomMinBatch('');
+                                        setCustomMaxBatch('');
+                                        setSearchBatch('');
+                                        sBatch = '';
                                     }
-                                }}
-                            >
-                                <SelectTrigger>
-                                    <SelectValue placeholder="Select status" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {dbStatuses.map(s => (
-                                        <SelectItem key={s.id} value={s.statusName}>{s.statusName}</SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                        </div>
-                        <div className="space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
-                            {editStatus === 'Suspended' && (
-                                <div className="space-y-2">
-                                    <div className="flex items-center justify-between">
-                                        <Label>
-                                            Suspension Expiry Date <span className="text-red-500">*</span>
-                                        </Label>
-                                        {editExpiryDate && new Date(editExpiryDate).getFullYear() >= 3000 && (
-                                            <Badge className="bg-orange-100 text-orange-800 border-orange-200 text-xs">
-                                                Indefinite
-                                            </Badge>
-                                        )}
-                                    </div>
+
+                                    if (val !== 'Custom Range') {
+                                        setAppliedSearchTerm(searchTerm);
+                                        setAppliedSearchBatch(sBatch);
+                                        setAppliedSearchReason(searchReason);
+                                        setAppliedBatchRange(val);
+                                        setAppliedCustomMinBatch(min);
+                                        setAppliedCustomMaxBatch(max);
+                                        setCurrentPage(1);
+                                    }
+                                }}>
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="All Batches" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="All Batches">All Batches</SelectItem>
+                                        <SelectItem value="Past 3">Past 3</SelectItem>
+                                        <SelectItem value="Past 5">Past 5</SelectItem>
+                                        <SelectItem value="Past 10">Past 10</SelectItem>
+                                        <SelectItem value="Past 30">Past 30</SelectItem>
+                                        <SelectItem value="Custom Range">Custom Range</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            {batchRange === 'All Batches' ? (
+                                <div>
                                     <Input
-                                        type="date"
-                                        required
-                                        value={editExpiryDate}
-                                        onChange={(e) => setEditExpiryDate(e.target.value)}
-                                        className={!editExpiryDate ? "border-red-300 focus-visible:ring-red-400" : ""}
+                                        placeholder="Batch year..."
+                                        value={searchBatch}
+                                        onChange={(e) => setSearchBatch(e.target.value)}
+                                        onKeyDown={(e) => { if (e.key === 'Enter') handleApplyFilters(); }}
                                     />
-                                    {!editExpiryDate && (
-                                        <p className="text-xs text-red-500 font-medium">Expiry date is required for suspending a user.</p>
-                                    )}
-                                    <div className="flex gap-2 pt-1 flex-wrap">
-                                        <Button type="button" variant="outline" size="sm" onClick={() => setPresetDuration(3)}>3 Days</Button>
-                                        <Button type="button" variant="outline" size="sm" onClick={() => setPresetDuration(7)}>1 Week</Button>
-                                        <Button type="button" variant="outline" size="sm" onClick={() => setPresetDuration(30)}>1 Month</Button>
-                                        <Button
-                                            type="button"
-                                            variant="outline"
-                                            size="sm"
-                                            className={editExpiryDate && new Date(editExpiryDate).getFullYear() >= 3000 ? "bg-orange-50 border-orange-300 text-orange-700 font-semibold" : ""}
-                                            onClick={setIndefiniteDuration}
-                                        >
-                                            Indefinite
-                                        </Button>
-                                    </div>
+                                </div>
+                            ) : (
+                                // The earliest possible batch for Engineering is 1966.
+                                // For simplicity sake, the range entered here will not be validated.
+                                <div className="flex gap-2 items-center">
+                                    <Input
+                                        placeholder="Min"
+                                        type="number"
+                                        value={customMinBatch}
+                                        onChange={(e) => setCustomMinBatch(e.target.value)}
+                                        disabled={batchRange !== 'Custom Range'}
+                                        className="w-full"
+                                    />
+                                    <span className="text-gray-400">-</span>
+                                    <Input
+                                        placeholder="Max"
+                                        type="number"
+                                        value={customMaxBatch}
+                                        onChange={(e) => setCustomMaxBatch(e.target.value)}
+                                        disabled={batchRange !== 'Custom Range'}
+                                        className="w-full"
+                                    />
                                 </div>
                             )}
-                            <div className="space-y-2">
-                                <Label>Reason / Administrative Note (Optional)</Label>
-                                <Textarea
-                                    placeholder="Provide reasoning or record note..."
-                                    value={editReason}
-                                    onChange={(e) => setEditReason(e.target.value)}
-                                    rows={3}
-                                />
-                                <p className="text-xs text-gray-500">This description will be recorded in the user status logs.</p>
+                            <div className="col-span-2 flex justify-end gap-2">
+                                <Button variant="outline" onClick={handleClearFilters}>Clear</Button>
+                                <Button className="bg-brand-primary hover:bg-brand-primary-hover" onClick={handleApplyFilters}>Submit</Button>
+                                <Button
+                                    className="ml-auto bg-brand-secondary hover:bg-brand-secondary-hover hover:text-white"
+                                    onMouseEnter={loadCreateUserModal}
+                                    onFocus={loadCreateUserModal}
+                                    onClick={() => {
+                                        loadCreateUserModal();
+                                        setIsCreateOpen(true);
+                                    }}
+                                >
+                                    <Plus className="mr-1 h-4 w-4" /> Create User
+                                </Button>
                             </div>
                         </div>
                     </div>
-                    <DialogFooter>
-                        <Button variant="outline" onClick={() => setEditingUser(null)}>Cancel</Button>
-                        <Button
-                            onClick={handleSaveEdit}
-                            disabled={editStatus === 'Suspended' && !editExpiryDate}
-                        >
-                            Save Changes
-                        </Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
 
-            {/* Create User Modal Component (Lazyloaded on hover) */}
-            <Suspense fallback={null}>
-                {isCreateOpen && (
-                    <CreateUserModal
-                        isOpen={isCreateOpen}
-                        onClose={() => setIsCreateOpen(false)}
-                        onUserCreated={() => {
-                            fetchUsersList();
-                            toast.success("User created successfully");
-                        }}
-                        degrees={degrees}
-                        dbStatuses={dbStatuses}
-                    />
-                )}
-            </Suspense>
-        </div>
-    );
-}
+                    {statuses.map(status => (
+                        <TabsContent key={status} value={status}>
+                            <Card className="border-none shadow-md">
+                                <CardHeader className="flex flex-row items-center justify-between">
+                                    <div>
+                                        <CardTitle>{status === 'All' ? 'All Users' : `${status} Users`}</CardTitle>
+                                        <CardDescription>
+                                            {status === 'All' ? 'Manage all accounts across the platform' : `Manage ${status.toLowerCase()} accounts`}
+                                        </CardDescription>
+                                    </div>
+                                    <Button variant="outline" onClick={handleExportCSV}>Export CSV</Button>
+                                </CardHeader>
+                                <CardContent>
+                                    {renderTable()}
+                                </CardContent>
+                            </Card>
+                        </TabsContent>
+                    ))}
+                </Tabs>
+
+                {/* Edit / Status Change Modal */}
+                <Dialog open={!!editingUser} onOpenChange={(open) => !open && setEditingUser(null)}>
+                    <DialogContent>
+                        <DialogHeader>
+                            <DialogTitle>Edit User Status: {editingUser?.name}</DialogTitle>
+                            <DialogDescription>
+                                Update user account status, duration, and administrative record.
+                            </DialogDescription>
+                        </DialogHeader>
+                        <div className="space-y-4 py-4">
+                            <div className="space-y-2">
+                                <Label>Status</Label>
+                                <Select
+                                    value={editStatus}
+                                    onValueChange={(val) => {
+                                        setEditStatus(val);
+                                        if (val === 'Suspended' && !editExpiryDate) {
+                                            const defaultDate = new Date();
+                                            defaultDate.setDate(defaultDate.getDate() + 7);
+                                            setEditExpiryDate(defaultDate.toISOString().split('T')[0]);
+                                        }
+                                    }}
+                                >
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="Select status" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {dbStatuses.map(s => (
+                                            <SelectItem key={s.id} value={s.statusName}>{s.statusName}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            <div className="space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
+                                {editStatus === 'Suspended' && (
+                                    <div className="space-y-2">
+                                        <div className="flex items-center justify-between">
+                                            <Label>
+                                                Suspension Expiry Date <span className="text-red-500">*</span>
+                                            </Label>
+                                            {editExpiryDate && new Date(editExpiryDate).getFullYear() >= 3000 && (
+                                                <Badge className="bg-orange-100 text-orange-800 border-orange-200 text-xs">
+                                                    Indefinite
+                                                </Badge>
+                                            )}
+                                        </div>
+                                        <Input
+                                            type="date"
+                                            required
+                                            value={editExpiryDate}
+                                            onChange={(e) => setEditExpiryDate(e.target.value)}
+                                            className={!editExpiryDate ? "border-red-300 focus-visible:ring-red-400" : ""}
+                                        />
+                                        {!editExpiryDate && (
+                                            <p className="text-xs text-red-500 font-medium">Expiry date is required for suspending a user.</p>
+                                        )}
+                                        <div className="flex gap-2 pt-1 flex-wrap">
+                                            <Button type="button" variant="outline" size="sm" onClick={() => setPresetDuration(3)}>3 Days</Button>
+                                            <Button type="button" variant="outline" size="sm" onClick={() => setPresetDuration(7)}>1 Week</Button>
+                                            <Button type="button" variant="outline" size="sm" onClick={() => setPresetDuration(30)}>1 Month</Button>
+                                            <Button
+                                                type="button"
+                                                variant="outline"
+                                                size="sm"
+                                                className={editExpiryDate && new Date(editExpiryDate).getFullYear() >= 3000 ? "bg-orange-50 border-orange-300 text-orange-700 font-semibold" : ""}
+                                                onClick={setIndefiniteDuration}
+                                            >
+                                                Indefinite
+                                            </Button>
+                                        </div>
+                                    </div>
+                                )}
+                                <div className="space-y-2">
+                                    <Label>Reason / Administrative Note (Optional)</Label>
+                                    <Textarea
+                                        placeholder="Provide reasoning or record note..."
+                                        value={editReason}
+                                        onChange={(e) => setEditReason(e.target.value)}
+                                        rows={3}
+                                    />
+                                    <p className="text-xs text-gray-500">This description will be recorded in the user status logs.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <DialogFooter>
+                            <Button variant="outline" onClick={() => setEditingUser(null)}>Cancel</Button>
+                            <Button
+                                onClick={handleSaveEdit}
+                                disabled={editStatus === 'Suspended' && !editExpiryDate}
+                            >
+                                Save Changes
+                            </Button>
+                        </DialogFooter>
+                    </DialogContent>
+                </Dialog>
+
+                {/* Create User Modal Component (Lazyloaded on hover) */}
+                <Suspense fallback={null}>
+                    {isCreateOpen && (
+                        <CreateUserModal
+                            isOpen={isCreateOpen}
+                            onClose={() => setIsCreateOpen(false)}
+                            onUserCreated={() => {
+                                fetchUsersList();
+                                toast.success("User created successfully");
+                            }}
+                            degrees={degrees}
+                            dbStatuses={dbStatuses}
+                        />
+                    )}
+                </Suspense>
+            </div>
+        );
+    }

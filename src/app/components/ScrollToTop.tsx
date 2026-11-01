@@ -4,7 +4,7 @@ import { ArrowUp } from 'lucide-react';
 
 interface ScrollToTopProps {
     children?: React.ReactNode;
-    scrollContainerRef?: React.RefObject<any>;
+    scrollContainerRef?: React.RefObject<HTMLElement | null>;
 }
 
 const ScrollToTop = ({ children, scrollContainerRef }: ScrollToTopProps) => {

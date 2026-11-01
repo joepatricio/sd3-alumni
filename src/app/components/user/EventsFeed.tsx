@@ -3,7 +3,7 @@ import { Calendar, MapPin, Users, Video } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { getCategoryColor, formatDate } from '@/app/views/formatters';
 import { LazyImage } from '@components/user/LazyImage';
-import { api, type EventData } from '@/app/views/api';
+import { api, unwrapListResponse, type EventData } from '@/app/views/api';
 
 export function EventsFeed() {
   const [events, setEvents] = useState<EventData[]>([]);
@@ -25,8 +25,7 @@ export function EventsFeed() {
             })
           }
         });
-        // Flagged for vague typing
-        const data = Array.isArray(res.data) ? res.data : res.data.data;
+        const data = unwrapListResponse<EventData>(res).items;
         setEvents(data || []);
       } catch (error) {
         console.error("Failed to fetch events:", error);

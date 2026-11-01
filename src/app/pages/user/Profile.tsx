@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { Calendar, Award, Heart, Loader2, Mail, Phone, MapPin, Briefcase, MessageSquare, FileText, User, NonBinary, Mars, Venus } from 'lucide-react';
 import { ProfileHeader } from '@components/user/ProfileHeader';
-import { api, AchievementIconMap, useProfileRoute, type ProfileData, type UserStatisticsData } from '@/app/views/api';
+import { api, AchievementIconMap, useProfileRoute, type ProfileData, type UserStatisticsData, type User as UserEntity, type UserConnectionData, type UserAchievementData, type BulletinData, type BulletinCommentData, type EventData, type RSVPData } from '@/app/views/api';
 import { useAuth } from '@/app/views/auth';
 import { formatCurrency, formatDate } from '@/app/views/formatters';
 import { NotFound } from '@pages/NotFound';
@@ -19,17 +19,17 @@ export function Profile() {
 
     const [loading, setLoading] = useState(true);
     const [profile, setProfile] = useState<ProfileData | null>(null);
-    const [userRecord, setUserRecord] = useState<any>(null);
+    const [userRecord, setUserRecord] = useState<UserEntity | null>(null);
     const [statsData, setStatsData] = useState<UserStatisticsData | null>(null);
     const [activeTab, setActiveTab] = useState(location.state?.activeTab || 'overview');
 
     const [pendingRequestsCount, setPendingRequestsCount] = useState(0);
-    const [connections, setConnections] = useState<any[]>([]);
-    const [connection, setConnection] = useState<any>(null);
-    const [achievements, setAchievements] = useState<any[]>([]);
-    const [bulletins, setBulletins] = useState<any[]>([]);
-    const [comments, setComments] = useState<any[]>([]);
-    const [events, setEvents] = useState<any[]>([]);
+    const [connections, setConnections] = useState<ProfileData[]>([]);
+    const [connection, setConnection] = useState<UserConnectionData | null>(null);
+    const [achievements, setAchievements] = useState<UserAchievementData[]>([]);
+    const [bulletins, setBulletins] = useState<BulletinData[]>([]);
+    const [comments, setComments] = useState<(BulletinCommentData & { bulletin?: { title?: string } })[]>([]);
+    const [events, setEvents] = useState<EventData[]>([]);
     const [tabPage, setTabPage] = useState(1);
     const [tabHasMore, setTabHasMore] = useState(true);
     const [tabLoadingMore, setTabLoadingMore] = useState(false);
@@ -52,9 +52,9 @@ export function Profile() {
             try {
                 setLoading(true);
                 const [profileRes, userRes, statsRes, connRes, achUserRes, relRes, pendingRes] = await Promise.all([
-                    api.get<any>('/profiles', { params: { 'userId': profileId, } }),
-                    api.get<any>('/users', { params: { 'userId': profileId } }),
-                    api.get<any>('/userStatistics', { params: { 'userId': profileId } }),
+                    api.get('/profiles', { params: { 'userId': profileId, } }),
+                    api.get('/users', { params: { 'userId': profileId } }),
+                    api.get('/userStatistics', { params: { 'userId': profileId } }),
                     api.get(`/userConnections`, { params: { 'userId': profileId, _page: 1, _per_page: 6, 'status.connectionName': 'Accepted' } }).catch(() => ({ data: { data: [] } })),
                     api.get(`/userAchievements`, { params: { 'userId': profileId, } }).catch(() => ({ data: [] })),
                     !isOwner && currentUserId ? api.get(`/userConnections`, { params: { 'userId': currentUserId, 'friendId': profileId } }).catch(() => ({ data: [] })) : Promise.resolve({ data: [] }),
@@ -83,24 +83,24 @@ export function Profile() {
 
                 const conns = connRes.data?.data || [];
                 if (conns.length > 0) {
-                    const friendIds = conns.map((c: any) => c.friendId).join(',');
+                    const friendIds = conns.map((c: { friendId: string }) => c.friendId).join(',');
                     const friendsRes = await api.get(`/profiles`, { params: { 'userId:in': friendIds } }).catch(() => ({ data: [] }));
                     const fData = Array.isArray(friendsRes.data) ? friendsRes.data : (friendsRes.data?.data || []);
                     setConnections(fData);
                 }
 
                 const userAchs = Array.isArray(achUserRes.data) ? achUserRes.data : (achUserRes.data?.data || []);
-                const highestTierAchs = new Map<number, any>();
-                userAchs.forEach((ach: any) => {
+                const highestTierAchs = new Map<number, UserAchievementData>();
+                userAchs.forEach((ach: UserAchievementData) => {
                     if (ach.achievement) {
                         const cat = ach.achievement.achievementCategory;
                         const tier = ach.achievement.achievementTier;
                         const existing = highestTierAchs.get(cat);
-                        if (!existing || tier > existing.achievement.achievementTier) {
-                            highestTierAchs.set(cat, ach);
+                            if (!existing || tier > (existing.achievement?.achievementTier || 0)) {
+                                highestTierAchs.set(cat, ach);
+                            }
                         }
-                    }
-                });
+                    });
                 setAchievements(Array.from(highestTierAchs.values()));
 
             } catch (err) {
@@ -146,7 +146,7 @@ export function Profile() {
                 );
             }
             if (activeTab === 'overview' || activeTab === 'events') {
-                const queryParams: any = { 'userId': profileId, _page: tabPage, _per_page: 10 };
+                const queryParams: Record<string, unknown> = { 'userId': profileId, _page: tabPage, _per_page: 10 };
                 if (activeTab === 'overview') {
                     queryParams.isAttending = true;
                 } else {
@@ -157,7 +157,7 @@ export function Profile() {
                     api.get('/userRsvps', { params: queryParams }).catch(() => ({ data: [] })).then(async rsvpRes => {
                         const rsvps = Array.isArray(rsvpRes.data) ? rsvpRes.data : (rsvpRes.data?.data || []);
                         if (rsvps.length > 0) {
-                            const eventIds = rsvps.map((r: any) => r.eventId).join(',');
+                            const eventIds = rsvps.map((r: RSVPData) => r.eventId).join(',');
                             const eventRes = await api.get('/events', {
                                 params: {
                                     'id:in': eventIds,
@@ -169,7 +169,7 @@ export function Profile() {
                             if (tabPage === 1) setEvents(data);
                             else setEvents(prev => {
                                 // Filter out duplicates just in case
-                                const newIds = new Set(data.map((d: any) => d.id));
+                                const newIds = new Set(data.map((d: EventData) => d.id));
                                 const uniquePrev = prev.filter(p => !newIds.has(p.id));
                                 return [...uniquePrev, ...data];
                             });
@@ -233,7 +233,7 @@ export function Profile() {
         ...(activeTab === 'overview' ? events.map(e => ({ ...e, type: 'event', sortDate: e.eventDate })) : [])
     ].sort((a, b) => new Date(b.sortDate).getTime() - new Date(a.sortDate).getTime());
 
-    const renderBulletin = (b: any) => (
+    const renderBulletin = (b: BulletinData) => (
         <div key={`bulletin-${b.id}`} className="bg-white p-4 rounded-lg shadow-sm border border-gray-100 mb-4 last:mb-0 hover:shadow-md transition-shadow">
             <Link to={`/bulletin/${b.id}`}>
                 <div className="flex items-center gap-2 text-sm text-gray-500 mb-3">
@@ -256,7 +256,7 @@ export function Profile() {
         </div>
     );
 
-    const renderEventOverview = (event: any) => (
+    const renderEventOverview = (event: EventData) => (
         <div key={`event-ov-${event.id}`} className="bg-white p-4 rounded-lg shadow-sm border border-gray-100 mb-4 last:mb-0 hover:shadow-md transition-shadow">
             <Link to={`/events/${event.id}`}>
                 <div className="flex items-center gap-2 text-sm text-gray-500 mb-3">
@@ -283,21 +283,21 @@ export function Profile() {
         </div>
     );
 
-    const renderComment = (c: any) => (
+    const renderComment = (c: BulletinCommentData & { bulletin?: { title?: string } }) => (
         <div key={`comment-${c.id}`} className="bg-white p-4 rounded-lg shadow-sm border border-gray-100 mb-4 last:mb-0 hover:shadow-md transition-shadow">
             <Link to={`/bulletin/${c.bulletinId}`}>
                 <div className="flex items-center gap-2 text-sm text-gray-500 mb-2">
                     <MessageSquare className="w-4 h-4" />
                     <span>Commented on {c.bulletin?.title ? `"${c.bulletin.title}"` : 'a bulletin'} • {formatDate(c.commentDate, 'short')}</span>
                 </div>
-                <p className="text-gray-800 text-sm">"{c.comment}"</p>
+                <p className="text-gray-800 text-sm">&quot;{c.comment}&quot;</p>
                 <p className="text-sm text-brand-accent font-medium mt-2 inline-block">View Bulletin</p>
             </Link >
         </div >
     );
 
-    const renderEvent = (event: any) => {
-        const isUpcoming = !(event.eventStatus.statusName === 'Concluded');
+    const renderEvent = (event: EventData) => {
+        const isUpcoming = !(event.eventStatus?.statusName === 'Concluded');
         return (
             <Link
                 key={event.id}
@@ -339,7 +339,7 @@ export function Profile() {
         );
     };
 
-    const isValidString = (val: any) => Boolean(val && String(val).trim() !== '' && String(val).trim() !== 'null' && String(val).trim() !== 'undefined');
+    const isValidString = (val: unknown) => Boolean(val && String(val).trim() !== '' && String(val).trim() !== 'null' && String(val).trim() !== 'undefined');
 
     const aboutConfig = [
         {
@@ -418,7 +418,7 @@ export function Profile() {
                     connectionStatus={connection?.status?.connectionName}
                     pendingRequestsCount={pendingRequestsCount}
                     onConnectionUpdate={(newStatusName, newCount) => {
-                        setConnection(newStatusName !== null ? { status: { connectionName: newStatusName } } : null);
+                        setConnection(newStatusName !== null ? { id: '', userId: '', friendId: '', connectionStatusId: '', dateUpdated: '', status: { id: '', connectionName: newStatusName } } : null);
                         if (newCount !== undefined) {
                             setStatsData(prev => prev ? { ...prev, userConnections: newCount } : prev);
                         }
@@ -530,9 +530,9 @@ export function Profile() {
                                                 <div className="bg-white p-8 text-center rounded-lg border border-gray-100 text-gray-500">No recent activity to show.</div>
                                             )}
                                             {overviewContent.map(item => {
-                                                if (item.type === 'bulletin') return renderBulletin(item);
-                                                if (item.type === 'comment') return renderComment(item);
-                                                if (item.type === 'event') return renderEventOverview(item);
+                                                if (item.type === 'bulletin') return renderBulletin(item as unknown as BulletinData);
+                                                if (item.type === 'comment') return renderComment(item as unknown as (BulletinCommentData & { bulletin?: { title?: string } }));
+                                                if (item.type === 'event') return renderEventOverview(item as unknown as EventData);
                                                 return null;
                                             })}
                                         </div>

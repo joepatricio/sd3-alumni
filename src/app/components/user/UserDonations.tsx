@@ -1,12 +1,24 @@
 import { useState, useEffect } from 'react';
 import { Heart, Search, Eye, EyeOff, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
-import { api } from '@/app/views/api';
+import { api, unwrapListResponse } from '@/app/views/api';
 import { formatCurrency, getStatusColor, formatDate } from '@/app/views/formatters';
+
+export interface UserDonationItem {
+    id: string;
+    userId?: string;
+    donationAmount: number;
+    donationDate: string;
+    donationAnonymous?: boolean;
+    bankName?: string;
+    donationReference?: string;
+    status?: { statusName: string };
+    donationStatus?: { statusName: string };
+}
 
 export function UserDonations({ userId, onStatsUpdate }: { userId: string, onStatsUpdate?: (newAmount: number) => void }) {
     const [loading, setLoading] = useState(true);
-    const [donations, setDonations] = useState<any[]>([]);
+    const [donations, setDonations] = useState<UserDonationItem[]>([]);
     const [claimRefId, setClaimRefId] = useState('');
     const [isClaiming, setIsClaiming] = useState(false);
 
@@ -16,7 +28,7 @@ export function UserDonations({ userId, onStatsUpdate }: { userId: string, onSta
             const res = await api.get('/donations', {
                 params: { userId: userId, }
             });
-            setDonations(res.data);
+            setDonations(unwrapListResponse<UserDonationItem>(res).items);
         } catch (err) {
             console.error('Failed to fetch donations', err);
             toast.error('Failed to load donations history.');
@@ -35,8 +47,8 @@ export function UserDonations({ userId, onStatsUpdate }: { userId: string, onSta
             const pubRes = await api.get('/donations', {
                 params: { userId: userId, donationAnonymous: false, 'status.statusName': 'Completed' }
             });
-            const pubDonations = pubRes.data || [];
-            const total = pubDonations.reduce((sum: number, d: any) => sum + Number(d.donationAmount), 0);
+            const pubDonations = unwrapListResponse<UserDonationItem>(pubRes).items;
+            const total = pubDonations.reduce((sum: number, d: UserDonationItem) => sum + Number(d.donationAmount), 0);
 
             const statsRes = await api.get('/userStatistics', { params: { userId: userId } });
             const stats = statsRes.data || [];
@@ -78,7 +90,7 @@ export function UserDonations({ userId, onStatsUpdate }: { userId: string, onSta
         }
     };
 
-    const handleToggleAnonymity = async (donation: any) => {
+    const handleToggleAnonymity = async (donation: UserDonationItem) => {
         const newAnonymousState = !donation.donationAnonymous;
         try {
             await api.patch(`/donations/${donation.id}`, {
@@ -193,7 +205,7 @@ export function UserDonations({ userId, onStatsUpdate }: { userId: string, onSta
                 {donations.length === 0 ? (
                     <div className="p-8 text-center text-gray-500">
                         <Heart className="w-8 h-8 text-gray-300 mx-auto mb-3" />
-                        <p>You haven't made any donations yet.</p>
+                        <p>You haven&apos;t made any donations yet.</p>
                     </div>
                 ) : (
                     <div className="divide-y divide-gray-50">
@@ -204,9 +216,9 @@ export function UserDonations({ userId, onStatsUpdate }: { userId: string, onSta
                                         <span className="font-bold text-lg text-brand-primary">
                                             {formatCurrency(donation.donationAmount)}
                                         </span>
-                                        <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${getStatusColor(donation.donationStatus.statusName)}`}>
-                                            {donation.donationStatus.statusName}
-                                        </span>
+                                            <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${getStatusColor(donation.donationStatus?.statusName || 'Completed')}`}>
+                                                {donation.donationStatus?.statusName || 'Completed'}
+                                            </span>
                                     </div>
                                     <div className="text-sm text-gray-500 space-y-1">
                                         <p>Date: {formatDate(donation.donationDate, 'long')}</p>
@@ -215,25 +227,25 @@ export function UserDonations({ userId, onStatsUpdate }: { userId: string, onSta
                                 </div>
 
                                 <div className="flex items-center sm:justify-end">
-                                    {(donation.donationStatus.statusName !== 'Failed') && <button
-                                        onClick={() => handleToggleAnonymity(donation)}
-                                        className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors border ${donation.donationAnonymous
-                                            ? 'border-gray-200 text-gray-600 hover:bg-gray-100'
-                                            : 'border-brand-primary/20 text-brand-primary bg-brand-primary/5 hover:bg-brand-primary/10'
-                                            }`}
-                                    >
-                                        {donation.donationAnonymous ? (
-                                            <>
-                                                <EyeOff className="w-4 h-4" />
-                                                Private
-                                            </>
-                                        ) : (
-                                            <>
-                                                <Eye className="w-4 h-4" />
-                                                Public
-                                            </>
-                                        )}
-                                    </button>}
+                                        {((donation.donationStatus?.statusName || 'Completed') !== 'Failed') && <button
+                                            onClick={() => handleToggleAnonymity(donation)}
+                                            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors border ${donation.donationAnonymous
+                                                ? 'border-gray-200 text-gray-600 hover:bg-gray-100'
+                                                : 'border-brand-primary/20 text-brand-primary bg-brand-primary/5 hover:bg-brand-primary/10'
+                                                }`}
+                                        >
+                                            {donation.donationAnonymous ? (
+                                                <>
+                                                    <EyeOff className="w-4 h-4" />
+                                                    Private
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <Eye className="w-4 h-4" />
+                                                    Public
+                                                </>
+                                            )}
+                                        </button>}
                                 </div>
                             </div>
                         ))}

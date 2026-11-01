@@ -16,7 +16,7 @@ import {
     Trash2,
     Ban
 } from 'lucide-react';
-import { CreateEventModal } from '@components/user/CreateEventModal';
+import { CreateEventModal, type EventModalInitialData } from '@components/user/CreateEventModal';
 import { Button } from '@components/ui/button';
 import { Badge } from '@components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@components/ui/avatar';
@@ -34,7 +34,7 @@ import {
 } from '@components/ui/alert-dialog';
 import { NotFound } from '@pages/NotFound';
 import { useAuth } from '@/app/views/auth';
-import { api, type EventData, type ProfileData } from '@/app/views/api';
+import { api, unwrapListResponse, type EventData, type ProfileData } from '@/app/views/api';
 import { formatDate } from '@/app/views/formatters';
 
 export function EventDetail() {
@@ -64,7 +64,7 @@ export function EventDetail() {
                 const allUsers = Array.isArray(usersRes.data) ? usersRes.data : (usersRes.data?.data || []);
 
                 if (event?.authorId) {
-                    const authorUser = allUsers.find((u: any) => String(u.id) === String(event.authorId));
+                    const authorUser = allUsers.find((u: { id: string; userStatus?: { statusName?: string } }) => String(u.id) === String(event.authorId));
                     if (!isPreview && authorUser && authorUser.userStatus?.statusName === 'Banned') {
                         setEventData(null);
                         setLoading(false);
@@ -72,8 +72,7 @@ export function EventDetail() {
                     }
 
                     const profRes = await api.get(`/profiles?userId=${event.authorId}`);
-                    // Flagged for vague typing
-                    const profData = Array.isArray(profRes.data) ? profRes.data : profRes.data.data;
+                    const profData = unwrapListResponse<ProfileData>(profRes).items;
                     if (profData && profData.length > 0) {
                         setOrganizer(profData[0]);
                     }
@@ -204,8 +203,7 @@ export function EventDetail() {
         if (!eventData) return;
         try {
             const statusRes = await api.get(`/eventStatuses?statusName=${newStatusName}`);
-            // Flagged for vague typing
-            const statusData = Array.isArray(statusRes.data) ? statusRes.data : statusRes.data.data;
+            const statusData = unwrapListResponse<{ id: string; statusName: string }>(statusRes).items;
             const statusObj = statusData?.[0];
             if (statusObj) {
                 await api.patch(`/events/${eventData.id}`, { eventStatusId: statusObj.id });
@@ -272,7 +270,7 @@ export function EventDetail() {
                 <div className="bg-blue-50 px-4 py-3 border-b border-blue-200 text-center flex items-center justify-center gap-2">
                     <Info className="w-4 h-4 text-blue-800" />
                     <p className="text-blue-800 font-medium text-sm">
-                        Admin Preview Mode: Viewing event detail page as if Approved (Current Status: "{currentStatusName}")
+                        Admin Preview Mode: Viewing event detail page as if Approved (Current Status: &quot;{currentStatusName}&quot;)
                     </p>
                 </div>
             )}
@@ -298,7 +296,7 @@ export function EventDetail() {
                                                 Edit Event
                                             </Button>
                                         }
-                                        initialData={eventData as any}
+                                        initialData={eventData as EventModalInitialData}
                                     />
                                     {currentStatusName !== "Cancelled" && (
                                         <>
@@ -478,7 +476,7 @@ export function EventDetail() {
                                 <>
                                     <div className="text-center mb-6">
                                         <h3 className="text-lg font-bold text-gray-900 mb-2">Are you going?</h3>
-                                        <p className="text-gray-500 text-sm">Let us know if you'll be there!</p>
+                                        <p className="text-gray-500 text-sm">Let us know if you&apos;ll be there!</p>
                                     </div>
 
                                     <div className="grid grid-cols-2 gap-3 mb-6">
@@ -505,7 +503,7 @@ export function EventDetail() {
                             ) : (
                                 <div className="text-center py-4">
                                     <h3 className="text-lg font-bold text-gray-900 mb-2">RSVP to this Event</h3>
-                                    <p className="text-gray-500 text-sm mb-6">Log in to let alumni know you'll be attending.</p>
+                                    <p className="text-gray-500 text-sm mb-6">Log in to let alumni know you&apos;ll be attending.</p>
                                     <Link to="/login" state={{ from: `/events/${eventData.id}` }} className="inline-block w-full">
                                         <Button className="w-full bg-brand-primary hover:bg-brand-primary-hover">
                                             Log In to RSVP

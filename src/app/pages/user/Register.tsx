@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Mail, Lock, Eye, EyeOff, User, Loader2, GraduationCap, School } from 'lucide-react';
-import { useForm } from 'react-hook-form';
+import { useForm, type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { toast } from 'sonner';
@@ -90,7 +90,7 @@ export function Register() {
     }, []);
 
     const form = useForm<z.infer<typeof registerSchema>>({
-        resolver: zodResolver(registerSchema) as any,
+        resolver: zodResolver(registerSchema) as unknown as Resolver<z.infer<typeof registerSchema>>,
         defaultValues: {
             fullName: "",
             email: "",
@@ -122,9 +122,10 @@ export function Register() {
                 description: "Your account is awaiting admin approval.",
             });
             navigate('/login');
-        } catch (error: any) {
+        } catch (error: unknown) {
+            const err = error as { response?: { data?: { error?: string } } };
             console.error("Registration error:", error);
-            const errorMessage = error.response?.data?.error || "An unexpected error occurred. Please try again.";
+            const errorMessage = err.response?.data?.error || "An unexpected error occurred. Please try again.";
             toast.error("Registration failed", {
                 description: errorMessage
             });

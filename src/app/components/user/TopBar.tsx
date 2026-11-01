@@ -2,7 +2,7 @@ import { User, Menu, X, Bell } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/app/views/auth";
-import { api } from "@/app/views/api";
+import { api, unwrapListResponse } from "@/app/views/api";
 
 interface TopBarProps {
   isMenuOpen: boolean;
@@ -21,8 +21,7 @@ export function TopBar({
     if (isLoggedIn && session?.userId) {
       api.get('/notifications', { params: { userId: session.userId, isRead: false } })
         .then(res => {
-          // Flagged for vague typing
-          const count = Array.isArray(res.data) ? res.data.length : (res.data?.data?.length || 0);
+          const count = unwrapListResponse(res).total;
           setUnreadCount(count);
         })
         .catch(console.error);

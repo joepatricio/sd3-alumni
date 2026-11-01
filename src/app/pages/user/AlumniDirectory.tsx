@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Search, Users, Loader2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { api, type DegreeData, type AlumniCard } from '@/app/views/api';
+import { api, unwrapListResponse, type DegreeData, type AlumniCard, type ProfileData } from '@/app/views/api';
 
 const ITEMS_PER_PAGE = 12;
 const ALUMNI_DIRECTORY_FILTERS_KEY = 'alumni_directory_filters';
@@ -58,7 +58,7 @@ export function AlumniDirectory() {
     }, [activeFilters]);
 
     useEffect(() => {
-        api.get<any>('/degrees').then(res => setDegrees(res.data || []));
+        api.get('/degrees').then(res => setDegrees(unwrapListResponse<DegreeData>(res).items));
         api.get('/users', {
             params: {
                 _where: JSON.stringify({
@@ -66,7 +66,7 @@ export function AlumniDirectory() {
                 }),
                 _include: "userStatus"
             }
-        }).then(res => setAbsoluteTotalAlumni(res.data.items || res.data.length || 0)); // Flagged for vague typing
+        }).then(res => setAbsoluteTotalAlumni(unwrapListResponse(res).total));
     }, []);
 
     useEffect(() => {
@@ -75,7 +75,7 @@ export function AlumniDirectory() {
         const fetchData = async () => {
             setLoading(true);
             try {
-                const whereClause: any = {
+                const whereClause: Record<string, unknown> = {
                     user: { userStatus: { statusName: { notIn: ['Banned', 'Deactivated'] } } }
                 };
 
@@ -100,13 +100,11 @@ export function AlumniDirectory() {
                     }
                 });
 
-                // Flagged for vague typing
-                const data = res.data.data || res.data;
-                const total = res.data.items || data.length;
+                const { items: data, total } = unwrapListResponse<ProfileData>(res);
 
                 setTotalPages(Math.ceil(total / ITEMS_PER_PAGE));
 
-                const mappedAlumni = data.map((profile: any) => {
+                const mappedAlumni = data.map((profile: ProfileData) => {
                     const deg = degrees.find(d => String(d.id) === String(profile.degreeId));
                     return {
                         userId: profile.userId,
@@ -289,7 +287,7 @@ export function AlumniDirectory() {
                             No Alumni Found
                         </h3>
                         <p className="text-gray-500">
-                            We couldn't find anyone matching your current filters. Try adjusting your search criteria.
+                            We couldn&apos;t find anyone matching your current filters. Try adjusting your search criteria.
                         </p>
                         <button
                             onClick={handleClearFilters}

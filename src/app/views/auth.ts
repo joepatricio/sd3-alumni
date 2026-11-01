@@ -20,13 +20,13 @@ export const setSession = (sessionData: UserSession | string | null, _rememberMe
         currentSession = sessionData;
     } else if (typeof sessionData === 'string') {
         try {
-            const decoded: any = jwtDecode(sessionData);
+            const decoded = jwtDecode<{ role?: string; id?: string; email?: string }>(sessionData);
             if (decoded?.role === 'admin') {
                 currentSession = null;
             } else {
                 currentSession = {
-                    userId: decoded.id,
-                    email: decoded.email
+                    userId: decoded.id || '',
+                    email: decoded.email || ''
                 };
             }
         } catch {
