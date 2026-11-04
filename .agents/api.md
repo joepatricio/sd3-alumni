@@ -1,3 +1,27 @@
+# REST API Proper Usage
+
+- **Primary Reference**
+  - Always consult `.agents/api.md` before implementing, modifying, debugging, or integrating with the project's REST API.
+  - Treat `.agents/api.md` as the primary reference for API conventions, endpoints, request and response structures, authentication, validation, error handling, and other documented behaviors.
+  - Do not assume undocumented API behavior.
+
+- **Documentation Synchronization**
+  - Whenever an implementation changes the REST API's behavior, `.agents/api.md` must be updated to reflect the changes. Coordinate these changes with your operator.
+  - Ensure documentation accurately describes the implemented API, including affected endpoints, request parameters, response structures, status codes, and error handling.
+  - Do not consider API-related implementation work complete until the corresponding documentation has been reviewed and updated.
+
+- **Discrepancy Reporting**
+  - Compare the documented API behavior against the actual implementation whenever working on relevant API functionality.
+  - Report any inconsistencies between `.agents/api.md` and the implemented REST API.
+  - Clearly identify:
+    1. The affected endpoint or functionality.
+    2. The documented behavior.
+    3. The observed implementation behavior.
+    4. The potential implications of the discrepancy.
+  - Do not independently decide whether the implementation or documentation should take precedence when they conflict.
+  - Require the operator to make an explicit judgement call on how the discrepancy should be resolved.
+  - Do not silently modify documentation to legitimize unexpected implementation behavior, or modify implementation to match potentially outdated documentation, without operator direction.
+
 ## Filter by condition
 **Query:** `GET /api/achievements?_where={"achievementTier":{"gt":1}}`
 
