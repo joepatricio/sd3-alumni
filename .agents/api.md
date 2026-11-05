@@ -5,6 +5,20 @@
   - Treat `.agents/api.md` as the primary reference for API conventions, endpoints, request and response structures, authentication, validation, error handling, and other documented behaviors.
   - Do not assume undocumented API behavior.
 
+- **Verification Protocol (HTTP-First Testing & Code Introspection)**
+  - **Runtime & Contract Verification**: When verifying or testing API endpoints, response shapes, and query syntax, always execute HTTP requests against the live running API server (e.g., using `curl.exe` or lightweight HTTP test scripts).
+  - **No Direct Database Probing**: Do not bypass the REST layer to query data directly via SQLite drivers (`better-sqlite3`, raw `.db` files). Raw database queries bypass middleware, authentication, relational hydration, default projections, and JSON serialization, producing misleading representations of what the API actually serves.
+  - **Code Introspection Permitted**: Agents are fully permitted and encouraged to read backend source code (e.g., `api/index.js`, `api/queryParser.js`, `prisma/schema.prisma`) to trace route logic, schemas, and parser rules. Code examination must serve understanding and implementation, while behavioral verification remains over HTTP.
+
+- **Relational Inclusion Conventions (`_include`)**
+  - When specifying `_include` fields, the API automatically hydrates nested defaults for core domain models (e.g., including `profile` on `/api/users` automatically includes `profile.degree`). Refer to the **Model Relation Hydration Rules** section below for specific defaults.
+
+- **Canonical Lookup & Status Verification**
+  - **No Inferred Statuses**: Never assume, extrapolate, or invent status names, category values, or enum-like literals (e.g., `userStatus`, `contentStatus`, `profileStatus`, `eventStatus`) from UI strings, variable names, or legacy code comments.
+  - **Ground Truth for Lookups**: Statuses and category names are relational database entities. When constructing queries with relational filters (such as `_where={"userStatus":{"statusName":{"notIn":[...]}}}`), agents must verify exact values against the live lookup endpoints (e.g., `GET /api/userStatuses`, `GET /api/contentStatuses`)
+  - **Strict Filter Fidelity**: When the operator or specification supplies an explicit set of filter conditions (e.g., `"Not Banned, Deactivated, or Pending"`), agents must restrict their query payloads strictly to those specified values without embellishing or re-introducing deprecated/stale statuses found elsewhere in legacy code.
+  - **Differentiating Active Contracts from Legacy Residue**: If an identifier or status string appears in frontend/backend code (e.g., `disabledUsers`) but is absent from the database lookup table or Prisma schema, treat it as obsolete legacy code—do not propagate it to API requests, query parameters, or documentation.
+
 - **Documentation Synchronization**
   - Whenever an implementation changes the REST API's behavior, `.agents/api.md` must be updated to reflect the changes. Coordinate these changes with your operator.
   - Ensure documentation accurately describes the implemented API, including affected endpoints, request parameters, response structures, status codes, and error handling.
@@ -21,6 +35,19 @@
   - Do not independently decide whether the implementation or documentation should take precedence when they conflict.
   - Require the operator to make an explicit judgement call on how the discrepancy should be resolved.
   - Do not silently modify documentation to legitimize unexpected implementation behavior, or modify implementation to match potentially outdated documentation, without operator direction.
+
+## Model Relation Hydration Rules
+
+When querying entities with `_include` (or omitting `_include` when default relationships exist), the API server hydrates nested relational trees:
+
+| Model / Endpoint | Requested Relation (`_include`) | Hydrated Nested Structure |
+|---|---|---|
+| `/api/users` | `profile` | Includes `degree: true` (`user.profile.degree`) |
+| `/api/users` | `userStatus` | Includes user status record (`user.userStatus`) |
+| `/api/users` | *(default when omitted)* | `profile` (with `degree`), `userStatus`, `profileStatus`, `records` |
+| `/api/bulletins` | `category`, `status`, `author` | Author includes `profile` and `userStatus` |
+| `/api/events` | `location`, `category`, `status`, `author` | Author includes `profile` and `userStatus` |
+| `/api/userConnections` | `user`, `friend` | Both include `profile` (with `degree`) |
 
 ## Filter by condition
 **Query:** `GET /api/achievements?_where={"achievementTier":{"gt":1}}`
@@ -785,4 +812,88 @@
     "achievementIcon": "BookOpen"
   }
 ]
+```
+
+## Filter by relation negation (notIn)
+
+**Query:** `GET /api/users?_where={"userStatus":{"statusName":{"notIn":["Banned","Deactivated","Pending"]}}}&_include=profile,userStatus&_per_page=1`
+
+```json
+{
+  "items": 48,
+  "data": [
+    {
+      "id": "06f07654-fc6a-41e1-89b2-5bfa3cf55c08",
+      "userStatusId": "OWOyGJzHfV",
+      "currentRecordId": "d8414be9-b24f-4696-bccc-00657fd17be8",
+      "profileStatusId": "kvf-XCOljU",
+      "profile": {
+        "userId": "06f07654-fc6a-41e1-89b2-5bfa3cf55c08",
+        "userName": "John Smith",
+        "gender": "Male",
+        "bio": "Let sleeping gods lie...",
+        "email": "smith@pym.org",
+        "phone": "09129876543",
+        "location": "Minglanilla, Cebu",
+        "currentJob": "CEO",
+        "company": "PymTech",
+        "profileImage": "/uploads/upload-695c7d6d-4f1c-4481-9941-c3703ceab81a.jpg",
+        "degreeId": "AUG-4vBe6k",
+        "batch": 1999,
+        "birthday": "1979-05-05T00:00:00.000Z",
+        "degree": {
+          "id": "AUG-4vBe6k",
+          "degreeName": "Electrical Engineering",
+          "degreeAbbr": "BSEE"
+        }
+      },
+      "userStatus": {
+        "id": "OWOyGJzHfV",
+        "statusName": "Official"
+      }
+    }
+  ]
+}
+```
+
+## Filter by nested relation property
+
+**Query:** `GET /api/users?_where={"profile":{"degree":{"degreeAbbr":"BSCpE"}}}&_include=profile,userStatus&_per_page=1`
+
+```json
+{
+  "items": 10,
+  "data": [
+    {
+      "id": "5GJpEZBQ_4",
+      "userStatusId": "2Ue2cfwVMa",
+      "currentRecordId": "21QC2BBEF1",
+      "profileStatusId": "kvf-XCOljU",
+      "profile": {
+        "userId": "5GJpEZBQ_4",
+        "userName": "John Ramos",
+        "gender": "Male",
+        "bio": "A proud alumnus of University of San Jose - Recoletos. Batch of 2020.",
+        "email": "john.ramos40@example.com",
+        "phone": "+63 917 123 5236",
+        "location": "Cebu City, Philippines",
+        "currentJob": "Student",
+        "company": "Scam Inc.",
+        "profileImage": "/uploads/profile-image.jpg",
+        "degreeId": "hd2F5ini8q",
+        "batch": 2020,
+        "birthday": "1974-08-24T23:22:37.000Z",
+        "degree": {
+          "id": "hd2F5ini8q",
+          "degreeName": "Computer Engineering",
+          "degreeAbbr": "BSCpE"
+        }
+      },
+      "userStatus": {
+        "id": "2Ue2cfwVMa",
+        "statusName": "Regular"
+      }
+    }
+  ]
+}
 ```

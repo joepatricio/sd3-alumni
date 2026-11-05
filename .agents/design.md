@@ -1,7 +1,15 @@
 # USJ-R SEA Alumni Project Design System
-
-## Overview
 This document outlines the core styling conventions, color palettes, and structural layouts governing the USJ-R SEA Alumni Platform.
+
+## Agent Workflow: Iterative Delivery
+- **Prioritize Rapid Iteration**: Agents should prioritize quick, small, verifiable iterations and incremental design revisions over prolonged, single-turn efforts unless explicitly instructed otherwise by the operator.
+- **Early Feedback Alignment**: Keep UI and stylistic changes targeted and check in frequently with working previews or focused updates to ensure visual alignment before committing to extensive overhauls.
+
+### Communication: Concise Responses
+Keep explanations, responses, and progress updates concise and focused. Avoid unnecessary elaboration, repetition, or verbosity unless explicitly requested by the operator.
+- **Lead with the Answer**: Present the solution, result, or key finding first. Provide supporting context only when necessary.
+- **Limit Unsolicited Explanations**: Do not explain routine implementation details, obvious decisions, or straightforward changes unless clarification is needed.
+- **Expand on Demand**: Provide detailed explanations, rationale, alternatives, and implementation walkthroughs when explicitly requested or when necessary to prevent ambiguity or errors.
 
 ## Color Palette
 

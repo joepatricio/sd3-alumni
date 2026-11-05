@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
 import { Search, Users, Loader2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { api, unwrapListResponse, type DegreeData, type AlumniCard, type ProfileData } from '@/app/views/api';
+import { AuroraHero } from '@/components/hero-textgradient';
 
 const ITEMS_PER_PAGE = 12;
 const ALUMNI_DIRECTORY_FILTERS_KEY = 'alumni_directory_filters';
@@ -160,23 +162,46 @@ export function AlumniDirectory() {
     );
 
     return (
-        <div className="bg-gray-50 flex flex-col min-h-[calc(100vh-64px)] pb-12">
+        <div className="bg-gray-50 flex flex-col min-h-[calc(100vh-64px)] pb-12 overflow-x-hidden">
             {/* Hero Section */}
-            <div className="text-black pt-16 pb-8">
-                <div className="max-w-6xl mx-auto px-4 md:px-8 text-center">
-                    <h1 className="text-4xl md:text-5xl font-bold mb-4 text-brand-primary">
-                        Welcome to the home of
-                    </h1>
-                    <h2 className="text-3xl md:text-4xl font-bold mb-6 text-brand-accent">
-                        {loading && displayedAlumni.length === 0 ? '...' : absoluteTotalAlumni} alumna
-                    </h2>
-                    <p className="text-lg text-gray-700 max-w-2xl mx-auto">
+            <AuroraHero
+                className="h-auto pt-16 pb-20 px-4 md:px-8 mb-[-3.5rem] bg-transparent !overflow-visible"
+                blobContainerClassName="!overflow-visible"
+            >
+                <div className="max-w-6xl mx-auto text-center">
+                    <motion.h1
+                        initial={{ opacity: 0, y: 30 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{
+                            delay: 0.2,
+                            duration: 0.7,
+                            ease: "easeInOut",
+                        }}
+                        className="text-4xl md:text-5xl font-extrabold tracking-tight mb-3"
+                    >
+                        <span className="bg-gradient-to-b from-gray-900 to-gray-600 bg-clip-text text-transparent">
+                            Welcome to the home of{" "}
+                        </span>
+                        <span className="bg-gradient-to-r from-brand-primary via-brand-accent to-brand-primary-hover bg-clip-text text-transparent">
+                            {loading && displayedAlumni.length === 0 ? '...' : absoluteTotalAlumni} alumna
+                        </span>
+                    </motion.h1>
+                    <motion.p
+                        initial={{ opacity: 0, y: 30 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{
+                            delay: 0.4,
+                            duration: 0.7,
+                            ease: "easeInOut",
+                        }}
+                        className="text-base md:text-lg text-gray-600 max-w-2xl mx-auto leading-relaxed"
+                    >
                         Connect with fellow Josenians from across generations and around the world
-                    </p>
+                    </motion.p>
                 </div>
-            </div>
+            </AuroraHero>
 
-            <div className="flex-1 max-w-6xl w-full mx-auto px-4 md:px-8">
+            <div className="flex-1 max-w-6xl w-full mx-auto px-4 md:px-8 relative z-10">
                 {/* Search Sections */}
                 <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden mb-8">
                     <div className="p-6 md:p-8 space-y-6">

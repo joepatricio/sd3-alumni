@@ -6,18 +6,15 @@
 - Follow existing project conventions and architecture.
 - Do not introduce unnecessary dependencies.
 - Preserve backward compatibility unless explicitly authorized.
+- When interacting with Cloudflare, use the cf CLI unless the project has a Wrangler configuration file.
 
 ## Specialized Instructions
 
-Consult the following documents when performing relevant tasks:
-
-| Task | Reference |
-|---|---|
-| Python development and execution | `.agents/python.md` |
-| REST API development and integration | `.agents/api.md` |
-| Frontend development | `.agents/design.md` |
-
-- Consult only the references relevant to the current task.
-- If a task spans multiple areas, consult all applicable references.
-- Specialized instructions supplement these general rules.
-- If instructions conflict, stop and report the conflict rather than arbitrarily choosing one.
+Before executing any request, perform a **Domain Assessment**:
+1. Identify all applicable domains involved in the task:
+   - Python operations/scripts → `.agents/python.md`
+   - REST API consumption, modification, or endpoint behavior → `.agents/api.md`
+   - UI, styling, layout, or frontend components → `.agents/design.md`
+2. **Cross-Domain Requirement**: If more than one domain is touched (e.g., frontend code that calls REST endpoints, or Python scripts consuming APIs), you **MUST** read and consult all corresponding references before writing code.
+3. Apply each document's rules strictly to its respective subsystem (do not bleed frontend rules into backend or vice versa).
+4. Specialized instructions supplement these general rules but do not automatically override them. If an actual conflict exists within the applicable scope, stop and report the conflict rather than arbitrarily choosing one.

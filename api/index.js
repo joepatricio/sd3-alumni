@@ -82,10 +82,10 @@ const basePrisma = new PrismaClient({ adapter });
 
 (async () => {
     try {
-        await basePrisma.$executeRawUnsafe('PRAGMA journal_mode = WAL;');
+        await basePrisma.$executeRawUnsafe('PRAGMA journal_mode = DELETE;');
         await basePrisma.$executeRawUnsafe('PRAGMA busy_timeout = 10000;');
     } catch (e) {
-        console.warn("Could not set SQLite WAL mode / busy_timeout:", e.message);
+        console.warn("Could not set SQLite journal mode / busy_timeout:", e.message);
     }
 })();
 
@@ -1634,7 +1634,6 @@ app.get('/api/admin/dashboard-stats', authenticateAdminToken, async (req, res) =
             regularUsersCount,
             suspendedUsersCount,
             bannedUsersCount,
-            disabledUsersCount,
             totalUsersCount,
             pendingBulletinsCount,
             flaggedBulletinsCount,
@@ -1653,7 +1652,6 @@ app.get('/api/admin/dashboard-stats', authenticateAdminToken, async (req, res) =
             prisma.user.count({ where: { userStatus: { statusName: 'Regular' } } }),
             prisma.user.count({ where: { userStatus: { statusName: 'Suspended' } } }),
             prisma.user.count({ where: { userStatus: { statusName: 'Banned' } } }),
-            prisma.user.count({ where: { userStatus: { statusName: 'Disabled' } } }),
             prisma.user.count(),
             prisma.bulletin.count({ where: { status: { statusName: 'Pending' } } }),
             prisma.bulletin.count({ where: { status: { statusName: 'Flagged' } } }),
@@ -1692,9 +1690,25 @@ app.get('/api/admin/dashboard-stats', authenticateAdminToken, async (req, res) =
                 include: { status: true, user: { include: { profile: true } } }
             }),
             prisma.user.findMany({
+                where: {
+                    userStatus: {
+                        statusName: { notIn: ['Banned', 'Deactivated', 'Pending'] }
+                    }
+                },
                 select: {
-                    profile: { select: { birthday: true } },
-                    profileStatus: { select: { statusName: true } }
+                    profile: {
+                        select: {
+                            birthday: true,
+                            degree: {
+                                select: {
+                                    degreeName: true,
+                                    degreeAbbr: true
+                                }
+                            }
+                        }
+                    },
+                    profileStatus: { select: { statusName: true } },
+                    userStatus: { select: { statusName: true } }
                 }
             })
         ]);
@@ -1708,8 +1722,16 @@ app.get('/api/admin/dashboard-stats', authenticateAdminToken, async (req, res) =
         let profileConnections = 0;
         let profilePrivate = 0;
 
-        allProfiles.forEach(u => {
-            // Demographics based only on non-blank birthdays
+        const excludedStatuses = ['banned', 'deactivated', 'pending'];
+        const degreeCounts = {};
+
+        (allProfiles || []).forEach(u => {
+            const userStatusName = (u.userStatus?.statusName || '').toLowerCase().trim();
+            if (excludedStatuses.includes(userStatusName)) {
+                return;
+            }
+
+            // Demographics based only on non-blank birthdays for active users
             if (u.profile && u.profile.birthday) {
                 const bDate = new Date(u.profile.birthday);
                 if (!isNaN(bDate.getTime())) {
@@ -1721,22 +1743,42 @@ app.get('/api/admin/dashboard-stats', authenticateAdminToken, async (req, res) =
                 }
             }
 
-            // Profile status counts
+            // Profile status counts for active users
             const statusName = u.profileStatus?.statusName;
             if (statusName === 'Public') profilePublic++;
             else if (statusName === 'Connections Only') profileConnections++;
             else if (statusName === 'Private') profilePrivate++;
+
+            // Degree program distribution for active users
+            if (u.profile?.degree) {
+                const deg = u.profile.degree;
+                const abbr = deg.degreeAbbr || deg.degreeName || 'Other';
+                const fullName = deg.degreeName || abbr;
+
+                if (!degreeCounts[abbr]) {
+                    degreeCounts[abbr] = { fullName, count: 0 };
+                }
+                degreeCounts[abbr].count += 1;
+            }
         });
 
-        const donationsTotal = completedDonations.reduce((sum, d) => sum + (d.donationAmount || 0), 0);
+        const degreeDistribution = Object.entries(degreeCounts)
+            .map(([name, info]) => ({
+                name,
+                fullName: info.fullName,
+                value: info.count
+            }))
+            .sort((a, b) => b.value - a.value);
+
+        const donationsTotal = (completedDonations || []).reduce((sum, d) => sum + (d.donationAmount || 0), 0);
         // Only set name as Anonymous if donation is not tied to any account
         const activeDonorsSet = new Set(
-            completedDonations.map(d => d.userId || 'Anonymous')
+            (completedDonations || []).map(d => d.userId || 'Anonymous')
         );
 
         const activities = [];
 
-        recentUsers.forEach(u => {
+        (recentUsers || []).forEach(u => {
             const regDate = u.statistics?.dateRegistered ? new Date(u.statistics.dateRegistered) : new Date();
             activities.push({
                 id: `user-${u.id}`,
@@ -1748,7 +1790,7 @@ app.get('/api/admin/dashboard-stats', authenticateAdminToken, async (req, res) =
             });
         });
 
-        recentBulletins.forEach(b => {
+        (recentBulletins || []).forEach(b => {
             const dateObj = new Date(b.bulletinDate);
             activities.push({
                 id: `bulletin-${b.id}`,
@@ -1760,7 +1802,7 @@ app.get('/api/admin/dashboard-stats', authenticateAdminToken, async (req, res) =
             });
         });
 
-        recentEvents.forEach(e => {
+        (recentEvents || []).forEach(e => {
             const dateObj = new Date(e.eventDate);
             activities.push({
                 id: `event-${e.id}`,
@@ -1772,7 +1814,7 @@ app.get('/api/admin/dashboard-stats', authenticateAdminToken, async (req, res) =
             });
         });
 
-        recentDonations.forEach(d => {
+        (recentDonations || []).forEach(d => {
             const donorName = d.userId === 'Anonymous' || !d.userId ? 'Anonymous' : (d.user?.profile?.userName || 'Registered user');
             const dateObj = new Date(d.donationDate);
             const amountFormatted = new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(d.donationAmount || 0);
@@ -1794,7 +1836,6 @@ app.get('/api/admin/dashboard-stats', authenticateAdminToken, async (req, res) =
             regularUsers: regularUsersCount,
             suspendedUsers: suspendedUsersCount,
             bannedUsers: bannedUsersCount,
-            disabledUsers: disabledUsersCount,
             totalUsers: totalUsersCount,
             demographics: {
                 babyBoomers,
@@ -1805,8 +1846,10 @@ app.get('/api/admin/dashboard-stats', authenticateAdminToken, async (req, res) =
                     public: profilePublic,
                     connections: profileConnections,
                     private: profilePrivate
-                }
+                },
+                degreeDistribution
             },
+            degreeDistribution,
             pendingBulletins: pendingBulletinsCount,
             flaggedBulletins: flaggedBulletinsCount,
             approvedBulletins: approvedBulletinsCount,
@@ -3250,4 +3293,4 @@ if (CLASSIFIER_INTERVAL_MINUTES > 0) {
     console.log(`[Classifier] CLASSIFIER_INTERVAL_MINUTES is ${CLASSIFIER_INTERVAL_MINUTES} (<= 0). Classification and auto-registration logic are disabled.`);
 }
 
-export { autoApprovePendingUsers, classifyPendingBulletins, runClassifierTasks };
+export { autoApprovePendingUsers, classifyPendingBulletins, runClassifierTasks };

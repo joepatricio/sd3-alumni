@@ -563,7 +563,7 @@ def generate_phase_4(USER, USER_STATISTICS):
             "description": f"Detailed description for event {i}.",
             "startTime": start_time,
             "endTime": end_time,
-            "responses": random.randint(10, 100),
+            "responses": 0,
             "modality": modality,
             "eventImage": event_image
         })
@@ -651,8 +651,11 @@ def generate_phase_5(USER, BULLETIN, EVENTS, USER_STATISTICS, USER_CONNECTIONS, 
         num_rsvps = random.randint(5, 15)
         attendees = random.sample(user_ids, num_rsvps)
         valid_status_ids = [s["id"] for s in EVENT_STATUS if s["statusName"] == "Concluded"]
+        going_count = 0
         for uid in attendees:
             is_attending = random.choice([True, False])
+            if is_attending:
+                going_count += 1
             is_valid = (event["eventStatusId"] in valid_status_ids) if is_attending else False
             USER_RSVP.append({
                 "id": generate(size=10),
@@ -661,6 +664,7 @@ def generate_phase_5(USER, BULLETIN, EVENTS, USER_STATISTICS, USER_CONNECTIONS, 
                 "isAttending": is_attending,
                 "isValid": is_valid
             })
+        event["responses"] = going_count
 
     # 5. BULLETIN_LIKES
     for bulletin in BULLETIN:
