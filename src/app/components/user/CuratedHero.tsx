@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
+import { api } from "@/app/views/api";
 import { AnimatedMarqueeHero, type HeroImageItem, type AnimatedMarqueeHeroProps } from "@/components/hero-3";
 
 const FALLBACK_HERO_IMAGES: HeroImageItem[] = [
@@ -46,7 +46,7 @@ export const CuratedHero: React.FC<CuratedHeroProps> = ({
 
     async function fetchHeroImages() {
       try {
-        const response = await axios.get("/api/hero/images");
+        const response = await api.get("/hero/images");
         if (
           isMounted &&
           response.data?.success &&

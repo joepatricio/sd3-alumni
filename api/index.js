@@ -7,12 +7,17 @@ import cookieParser from 'cookie-parser';
 import multer from 'multer';
 import fs from 'fs';
 import path from 'path';
+import { fileURLToPath } from 'url';
 import sharp from 'sharp';
 import { v4 as uuidv4 } from 'uuid';
 import { PrismaClient } from "@prisma-client/client";
 import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
 import { parseWhere, parseSort, numericFields } from './queryParser.js';
 import { rateLimit, ipKeyGenerator } from 'express-rate-limit';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const PROJECT_ROOT = path.resolve(__dirname, '..');
 
 // ==============================================================================
 // ENVIRONMENT CONFIGURATION VALIDATION
@@ -177,8 +182,11 @@ app.set('trust proxy', 1); // Trust the reverse proxy to get the real client IP
 
 // In production, serve the Vite frontend build (dist folder)
 // Otherwise ngrok is used to tunnel traffic to localhost
+const distPath = fs.existsSync(path.resolve(process.cwd(), 'dist'))
+    ? path.resolve(process.cwd(), 'dist')
+    : path.resolve(PROJECT_ROOT, 'dist');
+
 if (process.env.NODE_ENV === 'production') {
-    const distPath = path.resolve('dist');
     app.use(express.static(distPath));
 } else if (process.env.NODE_ENV === 'development') {
     async function forwardToApp() {
@@ -220,11 +228,14 @@ app.use(cors({
 app.use(express.json({ limit: '50mb' }));
 app.use(cookieParser());
 // Serve static images and uploads
-app.use('/images', express.static('images'));
+const imagesDir = fs.existsSync(path.resolve(process.cwd(), 'images'))
+    ? path.resolve(process.cwd(), 'images')
+    : path.resolve(PROJECT_ROOT, 'images');
+app.use('/images', express.static(imagesDir));
 
 // Legacy fallback: Redirect static assets requested under /uploads to /images if they exist in /images
 app.use('/uploads', (req, res, next) => {
-    const staticFilePath = path.join(process.cwd(), 'images', req.path);
+    const staticFilePath = path.join(imagesDir, req.path);
     if (!req.path.startsWith('/upload-') && fs.existsSync(staticFilePath)) {
         return res.redirect(`/images${req.path}`);
     }
@@ -2265,7 +2276,9 @@ app.get('/api/hero/images', async (req, res) => {
 
         // Shuffle albums to get high variety across sessions
         const shuffledAlbums = [...approvedAlbums].sort(() => 0.5 - Math.random());
-        const albumsBaseDir = path.resolve(process.cwd(), 'images', 'albums');
+        const cwdAlbums = path.resolve(process.cwd(), 'images', 'albums');
+        const projectAlbums = path.resolve(PROJECT_ROOT, 'images', 'albums');
+        const albumsBaseDir = fs.existsSync(cwdAlbums) ? cwdAlbums : projectAlbums;
         const sampledImages = [];
 
         for (const album of shuffledAlbums) {
@@ -3062,7 +3075,7 @@ app.use('/api', (req, res) => {
 // Must be placed after all API routes!
 if (process.env.NODE_ENV === 'production') {
     app.get(/.*/, (req, res) => {
-        res.sendFile(path.resolve('dist', 'index.html'));
+        res.sendFile(path.join(distPath, 'index.html'));
     });
 }
 
