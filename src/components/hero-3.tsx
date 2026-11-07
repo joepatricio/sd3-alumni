@@ -154,13 +154,13 @@ const MarqueeCard: React.FC<MarqueeCardProps> = ({ item, singleRow }) => {
           </span>
         </div>
       ) : (
-        /* 4. Active Image (lazy + async decoding with hardware-friendly CSS fade-in) */
+        /* 4. Active Image (eager loading for continuous marquee with async decoding) */
         <img
           ref={imgRef}
           key={currentUrl}
           src={currentUrl}
           alt={item.title || "Alumni moment"}
-          loading="lazy"
+          loading="eager"
           decoding="async"
           onLoad={handleImageReady}
           onError={() => {
@@ -259,10 +259,10 @@ export const AnimatedMarqueeHero: React.FC<AnimatedMarqueeHeroProps> = ({
   const row1 = singleRow ? normalizedImages : normalizedImages.slice(0, mid);
   const row2 = singleRow ? [] : normalizedImages.slice(mid);
 
-  // Target a consistent number of visible items per marquee row
-  // On mobile / low-power / constrained devices, 4 items is more than enough to loop seamlessly (each card ~272px wide; 4 cards = 1088px)
-  // On desktop, 6 items per row gives ~2160px track which spans beyond 1920px screens without ballooning memory.
-  const targetItemsCount = shouldSimplify ? 4 : (singleRow ? 6 : 6);
+  // Target a consistent number of visible items per marquee row:
+  // Mobile screens (<768px): 4 items is plenty (4 * 272px = 1088px > 430px viewport).
+  // Desktop screens (>=768px): need 6-8 items to ensure the track (>= 2880px) spans beyond 1920px/2560px displays without empty gaps.
+  const targetItemsCount = isSmallScreen ? 4 : (singleRow ? 6 : 8);
 
   const ensureMinItems = (arr: HeroImageItem[], target = targetItemsCount): HeroImageItem[] => {
     if (arr.length === 0) return [];
@@ -309,7 +309,7 @@ export const AnimatedMarqueeHero: React.FC<AnimatedMarqueeHeroProps> = ({
     return (
       <div className="space-y-4 md:space-y-6">
         {/* Row 1 Skeleton: Scrolling Left */}
-        <div className="marquee-row overflow-hidden [contain:paint]">
+        <div className="marquee-row overflow-hidden">
           <div className="flex w-max gap-4 sm:gap-6 animate-marquee-row1">
             {skeletonLoop.map((_, idx) => (
               <SkeletonCard key={`sk1-${idx}`} singleRow={singleRow} />
@@ -319,7 +319,7 @@ export const AnimatedMarqueeHero: React.FC<AnimatedMarqueeHeroProps> = ({
 
         {/* Row 2 Skeleton: Scrolling Right */}
         {!singleRow && (
-          <div className="marquee-row overflow-hidden [contain:paint]">
+          <div className="marquee-row overflow-hidden">
             <div className="flex w-max gap-4 sm:gap-6 animate-marquee-row2">
               {skeletonLoop.map((_, idx) => (
                 <SkeletonCard key={`sk2-${idx}`} singleRow={singleRow} />
@@ -353,7 +353,7 @@ export const AnimatedMarqueeHero: React.FC<AnimatedMarqueeHeroProps> = ({
     return (
       <div className="space-y-4 md:space-y-6">
         {/* Row 1: Scrolling Left */}
-        <div className="marquee-row overflow-hidden [contain:paint]">
+        <div className="marquee-row overflow-hidden">
           <div className="flex w-max gap-4 sm:gap-6 animate-marquee-row1">
             {row1Loop.map((item, idx) => (
               <MarqueeCard
@@ -367,7 +367,7 @@ export const AnimatedMarqueeHero: React.FC<AnimatedMarqueeHeroProps> = ({
 
         {/* Row 2: Scrolling Right (rendered if not singleRow) */}
         {!singleRow && (
-          <div className="marquee-row overflow-hidden [contain:paint]">
+          <div className="marquee-row overflow-hidden">
             <div className="flex w-max gap-4 sm:gap-6 animate-marquee-row2">
               {row2Loop.map((item, idx) => (
                 <MarqueeCard
@@ -433,13 +433,6 @@ export const AnimatedMarqueeHero: React.FC<AnimatedMarqueeHeroProps> = ({
             animation-play-state: paused;
           }
         }
-        @media (prefers-reduced-motion: reduce) {
-          .animate-marquee-row1,
-          .animate-marquee-row2,
-          .animate-hero-shimmer {
-            animation: none !important;
-          }
-        }
       `}</style>
 
       {/* Aurora Ambient Background Effect */}
@@ -449,13 +442,15 @@ export const AnimatedMarqueeHero: React.FC<AnimatedMarqueeHeroProps> = ({
         {/* University Badge */}
         {badgeText && (
           <motion.div
-            initial={{ opacity: 0, y: -10 }}
+            initial={shouldSimplify ? false : { opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4 }}
+            transition={shouldSimplify ? { duration: 0 } : { duration: 0.4 }}
             className="mb-5 inline-flex items-center gap-2 rounded-full border border-brand-primary/25 bg-amber-50/80 px-4 py-1.5 text-xs font-semibold uppercase tracking-wider text-brand-primary backdrop-blur-sm md:text-sm"
           >
             <span className="relative flex h-2 w-2">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-brand-primary opacity-75" />
+              {!shouldSimplify && (
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-brand-primary opacity-75" />
+              )}
               <span className="relative inline-flex h-2 w-2 rounded-full bg-brand-primary" />
             </span>
             <span>{badgeText}</span>
@@ -464,9 +459,9 @@ export const AnimatedMarqueeHero: React.FC<AnimatedMarqueeHeroProps> = ({
 
         {/* Main Title */}
         <motion.h1
-          initial={{ opacity: 0, y: 15 }}
+          initial={shouldSimplify ? false : { opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.1 }}
+          transition={shouldSimplify ? { duration: 0 } : { duration: 0.5, delay: 0.1 }}
           className="text-4xl font-extrabold tracking-tight text-gray-900 sm:text-5xl md:text-6xl"
         >
           {title}
@@ -474,9 +469,9 @@ export const AnimatedMarqueeHero: React.FC<AnimatedMarqueeHeroProps> = ({
 
         {/* Description */}
         <motion.p
-          initial={{ opacity: 0, y: 15 }}
+          initial={shouldSimplify ? false : { opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.2 }}
+          transition={shouldSimplify ? { duration: 0 } : { duration: 0.5, delay: 0.2 }}
           className="mt-5 max-w-2xl text-base text-gray-600 sm:text-lg md:text-xl"
         >
           {description}
@@ -484,9 +479,9 @@ export const AnimatedMarqueeHero: React.FC<AnimatedMarqueeHeroProps> = ({
 
         {/* Call to Action Buttons */}
         <motion.div
-          initial={{ opacity: 0, y: 15 }}
+          initial={shouldSimplify ? false : { opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.3 }}
+          transition={shouldSimplify ? { duration: 0 } : { duration: 0.5, delay: 0.3 }}
           className="mt-8 flex flex-wrap items-center justify-center gap-4 sm:mt-10"
         >
           <Link
@@ -511,7 +506,6 @@ export const AnimatedMarqueeHero: React.FC<AnimatedMarqueeHeroProps> = ({
       <div
         className={cn(
           "relative mt-12 w-full overflow-hidden md:mt-16",
-          !shouldSimplify && "md:[mask-image:linear-gradient(to_right,transparent,black_10%,black_90%,transparent)] md:[-webkit-mask-image:linear-gradient(to_right,transparent,black_10%,black_90%,transparent)]",
           minHeightClass
         )}
         style={
@@ -523,13 +517,9 @@ export const AnimatedMarqueeHero: React.FC<AnimatedMarqueeHeroProps> = ({
           } as React.CSSProperties
         }
       >
-        {/* Soft edge gradient fades when simplified (hardware-friendly alternative to expensive mask-image) */}
-        {shouldSimplify && (
-          <>
-            <div className="pointer-events-none absolute inset-y-0 left-0 z-20 w-8 sm:w-16 bg-gradient-to-r from-gray-50/90 to-transparent" />
-            <div className="pointer-events-none absolute inset-y-0 right-0 z-20 w-8 sm:w-16 bg-gradient-to-l from-gray-50/90 to-transparent" />
-          </>
-        )}
+        {/* Universal edge gradient fades (zero compositor overhead, 100% reliable across all browsers & GPUs) */}
+        <div className="pointer-events-none absolute inset-y-0 left-0 z-20 w-10 sm:w-16 md:w-28 bg-gradient-to-r from-gray-50 via-gray-50/80 to-transparent" />
+        <div className="pointer-events-none absolute inset-y-0 right-0 z-20 w-10 sm:w-16 md:w-28 bg-gradient-to-l from-gray-50 via-gray-50/80 to-transparent" />
         <AnimatePresence mode="wait">
           {isEmpty ? (
             <motion.div

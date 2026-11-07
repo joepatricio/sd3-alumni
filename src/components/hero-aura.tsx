@@ -62,7 +62,7 @@ export const AuroraBackground = ({ className, blobContainerClassName }: { classN
                     className={cn(
                         "aurora-blob absolute -top-1/4 left-1/4 rounded-full bg-brand-primary/45 opacity-40 filter dark:opacity-60",
                         shouldSimplify
-                            ? "h-64 w-64 sm:h-80 sm:w-80 blur-2xl animate-[aurora-1_22s_ease-in-out_infinite]"
+                            ? "h-64 w-64 sm:h-80 sm:w-80 blur-2xl"
                             : "h-96 w-96 blur-3xl animate-[aurora-1_20s_ease-in-out_infinite]"
                     )}
                 />
@@ -72,7 +72,7 @@ export const AuroraBackground = ({ className, blobContainerClassName }: { classN
                     className={cn(
                         "aurora-blob absolute -bottom-1/4 right-1/4 rounded-full bg-brand-secondary/45 opacity-35 filter dark:opacity-50",
                         shouldSimplify
-                            ? "h-72 w-72 sm:h-96 sm:w-96 blur-2xl animate-[aurora-2_24s_ease-in-out_infinite]"
+                            ? "h-72 w-72 sm:h-96 sm:w-96 blur-2xl"
                             : "h-[30rem] w-[30rem] blur-3xl animate-[aurora-2_22s_ease-in-out_infinite]"
                     )}
                 />

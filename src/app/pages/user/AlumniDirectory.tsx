@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { api, unwrapListResponse, type DegreeData, type AlumniCard, type ProfileData } from '@/app/views/api';
 import { AuroraHero } from '@/components/hero-aura';
+import { useDeviceCapabilities } from '@/lib/device';
 
 const ITEMS_PER_PAGE = 12;
 const ALUMNI_DIRECTORY_FILTERS_KEY = 'alumni_directory_filters';
@@ -28,6 +29,8 @@ const getStoredAlumniFilters = (): AlumniFilterState => {
 };
 
 export function AlumniDirectory() {
+    const { isLowPower, isSmallScreen } = useDeviceCapabilities();
+    const shouldSimplify = isLowPower || isSmallScreen;
     const storedFilters = getStoredAlumniFilters();
     const [loading, setLoading] = useState(true);
     const [displayedAlumni, setDisplayedAlumni] = useState<AlumniCard[]>([]);
@@ -170,9 +173,9 @@ export function AlumniDirectory() {
             >
                 <div className="max-w-6xl mx-auto text-center">
                     <motion.h1
-                        initial={{ opacity: 0, y: 30 }}
+                        initial={shouldSimplify ? false : { opacity: 0, y: 30 }}
                         animate={{ opacity: 1, y: 0 }}
-                        transition={{
+                        transition={shouldSimplify ? { duration: 0 } : {
                             delay: 0.2,
                             duration: 0.7,
                             ease: "easeInOut",
@@ -187,9 +190,9 @@ export function AlumniDirectory() {
                         </span>
                     </motion.h1>
                     <motion.p
-                        initial={{ opacity: 0, y: 30 }}
+                        initial={shouldSimplify ? false : { opacity: 0, y: 30 }}
                         animate={{ opacity: 1, y: 0 }}
-                        transition={{
+                        transition={shouldSimplify ? { duration: 0 } : {
                             delay: 0.4,
                             duration: 0.7,
                             ease: "easeInOut",
