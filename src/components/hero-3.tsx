@@ -5,6 +5,7 @@ import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowRight, Sparkles, ExternalLink, ImageOff } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useDeviceCapabilities } from "@/lib/device";
 import { AuroraBackground } from "@/components/hero-aura";
 
 export interface HeroImageItem {
@@ -95,16 +96,8 @@ const MarqueeCard: React.FC<MarqueeCardProps> = ({ item, singleRow }) => {
     return () => clearTimeout(timer);
   }, [prevUrl]);
 
-  // DOM image onload and initial cache-check with decode()
-  const handleImageReady = async (e: React.SyntheticEvent<HTMLImageElement>) => {
-    const target = e.currentTarget;
-    try {
-      if ("decode" in target) {
-        await target.decode();
-      }
-    } catch {
-      // decode fallback
-    }
+  // DOM image onload and initial cache-check
+  const handleImageReady = () => {
     setIsLoaded(true);
     setHasError(false);
   };
@@ -113,21 +106,14 @@ const MarqueeCard: React.FC<MarqueeCardProps> = ({ item, singleRow }) => {
     const domImg = imgRef.current;
     if (!domImg) return;
     if (domImg.complete && domImg.naturalWidth > 0) {
-      if ("decode" in domImg) {
-        domImg
-          .decode()
-          .then(() => setIsLoaded(true))
-          .catch(() => setIsLoaded(true));
-      } else {
-        setIsLoaded(true);
-      }
+      setIsLoaded(true);
     }
   }, [currentUrl]);
 
   const cardContent = (
     <div
       className={cn(
-        "group/card relative shrink-0 overflow-hidden rounded-2xl border border-gray-200/90 bg-gray-100 shadow-sm transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:border-brand-primary/40",
+        "group/card relative shrink-0 overflow-hidden rounded-2xl border border-gray-200/90 bg-gray-100 shadow-sm transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:border-brand-primary/40 transform-gpu",
         singleRow
           ? "h-56 w-80 sm:h-64 sm:w-96 md:h-72 md:w-[28rem]"
           : "h-44 w-64 sm:h-52 sm:w-76 md:h-56 md:w-84"
@@ -144,7 +130,7 @@ const MarqueeCard: React.FC<MarqueeCardProps> = ({ item, singleRow }) => {
             className="absolute inset-0 z-0 pointer-events-none"
           >
             <div className="absolute inset-0 bg-gradient-to-tr from-gray-200/90 via-gray-100/70 to-gray-200/90 animate-pulse" />
-            <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/50 to-transparent animate-hero-shimmer" />
+            <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/50 to-transparent animate-hero-shimmer will-change-transform" />
           </motion.div>
         )}
       </AnimatePresence>
@@ -168,28 +154,24 @@ const MarqueeCard: React.FC<MarqueeCardProps> = ({ item, singleRow }) => {
           </span>
         </div>
       ) : (
-        /* 4. Active Image (guaranteed decode before smooth fade-in) */
-        <motion.img
+        /* 4. Active Image (lazy + async decoding with hardware-friendly CSS fade-in) */
+        <img
           ref={imgRef}
           key={currentUrl}
           src={currentUrl}
           alt={item.title || "Alumni moment"}
-          loading="eager"
+          loading="lazy"
+          decoding="async"
           onLoad={handleImageReady}
           onError={() => {
             setHasError(true);
             setIsLoaded(false);
           }}
-          initial={{ opacity: 0 }}
-          animate={{
-            opacity: isLoaded ? 1 : 0,
-          }}
-          transition={{
-            duration: 0.75,
-            ease: [0.25, 0.1, 0.25, 1],
-          }}
-          style={{ willChange: "opacity" }}
-          className="relative z-20 h-full w-full object-cover transition-transform duration-500 ease-out group-hover/card:scale-110"
+          className={cn(
+            "relative z-20 h-full w-full object-cover transition-opacity duration-500 ease-out",
+            "transform-gpu group-hover/card:scale-105 transition-transform duration-500",
+            isLoaded ? "opacity-100" : "opacity-0"
+          )}
         />
       )}
 
@@ -230,14 +212,14 @@ const MarqueeCard: React.FC<MarqueeCardProps> = ({ item, singleRow }) => {
 const SkeletonCard: React.FC<{ singleRow?: boolean }> = ({ singleRow }) => (
   <div
     className={cn(
-      "relative shrink-0 overflow-hidden rounded-2xl border border-gray-200/80 bg-gray-100 shadow-xs",
+      "relative shrink-0 overflow-hidden rounded-2xl border border-gray-200/80 bg-gray-100 shadow-xs transform-gpu",
       singleRow
         ? "h-56 w-80 sm:h-64 sm:w-96 md:h-72 md:w-[28rem]"
         : "h-44 w-64 sm:h-52 sm:w-76 md:h-56 md:w-84"
     )}
   >
     <div className="absolute inset-0 bg-gradient-to-tr from-gray-200/80 via-gray-100/60 to-gray-200/80 animate-pulse" />
-    <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/50 to-transparent animate-hero-shimmer" />
+    <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/50 to-transparent animate-hero-shimmer will-change-transform" />
     <div className="absolute bottom-3 left-3 flex items-center gap-1.5 rounded-full bg-white/80 px-3 py-1 shadow-xs backdrop-blur-xs">
       <div className="h-3 w-3 rounded-full bg-gray-300/80 animate-pulse" />
       <div className="h-2.5 w-16 rounded-full bg-gray-300/80 animate-pulse" />
@@ -260,6 +242,8 @@ export const AnimatedMarqueeHero: React.FC<AnimatedMarqueeHeroProps> = ({
   emptyState,
 }) => {
   const [isMounted, setIsMounted] = useState<boolean>(false);
+  const { isLowPower, isSmallScreen } = useDeviceCapabilities();
+  const shouldSimplify = isLowPower || isSmallScreen;
 
   useEffect(() => {
     setIsMounted(true);
@@ -276,17 +260,19 @@ export const AnimatedMarqueeHero: React.FC<AnimatedMarqueeHeroProps> = ({
   const row2 = singleRow ? [] : normalizedImages.slice(mid);
 
   // Target a consistent number of visible items per marquee row
-  const targetItemsCount = singleRow ? 6 : 8;
+  // On mobile / low-power / constrained devices, 4 items is more than enough to loop seamlessly (each card ~272px wide; 4 cards = 1088px)
+  // On desktop, 6 items per row gives ~2160px track which spans beyond 1920px screens without ballooning memory.
+  const targetItemsCount = shouldSimplify ? 4 : (singleRow ? 6 : 6);
 
-  const ensureMinItems = (arr: HeroImageItem[], min = targetItemsCount): HeroImageItem[] => {
+  const ensureMinItems = (arr: HeroImageItem[], target = targetItemsCount): HeroImageItem[] => {
     if (arr.length === 0) return [];
     let res = [...arr];
-    while (res.length < min) {
+    while (res.length < target) {
       res = [...res, ...arr];
     }
-    // Cap single row to avoid ballooning track length and causing faster linear translation
-    if (singleRow && res.length > min) {
-      res = res.slice(0, min);
+    // Cap track length to target to prevent ballooning DOM nodes and GPU memory
+    if (res.length > target) {
+      res = res.slice(0, target);
     }
     return res;
   };
@@ -308,9 +294,6 @@ export const AnimatedMarqueeHero: React.FC<AnimatedMarqueeHeroProps> = ({
   const row2DurationMobile = Math.max(35, (row2Items.length || targetItemsCount) * 9.0);
 
   // Determine active visual state
-  // 1. Placeholder: when explicitly loading or during initial mount before hydration
-  // 2. Empty: mounted, not loading, and images array is empty
-  // 3. Hydrated: mounted, not loading, and images array has items
   const isPlaceholder = isLoading !== undefined ? isLoading : !isMounted && normalizedImages.length === 0;
   const isEmpty = !isPlaceholder && normalizedImages.length === 0;
 
@@ -326,7 +309,7 @@ export const AnimatedMarqueeHero: React.FC<AnimatedMarqueeHeroProps> = ({
     return (
       <div className="space-y-4 md:space-y-6">
         {/* Row 1 Skeleton: Scrolling Left */}
-        <div className="marquee-row overflow-hidden">
+        <div className="marquee-row overflow-hidden [contain:paint]">
           <div className="flex w-max gap-4 sm:gap-6 animate-marquee-row1">
             {skeletonLoop.map((_, idx) => (
               <SkeletonCard key={`sk1-${idx}`} singleRow={singleRow} />
@@ -336,7 +319,7 @@ export const AnimatedMarqueeHero: React.FC<AnimatedMarqueeHeroProps> = ({
 
         {/* Row 2 Skeleton: Scrolling Right */}
         {!singleRow && (
-          <div className="marquee-row overflow-hidden">
+          <div className="marquee-row overflow-hidden [contain:paint]">
             <div className="flex w-max gap-4 sm:gap-6 animate-marquee-row2">
               {skeletonLoop.map((_, idx) => (
                 <SkeletonCard key={`sk2-${idx}`} singleRow={singleRow} />
@@ -370,7 +353,7 @@ export const AnimatedMarqueeHero: React.FC<AnimatedMarqueeHeroProps> = ({
     return (
       <div className="space-y-4 md:space-y-6">
         {/* Row 1: Scrolling Left */}
-        <div className="marquee-row overflow-hidden">
+        <div className="marquee-row overflow-hidden [contain:paint]">
           <div className="flex w-max gap-4 sm:gap-6 animate-marquee-row1">
             {row1Loop.map((item, idx) => (
               <MarqueeCard
@@ -384,7 +367,7 @@ export const AnimatedMarqueeHero: React.FC<AnimatedMarqueeHeroProps> = ({
 
         {/* Row 2: Scrolling Right (rendered if not singleRow) */}
         {!singleRow && (
-          <div className="marquee-row overflow-hidden">
+          <div className="marquee-row overflow-hidden [contain:paint]">
             <div className="flex w-max gap-4 sm:gap-6 animate-marquee-row2">
               {row2Loop.map((item, idx) => (
                 <MarqueeCard
@@ -409,25 +392,32 @@ export const AnimatedMarqueeHero: React.FC<AnimatedMarqueeHeroProps> = ({
     >
       <style>{`
         @keyframes marquee-scroll-left {
-          0% { transform: translateX(0%); }
-          100% { transform: translateX(-50%); }
+          0% { transform: translate3d(0%, 0, 0); }
+          100% { transform: translate3d(-50%, 0, 0); }
         }
         @keyframes marquee-scroll-right {
-          0% { transform: translateX(-50%); }
-          100% { transform: translateX(0%); }
+          0% { transform: translate3d(-50%, 0, 0); }
+          100% { transform: translate3d(0%, 0, 0); }
         }
         @keyframes hero-shimmer {
-          0% { transform: translateX(-100%); }
-          100% { transform: translateX(100%); }
+          0% { transform: translate3d(-100%, 0, 0); }
+          100% { transform: translate3d(100%, 0, 0); }
         }
         .animate-hero-shimmer {
           animation: hero-shimmer 2.2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+          will-change: transform;
         }
         .animate-marquee-row1 {
           animation: marquee-scroll-left var(--duration-row1-mobile, 45s) linear infinite;
+          will-change: transform;
+          transform: translate3d(0, 0, 0);
+          backface-visibility: hidden;
         }
         .animate-marquee-row2 {
           animation: marquee-scroll-right var(--duration-row2-mobile, 48s) linear infinite;
+          will-change: transform;
+          transform: translate3d(0, 0, 0);
+          backface-visibility: hidden;
         }
         @media (min-width: 768px) {
           .animate-marquee-row1 {
@@ -437,9 +427,18 @@ export const AnimatedMarqueeHero: React.FC<AnimatedMarqueeHeroProps> = ({
             animation-duration: var(--duration-row2-desktop, 38s);
           }
         }
-        .marquee-row:hover .animate-marquee-row1,
-        .marquee-row:hover .animate-marquee-row2 {
-          animation-play-state: paused;
+        @media (hover: hover) and (pointer: fine) {
+          .marquee-row:hover .animate-marquee-row1,
+          .marquee-row:hover .animate-marquee-row2 {
+            animation-play-state: paused;
+          }
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .animate-marquee-row1,
+          .animate-marquee-row2,
+          .animate-hero-shimmer {
+            animation: none !important;
+          }
         }
       `}</style>
 
@@ -512,7 +511,7 @@ export const AnimatedMarqueeHero: React.FC<AnimatedMarqueeHeroProps> = ({
       <div
         className={cn(
           "relative mt-12 w-full overflow-hidden md:mt-16",
-          "[mask-image:linear-gradient(to_right,transparent,black_10%,black_90%,transparent)]",
+          !shouldSimplify && "md:[mask-image:linear-gradient(to_right,transparent,black_10%,black_90%,transparent)] md:[-webkit-mask-image:linear-gradient(to_right,transparent,black_10%,black_90%,transparent)]",
           minHeightClass
         )}
         style={
@@ -524,6 +523,13 @@ export const AnimatedMarqueeHero: React.FC<AnimatedMarqueeHeroProps> = ({
           } as React.CSSProperties
         }
       >
+        {/* Soft edge gradient fades when simplified (hardware-friendly alternative to expensive mask-image) */}
+        {shouldSimplify && (
+          <>
+            <div className="pointer-events-none absolute inset-y-0 left-0 z-20 w-8 sm:w-16 bg-gradient-to-r from-gray-50/90 to-transparent" />
+            <div className="pointer-events-none absolute inset-y-0 right-0 z-20 w-8 sm:w-16 bg-gradient-to-l from-gray-50/90 to-transparent" />
+          </>
+        )}
         <AnimatePresence mode="wait">
           {isEmpty ? (
             <motion.div
