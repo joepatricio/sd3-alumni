@@ -39,6 +39,7 @@ interface MarqueeCardProps {
 }
 
 const MarqueeCard: React.FC<MarqueeCardProps> = ({ item, singleRow }) => {
+  const { isLowPower } = useDeviceCapabilities();
   const [currentUrl, setCurrentUrl] = useState<string>(item.url);
   const [prevUrl, setPrevUrl] = useState<string | null>(null);
   const [isLoaded, setIsLoaded] = useState<boolean>(false);
@@ -152,7 +153,7 @@ const MarqueeCard: React.FC<MarqueeCardProps> = ({ item, singleRow }) => {
             key="skeleton"
             initial={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.5, ease: "easeOut" }}
+            transition={{ duration: isLowPower ? 0.3 : 0.6, ease: "easeOut" }}
             className="absolute inset-0 z-0 pointer-events-none"
           >
             <div className="absolute inset-0 bg-gradient-to-tr from-gray-200/90 via-gray-100/70 to-gray-200/90 animate-pulse" />
@@ -180,25 +181,26 @@ const MarqueeCard: React.FC<MarqueeCardProps> = ({ item, singleRow }) => {
           </span>
         </div>
       ) : (
-        /* 4. Active Image (eager loading, hardware decoded before opacity transition) */
-        <img
+        /* 4. Active Image (Framer Motion managed opacity ensures smooth tween without CSS class conflict) */
+        <motion.img
           ref={imgRef}
           key={currentUrl}
           src={currentUrl}
           alt={item.title || "Alumni moment"}
           loading="eager"
-          decoding="sync"
+          decoding="async"
           onLoad={handleImageReady}
           onError={() => {
             setHasError(true);
             setIsLoaded(false);
           }}
-          style={{ willChange: "opacity" }}
-          className={cn(
-            "relative z-20 h-full w-full object-cover transition-opacity duration-700 ease-out",
-            "transform-gpu group-hover/card:scale-105 transition-transform duration-500",
-            isLoaded ? "opacity-100" : "opacity-0"
-          )}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: isLoaded ? 1 : 0 }}
+          transition={{
+            duration: isLowPower ? 0.3 : 0.7,
+            ease: [0.16, 1, 0.3, 1],
+          }}
+          className="relative z-20 h-full w-full object-cover transform-gpu group-hover/card:scale-105 transition-transform duration-500 ease-out will-change-[opacity,transform]"
         />
       )}
 
@@ -547,40 +549,42 @@ export const AnimatedMarqueeHero: React.FC<AnimatedMarqueeHeroProps> = ({
         {/* Universal edge gradient fades (zero compositor overhead, 100% reliable across all browsers & GPUs) */}
         <div className="pointer-events-none absolute inset-y-0 left-0 z-20 w-10 sm:w-16 md:w-28 bg-gradient-to-r from-gray-50 via-gray-50/80 to-transparent" />
         <div className="pointer-events-none absolute inset-y-0 right-0 z-20 w-10 sm:w-16 md:w-28 bg-gradient-to-l from-gray-50 via-gray-50/80 to-transparent" />
-        <AnimatePresence mode="wait">
-          {isEmpty ? (
-            <motion.div
-              key="empty"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: 0.45, ease: "easeOut" }}
-              className={cn("flex w-full items-center justify-center py-4", minHeightClass)}
-            >
-              {renderEmptyState()}
-            </motion.div>
-          ) : isPlaceholder ? (
-            <motion.div
-              key="placeholder"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.45, ease: "easeOut" }}
-            >
-              {renderSkeletonMarquee()}
-            </motion.div>
-          ) : (
-            <motion.div
-              key="hydrated"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.5, ease: "easeOut" }}
-            >
-              {renderHydratedMarquee()}
-            </motion.div>
-          )}
-        </AnimatePresence>
+        <div className="grid grid-cols-1 grid-rows-1 [&>*]:col-start-1 [&>*]:row-start-1">
+          <AnimatePresence>
+            {isEmpty ? (
+              <motion.div
+                key="empty"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.45, ease: "easeOut" }}
+                className={cn("flex w-full items-center justify-center py-4", minHeightClass)}
+              >
+                {renderEmptyState()}
+              </motion.div>
+            ) : isPlaceholder ? (
+              <motion.div
+                key="placeholder"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.5, ease: "easeOut" }}
+              >
+                {renderSkeletonMarquee()}
+              </motion.div>
+            ) : (
+              <motion.div
+                key="hydrated"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.5, ease: "easeOut" }}
+              >
+                {renderHydratedMarquee()}
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
       </div>
     </section>
   );
