@@ -65,7 +65,7 @@ async function main() {
                             email,
                             degreeId: degreeId,
                             batch: parseInt(batch, 10) || null,
-                            profileImage: "/uploads/engineer.png"
+                            profileImage: "/images/engineer.png"
                         }
                     },
                     statistics: {

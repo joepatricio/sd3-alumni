@@ -58,7 +58,7 @@ export function TopBar({
           <Link to="/" className="favi-alum">
             <div className="flex items-center gap-2">
               <img
-                src="/uploads/alumni-logo.jpg"
+                src="/images/alumni-logo.jpg"
                 alt="Alumni"
                 className="h-8 w-8 object-contain rounded"
               />

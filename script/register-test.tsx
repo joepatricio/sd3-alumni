@@ -48,7 +48,7 @@ for (let i = 0; i < USERS; i++) {
         batch: mockUser.batch,
         birthday: null,
         date_registered: new Date().toISOString(),
-        profileImage: "/uploads/engineer.png"
+        profileImage: "/images/engineer.png"
     })
 
 }

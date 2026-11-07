@@ -219,7 +219,17 @@ app.use(cors({
 }));
 app.use(express.json({ limit: '50mb' }));
 app.use(cookieParser());
-// Serve static uploads
+// Serve static images and uploads
+app.use('/images', express.static('images'));
+
+// Legacy fallback: Redirect static assets requested under /uploads to /images if they exist in /images
+app.use('/uploads', (req, res, next) => {
+    const staticFilePath = path.join(process.cwd(), 'images', req.path);
+    if (!req.path.startsWith('/upload-') && fs.existsSync(staticFilePath)) {
+        return res.redirect(`/images${req.path}`);
+    }
+    next();
+});
 app.use('/uploads', express.static('uploads'));
 
 const storage = multer.diskStorage({
@@ -462,7 +472,7 @@ app.post('/api/auth/register', authLimiter, async (req, res) => {
                             email,
                             degreeId: degreeId,
                             batch: parseInt(batch, 10) || null,
-                            profileImage: "/uploads/engineer.png",
+                            profileImage: "/images/engineer.png",
                             gender: gender
                         }
                     },
@@ -1912,7 +1922,7 @@ app.post('/api/admin/users', authenticateAdminToken, async (req, res) => {
                             email,
                             degreeId,
                             batch: batch ? parseInt(batch, 10) : null,
-                            profileImage: "/uploads/engineer.png",
+                            profileImage: "/images/engineer.png",
                             gender: gender || null
                         }
                     },
@@ -2240,6 +2250,54 @@ function filterModelFields(modelName, data) {
     }
     return filtered;
 }
+
+// Hero Showcase Images API
+app.get('/api/hero/images', async (req, res) => {
+    try {
+        const approvedAlbums = await prisma.heroGallery.findMany({
+            where: { blacklist: 'none' },
+            select: { albumId: true, sourceUrl: true }
+        });
+
+        if (!approvedAlbums || approvedAlbums.length === 0) {
+            return res.json({ success: true, count: 0, images: [] });
+        }
+
+        // Shuffle albums to get high variety across sessions
+        const shuffledAlbums = [...approvedAlbums].sort(() => 0.5 - Math.random());
+        const albumsBaseDir = path.resolve(process.cwd(), 'images', 'albums');
+        const sampledImages = [];
+
+        for (const album of shuffledAlbums) {
+            if (sampledImages.length >= 30) break;
+            const albumPath = path.join(albumsBaseDir, album.albumId);
+            if (!fs.existsSync(albumPath)) continue;
+
+            try {
+                const files = fs.readdirSync(albumPath).filter(f => /\.(jpg|jpeg|png|webp|avif)$/i.test(f));
+                if (files.length > 0) {
+                    const randomFile = files[Math.floor(Math.random() * files.length)];
+                    sampledImages.push({
+                        url: `/images/albums/${album.albumId}/${randomFile}`,
+                        albumId: album.albumId,
+                        sourceUrl: album.sourceUrl || null
+                    });
+                }
+            } catch (_err) {
+                // skip unreadable album folder
+            }
+        }
+
+        res.json({
+            success: true,
+            count: sampledImages.length,
+            images: sampledImages
+        });
+    } catch (e) {
+        console.error("Error in hero images endpoint:", e);
+        res.status(500).json({ success: false, error: "Internal server error" });
+    }
+});
 
 // Server Time API
 app.get('/api/server-time', async (req, res) => {

@@ -24,6 +24,7 @@ export interface ContentItem {
     id: string;
     title: string;
     author: string;
+    authorId?: string;
     date: string;
     type: 'Event' | 'Bulletin';
     status: string;
@@ -40,7 +41,7 @@ interface ContentTableRowProps {
     getCategoryClass: (category: string) => string;
     getStatusIndicator: (status: string) => React.ReactNode;
     handleStatusUpdate: (id: string, status: string, type: "Event" | "Bulletin") => void;
-    statusOptions: string[];
+    statusOptions: React.ReactNode;
     setEditingItem: (item: ContentItem) => void;
     loadCreateEventModal: () => Promise<unknown>;
     loadCreateBulletinModal: () => Promise<unknown>;
@@ -98,7 +99,7 @@ const ContentTableRow = memo(({
                     <span className={`w-2 h-2 rounded-full ${getStatusIndicator(item.status)}`}></span>
                     <select
                         value={item.status}
-                        onChange={(e) => handleStatusUpdate(item.id, e.target.value)}
+                        onChange={(e) => handleStatusUpdate(item.id, e.target.value, item.type)}
                         className="w-[120px] h-8 text-xs bg-white border border-gray-300 rounded px-2 focus:ring-1 focus:ring-brand-primary outline-none"
                     >
                         {statusOptions}
@@ -564,7 +565,7 @@ export function AdminContentTable({
                             <span className="text-sm text-gray-500 shrink-0">Date:</span>
                             <Select value={datePreset} onValueChange={(val: string) => {
                                 setDatePreset(val);
-                                if (val !== 'custom') applyQuickFilter(val);
+                                if (val !== 'custom') applyQuickFilter(val as any);
                             }}>
                                 <SelectTrigger className="w-[140px] h-10 bg-white text-gray-700 border border-gray-300 shrink-0">
                                     <SelectValue placeholder="Preset Dates" />

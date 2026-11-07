@@ -18,6 +18,7 @@ pyvenv.cfg
 # production
 /build
 /dist
+/images/albums/page*
 /prisma/generated/
 db.json
 *.db-shm

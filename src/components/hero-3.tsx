@@ -1,194 +1,566 @@
 "use client";
 
-import React from "react";
-import { motion } from "framer-motion";
-import { cn } from "@/lib/utils"; // Assuming you have a `cn` utility from shadcn
+import React, { useState, useEffect, useRef } from "react";
+import { Link } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
+import { ArrowRight, Sparkles, ExternalLink, ImageOff } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { AuroraBackground } from "@/components/hero-aura";
 
-// Props interface for the component
-interface AnimatedMarqueeHeroProps {
-  tagline: string;
-  title: React.ReactNode;
-  description: string;
-  ctaText: string;
-  images: string[];
-  className?: string;
+export interface HeroImageItem {
+  url: string;
+  albumId?: string;
+  sourceUrl?: string | null;
+  title?: string;
 }
 
-// Reusable Button component styled like in the image
-const ActionButton = ({ children }: { children: React.ReactNode }) => (
-  <motion.button
-    whileHover={{ scale: 1.05 }}
-    whileTap={{ scale: 0.95 }}
-    className="mt-8 px-8 py-3 rounded-full bg-red-500 text-white font-semibold shadow-lg transition-colors hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-400 focus:ring-opacity-75"
-  >
-    {children}
-  </motion.button>
-);
+export interface AnimatedMarqueeHeroProps {
+  badgeText?: string;
+  title?: React.ReactNode;
+  description?: React.ReactNode;
+  primaryCtaText?: string;
+  primaryCtaLink?: string;
+  secondaryCtaText?: string;
+  secondaryCtaLink?: string;
+  images?: (string | HeroImageItem)[];
+  singleRow?: boolean;
+  className?: string;
+  isLoading?: boolean;
+  emptyState?: React.ReactNode;
+}
 
-// The main hero component
-export const AnimatedMarqueeHero: React.FC<AnimatedMarqueeHeroProps> = ({
-  tagline,
-  title,
-  description,
-  ctaText,
-  images,
-  className,
-}) => {
-  // Animation variants for the text content
-  const FADE_IN_ANIMATION_VARIANTS = {
-    hidden: { opacity: 0, y: 10 },
-    show: { opacity: 1, y: 0, transition: { type: "spring" as const, stiffness: 100, damping: 20 } },
+/**
+ * Individual Marquee Card with double-buffered image loading and smooth cross-fade
+ */
+interface MarqueeCardProps {
+  item: HeroImageItem;
+  singleRow?: boolean;
+}
+
+const MarqueeCard: React.FC<MarqueeCardProps> = ({ item, singleRow }) => {
+  const [currentUrl, setCurrentUrl] = useState<string>(item.url);
+  const [prevUrl, setPrevUrl] = useState<string | null>(null);
+  const [isLoaded, setIsLoaded] = useState<boolean>(false);
+  const [hasError, setHasError] = useState<boolean>(false);
+  const imgRef = useRef<HTMLImageElement>(null);
+
+  // When item.url changes, preload and decode the new image in background
+  useEffect(() => {
+    if (item.url === currentUrl) return;
+
+    let isCurrent = true;
+    const preload = new Image();
+    preload.src = item.url;
+
+    const handleNewImageReady = async () => {
+      try {
+        if ("decode" in preload) await preload.decode();
+      } catch {
+        // decode fallback
+      }
+      if (!isCurrent) return;
+
+      // Keep existing image visible underneath while new image fades in on top
+      setPrevUrl(currentUrl);
+      setCurrentUrl(item.url);
+      setIsLoaded(false);
+
+      requestAnimationFrame(() => {
+        if (!isCurrent) return;
+        setIsLoaded(true);
+      });
+    };
+
+    if (preload.complete && preload.naturalWidth > 0) {
+      handleNewImageReady();
+    } else {
+      preload.onload = handleNewImageReady;
+      preload.onerror = () => {
+        if (!isCurrent) return;
+        setHasError(true);
+      };
+    }
+
+    return () => {
+      isCurrent = false;
+    };
+  }, [item.url, currentUrl]);
+
+  // Clean up prevUrl after cross-fade completes
+  useEffect(() => {
+    if (!prevUrl) return;
+    const timer = setTimeout(() => {
+      setPrevUrl(null);
+    }, 850);
+    return () => clearTimeout(timer);
+  }, [prevUrl]);
+
+  // DOM image onload and initial cache-check with decode()
+  const handleImageReady = async (e: React.SyntheticEvent<HTMLImageElement>) => {
+    const target = e.currentTarget;
+    try {
+      if ("decode" in target) {
+        await target.decode();
+      }
+    } catch {
+      // decode fallback
+    }
+    setIsLoaded(true);
+    setHasError(false);
   };
 
-  // Duplicate images for a seamless loop
-  const duplicatedImages = [...images, ...images];
+  useEffect(() => {
+    const domImg = imgRef.current;
+    if (!domImg) return;
+    if (domImg.complete && domImg.naturalWidth > 0) {
+      if ("decode" in domImg) {
+        domImg
+          .decode()
+          .then(() => setIsLoaded(true))
+          .catch(() => setIsLoaded(true));
+      } else {
+        setIsLoaded(true);
+      }
+    }
+  }, [currentUrl]);
+
+  const cardContent = (
+    <div
+      className={cn(
+        "group/card relative shrink-0 overflow-hidden rounded-2xl border border-gray-200/90 bg-gray-100 shadow-sm transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:border-brand-primary/40",
+        singleRow
+          ? "h-56 w-80 sm:h-64 sm:w-96 md:h-72 md:w-[28rem]"
+          : "h-44 w-64 sm:h-52 sm:w-76 md:h-56 md:w-84"
+      )}
+    >
+      {/* 1. Skeleton Shimmer (visible only when no image has loaded yet) */}
+      <AnimatePresence>
+        {!isLoaded && !prevUrl && !hasError && (
+          <motion.div
+            key="skeleton"
+            initial={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.5, ease: "easeOut" }}
+            className="absolute inset-0 z-0 pointer-events-none"
+          >
+            <div className="absolute inset-0 bg-gradient-to-tr from-gray-200/90 via-gray-100/70 to-gray-200/90 animate-pulse" />
+            <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/50 to-transparent animate-hero-shimmer" />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* 2. Previous Image Underlay (prevents popping when resource URL changes) */}
+      {prevUrl && (
+        <img
+          src={prevUrl}
+          alt=""
+          aria-hidden="true"
+          className="absolute inset-0 z-10 h-full w-full object-cover"
+        />
+      )}
+
+      {/* 3. Error Fallback */}
+      {hasError ? (
+        <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-gray-100 p-4 text-center">
+          <ImageOff className="h-8 w-8 text-gray-400 mb-1" />
+          <span className="text-xs font-medium text-gray-500">
+            {item.title || "Photo unavailable"}
+          </span>
+        </div>
+      ) : (
+        /* 4. Active Image (guaranteed decode before smooth fade-in) */
+        <motion.img
+          ref={imgRef}
+          key={currentUrl}
+          src={currentUrl}
+          alt={item.title || "Alumni moment"}
+          loading="eager"
+          onLoad={handleImageReady}
+          onError={() => {
+            setHasError(true);
+            setIsLoaded(false);
+          }}
+          initial={{ opacity: 0 }}
+          animate={{
+            opacity: isLoaded ? 1 : 0,
+          }}
+          transition={{
+            duration: 0.75,
+            ease: [0.25, 0.1, 0.25, 1],
+          }}
+          style={{ willChange: "opacity" }}
+          className="relative z-20 h-full w-full object-cover transition-transform duration-500 ease-out group-hover/card:scale-110"
+        />
+      )}
+
+      {/* Hover action overlay */}
+      {item.sourceUrl ? (
+        <div className="absolute inset-0 z-30 flex items-end bg-gradient-to-t from-black/80 via-black/20 to-transparent p-3 opacity-0 transition-opacity duration-300 group-hover/card:opacity-100">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-white/95 px-3 py-1 text-xs font-semibold text-gray-900 shadow-sm transition-colors hover:bg-white">
+            <ExternalLink className="h-3 w-3 text-brand-primary" />
+            <span>Original Album</span>
+          </span>
+        </div>
+      ) : (
+        <div className="absolute inset-0 z-30 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 transition-opacity duration-300 group-hover/card:opacity-100" />
+      )}
+    </div>
+  );
+
+  if (item.sourceUrl) {
+    return (
+      <a
+        href={item.sourceUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="focus:outline-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2 rounded-2xl block"
+        title="Open source album in new tab"
+      >
+        {cardContent}
+      </a>
+    );
+  }
+
+  return <div className="rounded-2xl">{cardContent}</div>;
+};
+
+/**
+ * Placeholder Skeleton Card matching live card dimensions
+ */
+const SkeletonCard: React.FC<{ singleRow?: boolean }> = ({ singleRow }) => (
+  <div
+    className={cn(
+      "relative shrink-0 overflow-hidden rounded-2xl border border-gray-200/80 bg-gray-100 shadow-xs",
+      singleRow
+        ? "h-56 w-80 sm:h-64 sm:w-96 md:h-72 md:w-[28rem]"
+        : "h-44 w-64 sm:h-52 sm:w-76 md:h-56 md:w-84"
+    )}
+  >
+    <div className="absolute inset-0 bg-gradient-to-tr from-gray-200/80 via-gray-100/60 to-gray-200/80 animate-pulse" />
+    <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/50 to-transparent animate-hero-shimmer" />
+    <div className="absolute bottom-3 left-3 flex items-center gap-1.5 rounded-full bg-white/80 px-3 py-1 shadow-xs backdrop-blur-xs">
+      <div className="h-3 w-3 rounded-full bg-gray-300/80 animate-pulse" />
+      <div className="h-2.5 w-16 rounded-full bg-gray-300/80 animate-pulse" />
+    </div>
+  </div>
+);
+
+export const AnimatedMarqueeHero: React.FC<AnimatedMarqueeHeroProps> = ({
+  badgeText = "",
+  title = "USJ-R SEA Alumni",
+  description = "Build lasting relationships, advance your career, and give back to the community that shaped your future.",
+  primaryCtaText = "Join the Community",
+  primaryCtaLink = "/login",
+  secondaryCtaText = "Learn More",
+  secondaryCtaLink = "/about",
+  images = [],
+  singleRow,
+  className,
+  isLoading,
+  emptyState,
+}) => {
+  const [isMounted, setIsMounted] = useState<boolean>(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  // Normalize items to HeroImageItem
+  const normalizedImages: HeroImageItem[] = images.map((img) =>
+    typeof img === "string" ? { url: img } : img
+  );
+
+  // Divide images across Row 1 and Row 2, or use single row
+  const mid = Math.ceil(normalizedImages.length / 2);
+  const row1 = singleRow ? normalizedImages : normalizedImages.slice(0, mid);
+  const row2 = singleRow ? [] : normalizedImages.slice(mid);
+
+  // Target a consistent number of visible items per marquee row
+  const targetItemsCount = singleRow ? 6 : 8;
+
+  const ensureMinItems = (arr: HeroImageItem[], min = targetItemsCount): HeroImageItem[] => {
+    if (arr.length === 0) return [];
+    let res = [...arr];
+    while (res.length < min) {
+      res = [...res, ...arr];
+    }
+    // Cap single row to avoid ballooning track length and causing faster linear translation
+    if (singleRow && res.length > min) {
+      res = res.slice(0, min);
+    }
+    return res;
+  };
+
+  const row1Items = ensureMinItems(row1.length > 0 ? row1 : normalizedImages, targetItemsCount);
+  const row2Items = !singleRow
+    ? ensureMinItems(row2.length > 0 ? row2 : normalizedImages, targetItemsCount)
+    : [];
+
+  // Duplicate for seamless infinite CSS translation (-50% transform)
+  const row1Loop = [...row1Items, ...row1Items];
+  const row2Loop = [...row2Items, ...row2Items];
+
+  // Dynamic animation duration based on card count so physical velocity (px/s) remains identical
+  const row1DurationDesktop = Math.max(25, (row1Items.length || targetItemsCount) * 6.5);
+  const row1DurationMobile = Math.max(30, (row1Items.length || targetItemsCount) * 8.5);
+
+  const row2DurationDesktop = Math.max(28, (row2Items.length || targetItemsCount) * 7.0);
+  const row2DurationMobile = Math.max(35, (row2Items.length || targetItemsCount) * 9.0);
+
+  // Determine active visual state
+  // 1. Placeholder: when explicitly loading or during initial mount before hydration
+  // 2. Empty: mounted, not loading, and images array is empty
+  // 3. Hydrated: mounted, not loading, and images array has items
+  const isPlaceholder = isLoading !== undefined ? isLoading : !isMounted && normalizedImages.length === 0;
+  const isEmpty = !isPlaceholder && normalizedImages.length === 0;
+
+  const minHeightClass = singleRow
+    ? "min-h-[224px] sm:min-h-[256px] md:min-h-[288px]"
+    : "min-h-[368px] sm:min-h-[440px] md:min-h-[472px]";
+
+  const renderSkeletonMarquee = () => {
+    const skeletonCount = targetItemsCount;
+    const skeletonItems = Array.from({ length: skeletonCount }, (_, i) => i);
+    const skeletonLoop = [...skeletonItems, ...skeletonItems];
+
+    return (
+      <div className="space-y-4 md:space-y-6">
+        {/* Row 1 Skeleton: Scrolling Left */}
+        <div className="marquee-row overflow-hidden">
+          <div className="flex w-max gap-4 sm:gap-6 animate-marquee-row1">
+            {skeletonLoop.map((_, idx) => (
+              <SkeletonCard key={`sk1-${idx}`} singleRow={singleRow} />
+            ))}
+          </div>
+        </div>
+
+        {/* Row 2 Skeleton: Scrolling Right */}
+        {!singleRow && (
+          <div className="marquee-row overflow-hidden">
+            <div className="flex w-max gap-4 sm:gap-6 animate-marquee-row2">
+              {skeletonLoop.map((_, idx) => (
+                <SkeletonCard key={`sk2-${idx}`} singleRow={singleRow} />
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  const renderEmptyState = () => {
+    if (emptyState) return emptyState;
+
+    return (
+      <div className="mx-auto flex w-full max-w-2xl flex-col items-center justify-center rounded-3xl border border-dashed border-brand-primary/25 bg-amber-50/40 p-8 text-center backdrop-blur-sm sm:p-12">
+        <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-brand-primary/10 text-brand-primary shadow-xs ring-1 ring-brand-primary/20">
+          <Sparkles className="h-7 w-7 text-brand-primary" />
+        </div>
+        <h3 className="text-lg font-bold text-gray-900 sm:text-xl">
+          Campus Moments Coming Soon
+        </h3>
+        <p className="mt-2 max-w-md text-sm text-gray-600 sm:text-base">
+          Our alumni community gallery is being updated with fresh photos and event highlights.
+        </p>
+      </div>
+    );
+  };
+
+  const renderHydratedMarquee = () => {
+    return (
+      <div className="space-y-4 md:space-y-6">
+        {/* Row 1: Scrolling Left */}
+        <div className="marquee-row overflow-hidden">
+          <div className="flex w-max gap-4 sm:gap-6 animate-marquee-row1">
+            {row1Loop.map((item, idx) => (
+              <MarqueeCard
+                key={`r1-${idx}`}
+                item={item}
+                singleRow={singleRow}
+              />
+            ))}
+          </div>
+        </div>
+
+        {/* Row 2: Scrolling Right (rendered if not singleRow) */}
+        {!singleRow && (
+          <div className="marquee-row overflow-hidden">
+            <div className="flex w-max gap-4 sm:gap-6 animate-marquee-row2">
+              {row2Loop.map((item, idx) => (
+                <MarqueeCard
+                  key={`r2-${idx}`}
+                  item={item}
+                  singleRow={singleRow}
+                />
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  };
 
   return (
     <section
       className={cn(
-        "relative w-full h-screen overflow-hidden bg-background flex flex-col items-center justify-center text-center px-4",
+        "relative w-full overflow-x-clip bg-gradient-to-b from-gray-50/70 via-white to-gray-50/40 py-16 md:py-24",
         className
       )}
     >
-      <div className="z-10 flex flex-col items-center">
-        {/* Tagline */}
-        <motion.div
-          initial="hidden"
-          animate="show"
-          variants={FADE_IN_ANIMATION_VARIANTS}
-          className="mb-4 inline-block rounded-full border border-border bg-card/50 px-4 py-1.5 text-sm font-medium text-muted-foreground backdrop-blur-sm"
-        >
-          {tagline}
-        </motion.div>
+      <style>{`
+        @keyframes marquee-scroll-left {
+          0% { transform: translateX(0%); }
+          100% { transform: translateX(-50%); }
+        }
+        @keyframes marquee-scroll-right {
+          0% { transform: translateX(-50%); }
+          100% { transform: translateX(0%); }
+        }
+        @keyframes hero-shimmer {
+          0% { transform: translateX(-100%); }
+          100% { transform: translateX(100%); }
+        }
+        .animate-hero-shimmer {
+          animation: hero-shimmer 2.2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+        }
+        .animate-marquee-row1 {
+          animation: marquee-scroll-left var(--duration-row1-mobile, 45s) linear infinite;
+        }
+        .animate-marquee-row2 {
+          animation: marquee-scroll-right var(--duration-row2-mobile, 48s) linear infinite;
+        }
+        @media (min-width: 768px) {
+          .animate-marquee-row1 {
+            animation-duration: var(--duration-row1-desktop, 35s);
+          }
+          .animate-marquee-row2 {
+            animation-duration: var(--duration-row2-desktop, 38s);
+          }
+        }
+        .marquee-row:hover .animate-marquee-row1,
+        .marquee-row:hover .animate-marquee-row2 {
+          animation-play-state: paused;
+        }
+      `}</style>
+
+      {/* Aurora Ambient Background Effect */}
+      <AuroraBackground className="!overflow-x-clip" blobContainerClassName="!overflow-x-clip" />
+
+      <div className="relative z-10 mx-auto flex max-w-5xl flex-col items-center px-4 text-center sm:px-6">
+        {/* University Badge */}
+        {badgeText && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4 }}
+            className="mb-5 inline-flex items-center gap-2 rounded-full border border-brand-primary/25 bg-amber-50/80 px-4 py-1.5 text-xs font-semibold uppercase tracking-wider text-brand-primary backdrop-blur-sm md:text-sm"
+          >
+            <span className="relative flex h-2 w-2">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-brand-primary opacity-75" />
+              <span className="relative inline-flex h-2 w-2 rounded-full bg-brand-primary" />
+            </span>
+            <span>{badgeText}</span>
+          </motion.div>
+        )}
 
         {/* Main Title */}
         <motion.h1
-          initial="hidden"
-          animate="show"
-          variants={{
-            hidden: {},
-            show: {
-              transition: {
-                staggerChildren: 0.1,
-              },
-            },
-          }}
-          className="text-5xl md:text-7xl font-bold tracking-tighter text-foreground"
+          initial={{ opacity: 0, y: 15 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.1 }}
+          className="text-4xl font-extrabold tracking-tight text-gray-900 sm:text-5xl md:text-6xl"
         >
-          {typeof title === 'string' ? (
-            title.split(" ").map((word, i) => (
-              <motion.span
-                key={i}
-                variants={FADE_IN_ANIMATION_VARIANTS}
-                className="inline-block"
-              >
-                {word}&nbsp;
-              </motion.span>
-            ))
-          ) : (
-            title
-          )}
+          {title}
         </motion.h1>
 
         {/* Description */}
         <motion.p
-          initial="hidden"
-          animate="show"
-          variants={FADE_IN_ANIMATION_VARIANTS}
-          transition={{ delay: 0.5 }}
-          className="mt-6 max-w-xl text-lg text-muted-foreground"
+          initial={{ opacity: 0, y: 15 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.2 }}
+          className="mt-5 max-w-2xl text-base text-gray-600 sm:text-lg md:text-xl"
         >
           {description}
         </motion.p>
 
-        {/* Call to Action Button */}
+        {/* Call to Action Buttons */}
         <motion.div
-          initial="hidden"
-          animate="show"
-          variants={FADE_IN_ANIMATION_VARIANTS}
-          transition={{ delay: 0.6 }}
+          initial={{ opacity: 0, y: 15 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.3 }}
+          className="mt-8 flex flex-wrap items-center justify-center gap-4 sm:mt-10"
         >
-          <ActionButton>{ctaText}</ActionButton>
+          <Link
+            to={primaryCtaLink}
+            className="group inline-flex items-center gap-2.5 rounded-full bg-brand-primary px-8 py-3.5 text-base font-semibold text-white shadow-lg shadow-brand-primary/25 transition-all duration-200 hover:bg-brand-primary-hover hover:shadow-xl hover:shadow-brand-primary/35 active:scale-95"
+          >
+            <span>{primaryCtaText}</span>
+            <ArrowRight className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-1" />
+          </Link>
+
+          <Link
+            to={secondaryCtaLink}
+            className="group inline-flex items-center gap-2.5 rounded-full border-2 border-brand-secondary bg-white/90 px-8 py-3.5 text-base font-semibold text-brand-secondary shadow-sm transition-all duration-200 hover:bg-brand-secondary hover:text-white active:scale-95"
+          >
+            <span>{secondaryCtaText}</span>
+            <Sparkles className="h-4 w-4 text-brand-accent transition-transform duration-200 group-hover:rotate-12" />
+          </Link>
         </motion.div>
       </div>
 
-      {/* Animated Image Marquee */}
-      <div className="absolute bottom-0 left-0 w-full h-1/3 md:h-2/5 [mask-image:linear-gradient(to_bottom,transparent,black_20%,black_80%,transparent)]">
-        <motion.div
-          className="flex gap-4"
-          animate={{
-            x: ["-100%", "0%"],
-            transition: {
-              ease: "linear",
-              duration: 40,
-              repeat: Infinity,
-            },
-          }}
-        >
-          {duplicatedImages.map((src, index) => (
-            <div
-              key={index}
-              className="relative aspect-[3/4] h-48 md:h-64 flex-shrink-0"
-              style={{
-                rotate: `${(index % 2 === 0 ? -2 : 5)}deg`,
-              }}
+      {/* Showcase area with smooth state transitions */}
+      <div
+        className={cn(
+          "relative mt-12 w-full overflow-hidden md:mt-16",
+          "[mask-image:linear-gradient(to_right,transparent,black_10%,black_90%,transparent)]",
+          minHeightClass
+        )}
+        style={
+          {
+            "--duration-row1-desktop": `${row1DurationDesktop}s`,
+            "--duration-row1-mobile": `${row1DurationMobile}s`,
+            "--duration-row2-desktop": `${row2DurationDesktop}s`,
+            "--duration-row2-mobile": `${row2DurationMobile}s`,
+          } as React.CSSProperties
+        }
+      >
+        <AnimatePresence mode="wait">
+          {isEmpty ? (
+            <motion.div
+              key="empty"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.45, ease: "easeOut" }}
+              className={cn("flex w-full items-center justify-center py-4", minHeightClass)}
             >
-              <img
-                src={src}
-                alt={`Showcase image ${index + 1}`}
-                className="w-full h-full object-cover rounded-2xl shadow-md"
-              />
-            </div>
-          ))}
-        </motion.div>
+              {renderEmptyState()}
+            </motion.div>
+          ) : isPlaceholder ? (
+            <motion.div
+              key="placeholder"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.45, ease: "easeOut" }}
+            >
+              {renderSkeletonMarquee()}
+            </motion.div>
+          ) : (
+            <motion.div
+              key="hydrated"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.5, ease: "easeOut" }}
+            >
+              {renderHydratedMarquee()}
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </section>
   );
 };
 
-/*
-Implementation example
-demo.tsx
-import { AnimatedMarqueeHero } from "@/components/ui/hero-3";
-
-// A list of sample image URLs for the demo
-const DEMO_IMAGES = [
-  "https://cdn.21st.dev/assets/mirror/9c/9c0892e59c262cc1da34c88d977221da3f36aaef35ede7924d66b80c219be979.jpg",
-  "https://cdn.21st.dev/assets/mirror/cb/cb5e5ebf2a894b2cd0e47b41b1fc76a3021ca1e2d2164e68aedca123cd33144f.jpg",
-  "https://cdn.21st.dev/assets/mirror/98/989f6e3fb1763ee781695ca8471c7b5c34ee8162b73cb966a692df7183434dd6.jpg",
-  "https://cdn.21st.dev/assets/mirror/d4/d42e2bf7d2616d0f8b7133f77efbc40bfbd042fbe5dd5e2ae3bb0b0cd5bf0b00.jpg",
-  "https://cdn.21st.dev/assets/mirror/34/34ec840fc286ece83ac48705cb38c8b7bfae31022d3869530edad1e1b1305933.jpg",
-  "https://cdn.21st.dev/assets/mirror/3a/3ad7469aaf0ee239cd4a79d5cbd089e88ee36def81eff12b76288139985a8bea.jpg",
-  "https://cdn.21st.dev/assets/mirror/82/82d335fc097e30d74dc1b664327e735c0c2c01f807575623c72e2379f3bb3ae6.jpg",
-  "https://cdn.21st.dev/assets/mirror/d5/d55bd9d62a8a40170fdb1bab434888bb28c9f11cf7d20bd6dcbe3befe8077abe.jpg",
-  "https://cdn.21st.dev/assets/mirror/9c/9c0892e59c262cc1da34c88d977221da3f36aaef35ede7924d66b80c219be979.jpg",
-  "https://cdn.21st.dev/assets/mirror/cb/cb5e5ebf2a894b2cd0e47b41b1fc76a3021ca1e2d2164e68aedca123cd33144f.jpg",
-  "https://cdn.21st.dev/assets/mirror/98/989f6e3fb1763ee781695ca8471c7b5c34ee8162b73cb966a692df7183434dd6.jpg",
-  "https://cdn.21st.dev/assets/mirror/d4/d42e2bf7d2616d0f8b7133f77efbc40bfbd042fbe5dd5e2ae3bb0b0cd5bf0b00.jpg",
-  "https://cdn.21st.dev/assets/mirror/34/34ec840fc286ece83ac48705cb38c8b7bfae31022d3869530edad1e1b1305933.jpg",
-  "https://cdn.21st.dev/assets/mirror/3a/3ad7469aaf0ee239cd4a79d5cbd089e88ee36def81eff12b76288139985a8bea.jpg",
-  "https://cdn.21st.dev/assets/mirror/82/82d335fc097e30d74dc1b664327e735c0c2c01f807575623c72e2379f3bb3ae6.jpg",
-  "https://cdn.21st.dev/assets/mirror/d5/d55bd9d62a8a40170fdb1bab434888bb28c9f11cf7d20bd6dcbe3befe8077abe.jpg",
-];
-
-const AnimatedHeroDemo = () => {
-  return (
-    <AnimatedMarqueeHero
-      tagline="Join over 100,000 happy creators"
-      title={
-        <>
-          Engage Audiences
-          <br />
-          with Stunning Videos
-        </>
-      }
-      description="Boost Your Brand with High-Impact Short Videos from our expert content creators. Our team is ready to propel your business forward."
-      ctaText="Get Started"
-      images={DEMO_IMAGES}
-    />
-  );
-};
-
-export default AnimatedHeroDemo;
-```
-*/
+export default AnimatedMarqueeHero;

@@ -354,3 +354,13 @@ model ClefLog {
   decision        String   // 'Approved', 'Rejected', 'Review'
   createdAt       DateTime @default(now())
 }
+
+
+model HeroGallery {
+  id        String   @id @default(uuid())
+  albumId   String   @unique
+  blacklist String   @default("none") // "empty", "lowres", "portrait", "pubmat", "none"
+  sourceUrl String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}

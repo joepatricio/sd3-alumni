@@ -3,7 +3,7 @@ import { Search, Users, Loader2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { api, unwrapListResponse, type DegreeData, type AlumniCard, type ProfileData } from '@/app/views/api';
-import { AuroraHero } from '@/components/hero-textgradient';
+import { AuroraHero } from '@/components/hero-aura';
 
 const ITEMS_PER_PAGE = 12;
 const ALUMNI_DIRECTORY_FILTERS_KEY = 'alumni_directory_filters';

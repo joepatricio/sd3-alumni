@@ -924,7 +924,7 @@ async function onSubmit(values: z.infer<typeof formSchema>) {
     // Prisma allows nested create via relation: `location: { create: { ... } }` or just sending locationId. 
     // For simplicity and since we don't have the exact backend mapping for nested creations without seeing it,
     // we'll format the values exactly as they are in the schema and let the backend handle it, or send it directly.
-    const finalImage = values.image || previewUrl || '/uploads/alumni-logo.jpg';
+    const finalImage = values.image || previewUrl || '/images/alumni-logo.jpg';
     const payload: Record<string, unknown> = {
         title: values.title,
         description: values.description,

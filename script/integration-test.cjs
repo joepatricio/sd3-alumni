@@ -101,7 +101,7 @@ function main() {
             testerIds.push(testerId);
 
             insertUser.run(testerId, activeUserStatus.id, publicProfileStatus.id);
-            insertProfile.run(testerId, `Tester User ${i}`, 'Tester', degree.id, 2026, '/uploads/engineer.png');
+            insertProfile.run(testerId, `Tester User ${i}`, 'Tester', degree.id, 2026, '/images/engineer.png');
             insertStats.run(testerId, now);
         }
     })();
