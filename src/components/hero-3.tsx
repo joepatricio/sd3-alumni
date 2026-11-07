@@ -96,17 +96,43 @@ const MarqueeCard: React.FC<MarqueeCardProps> = ({ item, singleRow }) => {
     return () => clearTimeout(timer);
   }, [prevUrl]);
 
-  // DOM image onload and initial cache-check
-  const handleImageReady = () => {
-    setIsLoaded(true);
-    setHasError(false);
+  // DOM image onload and initial cache-check with guaranteed hardware decode
+  const handleImageReady = async (e: React.SyntheticEvent<HTMLImageElement>) => {
+    const target = e.currentTarget;
+    try {
+      if ("decode" in target) {
+        await target.decode();
+      }
+    } catch {
+      // decode fallback
+    }
+    requestAnimationFrame(() => {
+      setIsLoaded(true);
+      setHasError(false);
+    });
   };
 
   useEffect(() => {
     const domImg = imgRef.current;
     if (!domImg) return;
     if (domImg.complete && domImg.naturalWidth > 0) {
-      setIsLoaded(true);
+      if ("decode" in domImg) {
+        domImg
+          .decode()
+          .then(() => {
+            requestAnimationFrame(() => {
+              setIsLoaded(true);
+              setHasError(false);
+            });
+          })
+          .catch(() => {
+            setIsLoaded(true);
+          });
+      } else {
+        requestAnimationFrame(() => {
+          setIsLoaded(true);
+        });
+      }
     }
   }, [currentUrl]);
 
@@ -154,21 +180,22 @@ const MarqueeCard: React.FC<MarqueeCardProps> = ({ item, singleRow }) => {
           </span>
         </div>
       ) : (
-        /* 4. Active Image (eager loading for continuous marquee with async decoding) */
+        /* 4. Active Image (eager loading, hardware decoded before opacity transition) */
         <img
           ref={imgRef}
           key={currentUrl}
           src={currentUrl}
           alt={item.title || "Alumni moment"}
           loading="eager"
-          decoding="async"
+          decoding="sync"
           onLoad={handleImageReady}
           onError={() => {
             setHasError(true);
             setIsLoaded(false);
           }}
+          style={{ willChange: "opacity" }}
           className={cn(
-            "relative z-20 h-full w-full object-cover transition-opacity duration-500 ease-out",
+            "relative z-20 h-full w-full object-cover transition-opacity duration-700 ease-out",
             "transform-gpu group-hover/card:scale-105 transition-transform duration-500",
             isLoaded ? "opacity-100" : "opacity-0"
           )}
