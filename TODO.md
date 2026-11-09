@@ -2,6 +2,7 @@
 
 * Bulletin likes maybe? Schema is already in place. It just needs to be implemented in the views.
 * Maybe implement email stuff...
+* Simplify the management of content state by adding fields for isHidden and isCatalogued
 * Specific albums instead of generic links to FB groups
 * Read-only clefLogs tab for admins
 * Happy path for Admin Dashboard
