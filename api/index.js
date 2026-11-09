@@ -234,6 +234,7 @@ const imagesDir = fs.existsSync(path.resolve(process.cwd(), 'images'))
 app.use('/images', express.static(imagesDir));
 
 // Legacy fallback: Redirect static assets requested under /uploads to /images if they exist in /images
+// Bruh idk probably safe to remove
 app.use('/uploads', (req, res, next) => {
     const staticFilePath = path.join(imagesDir, req.path);
     if (!req.path.startsWith('/upload-') && fs.existsSync(staticFilePath)) {

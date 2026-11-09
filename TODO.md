@@ -1,6 +1,7 @@
 ## Nice to have (optional features)
 
 * Bulletin likes maybe? Schema is already in place. It just needs to be implemented in the views.
+* Maybe implement email stuff...
 * Specific albums instead of generic links to FB groups
 * Read-only clefLogs tab for admins
 * Happy path for Admin Dashboard

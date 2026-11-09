@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, lazy, Suspense } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import {
     Calendar,
@@ -19,8 +19,8 @@ import {
 } from 'lucide-react';
 import { CreateEventModal, type EventModalInitialData } from '@components/user/CreateEventModal';
 import { PublicGuestListModal } from '@components/user/PublicGuestListModal';
-import { FullGuestListModal } from '@components/user/FullGuestListModal';
-import { Analytics } from '@components/admin/Analytics';
+const Analytics = lazy(() => import('@components/admin/Analytics').then(m => ({ default: m.Analytics })));
+const FullGuestListModal = lazy(() => import('@components/user/FullGuestListModal').then(m => ({ default: m.FullGuestListModal })));
 import { Button } from '@components/ui/button';
 import { Badge } from '@components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@components/ui/avatar';
@@ -663,25 +663,34 @@ export function EventDetail() {
 
                 {/* RSVP Analytics for author view and in admin preview */}
                 {(isAuthor || isAdminPreview) && (
-                    <Analytics
-                        guestList={enrichedGuestList}
-                        title="RSVP Analytics"
-                        description="Visual distribution of attendee degree programs, generational cohorts, and profile privacy preferences."
-                        headerExtra={
-                            <FullGuestListModal
-                                guestList={enrichedGuestList}
-                                currentUserId={session?.userId ? String(session.userId) : null}
-                                friendIds={friendIds}
-                                eventTitle={eventData.title}
-                                trigger={
-                                    <Button variant="outline" size="sm" className="gap-1.5 text-xs font-semibold text-brand-primary border-brand-primary hover:bg-brand-primary hover:text-white transition-colors">
-                                        <Users className="w-3.5 h-3.5" />
-                                        View Guest List
-                                    </Button>
-                                }
-                            />
+                    <Suspense
+                        fallback={
+                            <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-8 flex flex-col items-center justify-center min-h-[300px]">
+                                <Loader2 className="w-8 h-8 text-brand-primary animate-spin mb-2" />
+                                <p className="text-sm text-gray-500 font-medium">Loading RSVP Analytics...</p>
+                            </div>
                         }
-                    />
+                    >
+                        <Analytics
+                            guestList={enrichedGuestList}
+                            title="RSVP Analytics"
+                            description="Visual distribution of attendee degree programs, generational cohorts, and profile privacy preferences."
+                            headerExtra={
+                                <FullGuestListModal
+                                    guestList={enrichedGuestList}
+                                    currentUserId={session?.userId ? String(session.userId) : null}
+                                    friendIds={friendIds}
+                                    eventTitle={eventData.title}
+                                    trigger={
+                                        <Button variant="outline" size="sm" className="gap-1.5 text-xs font-semibold text-brand-primary border-brand-primary hover:bg-brand-primary hover:text-white transition-colors">
+                                            <Users className="w-3.5 h-3.5" />
+                                            View Guest List
+                                        </Button>
+                                    }
+                                />
+                            }
+                        />
+                    </Suspense>
                 )}
             </main>
         </div>
