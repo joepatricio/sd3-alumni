@@ -1270,13 +1270,18 @@ async function resolveBulletinData(body, isUpdate = false, req = null) {
 const handleAdminUpdateEventStatus = async (req, res) => {
     try {
         const { id } = req.params;
-        const { status } = req.body;
+        const { status, adminNotes } = req.body;
 
         const effectiveAdminId = getAdminId(req);
+        const additionalData = {};
+        if (adminNotes !== undefined) {
+            additionalData.adminNotes = adminNotes ? adminNotes.trim() : null;
+        }
         const updatedEvent = await updateEventStatusAndStats({
             eventId: id,
             newStatusName: status,
-            adminId: effectiveAdminId
+            adminId: effectiveAdminId,
+            additionalData
         });
         if (!updatedEvent) return res.status(404).json({ error: 'Event not found' });
 
@@ -1557,13 +1562,18 @@ async function updateBulletinStatusAndStats({ bulletinId, newStatusName, adminId
 // Admin Update Bulletin Status
 const handleAdminUpdateBulletinStatus = async (req, res) => {
     const { id } = req.params;
-    const { status } = req.body;
+    const { status, adminNotes } = req.body;
     try {
         const effectiveAdminId = getAdminId(req);
+        const additionalData = {};
+        if (adminNotes !== undefined) {
+            additionalData.adminNotes = adminNotes ? adminNotes.trim() : null;
+        }
         const updatedBulletin = await updateBulletinStatusAndStats({
             bulletinId: id,
             newStatusName: status,
-            adminId: effectiveAdminId
+            adminId: effectiveAdminId,
+            additionalData
         });
         if (!updatedBulletin) return res.status(404).json({ error: 'Bulletin not found' });
 
@@ -2157,11 +2167,11 @@ const defaultIncludes = {
     profile: { degree: true, user: true },
     user: { profile: { include: { degree: true } }, userStatus: true, profileStatus: true, records: { include: { userStatus: true, admin: { select: { id: true, username: true } } }, orderBy: { dateCreated: 'desc' } } },
     bulletin: { comments: { include: { user: { include: { profile: true } }, likesList: true } }, status: true, category: true, author: { include: { profile: true, userStatus: true } }, likes: true, admin: true },
-    event: { location: true, rsvps: true, status: true, category: true, author: { include: { profile: true, userStatus: true } }, admin: true },
+    event: { location: true, rsvps: { include: { user: { include: { profile: { include: { degree: true } }, userStatus: true, profileStatus: true } } } }, status: true, category: true, author: { include: { profile: true, userStatus: true } }, admin: true },
     userConnection: { status: true, user: { include: { profile: { include: { degree: true } } } }, friend: { include: { profile: { include: { degree: true } } } } },
     comment: { user: { include: { profile: true } }, bulletin: true, likesList: true },
     userAchievement: { achievement: true },
-    userRsvp: { event: true },
+    userRsvp: { event: true, user: { include: { profile: { include: { degree: true } }, userStatus: true, profileStatus: true } } },
     donation: { status: true, user: { select: { profile: { select: { userName: true } } } } },
     userAuth: {
         user: {
@@ -2220,11 +2230,15 @@ function formatOutput(modelName, data) {
                 });
             }
         }
-        if (modelName === 'event' && item.status) {
-            item.eventStatus = item.status;
-            delete item.status;
-            item.eventCategory = item.category;
-            delete item.category;
+        if (modelName === 'event') {
+            if (item.status) {
+                item.eventStatus = item.status;
+                delete item.status;
+            }
+            if (item.category) {
+                item.eventCategory = item.category;
+                delete item.category;
+            }
             if (item.rsvps) {
                 item.userRsvps = item.rsvps;
                 delete item.rsvps;
@@ -2534,6 +2548,10 @@ app.get('/api/:table', async (req, res, next) => {
                 } else if (modelName === 'event') {
                     if (f === 'eventCategory') f = 'category';
                     else if (f === 'eventStatus') f = 'status';
+                    else if (f === 'userRsvps' || f === 'userrsvps' || f === 'userRsvp' || f === 'userrsvp') f = 'rsvps';
+                } else if (modelName === 'userRsvp') {
+                    if (f === 'users') f = 'user';
+                    else if (f === 'events') f = 'event';
                 } else if (modelName === 'user') {
                     if (f.toLowerCase() === 'user_achievement' || f.toLowerCase() === 'userachievement' || f.toLowerCase() === 'userachievements') {
                         f = 'achievements';
@@ -2635,6 +2653,10 @@ app.get('/api/:table/:id', async (req, res, next) => {
                 } else if (modelName === 'event') {
                     if (f === 'eventCategory') f = 'category';
                     else if (f === 'eventStatus') f = 'status';
+                    else if (f === 'userRsvps' || f === 'userrsvps' || f === 'userRsvp' || f === 'userrsvp') f = 'rsvps';
+                } else if (modelName === 'userRsvp') {
+                    if (f === 'users') f = 'user';
+                    else if (f === 'events') f = 'event';
                 } else if (modelName === 'user') {
                     if (f.toLowerCase() === 'user_achievement' || f.toLowerCase() === 'userachievement' || f.toLowerCase() === 'userachievements') {
                         f = 'achievements';

@@ -57,6 +57,7 @@ export function BulletinDetail() {
     const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
     const [editedCommentText, setEditedCommentText] = useState('');
     const [isAdmin, setIsAdmin] = useState(false);
+    const [authorUser, setAuthorUser] = useState<{ id: string | number; userStatus?: { statusName?: string } } | null>(null);
 
     const fetchComments = async () => {
         try {
@@ -100,8 +101,11 @@ export function BulletinDetail() {
                     setBulletinStatus(statusName);
 
                     const authorUserId = bulletinData.profile?.userId || bulletinData.author?.profile?.userId || bulletinData.authorId || bulletinData.author?.id;
-                    const authorUser = (allUsers as Array<{ id: string | number; userStatus?: { statusName?: string } }>).find(u => String(u.id) === String(authorUserId)) || bulletinData.author;
-                    if (!isPreview && authorUser && authorUser.userStatus?.statusName === 'Banned') {
+                    const foundAuthor = (allUsers as Array<{ id: string | number; userStatus?: { statusName?: string } }>).find(u => String(u.id) === String(authorUserId)) || bulletinData.author;
+                    if (foundAuthor) {
+                        setAuthorUser(foundAuthor);
+                    }
+                    if (!isPreview && foundAuthor && foundAuthor.userStatus?.statusName === 'Banned') {
                         setBulletin(null);
                         setLoading(false);
                         return;
@@ -159,6 +163,7 @@ export function BulletinDetail() {
     const effectiveStatus = bulletin?.contentStatus?.statusName || bulletinStatus;
     const isValidStatus = ['Approved'].includes(effectiveStatus);
     const isHidden = ['Archived'].includes(effectiveStatus);
+    const isAuthorEditable = isAuthor && !['Suspended', 'Deactivated', 'Banned'].includes(authorUser?.userStatus?.statusName || '') && effectiveStatus !== 'Archived';
 
     if (!bulletin || (!isValidStatus && !isAdminPreview && !isAuthor) || isHidden) {
         return <NotFound />;
@@ -319,6 +324,16 @@ export function BulletinDetail() {
                     </p>
                 </div>
             )}
+            {(isAuthor || isAdminPreview) && (
+                <div className="bg-amber-50 px-4 py-3 border-b border-amber-200 text-center flex items-center justify-center gap-2">
+                    <Info className="w-4 h-4 text-amber-800 shrink-0" />
+                    <p className="text-amber-800 font-medium text-sm">
+                        {bulletin.adminNotes && bulletin.adminNotes.trim()
+                            ? `Administrative note: ${bulletin.adminNotes.trim()}`
+                            : "The admin did not provide a reason for this decision."}
+                    </p>
+                </div>
+            )}
 
             {/* Back Button and Edit Button */}
             <div className="max-w-4xl mx-auto px-4 md:px-8 pt-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -332,15 +347,17 @@ export function BulletinDetail() {
 
                 {isLoggedIn && (session?.userId === bulletin.authorId) && (
                     <div className="flex flex-wrap items-center gap-2">
-                        <CreateBulletinModal
-                            trigger={
-                                <Button variant="outline" className="gap-2 text-brand-primary border-brand-primary hover:bg-brand-primary hover:text-white transition-colors">
-                                    <Edit className="w-4 h-4" />
-                                    Edit Bulletin
-                                </Button>
-                            }
-                            initialData={bulletin as unknown as BulletinModalInitialData}
-                        />
+                        {isAuthorEditable && (
+                            <CreateBulletinModal
+                                trigger={
+                                    <Button variant="outline" className="gap-2 text-brand-primary border-brand-primary hover:bg-brand-primary hover:text-white transition-colors">
+                                        <Edit className="w-4 h-4" />
+                                        Edit Bulletin
+                                    </Button>
+                                }
+                                initialData={bulletin as unknown as BulletinModalInitialData}
+                            />
+                        )}
 
                         <AlertDialog>
                             <AlertDialogTrigger asChild>

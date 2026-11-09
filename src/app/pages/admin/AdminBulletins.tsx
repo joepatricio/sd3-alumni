@@ -89,19 +89,21 @@ export function AdminBulletins() {
             isOfficial: b.author?.userStatus?.statusName === 'Official',
             isBanned: b.author?.userStatus?.statusName === 'Banned',
             isSuspended: b.author?.userStatus?.statusName === 'Suspended',
-            rawDate: new Date(b.bulletinDate).getTime()
+            isDeactivated: b.author?.userStatus?.statusName === 'Deactivated',
+            rawDate: new Date(b.bulletinDate).getTime(),
+            adminNotes: b.adminNotes ?? null
         }));
 
         return { data: mappedBulletins, total };
     };
 
-    const handleStatusChange = async (id: string, newStatus: string) => {
+    const handleStatusChange = async (id: string, newStatus: string, adminNotes?: string | null) => {
         try {
             // Get the old bulletin to check previous status and author
             await api.get(`/bulletins/${id}`);
 
             // Patch status
-            await api.patch(`/admin/bulletins/${id}/status`, { status: newStatus });
+            await api.patch(`/admin/bulletins/${id}/status`, { status: newStatus, adminNotes });
 
 
         } catch (err) {

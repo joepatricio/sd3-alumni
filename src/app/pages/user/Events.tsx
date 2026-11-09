@@ -94,9 +94,6 @@ export function Events() {
                 ]);
 
                 const allUsers = unwrapListResponse<User>(usersRes).items;
-                const restricted = allUsers
-                    .filter((u: User) => u.userStatus?.statusName === 'Banned' || u.userStatus?.statusName === 'Suspended')
-                    .map((u: User) => String(u.id));
 
                 if (session?.userId) {
                     const currentU = allUsers.find((u: User) => String(u.id) === String(session.userId));
@@ -109,10 +106,6 @@ export function Events() {
                     status: { statusName: 'Approved' },
                     author: { userStatus: { statusName: { ne: 'Banned' } } }
                 };
-
-                if (restricted.length > 0) {
-                    whereClause.authorId = { notIn: restricted };
-                }
 
                 if (selectedCategories.length > 0) {
                     whereClause.category = { eventCategoryName: { in: selectedCategories } };

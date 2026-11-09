@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import {
     Calendar,
@@ -14,9 +14,13 @@ import {
     Loader2,
     Info,
     Trash2,
-    Ban
+    Ban,
+    Users
 } from 'lucide-react';
 import { CreateEventModal, type EventModalInitialData } from '@components/user/CreateEventModal';
+import { PublicGuestListModal } from '@components/user/PublicGuestListModal';
+import { FullGuestListModal } from '@components/user/FullGuestListModal';
+import { Analytics } from '@components/admin/Analytics';
 import { Button } from '@components/ui/button';
 import { Badge } from '@components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@components/ui/avatar';
@@ -44,6 +48,9 @@ export function EventDetail() {
 
     const [eventData, setEventData] = useState<EventData | null>(null);
     const [organizer, setOrganizer] = useState<ProfileData | null>(null);
+    const [authorUser, setAuthorUser] = useState<{ id: string; userStatus?: { statusName?: string } } | null>(null);
+    const [allUsers, setAllUsers] = useState<any[]>([]);
+    const [friendIds, setFriendIds] = useState<Set<string>>(new Set());
     const [loading, setLoading] = useState(true);
     const [rsvpLoading, setRsvpLoading] = useState(false);
     const [isAdmin, setIsAdmin] = useState(false);
@@ -53,7 +60,7 @@ export function EventDetail() {
             try {
                 const isPreview = location.pathname.includes('/admin/preview');
                 const [eventRes, usersRes, adminRes] = await Promise.all([
-                    api.get(`/events/${id}?_embed=userRsvps`),
+                    api.get(`/events/${id}`),
                     api.get('/users'),
                     isPreview ? api.get('/auth/admin/me').catch(() => null) : Promise.resolve(null)
                 ]);
@@ -61,14 +68,13 @@ export function EventDetail() {
                     setIsAdmin(true);
                 }
                 const event = eventRes.data;
-                const allUsers = Array.isArray(usersRes.data) ? usersRes.data : (usersRes.data?.data || []);
+                const usersList = Array.isArray(usersRes.data) ? usersRes.data : (usersRes.data?.data || []);
+                setAllUsers(usersList);
 
                 if (event?.authorId) {
-                    const authorUser = allUsers.find((u: { id: string; userStatus?: { statusName?: string } }) => String(u.id) === String(event.authorId));
-                    if (!isPreview && authorUser && authorUser.userStatus?.statusName === 'Banned') {
-                        setEventData(null);
-                        setLoading(false);
-                        return;
+                    const foundAuthor = event.author || usersList.find((u: { id: string; userStatus?: { statusName?: string } }) => String(u.id) === String(event.authorId));
+                    if (foundAuthor) {
+                        setAuthorUser(foundAuthor);
                     }
 
                     const profRes = await api.get(`/profiles?userId=${event.authorId}`);
@@ -88,6 +94,47 @@ export function EventDetail() {
         fetchEventAndOrganizer();
     }, [id]);
 
+    // Fetch friend connections for privacy check ("friends who aren't Private")
+    useEffect(() => {
+        if (!session?.userId) {
+            setFriendIds(new Set());
+            return;
+        }
+
+        const fetchFriends = async () => {
+            try {
+                const [res1, res2] = await Promise.all([
+                    api.get('/userConnections', { params: { 'userId': session.userId, 'status.connectionName': 'Accepted' } }).catch(() => ({ data: [] })),
+                    api.get('/userConnections', { params: { 'friendId': session.userId, 'status.connectionName': 'Accepted' } }).catch(() => ({ data: [] }))
+                ]);
+                const c1 = unwrapListResponse<{ userId?: string; friendId?: string }>(res1).items;
+                const c2 = unwrapListResponse<{ userId?: string; friendId?: string }>(res2).items;
+                const fSet = new Set<string>();
+                c1.forEach(c => { if (c.friendId) fSet.add(String(c.friendId)); });
+                c2.forEach(c => { if (c.userId) fSet.add(String(c.userId)); });
+                setFriendIds(fSet);
+            } catch (err) {
+                console.error("Failed to fetch friends for privacy filter:", err);
+            }
+        };
+        fetchFriends();
+    }, [session?.userId]);
+
+    const userMap = useMemo(() => {
+        const map = new Map<string, any>();
+        allUsers.forEach(u => {
+            if (u?.id) map.set(String(u.id), u);
+        });
+        return map;
+    }, [allUsers]);
+
+    const enrichedGuestList = useMemo(() => {
+        return (eventData?.userRsvps || []).map((rsvp: any) => ({
+            ...rsvp,
+            user: rsvp.user || userMap.get(String(rsvp.userId))
+        }));
+    }, [eventData?.userRsvps, userMap]);
+
     if (loading) {
         return (
             <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center">
@@ -99,14 +146,30 @@ export function EventDetail() {
 
     const isPreview = location.pathname.includes('/admin/preview');
     const isAdminPreview = isPreview || (location.pathname.includes('/admin/preview') && isAdmin);
-    const isAuthor = session?.userId && String(session.userId) === String(eventData?.authorId);
+    const isAuthor = Boolean(session?.userId && String(session.userId) === String(eventData?.authorId));
 
     const currentStatusName = eventData?.eventStatus?.statusName || "";
     const effectiveStatusName = isPreview ? "Approved" : currentStatusName;
-    const isHidden = currentStatusName === "Archived";
+    const authorIsBanned = authorUser?.userStatus?.statusName === 'Banned';
+    const isAuthorEditable = isAuthor && !['Suspended', 'Deactivated', 'Banned'].includes(authorUser?.userStatus?.statusName || '') && !['Concluded', 'Archived'].includes(currentStatusName);
 
-    if (!eventData || isHidden || (["Rejected", "Pending"].includes(currentStatusName) && !(isAdminPreview || isAuthor))) {
+    if (!eventData) {
         return <NotFound />;
+    }
+
+    if (!isAdminPreview) {
+        if (currentStatusName === "Archived") {
+            return <NotFound />;
+        }
+
+        if (!isAuthor) {
+            if (authorIsBanned) {
+                return <NotFound />;
+            }
+            if (!['Approved', 'Concluded', 'Cancelled'].includes(currentStatusName)) {
+                return <NotFound />;
+            }
+        }
     }
 
     const isPastEvent = new Date(eventData.eventDate) < new Date() || effectiveStatusName === 'Concluded';
@@ -167,10 +230,15 @@ export function EventDetail() {
                     await api.patch(`/events/${eventData.id}`, { responses: newResponsesCount });
                 }
 
+                const createdRsvp = {
+                    ...res.data,
+                    user: res.data.user || userMap.get(String(session.userId))
+                };
+
                 setEventData(prev => prev ? {
                     ...prev,
                     responses: newResponsesCount,
-                    userRsvps: [...(prev.userRsvps || []), res.data]
+                    userRsvps: [...(prev.userRsvps || []), createdRsvp]
                 } : null);
             }
         } catch (error) {
@@ -274,6 +342,16 @@ export function EventDetail() {
                     </p>
                 </div>
             )}
+            {(isAuthor || isAdminPreview) && (
+                <div className="bg-amber-50 px-4 py-3 border-b border-amber-200 text-center flex items-center justify-center gap-2">
+                    <Info className="w-4 h-4 text-amber-800 shrink-0" />
+                    <p className="text-amber-800 font-medium text-sm">
+                        {eventData.adminNotes && eventData.adminNotes.trim()
+                            ? `Administrative note: ${eventData.adminNotes.trim()}`
+                            : "Reviewing admin did not provide any additional notes or feedback."}
+                    </p>
+                </div>
+            )}
             {/* Header / Nav */}
             <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <Link
@@ -287,62 +365,60 @@ export function EventDetail() {
                 <div className="flex flex-wrap items-center gap-2">
                     {isLoggedIn && isAuthor && (
                         <>
-                            {currentStatusName !== "Concluded" && (
+                            {isAuthorEditable && (
+                                <CreateEventModal
+                                    trigger={
+                                        <Button variant="outline" className="gap-2 text-brand-primary border-brand-primary hover:bg-brand-primary hover:text-white transition-colors">
+                                            <Edit className="w-4 h-4" />
+                                            Edit Event
+                                        </Button>
+                                    }
+                                    initialData={eventData as EventModalInitialData}
+                                />
+                            )}
+                            {currentStatusName !== "Concluded" && currentStatusName !== "Cancelled" && (
                                 <>
-                                    <CreateEventModal
-                                        trigger={
-                                            <Button variant="outline" className="gap-2 text-brand-primary border-brand-primary hover:bg-brand-primary hover:text-white transition-colors">
-                                                <Edit className="w-4 h-4" />
-                                                Edit Event
+                                    <AlertDialog>
+                                        <AlertDialogTrigger asChild>
+                                            <Button variant="outline" className="gap-2 text-yellow-600 border-yellow-600 hover:bg-yellow-600 hover:text-white transition-colors">
+                                                <Ban className="w-4 h-4" />
+                                                Cancel Event
                                             </Button>
-                                        }
-                                        initialData={eventData as EventModalInitialData}
-                                    />
-                                    {currentStatusName !== "Cancelled" && (
-                                        <>
-                                            <AlertDialog>
-                                                <AlertDialogTrigger asChild>
-                                                    <Button variant="outline" className="gap-2 text-yellow-600 border-yellow-600 hover:bg-yellow-600 hover:text-white transition-colors">
-                                                        <Ban className="w-4 h-4" />
-                                                        Cancel Event
-                                                    </Button>
-                                                </AlertDialogTrigger>
-                                                <AlertDialogContent>
-                                                    <AlertDialogHeader>
-                                                        <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                                                        <AlertDialogDescription>
-                                                            This will cancel the event. It will still be visible, but RSVPs will be disabled.
-                                                        </AlertDialogDescription>
-                                                    </AlertDialogHeader>
-                                                    <AlertDialogFooter>
-                                                        <AlertDialogCancel>Go Back</AlertDialogCancel>
-                                                        <AlertDialogAction onClick={() => handleStatusChange('Cancelled')} className="bg-yellow-600 hover:bg-yellow-700">Yes, Cancel Event</AlertDialogAction>
-                                                    </AlertDialogFooter>
-                                                </AlertDialogContent>
-                                            </AlertDialog>
+                                        </AlertDialogTrigger>
+                                        <AlertDialogContent>
+                                            <AlertDialogHeader>
+                                                <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                                                <AlertDialogDescription>
+                                                    This will cancel the event. It will still be visible, but RSVPs will be disabled.
+                                                </AlertDialogDescription>
+                                            </AlertDialogHeader>
+                                            <AlertDialogFooter>
+                                                <AlertDialogCancel>Go Back</AlertDialogCancel>
+                                                <AlertDialogAction onClick={() => handleStatusChange('Cancelled')} className="bg-yellow-600 hover:bg-yellow-700">Yes, Cancel Event</AlertDialogAction>
+                                            </AlertDialogFooter>
+                                        </AlertDialogContent>
+                                    </AlertDialog>
 
-                                            <AlertDialog>
-                                                <AlertDialogTrigger asChild>
-                                                    <Button variant="outline" className="gap-2 text-brand-primary border-brand-primary hover:bg-brand-primary hover:text-white transition-colors">
-                                                        <CheckCircle2 className="w-4 h-4" />
-                                                        Conclude Event
-                                                    </Button>
-                                                </AlertDialogTrigger>
-                                                <AlertDialogContent>
-                                                    <AlertDialogHeader>
-                                                        <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                                                        <AlertDialogDescription>
-                                                            This will conclude the event. This action cannot be undone.
-                                                        </AlertDialogDescription>
-                                                    </AlertDialogHeader>
-                                                    <AlertDialogFooter>
-                                                        <AlertDialogCancel>Go Back</AlertDialogCancel>
-                                                        <AlertDialogAction onClick={handleConcludeEvent} className="bg-yellow-600 hover:bg-yellow-700">Yes, Conclude Event</AlertDialogAction>
-                                                    </AlertDialogFooter>
-                                                </AlertDialogContent>
-                                            </AlertDialog>
-                                        </>
-                                    )}
+                                    <AlertDialog>
+                                        <AlertDialogTrigger asChild>
+                                            <Button variant="outline" className="gap-2 text-brand-primary border-brand-primary hover:bg-brand-primary hover:text-white transition-colors">
+                                                <CheckCircle2 className="w-4 h-4" />
+                                                Conclude Event
+                                            </Button>
+                                        </AlertDialogTrigger>
+                                        <AlertDialogContent>
+                                            <AlertDialogHeader>
+                                                <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                                                <AlertDialogDescription>
+                                                    This will conclude the event. This action cannot be undone.
+                                                </AlertDialogDescription>
+                                            </AlertDialogHeader>
+                                            <AlertDialogFooter>
+                                                <AlertDialogCancel>Go Back</AlertDialogCancel>
+                                                <AlertDialogAction onClick={handleConcludeEvent} className="bg-yellow-600 hover:bg-yellow-700">Yes, Conclude Event</AlertDialogAction>
+                                            </AlertDialogFooter>
+                                        </AlertDialogContent>
+                                    </AlertDialog>
                                 </>
                             )}
 
@@ -371,7 +447,7 @@ export function EventDetail() {
                 </div>
             </div>
 
-            <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                     {/* Left Column: Main Content */}
@@ -512,16 +588,27 @@ export function EventDetail() {
                                 </div>
                             )}
 
-                            {(isLoggedIn || isAdminPreview) && (
-                                <>
-                                    <div className="border-t border-gray-100 pt-6">
-                                        <div className="flex items-center justify-between mb-2">
-                                            <span className="text-gray-600 font-medium">Responses</span>
-                                            <span className="text-brand-primary font-bold">{goingResponsesCount} Going</span>
-                                        </div>
-                                    </div>
-                                </>
-                            )}
+                            <div className="border-t border-gray-100 pt-6 space-y-4">
+                                <div className="flex items-center justify-between">
+                                    <span className="text-gray-600 font-medium">Responses</span>
+                                    <span className="text-brand-primary font-bold">{goingResponsesCount} Going</span>
+                                </div>
+                                <PublicGuestListModal
+                                    guestList={enrichedGuestList}
+                                    currentUserId={session?.userId ? String(session.userId) : null}
+                                    friendIds={friendIds}
+                                    eventTitle={eventData.title}
+                                    trigger={
+                                        <Button
+                                            variant="outline"
+                                            className="w-full gap-2 border-gray-200 text-gray-700 hover:bg-gray-50 hover:text-brand-primary font-medium"
+                                        >
+                                            <Users className="w-4 h-4 text-brand-primary" />
+                                            View Guest List
+                                        </Button>
+                                    }
+                                />
+                            </div>
                         </div>
 
                         {/* Organizer Info */}
@@ -571,6 +658,29 @@ export function EventDetail() {
                         )}
                     </div>
                 </div>
+
+                {/* RSVP Analytics for author view and in admin preview */}
+                {(isAuthor || isAdminPreview) && (
+                    <Analytics
+                        guestList={enrichedGuestList}
+                        title="RSVP Analytics"
+                        description="Visual distribution of attendee degree programs, generational cohorts, and profile privacy preferences."
+                        headerExtra={
+                            <FullGuestListModal
+                                guestList={enrichedGuestList}
+                                currentUserId={session?.userId ? String(session.userId) : null}
+                                friendIds={friendIds}
+                                eventTitle={eventData.title}
+                                trigger={
+                                    <Button variant="outline" size="sm" className="gap-1.5 text-xs font-semibold text-brand-primary border-brand-primary hover:bg-brand-primary hover:text-white transition-colors">
+                                        <Users className="w-3.5 h-3.5" />
+                                        View Guest List
+                                    </Button>
+                                }
+                            />
+                        }
+                    />
+                )}
             </main>
         </div>
     );

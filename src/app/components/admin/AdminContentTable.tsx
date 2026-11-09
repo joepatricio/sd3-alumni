@@ -3,9 +3,13 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@comp
 import { Button } from '@components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@components/ui/tabs';
 import { Input } from '@components/ui/input';
-import { ArrowUp, ArrowDown, ArrowUpDown, Ban, ChevronLeft, ChevronRight, Search, Eye, FileText, HardHat, Lock } from 'lucide-react';
+import { ArrowUp, ArrowDown, ArrowUpDown, Ban, ChevronLeft, ChevronRight, Search, Eye, FileText, HardHat, Lock, UserX } from 'lucide-react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@components/ui/select';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@components/ui/dialog';
+import { Label } from '@components/ui/label';
+import { Textarea } from '@components/ui/textarea';
+import { toast } from 'sonner';
 import { getCategoryColor, formatDate } from '@/app/views/formatters';
 import { startOfWeek, endOfWeek, startOfMonth, endOfMonth, startOfYear, endOfYear, format } from 'date-fns';
 
@@ -17,7 +21,7 @@ const CreateEventModal = lazy(loadCreateEventModal);
 
 const loadCreateBulletinModal = () => import('@components/user/CreateBulletinModal').then(m => ({ default: m.CreateBulletinModal }));
 const CreateBulletinModal = lazy(loadCreateBulletinModal);
-export const ACCOUNT_SCOPES = ['All', 'Regular', 'Official', 'Suspended', 'Banned'] as const;
+export const ACCOUNT_SCOPES = ['All', 'Regular', 'Official', 'Suspended', 'Banned', 'Deactivated'] as const;
 export type AccountScope = typeof ACCOUNT_SCOPES[number];
 
 export interface ContentItem {
@@ -34,96 +38,179 @@ export interface ContentItem {
     isOfficial: boolean;
     isBanned: boolean;
     isSuspended: boolean;
+    isDeactivated?: boolean;
+    adminNotes?: string | null;
+}
+
+interface ContentAction {
+    label: string;
+    targetStatus: string;
+    colorClass: string;
+}
+
+export function getContentActions(status: string, type: 'Event' | 'Bulletin'): ContentAction[] {
+    if (type === 'Event') {
+        switch (status) {
+            case 'Pending':
+                return [
+                    { label: 'Approve', targetStatus: 'Approved', colorClass: 'text-green-700 border-green-300 hover:bg-green-50' },
+                    { label: 'Reject', targetStatus: 'Rejected', colorClass: 'text-red-600 border-red-200 hover:bg-red-50' },
+                    { label: 'Archive', targetStatus: 'Archived', colorClass: 'text-gray-600 border-gray-200 hover:bg-gray-100' },
+                ];
+            case 'Approved':
+                return [
+                    { label: 'Reset', targetStatus: 'Pending', colorClass: 'text-blue-600 border-blue-200 hover:bg-blue-50' },
+                    { label: 'Conclude', targetStatus: 'Concluded', colorClass: 'text-indigo-600 border-indigo-200 hover:bg-indigo-50' },
+                    { label: 'Archive', targetStatus: 'Archived', colorClass: 'text-gray-600 border-gray-200 hover:bg-gray-100' },
+                ];
+            case 'Rejected':
+            case 'Cancelled':
+            case 'Concluded':
+                return [
+                    { label: 'Reset', targetStatus: 'Pending', colorClass: 'text-blue-600 border-blue-200 hover:bg-blue-50' },
+                    { label: 'Archive', targetStatus: 'Archived', colorClass: 'text-gray-600 border-gray-200 hover:bg-gray-100' },
+                ];
+            case 'Archived':
+            default:
+                return [
+                    { label: 'Reset', targetStatus: 'Pending', colorClass: 'text-blue-600 border-blue-200 hover:bg-blue-50' },
+                ];
+        }
+    } else {
+        // Bulletin
+        switch (status) {
+            case 'Pending':
+            case 'Flagged':
+                return [
+                    { label: 'Approve', targetStatus: 'Approved', colorClass: 'text-green-700 border-green-300 hover:bg-green-50' },
+                    { label: 'Reject', targetStatus: 'Rejected', colorClass: 'text-red-600 border-red-200 hover:bg-red-50' },
+                    { label: 'Archive', targetStatus: 'Archived', colorClass: 'text-gray-600 border-gray-200 hover:bg-gray-100' },
+                ];
+            case 'Approved':
+            case 'Rejected':
+                return [
+                    { label: 'Reset', targetStatus: 'Pending', colorClass: 'text-blue-600 border-blue-200 hover:bg-blue-50' },
+                    { label: 'Archive', targetStatus: 'Archived', colorClass: 'text-gray-600 border-gray-200 hover:bg-gray-100' },
+                ];
+            case 'Archived':
+            default:
+                return [
+                    { label: 'Reset', targetStatus: 'Pending', colorClass: 'text-blue-600 border-blue-200 hover:bg-blue-50' },
+                ];
+        }
+    }
 }
 
 interface ContentTableRowProps {
     item: ContentItem;
     getCategoryClass: (category: string) => string;
-    getStatusIndicator: (status: string) => React.ReactNode;
-    handleStatusUpdate: (id: string, status: string, type: "Event" | "Bulletin") => void;
-    statusOptions: React.ReactNode;
+    getStatusClass: (status: string) => string;
+    openStatusModal: (item: ContentItem, targetStatus: string) => void;
     setEditingItem: (item: ContentItem) => void;
     loadCreateEventModal: () => Promise<unknown>;
     loadCreateBulletinModal: () => Promise<unknown>;
 }
 
 const ContentTableRow = memo(({
-
     item,
     getCategoryClass,
-    getStatusIndicator,
-    handleStatusUpdate,
-    statusOptions,
+    getStatusClass,
+    openStatusModal,
     setEditingItem,
     loadCreateEventModal,
     loadCreateBulletinModal
-}: ContentTableRowProps) => (
-    <tr className="border-t">
-        <td className="px-6 py-4">
-            <div className="font-semibold text-gray-900 flex items-center gap-2">
-                <Link to={`/${item.type === 'Bulletin' ? 'bulletin' : 'events'}/${item.id}`} className="text-gray-900 hover:text-brand-primary hover:underline">
-                    {item.title}
-                </Link>
-                <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold ${getCategoryClass(item.category)}`}>{item.category}</span>
-                <Link to={`/admin/preview/${item.type === 'Bulletin' ? 'bulletin' : 'event'}/${item.id}`} className="text-gray-400 hover:text-brand-primary" title="Preview as Approved">
-                    <Eye className="w-4 h-4" />
-                </Link>
-            </div>
-            <div className="text-xs text-gray-500 line-clamp-1 max-w-sm">{item.description}</div>
-        </td>
-        <td className="px-6 py-4">
-            <div className="flex items-center gap-2">
-                {item.isOfficial && <HardHat className="w-4 h-4 text-brand-primary" />}
-                {item.isBanned && (
-                    <span title="Banned User">
-                        <Ban className="w-4 h-4 text-red-600" />
-                    </span>
-                )}
-                {item.isSuspended && (
-                    <span title="Suspended User">
-                        <Lock className="w-4 h-4 text-yellow-600" />
-                    </span>
-                )}
-                <span>{item.author}</span>
-                {item.authorId ? (
-                    <Link to={`/admin/preview/user/${item.authorId}`} className="text-gray-400 hover:text-brand-primary" title="Preview Profile">
-                        <Eye className="w-4 h-4" />
-                    </Link>
-                ) : null}
-            </div>
-        </td>
-        <td className="px-6 py-4">{formatDate(item.date, 'long')}</td>
-        <td className="px-6 py-4">
-            <div className="flex gap-2 justify-center">
-                <div className="flex items-center gap-2">
-                    <span className={`w-2 h-2 rounded-full ${getStatusIndicator(item.status)}`}></span>
-                    <select
-                        value={item.status}
-                        onChange={(e) => handleStatusUpdate(item.id, e.target.value, item.type)}
-                        className="w-[120px] h-8 text-xs bg-white border border-gray-300 rounded px-2 focus:ring-1 focus:ring-brand-primary outline-none"
+}: ContentTableRowProps) => {
+    const actions = getContentActions(item.status, item.type);
+
+    return (
+        <tr className="border-t">
+            <td className="px-6 py-4 w-96 max-w-md">
+                <div className="flex items-center justify-between gap-2 min-w-0">
+                    <Link
+                        to={`/${item.type === 'Bulletin' ? 'bulletin' : 'events'}/${item.id}`}
+                        className="text-gray-900 hover:text-brand-primary hover:underline font-semibold truncate flex-1 min-w-0"
+                        title={item.title}
                     >
-                        {statusOptions}
-                    </select>
+                        {item.title}
+                    </Link>
+                    <div className="flex items-center gap-2 shrink-0 ml-auto">
+                        <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold shrink-0 ${getCategoryClass(item.category)}`}>
+                            {item.category}
+                        </span>
+                        <Link
+                            to={`/admin/preview/${item.type === 'Bulletin' ? 'bulletin' : 'event'}/${item.id}`}
+                            className="text-gray-400 hover:text-brand-primary shrink-0"
+                            title="Preview as Approved"
+                        >
+                            <Eye className="w-4 h-4" />
+                        </Link>
+                    </div>
                 </div>
-                <button
-                    className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors hover:bg-gray-200 h-8 px-3"
-                    onMouseEnter={() => {
-                        if (item.type === 'Event') loadCreateEventModal();
-                        else if (item.type === 'Bulletin') loadCreateBulletinModal();
-                    }}
-                    onFocus={() => {
-                        if (item.type === 'Event') loadCreateEventModal();
-                        else if (item.type === 'Bulletin') loadCreateBulletinModal();
-                    }}
-                    onClick={() => setEditingItem(item)}
-                >
-                    <FileText className="w-4 h-4 mr-1" />
-                    Edit
-                </button>
-            </div>
-        </td>
-    </tr>
-));
+                <div className="text-xs text-gray-500 truncate" title={item.description || ''}>{item.description}</div>
+            </td>
+            <td className="px-6 py-4 w-48 max-w-[200px]">
+                <div className="flex items-center gap-2 min-w-0">
+                    {item.isOfficial && <HardHat className="w-4 h-4 text-brand-primary shrink-0" />}
+                    {item.isBanned && (
+                        <span title="Banned User" className="shrink-0">
+                            <Ban className="w-4 h-4 text-red-600" />
+                        </span>
+                    )}
+                    {item.isSuspended && (
+                        <span title="Suspended User" className="shrink-0">
+                            <Lock className="w-4 h-4 text-yellow-600" />
+                        </span>
+                    )}
+                    {item.isDeactivated && (
+                        <span title="Deactivated User" className="shrink-0">
+                            <UserX className="w-4 h-4 text-gray-500" />
+                        </span>
+                    )}
+                    <span className="truncate" title={item.author}>{item.author}</span>
+                    {item.authorId ? (
+                        <Link to={`/admin/preview/user/${item.authorId}`} className="text-gray-400 hover:text-brand-primary shrink-0" title="Preview Profile">
+                            <Eye className="w-4 h-4" />
+                        </Link>
+                    ) : null}
+                </div>
+            </td>
+            <td className="px-6 py-4 whitespace-nowrap">{formatDate(item.date, 'long')}</td>
+            <td className="px-6 py-4">
+                <div className="flex items-center gap-1.5 whitespace-nowrap">
+                    <span className={`inline-flex items-center justify-center text-center rounded-full border w-[4.5rem] px-2 py-0.5 text-xs font-semibold mr-1 shrink-0 ${getStatusClass(item.status)}`}>
+                        {item.status}
+                    </span>
+
+                    {actions.map((act) => (
+                        <button
+                            key={act.label}
+                            className={`inline-flex items-center justify-center rounded-md text-xs font-medium transition-colors border h-8 px-2.5 shrink-0 ${act.colorClass}`}
+                            onClick={() => openStatusModal(item, act.targetStatus)}
+                        >
+                            {act.label}
+                        </button>
+                    ))}
+
+                    <button
+                        className="ml-auto shrink-0 inline-flex items-center justify-center rounded-md text-xs font-medium transition-colors hover:bg-gray-200 h-8 px-2.5 border border-gray-200 text-gray-700"
+                        onMouseEnter={() => {
+                            if (item.type === 'Event') loadCreateEventModal();
+                            else if (item.type === 'Bulletin') loadCreateBulletinModal();
+                        }}
+                        onFocus={() => {
+                            if (item.type === 'Event') loadCreateEventModal();
+                            else if (item.type === 'Bulletin') loadCreateBulletinModal();
+                        }}
+                        onClick={() => setEditingItem(item)}
+                    >
+                        <FileText className="w-3.5 h-3.5 mr-1" />
+                        Edit
+                    </button>
+                </div>
+            </td>
+        </tr>
+    );
+});
 ContentTableRow.displayName = 'ContentTableRow';
 
 
@@ -149,7 +236,7 @@ interface AdminContentTableProps {
     statuses?: string[];
     assignableStatuses?: string[];
     categories?: string[];
-    onStatusChange?: (id: string, newStatus: string) => void | Promise<void>;
+    onStatusChange?: (id: string, newStatus: string, adminNotes?: string | null) => void | Promise<void>;
 }
 
 export function AdminContentTable({
@@ -168,6 +255,37 @@ export function AdminContentTable({
     const [totalItems, setTotalItems] = useState(0);
     const [isLoading, setIsLoading] = useState(false);
     const [editingItem, setEditingItem] = useState<ContentItem | null>(null);
+
+    // Status Change Modal State
+    const [statusModalItem, setStatusModalItem] = useState<ContentItem | null>(null);
+    const [statusModalTarget, setStatusModalTarget] = useState<string>('');
+    const [statusModalNote, setStatusModalNote] = useState<string>('');
+
+    const openStatusModal = useCallback((item: ContentItem, targetStatus: string) => {
+        setStatusModalItem(item);
+        setStatusModalTarget(targetStatus);
+        setStatusModalNote(item.adminNotes || '');
+    }, []);
+
+    const handleSaveStatusModal = async () => {
+        if (!statusModalItem) return;
+        const noteToSend = statusModalNote.trim() ? statusModalNote.trim() : null;
+        try {
+            if (onStatusChange) {
+                await onStatusChange(statusModalItem.id, statusModalTarget, noteToSend);
+            }
+            setData(prev => prev.map(item => item.id === statusModalItem.id ? {
+                ...item,
+                status: statusModalTarget,
+                adminNotes: noteToSend
+            } : item));
+            toast.success(`${contentType} status updated to ${statusModalTarget}`);
+            setStatusModalItem(null);
+        } catch (err) {
+            console.error("Failed to update status", err);
+            toast.error("Failed to update status");
+        }
+    };
 
 
     const [searchParams, setSearchParams] = useSearchParams();
@@ -296,17 +414,6 @@ export function AdminContentTable({
         setCurrentPage(1);
     };
 
-    const handleStatusUpdate = useCallback(async (id: string, newStatus: string) => {
-        if (onStatusChange) {
-            try {
-                await onStatusChange(id, newStatus);
-                setData(prev => prev.map(item => item.id === id ? { ...item, status: newStatus } : item));
-            } catch (err) {
-                console.error("Failed to update status", err);
-            }
-        }
-    }, [onStatusChange]);
-
     const handleExportCSV = () => {
         const headers = ['Title', 'Author', 'Date', 'Type', 'Status'];
         const csvContent = data.map(c =>
@@ -389,21 +496,6 @@ export function AdminContentTable({
         }
     }
 
-    const getStatusIndicator = useCallback((status: string) => {
-        switch (status) {
-            case "All": return 'bg-gray-400';
-            case "For Review": return 'bg-amber-500';
-            case "Pending": return 'bg-yellow-400';
-            case "Approved": return 'bg-green-500';
-            case "Rejected": return 'bg-red-500';
-            case "Cancelled": return 'bg-gray-500';
-            case "Archived": return 'bg-slate-500';
-            case "Concluded": return 'bg-blue-500';
-            case "Flagged": return 'bg-orange-500';
-            default: return 'bg-gray-400';
-        }
-    }, []);
-
     const getCategoryClass = useCallback((category: string) => {
         if (category === "All" || category === "For Review" || category === "Pending" || category === "Approved" || category === "Rejected" || category === "Cancelled" || category === "Archived" || category === "Concluded") {
             return getStatusClass(category);
@@ -413,13 +505,9 @@ export function AdminContentTable({
         return getCategoryColor(category);
     }, []);
 
-    const statusOptions = useMemo(() => {
+    const modalStatusOptions = useMemo(() => {
         const list = assignableStatuses || statuses;
-        return list
-            .filter(s => s !== "All" && s !== "For Review")
-            .map(s => (
-                <option key={s} value={s}>{s}</option>
-            ));
+        return list.filter(s => s !== "All" && s !== "For Review");
     }, [assignableStatuses, statuses]);
 
     const renderTable = () => {
@@ -472,19 +560,18 @@ export function AdminContentTable({
                     <table className="w-full text-sm text-left">
                         <thead className="bg-gray-50 text-gray-700">
                             <tr>
-                                <th className="px-6 py-3 cursor-pointer hover:bg-gray-100 transition-colors" onClick={() => handleSort('title')}>
+                                <th className="w-96 max-w-md px-6 py-3 cursor-pointer hover:bg-gray-100 transition-colors" onClick={() => handleSort('title')}>
                                     <div className="flex items-center gap-1">Title {renderSortIcon('title')}</div>
                                 </th>
-                                <th className="px-6 py-3 cursor-pointer hover:bg-gray-100 transition-colors" onClick={() => handleSort('author')}>
+                                <th className="w-48 max-w-[200px] px-6 py-3 cursor-pointer hover:bg-gray-100 transition-colors" onClick={() => handleSort('author')}>
                                     <div className="flex items-center gap-1">Author {renderSortIcon('author')}</div>
                                 </th>
-                                <th className="px-6 py-3 cursor-pointer hover:bg-gray-100 transition-colors" onClick={() => handleSort('date')}>
+                                <th className="w-44 px-6 py-3 whitespace-nowrap cursor-pointer hover:bg-gray-100 transition-colors" onClick={() => handleSort('date')}>
                                     <div className="flex items-center gap-1">
                                         {contentType === 'Event' ? 'Event Date' : 'Date Submitted'}{renderSortIcon('date')}
                                     </div>
                                 </th>
-                                {/* <th className="px-9 py-3 ">Quick Actions</th> */}
-                                <th className="px-9 py-3">Actions</th>
+                                <th className="px-6 py-3">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -493,9 +580,8 @@ export function AdminContentTable({
                                     key={item.id}
                                     item={item}
                                     getCategoryClass={getCategoryClass}
-                                    getStatusIndicator={getStatusIndicator}
-                                    handleStatusUpdate={handleStatusUpdate}
-                                    statusOptions={statusOptions}
+                                    getStatusClass={getStatusClass}
+                                    openStatusModal={openStatusModal}
                                     setEditingItem={setEditingItem}
                                     loadCreateEventModal={loadCreateEventModal}
                                     loadCreateBulletinModal={loadCreateBulletinModal}
@@ -651,6 +737,7 @@ export function AdminContentTable({
                                             {scope === 'Official' && <HardHat className={`w-3.5 h-3.5 mr-1 ${isSelected ? 'text-white' : 'text-brand-primary'}`} />}
                                             {scope === 'Suspended' && <Lock className={`w-3.5 h-3.5 mr-1 ${isSelected ? 'text-white' : 'text-yellow-600'}`} />}
                                             {scope === 'Banned' && <Ban className={`w-3.5 h-3.5 mr-1 ${isSelected ? 'text-white' : 'text-red-600'}`} />}
+                                            {scope === 'Deactivated' && <UserX className={`w-3.5 h-3.5 mr-1 ${isSelected ? 'text-white' : 'text-gray-500'}`} />}
                                             {scope}
                                         </Button>
                                     );
@@ -737,6 +824,54 @@ export function AdminContentTable({
                     ))
                 }
             </Tabs >
+
+            {/* Status Change / Decision Modal */}
+            <Dialog open={!!statusModalItem} onOpenChange={(open) => !open && setStatusModalItem(null)}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Update Status: {statusModalItem?.title}</DialogTitle>
+                        <DialogDescription>
+                            Update {contentType.toLowerCase()} status and administrative note for the author.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4 py-4">
+                        <div className="space-y-2">
+                            <Label>Status</Label>
+                            <Select
+                                value={statusModalTarget}
+                                onValueChange={setStatusModalTarget}
+                            >
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Select status" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {modalStatusOptions.map(s => (
+                                        <SelectItem key={s} value={s}>{s}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <div className="space-y-2">
+                            <Label>Reason / Administrative Note (Optional)</Label>
+                            <Textarea
+                                placeholder="Provide reasoning or note for the author..."
+                                value={statusModalNote}
+                                onChange={(e) => setStatusModalNote(e.target.value)}
+                                rows={3}
+                            />
+                            <p className="text-xs text-gray-500">
+                                This note will be visible to the author on the {contentType.toLowerCase()}&apos;s page.
+                            </p>
+                        </div>
+                    </div>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setStatusModalItem(null)}>Cancel</Button>
+                        <Button className="bg-brand-primary hover:bg-brand-primary-hover text-white" onClick={handleSaveStatusModal}>
+                            Save Changes
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
 
             <Suspense fallback={null}>
                 {editingItem && contentType === 'Event' && (

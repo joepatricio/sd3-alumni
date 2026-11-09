@@ -126,6 +126,7 @@ export interface EventData {
     id: string;
     adminId: string;
     authorId: string;
+    adminNotes?: string | null;
     eventStatusId: string;
     locationId: string;
     eventCategoryId: string;
@@ -167,6 +168,7 @@ export interface BulletinData {
     id: string;
     adminId: string;
     authorId: string;
+    adminNotes?: string | null;
     contentStatusId: string;
     bulletinCategoryId: string;
     bulletinDate: string;

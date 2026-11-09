@@ -79,19 +79,21 @@ export function AdminEvents() {
             isOfficial: e.author?.userStatus?.statusName === 'Official',
             isBanned: e.author?.userStatus?.statusName === 'Banned',
             isSuspended: e.author?.userStatus?.statusName === 'Suspended',
-            rawDate: new Date(e.eventDate).getTime()
+            isDeactivated: e.author?.userStatus?.statusName === 'Deactivated',
+            rawDate: new Date(e.eventDate).getTime(),
+            adminNotes: e.adminNotes ?? null
         }));
 
         return { data: mappedEvents, total };
     }, []);
 
-    const handleStatusChange = async (id: string, newStatus: string) => {
+    const handleStatusChange = async (id: string, newStatus: string, adminNotes?: string | null) => {
         try {
             // Get the old event to check previous status and author
             await api.get(`/events/${id}`);
 
             // Patch status
-            await api.patch(`/admin/events/${id}/status`, { status: newStatus });
+            await api.patch(`/admin/events/${id}/status`, { status: newStatus, adminNotes });
 
 
         } catch (err) {

@@ -26,6 +26,18 @@ interface AdminUserApiItem {
     records?: RecordData[];
 }
 
+const getUserStatusClass = (status: string) => {
+    switch (status) {
+        case 'Official': return 'bg-blue-100 text-blue-800';
+        case 'Regular': return 'bg-green-100 text-green-800';
+        case 'Pending': return 'bg-yellow-100 text-yellow-800';
+        case 'Suspended': return 'bg-orange-100 text-orange-800';
+        case 'Banned': return 'bg-red-100 text-red-800';
+        case 'Deactivated': return 'bg-gray-100 text-gray-800';
+        default: return 'bg-gray-100 text-gray-800';
+    }
+};
+
 const UserTableRow = memo(({ user, openEditModal }: { user: AdminUserRow, openEditModal: (user: AdminUserRow, status?: string) => void }) => {
     const showRestoreUnbanActivate = ['Suspended', 'Banned', 'Deactivated'].includes(user.status);
     const showSuspend = user.status === 'Official' || user.status === 'Regular';
@@ -34,12 +46,12 @@ const UserTableRow = memo(({ user, openEditModal }: { user: AdminUserRow, openEd
 
     return (
         <tr className="border-t">
-            <td className="px-6 py-4 font-medium">
-                <div className="flex items-center gap-2">
-                    <Link to={`/profile/${user.id}`} className="text-gray-900 hover:text-brand-primary" title="Link to Profile">
-                        <span>{user.name}</span>
+            <td className="px-6 py-4 font-medium max-w-xs">
+                <div className="flex items-center gap-2 min-w-0">
+                    <Link to={`/profile/${user.id}`} className="text-gray-900 hover:text-brand-primary truncate" title={user.name}>
+                        <span className="truncate">{user.name}</span>
                     </Link>
-                    <Link to={`/admin/preview/user/${user.id}`} className="text-gray-400 hover:text-brand-primary" title="Preview Profile">
+                    <Link to={`/admin/preview/user/${user.id}`} className="text-gray-400 hover:text-brand-primary shrink-0" title="Preview Profile">
                         <Eye className="w-4 h-4" />
                     </Link>
                 </div>
@@ -54,37 +66,49 @@ const UserTableRow = memo(({ user, openEditModal }: { user: AdminUserRow, openEd
                 )}
             </td>
             <td className="px-6 py-4">
-                <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold ${user.status === 'Official' ? 'bg-blue-100 text-blue-800 border-transparent' :
-                    user.status === 'Regular' ? 'bg-green-100 text-green-800 border-transparent' :
-                        user.status === 'Pending' ? 'bg-yellow-100 text-yellow-800 border-transparent' :
-                            user.status === 'Suspended' ? 'bg-orange-100 text-orange-800 border-transparent' :
-                                user.status === 'Banned' ? 'bg-red-100 text-red-800 border-transparent' :
-                                    'bg-gray-100 text-gray-800 border-transparent'
-                    }`}>
-                    {user.status}
-                </span>
-            </td>
-            <td className="px-6 py-4 text-left">
-                <div className="flex justify-end gap-1">
+                <div className="flex items-center gap-1.5 whitespace-nowrap">
+                    <span className={`inline-flex items-center justify-center text-center rounded-full border w-[5.5rem] px-2 py-0.5 text-xs font-semibold mr-1 shrink-0 ${getUserStatusClass(user.status)}`}>
+                        {user.status}
+                    </span>
+
                     {showRestoreUnbanActivate && (
                         <button
-                            className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors border h-8 px-3 text-blue-600 border-blue-200 hover:text-blue-700 hover:bg-blue-200"
+                            className="inline-flex items-center justify-center rounded-md text-xs font-medium transition-colors border h-8 px-2.5 shrink-0 text-blue-600 border-blue-200 hover:bg-blue-50"
                             onClick={() => openEditModal(user, 'Regular')}
                         >
                             {user.status === 'Suspended' ? 'Restore' : user.status === 'Banned' ? 'Unban' : 'Activate'}
                         </button>
                     )}
                     {showSuspend && (
-                        <button className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors border h-8 px-3 text-orange-600 border-orange-200 hover:bg-orange-50" onClick={() => openEditModal(user, 'Suspended')}>Suspend</button>
+                        <button
+                            className="inline-flex items-center justify-center rounded-md text-xs font-medium transition-colors border h-8 px-2.5 shrink-0 text-orange-600 border-orange-200 hover:bg-orange-50"
+                            onClick={() => openEditModal(user, 'Suspended')}
+                        >
+                            Suspend
+                        </button>
                     )}
                     {showBan && (
-                        <button className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors border h-8 px-3 text-red-600 border-red-200 hover:bg-red-50" onClick={() => openEditModal(user, 'Banned')}>Ban</button>
+                        <button
+                            className="inline-flex items-center justify-center rounded-md text-xs font-medium transition-colors border h-8 px-2.5 shrink-0 text-red-600 border-red-200 hover:bg-red-50"
+                            onClick={() => openEditModal(user, 'Banned')}
+                        >
+                            Ban
+                        </button>
                     )}
                     {showDeactivate && (
-                        <button className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors border h-8 px-3 text-gray-600 border-gray-200 hover:bg-gray-100" onClick={() => openEditModal(user, 'Deactivated')}>Deactivate</button>
+                        <button
+                            className="inline-flex items-center justify-center rounded-md text-xs font-medium transition-colors border h-8 px-2.5 shrink-0 text-gray-600 border-gray-200 hover:bg-gray-100"
+                            onClick={() => openEditModal(user, 'Deactivated')}
+                        >
+                            Deactivate
+                        </button>
                     )}
-                    <button className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors hover:bg-gray-200 h-8 px-3" onClick={() => openEditModal(user)}>
-                        <FileText className="w-4 h-4 mr-1" />
+
+                    <button
+                        className="ml-auto shrink-0 inline-flex items-center justify-center rounded-md text-xs font-medium transition-colors hover:bg-gray-200 h-8 px-2.5 border border-gray-200 text-gray-700"
+                        onClick={() => openEditModal(user)}
+                    >
+                        <FileText className="w-3.5 h-3.5 mr-1" />
                         Edit
                     </button>
                 </div>
@@ -538,11 +562,10 @@ export function AdminUsers() {
                                     <th className="px-6 py-3 cursor-pointer hover:bg-gray-100 transition-colors" onClick={() => handleSort('batch')}>
                                         <div className="flex items-center gap-1">Batch {renderSortIcon('batch')}</div>
                                     </th>
-                                    <th className="px-6 py-3 cursor-pointer hover:bg-gray-100 transition-colors" onClick={() => handleSort('grantedDate')}>
+                                    <th className="px-6 py-3 whitespace-nowrap cursor-pointer hover:bg-gray-100 transition-colors" onClick={() => handleSort('grantedDate')}>
                                         <div className="flex items-center gap-1">Granted/Expiry Date {renderSortIcon('grantedDate')}</div>
                                     </th>
-                                    <th className="px-6 py-3">Status</th>
-                                    <th className="px-8 py-3 text-left">Actions</th>
+                                    <th className="px-6 py-3">Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
