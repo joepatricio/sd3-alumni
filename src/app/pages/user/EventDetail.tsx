@@ -588,27 +588,29 @@ export function EventDetail() {
                                 </div>
                             )}
 
-                            <div className="border-t border-gray-100 pt-6 space-y-4">
-                                <div className="flex items-center justify-between">
-                                    <span className="text-gray-600 font-medium">Responses</span>
-                                    <span className="text-brand-primary font-bold">{goingResponsesCount} Going</span>
+                            {isLoggedIn && (
+                                <div className="border-t border-gray-100 pt-6 space-y-4">
+                                    <div className="flex items-center justify-between">
+                                        <span className="text-gray-600 font-medium">Responses</span>
+                                        <span className="text-brand-primary font-bold">{goingResponsesCount} Going</span>
+                                    </div>
+                                    <PublicGuestListModal
+                                        guestList={enrichedGuestList}
+                                        currentUserId={session?.userId ? String(session.userId) : null}
+                                        friendIds={friendIds}
+                                        eventTitle={eventData.title}
+                                        trigger={
+                                            <Button
+                                                variant="outline"
+                                                className="w-full gap-2 border-gray-200 text-gray-700 hover:bg-gray-50 hover:text-brand-primary font-medium"
+                                            >
+                                                <Users className="w-4 h-4 text-brand-primary" />
+                                                View Guest List
+                                            </Button>
+                                        }
+                                    />
                                 </div>
-                                <PublicGuestListModal
-                                    guestList={enrichedGuestList}
-                                    currentUserId={session?.userId ? String(session.userId) : null}
-                                    friendIds={friendIds}
-                                    eventTitle={eventData.title}
-                                    trigger={
-                                        <Button
-                                            variant="outline"
-                                            className="w-full gap-2 border-gray-200 text-gray-700 hover:bg-gray-50 hover:text-brand-primary font-medium"
-                                        >
-                                            <Users className="w-4 h-4 text-brand-primary" />
-                                            View Guest List
-                                        </Button>
-                                    }
-                                />
-                            </div>
+                            )}
                         </div>
 
                         {/* Organizer Info */}
