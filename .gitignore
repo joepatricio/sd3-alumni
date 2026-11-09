@@ -37,7 +37,6 @@ yarn-debug.log*
 yarn-error.log*
 
 #  Project files
-TODO.md
 /docs
 /coreutils-docs
 /gallery
