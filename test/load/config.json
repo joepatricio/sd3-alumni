@@ -1,0 +1,68 @@
+{
+  "baseUrl": "https://najealp.top",
+  "bandwidthLimitMbps": 70,
+  "steppedTiers": [200, 500, 1000, 1500, 2000],
+  "defaultTierDurationSec": 60,
+  "dryRunTierDurationSec": 5,
+  "credentials": {
+    "admins": [
+      { "username": "admin1", "password": "123456" },
+      { "username": "admin2", "password": "123456" },
+      { "username": "admin3", "password": "123456" },
+      { "username": "admin4", "password": "123456" },
+      { "username": "admin5", "password": "123456" },
+      { "username": "admin6", "password": "123456" },
+      { "username": "admin7", "password": "123456" },
+      { "username": "admin8", "password": "123456" },
+      { "username": "admin9", "password": "123456" },
+      { "username": "admin10", "password": "123456" }
+    ],
+    "officials": [
+      { "email": "test.official1@najealp.top", "password": "123456" },
+      { "email": "test.official2@najealp.top", "password": "123456" },
+      { "email": "test.official3@najealp.top", "password": "123456" },
+      { "email": "test.official4@najealp.top", "password": "123456" },
+      { "email": "test.official5@najealp.top", "password": "123456" }
+    ],
+    "regulars": [
+      { "email": "test.regular1@najealp.top", "password": "123456" },
+      { "email": "test.regular2@najealp.top", "password": "123456" },
+      { "email": "test.regular3@najealp.top", "password": "123456" },
+      { "email": "test.regular4@najealp.top", "password": "123456" },
+      { "email": "test.regular5@najealp.top", "password": "123456" }
+    ]
+  },
+  "routes": {
+    "readLookup": [
+      "/api/userStatuses",
+      "/api/contentStatuses",
+      "/api/eventStatuses",
+      "/api/donationStatuses",
+      "/api/profileStatuses",
+      "/api/degrees"
+    ],
+    "readCatalogs": [
+      "/api/bulletins?_page=1&_per_page=10",
+      "/api/events?_page=1&_per_page=10",
+      "/api/users?_page=1&_per_page=10"
+    ],
+    "readRelational": [
+      "/api/bulletins?_include=category,author,status&_page=1&_per_page=10",
+      "/api/events?_include=category,author,status,location&_page=1&_per_page=10",
+      "/api/users?_include=profile,userStatus,profileStatus&_page=1&_per_page=10"
+    ],
+    "readFiltered": [
+      "/api/bulletins?_sort=bulletinDate&_order=desc&_page=1&_per_page=10",
+      "/api/events?_sort=eventDate&_order=asc&_page=1&_per_page=10",
+      "/api/events?_sort=eventDate&_order=desc&_page=2&_per_page=5"
+    ],
+    "adminDashboards": [
+      "/api/admin/dashboard-stats",
+      "/api/donations/summary",
+      "/api/donations?_page=1&_per_page=10&_sort=donationDate&_order=desc",
+      "/api/admin/bulletins?_page=1&_per_page=10",
+      "/api/admin/events?_page=1&_per_page=10"
+    ]
+  }
+}
+

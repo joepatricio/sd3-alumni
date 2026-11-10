@@ -1,0 +1,1681 @@
+{
+  "metadata": {
+    "timestamp": "2026-11-10T14:23:56.896Z",
+    "baseUrl": "https://najealp.top",
+    "bandwidthLimitMbps": 70,
+    "totalRequests": 1539,
+    "tiersExecuted": [
+      10,
+      25
+    ],
+    "durationPerTier": 5
+  },
+  "steppedTiers": [
+    {
+      "concurrency": 10,
+      "durationSec": 5.0759704,
+      "totalRequests": 473,
+      "totalBytes": 11137942,
+      "rps": 93.18415253170113,
+      "mbps": 16.74078985649319,
+      "percentiles": {
+        "min": 68.3471999999997,
+        "p50": 89.37760000000003,
+        "p90": 140.8397,
+        "p95": 170.82810000000018,
+        "p99": 430.00689999999986,
+        "max": 523.3409999999999,
+        "avg": 105.6208236786469
+      },
+      "errorCount": 0,
+      "errorRate": 0
+    },
+    {
+      "concurrency": 25,
+      "durationSec": 5.143430399999999,
+      "totalRequests": 1066,
+      "totalBytes": 24120406,
+      "rps": 207.25467578991643,
+      "mbps": 35.778474542579545,
+      "percentiles": {
+        "min": 68.0677999999989,
+        "p50": 105.44520000000011,
+        "p90": 160.95840000000135,
+        "p95": 200.27160000000003,
+        "p99": 382.4322000000011,
+        "max": 498.1116999999995,
+        "avg": 118.27545347091935
+      },
+      "errorCount": 0,
+      "errorRate": 0
+    }
+  ],
+  "rankings": {
+    "mostTimeConsuming": [
+      {
+        "route": "/api/bulletins?_sort=bulletinDate&_order=desc&_page=1&_per_page=10",
+        "totalCalls": 82,
+        "totalBytes": 7255934,
+        "totalTimeMs": 13884.7263,
+        "avgLatency": 169.3259304878049,
+        "minLatency": 94.03809999999976,
+        "p50Latency": 145.4312,
+        "p90Latency": 224.34239999999954,
+        "p95Latency": 351.1196,
+        "p99Latency": 523.3409999999999,
+        "maxLatency": 523.3409999999999,
+        "statusCounts": {
+          "200": 82
+        },
+        "topVariances": [
+          {
+            "statusCode": 200,
+            "count": 82,
+            "percentage": "100.00",
+            "minLatency": 94.03809999999976,
+            "medianLatency": 145.4312,
+            "slowestLatency": 523.3409999999999,
+            "sampleError": ""
+          }
+        ]
+      },
+      {
+        "route": "/api/events?_sort=eventDate&_order=asc&_page=1&_per_page=10",
+        "totalCalls": 90,
+        "totalBytes": 7665030,
+        "totalTimeMs": 13688.248799999988,
+        "avgLatency": 152.0916533333332,
+        "minLatency": 96.78489999999874,
+        "p50Latency": 133.47719999999936,
+        "p90Latency": 236.14740000000165,
+        "p95Latency": 272.186099999999,
+        "p99Latency": 495.8811999999998,
+        "maxLatency": 495.8811999999998,
+        "statusCounts": {
+          "200": 90
+        },
+        "topVariances": [
+          {
+            "statusCode": 200,
+            "count": 90,
+            "percentage": "100.00",
+            "minLatency": 96.78489999999874,
+            "medianLatency": 133.47719999999936,
+            "slowestLatency": 495.8811999999998,
+            "sampleError": ""
+          }
+        ]
+      },
+      {
+        "route": "/api/events?_page=1&_per_page=10",
+        "totalCalls": 77,
+        "totalBytes": 7466074,
+        "totalTimeMs": 11773.353700000001,
+        "avgLatency": 152.9006974025974,
+        "minLatency": 97.44949999999972,
+        "p50Latency": 136.57090000000062,
+        "p90Latency": 225.54800000000068,
+        "p95Latency": 264.48199999999997,
+        "p99Latency": 488.0491000000002,
+        "maxLatency": 488.0491000000002,
+        "statusCounts": {
+          "200": 77
+        },
+        "topVariances": [
+          {
+            "statusCode": 200,
+            "count": 77,
+            "percentage": "100.00",
+            "minLatency": 97.44949999999972,
+            "medianLatency": 136.57090000000062,
+            "slowestLatency": 488.0491000000002,
+            "sampleError": ""
+          }
+        ]
+      },
+      {
+        "route": "/api/users?_include=profile,userStatus,profileStatus&_page=1&_per_page=10",
+        "totalCalls": 86,
+        "totalBytes": 632616,
+        "totalTimeMs": 9591.226499999992,
+        "avgLatency": 111.52588953488365,
+        "minLatency": 72.92810000000009,
+        "p50Latency": 95.65210000000116,
+        "p90Latency": 154.65749999999935,
+        "p95Latency": 165.61080000000038,
+        "p99Latency": 452.0467000000001,
+        "maxLatency": 452.0467000000001,
+        "statusCounts": {
+          "200": 86
+        },
+        "topVariances": [
+          {
+            "statusCode": 200,
+            "count": 86,
+            "percentage": "100.00",
+            "minLatency": 72.92810000000009,
+            "medianLatency": 95.65210000000116,
+            "slowestLatency": 452.0467000000001,
+            "sampleError": ""
+          }
+        ]
+      },
+      {
+        "route": "/api/bulletins?_page=1&_per_page=10",
+        "totalCalls": 67,
+        "totalBytes": 4185557,
+        "totalTimeMs": 9575.2071,
+        "avgLatency": 142.91353880597012,
+        "minLatency": 88.78099999999904,
+        "p50Latency": 130.45170000000144,
+        "p90Latency": 200.43340000000012,
+        "p95Latency": 246.51800000000003,
+        "p99Latency": 420.61179999999877,
+        "maxLatency": 420.61179999999877,
+        "statusCounts": {
+          "200": 67
+        },
+        "topVariances": [
+          {
+            "statusCode": 200,
+            "count": 67,
+            "percentage": "100.00",
+            "minLatency": 88.78099999999904,
+            "medianLatency": 130.45170000000144,
+            "slowestLatency": 420.61179999999877,
+            "sampleError": ""
+          }
+        ]
+      },
+      {
+        "route": "/api/events?_sort=eventDate&_order=desc&_page=2&_per_page=5",
+        "totalCalls": 69,
+        "totalBytes": 3156060,
+        "totalTimeMs": 9281.2255,
+        "avgLatency": 134.5105144927536,
+        "minLatency": 85.59710000000086,
+        "p50Latency": 118.53800000000001,
+        "p90Latency": 183.03160000000003,
+        "p95Latency": 212.5639999999985,
+        "p99Latency": 469.0096000000012,
+        "maxLatency": 469.0096000000012,
+        "statusCounts": {
+          "200": 69
+        },
+        "topVariances": [
+          {
+            "statusCode": 200,
+            "count": 69,
+            "percentage": "100.00",
+            "minLatency": 85.59710000000086,
+            "medianLatency": 118.53800000000001,
+            "slowestLatency": 469.0096000000012,
+            "sampleError": ""
+          }
+        ]
+      },
+      {
+        "route": "/api/users?_page=1&_per_page=10",
+        "totalCalls": 81,
+        "totalBytes": 1071387,
+        "totalTimeMs": 9208.67760000001,
+        "avgLatency": 113.68737777777793,
+        "minLatency": 74.76150000000052,
+        "p50Latency": 99.28149999999914,
+        "p90Latency": 144.6903999999995,
+        "p95Latency": 159.60460000000057,
+        "p99Latency": 392.2394999999997,
+        "maxLatency": 392.2394999999997,
+        "statusCounts": {
+          "200": 81
+        },
+        "topVariances": [
+          {
+            "statusCode": 200,
+            "count": 81,
+            "percentage": "100.00",
+            "minLatency": 74.76150000000052,
+            "medianLatency": 99.28149999999914,
+            "slowestLatency": 392.2394999999997,
+            "sampleError": ""
+          }
+        ]
+      },
+      {
+        "route": "/api/bulletins?_include=category,author,status&_page=1&_per_page=10",
+        "totalCalls": 84,
+        "totalBytes": 1645644,
+        "totalTimeMs": 9061.374,
+        "avgLatency": 107.87349999999998,
+        "minLatency": 76.18189999999959,
+        "p50Latency": 101.64819999999963,
+        "p90Latency": 140.2554999999993,
+        "p95Latency": 144.20749999999862,
+        "p99Latency": 351.28110000000015,
+        "maxLatency": 351.28110000000015,
+        "statusCounts": {
+          "200": 84
+        },
+        "topVariances": [
+          {
+            "statusCode": 200,
+            "count": 84,
+            "percentage": "100.00",
+            "minLatency": 76.18189999999959,
+            "medianLatency": 101.64819999999963,
+            "slowestLatency": 351.28110000000015,
+            "sampleError": ""
+          }
+        ]
+      },
+      {
+        "route": "/api/events?_include=category,author,status,location&_page=1&_per_page=10",
+        "totalCalls": 77,
+        "totalBytes": 1259566,
+        "totalTimeMs": 8625.653200000002,
+        "avgLatency": 112.02147012987014,
+        "minLatency": 78.63830000000007,
+        "p50Latency": 99.32229999999981,
+        "p90Latency": 140.39249999999993,
+        "p95Latency": 208.83519999999953,
+        "p99Latency": 401.60440000000017,
+        "maxLatency": 401.60440000000017,
+        "statusCounts": {
+          "200": 77
+        },
+        "topVariances": [
+          {
+            "statusCode": 200,
+            "count": 77,
+            "percentage": "100.00",
+            "minLatency": 78.63830000000007,
+            "medianLatency": 99.32229999999981,
+            "slowestLatency": 401.60440000000017,
+            "sampleError": ""
+          }
+        ]
+      },
+      {
+        "route": "/api/donations/summary",
+        "totalCalls": 86,
+        "totalBytes": 474376,
+        "totalTimeMs": 8600.265499999992,
+        "avgLatency": 100.00308720930224,
+        "minLatency": 73.50049999999828,
+        "p50Latency": 95.56290000000081,
+        "p90Latency": 119.6244000000006,
+        "p95Latency": 130.3690999999999,
+        "p99Latency": 395.0278999999998,
+        "maxLatency": 395.0278999999998,
+        "statusCounts": {
+          "200": 86
+        },
+        "topVariances": [
+          {
+            "statusCode": 200,
+            "count": 86,
+            "percentage": "100.00",
+            "minLatency": 73.50049999999828,
+            "medianLatency": 95.56290000000081,
+            "slowestLatency": 395.0278999999998,
+            "sampleError": ""
+          }
+        ]
+      },
+      {
+        "route": "/api/donations?_page=1&_per_page=10&_sort=donationDate&_order=desc",
+        "totalCalls": 80,
+        "totalBytes": 322080,
+        "totalTimeMs": 7977.169500000004,
+        "avgLatency": 99.71461875000004,
+        "minLatency": 70.98739999999998,
+        "p50Latency": 91.70750000000044,
+        "p90Latency": 131.6852999999992,
+        "p95Latency": 148.92430000000058,
+        "p99Latency": 356.3257999999987,
+        "maxLatency": 356.3257999999987,
+        "statusCounts": {
+          "200": 80
+        },
+        "topVariances": [
+          {
+            "statusCode": 200,
+            "count": 80,
+            "percentage": "100.00",
+            "minLatency": 70.98739999999998,
+            "medianLatency": 91.70750000000044,
+            "slowestLatency": 356.3257999999987,
+            "sampleError": ""
+          }
+        ]
+      },
+      {
+        "route": "/api/userStatuses",
+        "totalCalls": 79,
+        "totalBytes": 20935,
+        "totalTimeMs": 7917.459599999993,
+        "avgLatency": 100.22100759493661,
+        "minLatency": 73.23489999999993,
+        "p50Latency": 90.30409999999938,
+        "p90Latency": 126.59439999999995,
+        "p95Latency": 152.08969999999863,
+        "p99Latency": 418.20780000000013,
+        "maxLatency": 418.20780000000013,
+        "statusCounts": {
+          "200": 79
+        },
+        "topVariances": [
+          {
+            "statusCode": 200,
+            "count": 79,
+            "percentage": "100.00",
+            "minLatency": 73.23489999999993,
+            "medianLatency": 90.30409999999938,
+            "slowestLatency": 418.20780000000013,
+            "sampleError": ""
+          }
+        ]
+      },
+      {
+        "route": "/api/admin/dashboard-stats",
+        "totalCalls": 78,
+        "totalBytes": 4758,
+        "totalTimeMs": 7733.424599999995,
+        "avgLatency": 99.14646923076917,
+        "minLatency": 68.3471999999997,
+        "p50Latency": 92.16789999999855,
+        "p90Latency": 125.04699999999866,
+        "p95Latency": 145.79989999999998,
+        "p99Latency": 417.9692,
+        "maxLatency": 417.9692,
+        "statusCounts": {
+          "401": 78
+        },
+        "topVariances": [
+          {
+            "statusCode": 401,
+            "count": 78,
+            "percentage": "100.00",
+            "minLatency": 68.3471999999997,
+            "medianLatency": 92.16789999999855,
+            "slowestLatency": 417.9692,
+            "sampleError": "{\"error\":\"Unauthorized: Admin authentication token required\"}"
+          }
+        ]
+      },
+      {
+        "route": "/api/donationStatuses",
+        "totalCalls": 79,
+        "totalBytes": 13983,
+        "totalTimeMs": 7594.594199999995,
+        "avgLatency": 96.13410379746828,
+        "minLatency": 68.0677999999989,
+        "p50Latency": 86.40090000000055,
+        "p90Latency": 124.66090000000077,
+        "p95Latency": 129.70240000000013,
+        "p99Latency": 394.20900000000006,
+        "maxLatency": 394.20900000000006,
+        "statusCounts": {
+          "200": 79
+        },
+        "topVariances": [
+          {
+            "statusCode": 200,
+            "count": 79,
+            "percentage": "100.00",
+            "minLatency": 68.0677999999989,
+            "medianLatency": 86.40090000000055,
+            "slowestLatency": 394.20900000000006,
+            "sampleError": ""
+          }
+        ]
+      },
+      {
+        "route": "/api/profileStatuses",
+        "totalCalls": 71,
+        "totalBytes": 9798,
+        "totalTimeMs": 7338.470999999995,
+        "avgLatency": 103.35874647887319,
+        "minLatency": 68.3078000000005,
+        "p50Latency": 90.54249999999956,
+        "p90Latency": 131.32799999999952,
+        "p95Latency": 169.11090000000013,
+        "p99Latency": 332.9878000000008,
+        "maxLatency": 332.9878000000008,
+        "statusCounts": {
+          "200": 71
+        },
+        "topVariances": [
+          {
+            "statusCode": 200,
+            "count": 71,
+            "percentage": "100.00",
+            "minLatency": 68.3078000000005,
+            "medianLatency": 90.54249999999956,
+            "slowestLatency": 332.9878000000008,
+            "sampleError": ""
+          }
+        ]
+      },
+      {
+        "route": "/api/admin/bulletins?_page=1&_per_page=10",
+        "totalCalls": 78,
+        "totalBytes": 4758,
+        "totalTimeMs": 7327.102100000008,
+        "avgLatency": 93.93720641025651,
+        "minLatency": 68.55060000000049,
+        "p50Latency": 87.82970000000023,
+        "p90Latency": 129.66730000000098,
+        "p95Latency": 145.21770000000106,
+        "p99Latency": 293.21529999999984,
+        "maxLatency": 293.21529999999984,
+        "statusCounts": {
+          "401": 78
+        },
+        "topVariances": [
+          {
+            "statusCode": 401,
+            "count": 78,
+            "percentage": "100.00",
+            "minLatency": 68.55060000000049,
+            "medianLatency": 87.82970000000023,
+            "slowestLatency": 293.21529999999984,
+            "sampleError": "{\"error\":\"Unauthorized: Admin authentication token required\"}"
+          }
+        ]
+      },
+      {
+        "route": "/api/admin/events?_page=1&_per_page=10",
+        "totalCalls": 76,
+        "totalBytes": 4636,
+        "totalTimeMs": 7324.606099999991,
+        "avgLatency": 96.37639605263146,
+        "minLatency": 70.48219999999856,
+        "p50Latency": 91.92270000000008,
+        "p90Latency": 126.62620000000061,
+        "p95Latency": 155.8080000000009,
+        "p99Latency": 169.84910000000127,
+        "maxLatency": 169.84910000000127,
+        "statusCounts": {
+          "401": 76
+        },
+        "topVariances": [
+          {
+            "statusCode": 401,
+            "count": 76,
+            "percentage": "100.00",
+            "minLatency": 70.48219999999856,
+            "medianLatency": 91.92270000000008,
+            "slowestLatency": 169.84910000000127,
+            "sampleError": "{\"error\":\"Unauthorized: Admin authentication token required\"}"
+          }
+        ]
+      },
+      {
+        "route": "/api/eventStatuses",
+        "totalCalls": 70,
+        "totalBytes": 18620,
+        "totalTimeMs": 7140.1725000000015,
+        "avgLatency": 102.00246428571431,
+        "minLatency": 70.52579999999989,
+        "p50Latency": 87.28850000000057,
+        "p90Latency": 132.59259999999995,
+        "p95Latency": 135.66060000000107,
+        "p99Latency": 417.4471000000012,
+        "maxLatency": 417.4471000000012,
+        "statusCounts": {
+          "200": 70
+        },
+        "topVariances": [
+          {
+            "statusCode": 200,
+            "count": 70,
+            "percentage": "100.00",
+            "minLatency": 70.52579999999989,
+            "medianLatency": 87.28850000000057,
+            "slowestLatency": 417.4471000000012,
+            "sampleError": ""
+          }
+        ]
+      },
+      {
+        "route": "/api/degrees",
+        "totalCalls": 69,
+        "totalBytes": 33396,
+        "totalTimeMs": 6890.125399999999,
+        "avgLatency": 99.85688985507245,
+        "minLatency": 69.58110000000124,
+        "p50Latency": 88.67120000000023,
+        "p90Latency": 125.8094000000001,
+        "p95Latency": 147.64029999999912,
+        "p99Latency": 479.23680000000013,
+        "maxLatency": 479.23680000000013,
+        "statusCounts": {
+          "200": 69
+        },
+        "topVariances": [
+          {
+            "statusCode": 200,
+            "count": 69,
+            "percentage": "100.00",
+            "minLatency": 69.58110000000124,
+            "medianLatency": 88.67120000000023,
+            "slowestLatency": 479.23680000000013,
+            "sampleError": ""
+          }
+        ]
+      },
+      {
+        "route": "/api/contentStatuses",
+        "totalCalls": 60,
+        "totalBytes": 13140,
+        "totalTimeMs": 5507.199800000001,
+        "avgLatency": 91.78666333333335,
+        "minLatency": 69.2835,
+        "p50Latency": 90.23400000000038,
+        "p90Latency": 116.48110000000088,
+        "p95Latency": 128.10849999999846,
+        "p99Latency": 152.3607000000011,
+        "maxLatency": 152.3607000000011,
+        "statusCounts": {
+          "200": 60
+        },
+        "topVariances": [
+          {
+            "statusCode": 200,
+            "count": 60,
+            "percentage": "100.00",
+            "minLatency": 69.2835,
+            "medianLatency": 90.23400000000038,
+            "slowestLatency": 152.3607000000011,
+            "sampleError": ""
+          }
+        ]
+      }
+    ],
+    "slowestRoutes": [
+      {
+        "route": "/api/bulletins?_sort=bulletinDate&_order=desc&_page=1&_per_page=10",
+        "totalCalls": 82,
+        "totalBytes": 7255934,
+        "totalTimeMs": 13884.7263,
+        "avgLatency": 169.3259304878049,
+        "minLatency": 94.03809999999976,
+        "p50Latency": 145.4312,
+        "p90Latency": 224.34239999999954,
+        "p95Latency": 351.1196,
+        "p99Latency": 523.3409999999999,
+        "maxLatency": 523.3409999999999,
+        "statusCounts": {
+          "200": 82
+        },
+        "topVariances": [
+          {
+            "statusCode": 200,
+            "count": 82,
+            "percentage": "100.00",
+            "minLatency": 94.03809999999976,
+            "medianLatency": 145.4312,
+            "slowestLatency": 523.3409999999999,
+            "sampleError": ""
+          }
+        ]
+      },
+      {
+        "route": "/api/events?_sort=eventDate&_order=asc&_page=1&_per_page=10",
+        "totalCalls": 90,
+        "totalBytes": 7665030,
+        "totalTimeMs": 13688.248799999988,
+        "avgLatency": 152.0916533333332,
+        "minLatency": 96.78489999999874,
+        "p50Latency": 133.47719999999936,
+        "p90Latency": 236.14740000000165,
+        "p95Latency": 272.186099999999,
+        "p99Latency": 495.8811999999998,
+        "maxLatency": 495.8811999999998,
+        "statusCounts": {
+          "200": 90
+        },
+        "topVariances": [
+          {
+            "statusCode": 200,
+            "count": 90,
+            "percentage": "100.00",
+            "minLatency": 96.78489999999874,
+            "medianLatency": 133.47719999999936,
+            "slowestLatency": 495.8811999999998,
+            "sampleError": ""
+          }
+        ]
+      },
+      {
+        "route": "/api/events?_page=1&_per_page=10",
+        "totalCalls": 77,
+        "totalBytes": 7466074,
+        "totalTimeMs": 11773.353700000001,
+        "avgLatency": 152.9006974025974,
+        "minLatency": 97.44949999999972,
+        "p50Latency": 136.57090000000062,
+        "p90Latency": 225.54800000000068,
+        "p95Latency": 264.48199999999997,
+        "p99Latency": 488.0491000000002,
+        "maxLatency": 488.0491000000002,
+        "statusCounts": {
+          "200": 77
+        },
+        "topVariances": [
+          {
+            "statusCode": 200,
+            "count": 77,
+            "percentage": "100.00",
+            "minLatency": 97.44949999999972,
+            "medianLatency": 136.57090000000062,
+            "slowestLatency": 488.0491000000002,
+            "sampleError": ""
+          }
+        ]
+      },
+      {
+        "route": "/api/bulletins?_page=1&_per_page=10",
+        "totalCalls": 67,
+        "totalBytes": 4185557,
+        "totalTimeMs": 9575.2071,
+        "avgLatency": 142.91353880597012,
+        "minLatency": 88.78099999999904,
+        "p50Latency": 130.45170000000144,
+        "p90Latency": 200.43340000000012,
+        "p95Latency": 246.51800000000003,
+        "p99Latency": 420.61179999999877,
+        "maxLatency": 420.61179999999877,
+        "statusCounts": {
+          "200": 67
+        },
+        "topVariances": [
+          {
+            "statusCode": 200,
+            "count": 67,
+            "percentage": "100.00",
+            "minLatency": 88.78099999999904,
+            "medianLatency": 130.45170000000144,
+            "slowestLatency": 420.61179999999877,
+            "sampleError": ""
+          }
+        ]
+      },
+      {
+        "route": "/api/events?_sort=eventDate&_order=desc&_page=2&_per_page=5",
+        "totalCalls": 69,
+        "totalBytes": 3156060,
+        "totalTimeMs": 9281.2255,
+        "avgLatency": 134.5105144927536,
+        "minLatency": 85.59710000000086,
+        "p50Latency": 118.53800000000001,
+        "p90Latency": 183.03160000000003,
+        "p95Latency": 212.5639999999985,
+        "p99Latency": 469.0096000000012,
+        "maxLatency": 469.0096000000012,
+        "statusCounts": {
+          "200": 69
+        },
+        "topVariances": [
+          {
+            "statusCode": 200,
+            "count": 69,
+            "percentage": "100.00",
+            "minLatency": 85.59710000000086,
+            "medianLatency": 118.53800000000001,
+            "slowestLatency": 469.0096000000012,
+            "sampleError": ""
+          }
+        ]
+      },
+      {
+        "route": "/api/events?_include=category,author,status,location&_page=1&_per_page=10",
+        "totalCalls": 77,
+        "totalBytes": 1259566,
+        "totalTimeMs": 8625.653200000002,
+        "avgLatency": 112.02147012987014,
+        "minLatency": 78.63830000000007,
+        "p50Latency": 99.32229999999981,
+        "p90Latency": 140.39249999999993,
+        "p95Latency": 208.83519999999953,
+        "p99Latency": 401.60440000000017,
+        "maxLatency": 401.60440000000017,
+        "statusCounts": {
+          "200": 77
+        },
+        "topVariances": [
+          {
+            "statusCode": 200,
+            "count": 77,
+            "percentage": "100.00",
+            "minLatency": 78.63830000000007,
+            "medianLatency": 99.32229999999981,
+            "slowestLatency": 401.60440000000017,
+            "sampleError": ""
+          }
+        ]
+      },
+      {
+        "route": "/api/profileStatuses",
+        "totalCalls": 71,
+        "totalBytes": 9798,
+        "totalTimeMs": 7338.470999999995,
+        "avgLatency": 103.35874647887319,
+        "minLatency": 68.3078000000005,
+        "p50Latency": 90.54249999999956,
+        "p90Latency": 131.32799999999952,
+        "p95Latency": 169.11090000000013,
+        "p99Latency": 332.9878000000008,
+        "maxLatency": 332.9878000000008,
+        "statusCounts": {
+          "200": 71
+        },
+        "topVariances": [
+          {
+            "statusCode": 200,
+            "count": 71,
+            "percentage": "100.00",
+            "minLatency": 68.3078000000005,
+            "medianLatency": 90.54249999999956,
+            "slowestLatency": 332.9878000000008,
+            "sampleError": ""
+          }
+        ]
+      },
+      {
+        "route": "/api/users?_include=profile,userStatus,profileStatus&_page=1&_per_page=10",
+        "totalCalls": 86,
+        "totalBytes": 632616,
+        "totalTimeMs": 9591.226499999992,
+        "avgLatency": 111.52588953488365,
+        "minLatency": 72.92810000000009,
+        "p50Latency": 95.65210000000116,
+        "p90Latency": 154.65749999999935,
+        "p95Latency": 165.61080000000038,
+        "p99Latency": 452.0467000000001,
+        "maxLatency": 452.0467000000001,
+        "statusCounts": {
+          "200": 86
+        },
+        "topVariances": [
+          {
+            "statusCode": 200,
+            "count": 86,
+            "percentage": "100.00",
+            "minLatency": 72.92810000000009,
+            "medianLatency": 95.65210000000116,
+            "slowestLatency": 452.0467000000001,
+            "sampleError": ""
+          }
+        ]
+      },
+      {
+        "route": "/api/users?_page=1&_per_page=10",
+        "totalCalls": 81,
+        "totalBytes": 1071387,
+        "totalTimeMs": 9208.67760000001,
+        "avgLatency": 113.68737777777793,
+        "minLatency": 74.76150000000052,
+        "p50Latency": 99.28149999999914,
+        "p90Latency": 144.6903999999995,
+        "p95Latency": 159.60460000000057,
+        "p99Latency": 392.2394999999997,
+        "maxLatency": 392.2394999999997,
+        "statusCounts": {
+          "200": 81
+        },
+        "topVariances": [
+          {
+            "statusCode": 200,
+            "count": 81,
+            "percentage": "100.00",
+            "minLatency": 74.76150000000052,
+            "medianLatency": 99.28149999999914,
+            "slowestLatency": 392.2394999999997,
+            "sampleError": ""
+          }
+        ]
+      },
+      {
+        "route": "/api/admin/events?_page=1&_per_page=10",
+        "totalCalls": 76,
+        "totalBytes": 4636,
+        "totalTimeMs": 7324.606099999991,
+        "avgLatency": 96.37639605263146,
+        "minLatency": 70.48219999999856,
+        "p50Latency": 91.92270000000008,
+        "p90Latency": 126.62620000000061,
+        "p95Latency": 155.8080000000009,
+        "p99Latency": 169.84910000000127,
+        "maxLatency": 169.84910000000127,
+        "statusCounts": {
+          "401": 76
+        },
+        "topVariances": [
+          {
+            "statusCode": 401,
+            "count": 76,
+            "percentage": "100.00",
+            "minLatency": 70.48219999999856,
+            "medianLatency": 91.92270000000008,
+            "slowestLatency": 169.84910000000127,
+            "sampleError": "{\"error\":\"Unauthorized: Admin authentication token required\"}"
+          }
+        ]
+      },
+      {
+        "route": "/api/userStatuses",
+        "totalCalls": 79,
+        "totalBytes": 20935,
+        "totalTimeMs": 7917.459599999993,
+        "avgLatency": 100.22100759493661,
+        "minLatency": 73.23489999999993,
+        "p50Latency": 90.30409999999938,
+        "p90Latency": 126.59439999999995,
+        "p95Latency": 152.08969999999863,
+        "p99Latency": 418.20780000000013,
+        "maxLatency": 418.20780000000013,
+        "statusCounts": {
+          "200": 79
+        },
+        "topVariances": [
+          {
+            "statusCode": 200,
+            "count": 79,
+            "percentage": "100.00",
+            "minLatency": 73.23489999999993,
+            "medianLatency": 90.30409999999938,
+            "slowestLatency": 418.20780000000013,
+            "sampleError": ""
+          }
+        ]
+      },
+      {
+        "route": "/api/donations?_page=1&_per_page=10&_sort=donationDate&_order=desc",
+        "totalCalls": 80,
+        "totalBytes": 322080,
+        "totalTimeMs": 7977.169500000004,
+        "avgLatency": 99.71461875000004,
+        "minLatency": 70.98739999999998,
+        "p50Latency": 91.70750000000044,
+        "p90Latency": 131.6852999999992,
+        "p95Latency": 148.92430000000058,
+        "p99Latency": 356.3257999999987,
+        "maxLatency": 356.3257999999987,
+        "statusCounts": {
+          "200": 80
+        },
+        "topVariances": [
+          {
+            "statusCode": 200,
+            "count": 80,
+            "percentage": "100.00",
+            "minLatency": 70.98739999999998,
+            "medianLatency": 91.70750000000044,
+            "slowestLatency": 356.3257999999987,
+            "sampleError": ""
+          }
+        ]
+      },
+      {
+        "route": "/api/degrees",
+        "totalCalls": 69,
+        "totalBytes": 33396,
+        "totalTimeMs": 6890.125399999999,
+        "avgLatency": 99.85688985507245,
+        "minLatency": 69.58110000000124,
+        "p50Latency": 88.67120000000023,
+        "p90Latency": 125.8094000000001,
+        "p95Latency": 147.64029999999912,
+        "p99Latency": 479.23680000000013,
+        "maxLatency": 479.23680000000013,
+        "statusCounts": {
+          "200": 69
+        },
+        "topVariances": [
+          {
+            "statusCode": 200,
+            "count": 69,
+            "percentage": "100.00",
+            "minLatency": 69.58110000000124,
+            "medianLatency": 88.67120000000023,
+            "slowestLatency": 479.23680000000013,
+            "sampleError": ""
+          }
+        ]
+      },
+      {
+        "route": "/api/admin/dashboard-stats",
+        "totalCalls": 78,
+        "totalBytes": 4758,
+        "totalTimeMs": 7733.424599999995,
+        "avgLatency": 99.14646923076917,
+        "minLatency": 68.3471999999997,
+        "p50Latency": 92.16789999999855,
+        "p90Latency": 125.04699999999866,
+        "p95Latency": 145.79989999999998,
+        "p99Latency": 417.9692,
+        "maxLatency": 417.9692,
+        "statusCounts": {
+          "401": 78
+        },
+        "topVariances": [
+          {
+            "statusCode": 401,
+            "count": 78,
+            "percentage": "100.00",
+            "minLatency": 68.3471999999997,
+            "medianLatency": 92.16789999999855,
+            "slowestLatency": 417.9692,
+            "sampleError": "{\"error\":\"Unauthorized: Admin authentication token required\"}"
+          }
+        ]
+      },
+      {
+        "route": "/api/admin/bulletins?_page=1&_per_page=10",
+        "totalCalls": 78,
+        "totalBytes": 4758,
+        "totalTimeMs": 7327.102100000008,
+        "avgLatency": 93.93720641025651,
+        "minLatency": 68.55060000000049,
+        "p50Latency": 87.82970000000023,
+        "p90Latency": 129.66730000000098,
+        "p95Latency": 145.21770000000106,
+        "p99Latency": 293.21529999999984,
+        "maxLatency": 293.21529999999984,
+        "statusCounts": {
+          "401": 78
+        },
+        "topVariances": [
+          {
+            "statusCode": 401,
+            "count": 78,
+            "percentage": "100.00",
+            "minLatency": 68.55060000000049,
+            "medianLatency": 87.82970000000023,
+            "slowestLatency": 293.21529999999984,
+            "sampleError": "{\"error\":\"Unauthorized: Admin authentication token required\"}"
+          }
+        ]
+      },
+      {
+        "route": "/api/bulletins?_include=category,author,status&_page=1&_per_page=10",
+        "totalCalls": 84,
+        "totalBytes": 1645644,
+        "totalTimeMs": 9061.374,
+        "avgLatency": 107.87349999999998,
+        "minLatency": 76.18189999999959,
+        "p50Latency": 101.64819999999963,
+        "p90Latency": 140.2554999999993,
+        "p95Latency": 144.20749999999862,
+        "p99Latency": 351.28110000000015,
+        "maxLatency": 351.28110000000015,
+        "statusCounts": {
+          "200": 84
+        },
+        "topVariances": [
+          {
+            "statusCode": 200,
+            "count": 84,
+            "percentage": "100.00",
+            "minLatency": 76.18189999999959,
+            "medianLatency": 101.64819999999963,
+            "slowestLatency": 351.28110000000015,
+            "sampleError": ""
+          }
+        ]
+      },
+      {
+        "route": "/api/eventStatuses",
+        "totalCalls": 70,
+        "totalBytes": 18620,
+        "totalTimeMs": 7140.1725000000015,
+        "avgLatency": 102.00246428571431,
+        "minLatency": 70.52579999999989,
+        "p50Latency": 87.28850000000057,
+        "p90Latency": 132.59259999999995,
+        "p95Latency": 135.66060000000107,
+        "p99Latency": 417.4471000000012,
+        "maxLatency": 417.4471000000012,
+        "statusCounts": {
+          "200": 70
+        },
+        "topVariances": [
+          {
+            "statusCode": 200,
+            "count": 70,
+            "percentage": "100.00",
+            "minLatency": 70.52579999999989,
+            "medianLatency": 87.28850000000057,
+            "slowestLatency": 417.4471000000012,
+            "sampleError": ""
+          }
+        ]
+      },
+      {
+        "route": "/api/donations/summary",
+        "totalCalls": 86,
+        "totalBytes": 474376,
+        "totalTimeMs": 8600.265499999992,
+        "avgLatency": 100.00308720930224,
+        "minLatency": 73.50049999999828,
+        "p50Latency": 95.56290000000081,
+        "p90Latency": 119.6244000000006,
+        "p95Latency": 130.3690999999999,
+        "p99Latency": 395.0278999999998,
+        "maxLatency": 395.0278999999998,
+        "statusCounts": {
+          "200": 86
+        },
+        "topVariances": [
+          {
+            "statusCode": 200,
+            "count": 86,
+            "percentage": "100.00",
+            "minLatency": 73.50049999999828,
+            "medianLatency": 95.56290000000081,
+            "slowestLatency": 395.0278999999998,
+            "sampleError": ""
+          }
+        ]
+      },
+      {
+        "route": "/api/donationStatuses",
+        "totalCalls": 79,
+        "totalBytes": 13983,
+        "totalTimeMs": 7594.594199999995,
+        "avgLatency": 96.13410379746828,
+        "minLatency": 68.0677999999989,
+        "p50Latency": 86.40090000000055,
+        "p90Latency": 124.66090000000077,
+        "p95Latency": 129.70240000000013,
+        "p99Latency": 394.20900000000006,
+        "maxLatency": 394.20900000000006,
+        "statusCounts": {
+          "200": 79
+        },
+        "topVariances": [
+          {
+            "statusCode": 200,
+            "count": 79,
+            "percentage": "100.00",
+            "minLatency": 68.0677999999989,
+            "medianLatency": 86.40090000000055,
+            "slowestLatency": 394.20900000000006,
+            "sampleError": ""
+          }
+        ]
+      },
+      {
+        "route": "/api/contentStatuses",
+        "totalCalls": 60,
+        "totalBytes": 13140,
+        "totalTimeMs": 5507.199800000001,
+        "avgLatency": 91.78666333333335,
+        "minLatency": 69.2835,
+        "p50Latency": 90.23400000000038,
+        "p90Latency": 116.48110000000088,
+        "p95Latency": 128.10849999999846,
+        "p99Latency": 152.3607000000011,
+        "maxLatency": 152.3607000000011,
+        "statusCounts": {
+          "200": 60
+        },
+        "topVariances": [
+          {
+            "statusCode": 200,
+            "count": 60,
+            "percentage": "100.00",
+            "minLatency": 69.2835,
+            "medianLatency": 90.23400000000038,
+            "slowestLatency": 152.3607000000011,
+            "sampleError": ""
+          }
+        ]
+      }
+    ],
+    "mostTraffic": [
+      {
+        "route": "/api/events?_sort=eventDate&_order=asc&_page=1&_per_page=10",
+        "totalCalls": 90,
+        "totalBytes": 7665030,
+        "totalTimeMs": 13688.248799999988,
+        "avgLatency": 152.0916533333332,
+        "minLatency": 96.78489999999874,
+        "p50Latency": 133.47719999999936,
+        "p90Latency": 236.14740000000165,
+        "p95Latency": 272.186099999999,
+        "p99Latency": 495.8811999999998,
+        "maxLatency": 495.8811999999998,
+        "statusCounts": {
+          "200": 90
+        },
+        "topVariances": [
+          {
+            "statusCode": 200,
+            "count": 90,
+            "percentage": "100.00",
+            "minLatency": 96.78489999999874,
+            "medianLatency": 133.47719999999936,
+            "slowestLatency": 495.8811999999998,
+            "sampleError": ""
+          }
+        ]
+      },
+      {
+        "route": "/api/users?_include=profile,userStatus,profileStatus&_page=1&_per_page=10",
+        "totalCalls": 86,
+        "totalBytes": 632616,
+        "totalTimeMs": 9591.226499999992,
+        "avgLatency": 111.52588953488365,
+        "minLatency": 72.92810000000009,
+        "p50Latency": 95.65210000000116,
+        "p90Latency": 154.65749999999935,
+        "p95Latency": 165.61080000000038,
+        "p99Latency": 452.0467000000001,
+        "maxLatency": 452.0467000000001,
+        "statusCounts": {
+          "200": 86
+        },
+        "topVariances": [
+          {
+            "statusCode": 200,
+            "count": 86,
+            "percentage": "100.00",
+            "minLatency": 72.92810000000009,
+            "medianLatency": 95.65210000000116,
+            "slowestLatency": 452.0467000000001,
+            "sampleError": ""
+          }
+        ]
+      },
+      {
+        "route": "/api/donations/summary",
+        "totalCalls": 86,
+        "totalBytes": 474376,
+        "totalTimeMs": 8600.265499999992,
+        "avgLatency": 100.00308720930224,
+        "minLatency": 73.50049999999828,
+        "p50Latency": 95.56290000000081,
+        "p90Latency": 119.6244000000006,
+        "p95Latency": 130.3690999999999,
+        "p99Latency": 395.0278999999998,
+        "maxLatency": 395.0278999999998,
+        "statusCounts": {
+          "200": 86
+        },
+        "topVariances": [
+          {
+            "statusCode": 200,
+            "count": 86,
+            "percentage": "100.00",
+            "minLatency": 73.50049999999828,
+            "medianLatency": 95.56290000000081,
+            "slowestLatency": 395.0278999999998,
+            "sampleError": ""
+          }
+        ]
+      },
+      {
+        "route": "/api/bulletins?_include=category,author,status&_page=1&_per_page=10",
+        "totalCalls": 84,
+        "totalBytes": 1645644,
+        "totalTimeMs": 9061.374,
+        "avgLatency": 107.87349999999998,
+        "minLatency": 76.18189999999959,
+        "p50Latency": 101.64819999999963,
+        "p90Latency": 140.2554999999993,
+        "p95Latency": 144.20749999999862,
+        "p99Latency": 351.28110000000015,
+        "maxLatency": 351.28110000000015,
+        "statusCounts": {
+          "200": 84
+        },
+        "topVariances": [
+          {
+            "statusCode": 200,
+            "count": 84,
+            "percentage": "100.00",
+            "minLatency": 76.18189999999959,
+            "medianLatency": 101.64819999999963,
+            "slowestLatency": 351.28110000000015,
+            "sampleError": ""
+          }
+        ]
+      },
+      {
+        "route": "/api/bulletins?_sort=bulletinDate&_order=desc&_page=1&_per_page=10",
+        "totalCalls": 82,
+        "totalBytes": 7255934,
+        "totalTimeMs": 13884.7263,
+        "avgLatency": 169.3259304878049,
+        "minLatency": 94.03809999999976,
+        "p50Latency": 145.4312,
+        "p90Latency": 224.34239999999954,
+        "p95Latency": 351.1196,
+        "p99Latency": 523.3409999999999,
+        "maxLatency": 523.3409999999999,
+        "statusCounts": {
+          "200": 82
+        },
+        "topVariances": [
+          {
+            "statusCode": 200,
+            "count": 82,
+            "percentage": "100.00",
+            "minLatency": 94.03809999999976,
+            "medianLatency": 145.4312,
+            "slowestLatency": 523.3409999999999,
+            "sampleError": ""
+          }
+        ]
+      },
+      {
+        "route": "/api/users?_page=1&_per_page=10",
+        "totalCalls": 81,
+        "totalBytes": 1071387,
+        "totalTimeMs": 9208.67760000001,
+        "avgLatency": 113.68737777777793,
+        "minLatency": 74.76150000000052,
+        "p50Latency": 99.28149999999914,
+        "p90Latency": 144.6903999999995,
+        "p95Latency": 159.60460000000057,
+        "p99Latency": 392.2394999999997,
+        "maxLatency": 392.2394999999997,
+        "statusCounts": {
+          "200": 81
+        },
+        "topVariances": [
+          {
+            "statusCode": 200,
+            "count": 81,
+            "percentage": "100.00",
+            "minLatency": 74.76150000000052,
+            "medianLatency": 99.28149999999914,
+            "slowestLatency": 392.2394999999997,
+            "sampleError": ""
+          }
+        ]
+      },
+      {
+        "route": "/api/donations?_page=1&_per_page=10&_sort=donationDate&_order=desc",
+        "totalCalls": 80,
+        "totalBytes": 322080,
+        "totalTimeMs": 7977.169500000004,
+        "avgLatency": 99.71461875000004,
+        "minLatency": 70.98739999999998,
+        "p50Latency": 91.70750000000044,
+        "p90Latency": 131.6852999999992,
+        "p95Latency": 148.92430000000058,
+        "p99Latency": 356.3257999999987,
+        "maxLatency": 356.3257999999987,
+        "statusCounts": {
+          "200": 80
+        },
+        "topVariances": [
+          {
+            "statusCode": 200,
+            "count": 80,
+            "percentage": "100.00",
+            "minLatency": 70.98739999999998,
+            "medianLatency": 91.70750000000044,
+            "slowestLatency": 356.3257999999987,
+            "sampleError": ""
+          }
+        ]
+      },
+      {
+        "route": "/api/donationStatuses",
+        "totalCalls": 79,
+        "totalBytes": 13983,
+        "totalTimeMs": 7594.594199999995,
+        "avgLatency": 96.13410379746828,
+        "minLatency": 68.0677999999989,
+        "p50Latency": 86.40090000000055,
+        "p90Latency": 124.66090000000077,
+        "p95Latency": 129.70240000000013,
+        "p99Latency": 394.20900000000006,
+        "maxLatency": 394.20900000000006,
+        "statusCounts": {
+          "200": 79
+        },
+        "topVariances": [
+          {
+            "statusCode": 200,
+            "count": 79,
+            "percentage": "100.00",
+            "minLatency": 68.0677999999989,
+            "medianLatency": 86.40090000000055,
+            "slowestLatency": 394.20900000000006,
+            "sampleError": ""
+          }
+        ]
+      },
+      {
+        "route": "/api/userStatuses",
+        "totalCalls": 79,
+        "totalBytes": 20935,
+        "totalTimeMs": 7917.459599999993,
+        "avgLatency": 100.22100759493661,
+        "minLatency": 73.23489999999993,
+        "p50Latency": 90.30409999999938,
+        "p90Latency": 126.59439999999995,
+        "p95Latency": 152.08969999999863,
+        "p99Latency": 418.20780000000013,
+        "maxLatency": 418.20780000000013,
+        "statusCounts": {
+          "200": 79
+        },
+        "topVariances": [
+          {
+            "statusCode": 200,
+            "count": 79,
+            "percentage": "100.00",
+            "minLatency": 73.23489999999993,
+            "medianLatency": 90.30409999999938,
+            "slowestLatency": 418.20780000000013,
+            "sampleError": ""
+          }
+        ]
+      },
+      {
+        "route": "/api/admin/dashboard-stats",
+        "totalCalls": 78,
+        "totalBytes": 4758,
+        "totalTimeMs": 7733.424599999995,
+        "avgLatency": 99.14646923076917,
+        "minLatency": 68.3471999999997,
+        "p50Latency": 92.16789999999855,
+        "p90Latency": 125.04699999999866,
+        "p95Latency": 145.79989999999998,
+        "p99Latency": 417.9692,
+        "maxLatency": 417.9692,
+        "statusCounts": {
+          "401": 78
+        },
+        "topVariances": [
+          {
+            "statusCode": 401,
+            "count": 78,
+            "percentage": "100.00",
+            "minLatency": 68.3471999999997,
+            "medianLatency": 92.16789999999855,
+            "slowestLatency": 417.9692,
+            "sampleError": "{\"error\":\"Unauthorized: Admin authentication token required\"}"
+          }
+        ]
+      },
+      {
+        "route": "/api/admin/bulletins?_page=1&_per_page=10",
+        "totalCalls": 78,
+        "totalBytes": 4758,
+        "totalTimeMs": 7327.102100000008,
+        "avgLatency": 93.93720641025651,
+        "minLatency": 68.55060000000049,
+        "p50Latency": 87.82970000000023,
+        "p90Latency": 129.66730000000098,
+        "p95Latency": 145.21770000000106,
+        "p99Latency": 293.21529999999984,
+        "maxLatency": 293.21529999999984,
+        "statusCounts": {
+          "401": 78
+        },
+        "topVariances": [
+          {
+            "statusCode": 401,
+            "count": 78,
+            "percentage": "100.00",
+            "minLatency": 68.55060000000049,
+            "medianLatency": 87.82970000000023,
+            "slowestLatency": 293.21529999999984,
+            "sampleError": "{\"error\":\"Unauthorized: Admin authentication token required\"}"
+          }
+        ]
+      },
+      {
+        "route": "/api/events?_include=category,author,status,location&_page=1&_per_page=10",
+        "totalCalls": 77,
+        "totalBytes": 1259566,
+        "totalTimeMs": 8625.653200000002,
+        "avgLatency": 112.02147012987014,
+        "minLatency": 78.63830000000007,
+        "p50Latency": 99.32229999999981,
+        "p90Latency": 140.39249999999993,
+        "p95Latency": 208.83519999999953,
+        "p99Latency": 401.60440000000017,
+        "maxLatency": 401.60440000000017,
+        "statusCounts": {
+          "200": 77
+        },
+        "topVariances": [
+          {
+            "statusCode": 200,
+            "count": 77,
+            "percentage": "100.00",
+            "minLatency": 78.63830000000007,
+            "medianLatency": 99.32229999999981,
+            "slowestLatency": 401.60440000000017,
+            "sampleError": ""
+          }
+        ]
+      },
+      {
+        "route": "/api/events?_page=1&_per_page=10",
+        "totalCalls": 77,
+        "totalBytes": 7466074,
+        "totalTimeMs": 11773.353700000001,
+        "avgLatency": 152.9006974025974,
+        "minLatency": 97.44949999999972,
+        "p50Latency": 136.57090000000062,
+        "p90Latency": 225.54800000000068,
+        "p95Latency": 264.48199999999997,
+        "p99Latency": 488.0491000000002,
+        "maxLatency": 488.0491000000002,
+        "statusCounts": {
+          "200": 77
+        },
+        "topVariances": [
+          {
+            "statusCode": 200,
+            "count": 77,
+            "percentage": "100.00",
+            "minLatency": 97.44949999999972,
+            "medianLatency": 136.57090000000062,
+            "slowestLatency": 488.0491000000002,
+            "sampleError": ""
+          }
+        ]
+      },
+      {
+        "route": "/api/admin/events?_page=1&_per_page=10",
+        "totalCalls": 76,
+        "totalBytes": 4636,
+        "totalTimeMs": 7324.606099999991,
+        "avgLatency": 96.37639605263146,
+        "minLatency": 70.48219999999856,
+        "p50Latency": 91.92270000000008,
+        "p90Latency": 126.62620000000061,
+        "p95Latency": 155.8080000000009,
+        "p99Latency": 169.84910000000127,
+        "maxLatency": 169.84910000000127,
+        "statusCounts": {
+          "401": 76
+        },
+        "topVariances": [
+          {
+            "statusCode": 401,
+            "count": 76,
+            "percentage": "100.00",
+            "minLatency": 70.48219999999856,
+            "medianLatency": 91.92270000000008,
+            "slowestLatency": 169.84910000000127,
+            "sampleError": "{\"error\":\"Unauthorized: Admin authentication token required\"}"
+          }
+        ]
+      },
+      {
+        "route": "/api/profileStatuses",
+        "totalCalls": 71,
+        "totalBytes": 9798,
+        "totalTimeMs": 7338.470999999995,
+        "avgLatency": 103.35874647887319,
+        "minLatency": 68.3078000000005,
+        "p50Latency": 90.54249999999956,
+        "p90Latency": 131.32799999999952,
+        "p95Latency": 169.11090000000013,
+        "p99Latency": 332.9878000000008,
+        "maxLatency": 332.9878000000008,
+        "statusCounts": {
+          "200": 71
+        },
+        "topVariances": [
+          {
+            "statusCode": 200,
+            "count": 71,
+            "percentage": "100.00",
+            "minLatency": 68.3078000000005,
+            "medianLatency": 90.54249999999956,
+            "slowestLatency": 332.9878000000008,
+            "sampleError": ""
+          }
+        ]
+      },
+      {
+        "route": "/api/eventStatuses",
+        "totalCalls": 70,
+        "totalBytes": 18620,
+        "totalTimeMs": 7140.1725000000015,
+        "avgLatency": 102.00246428571431,
+        "minLatency": 70.52579999999989,
+        "p50Latency": 87.28850000000057,
+        "p90Latency": 132.59259999999995,
+        "p95Latency": 135.66060000000107,
+        "p99Latency": 417.4471000000012,
+        "maxLatency": 417.4471000000012,
+        "statusCounts": {
+          "200": 70
+        },
+        "topVariances": [
+          {
+            "statusCode": 200,
+            "count": 70,
+            "percentage": "100.00",
+            "minLatency": 70.52579999999989,
+            "medianLatency": 87.28850000000057,
+            "slowestLatency": 417.4471000000012,
+            "sampleError": ""
+          }
+        ]
+      },
+      {
+        "route": "/api/degrees",
+        "totalCalls": 69,
+        "totalBytes": 33396,
+        "totalTimeMs": 6890.125399999999,
+        "avgLatency": 99.85688985507245,
+        "minLatency": 69.58110000000124,
+        "p50Latency": 88.67120000000023,
+        "p90Latency": 125.8094000000001,
+        "p95Latency": 147.64029999999912,
+        "p99Latency": 479.23680000000013,
+        "maxLatency": 479.23680000000013,
+        "statusCounts": {
+          "200": 69
+        },
+        "topVariances": [
+          {
+            "statusCode": 200,
+            "count": 69,
+            "percentage": "100.00",
+            "minLatency": 69.58110000000124,
+            "medianLatency": 88.67120000000023,
+            "slowestLatency": 479.23680000000013,
+            "sampleError": ""
+          }
+        ]
+      },
+      {
+        "route": "/api/events?_sort=eventDate&_order=desc&_page=2&_per_page=5",
+        "totalCalls": 69,
+        "totalBytes": 3156060,
+        "totalTimeMs": 9281.2255,
+        "avgLatency": 134.5105144927536,
+        "minLatency": 85.59710000000086,
+        "p50Latency": 118.53800000000001,
+        "p90Latency": 183.03160000000003,
+        "p95Latency": 212.5639999999985,
+        "p99Latency": 469.0096000000012,
+        "maxLatency": 469.0096000000012,
+        "statusCounts": {
+          "200": 69
+        },
+        "topVariances": [
+          {
+            "statusCode": 200,
+            "count": 69,
+            "percentage": "100.00",
+            "minLatency": 85.59710000000086,
+            "medianLatency": 118.53800000000001,
+            "slowestLatency": 469.0096000000012,
+            "sampleError": ""
+          }
+        ]
+      },
+      {
+        "route": "/api/bulletins?_page=1&_per_page=10",
+        "totalCalls": 67,
+        "totalBytes": 4185557,
+        "totalTimeMs": 9575.2071,
+        "avgLatency": 142.91353880597012,
+        "minLatency": 88.78099999999904,
+        "p50Latency": 130.45170000000144,
+        "p90Latency": 200.43340000000012,
+        "p95Latency": 246.51800000000003,
+        "p99Latency": 420.61179999999877,
+        "maxLatency": 420.61179999999877,
+        "statusCounts": {
+          "200": 67
+        },
+        "topVariances": [
+          {
+            "statusCode": 200,
+            "count": 67,
+            "percentage": "100.00",
+            "minLatency": 88.78099999999904,
+            "medianLatency": 130.45170000000144,
+            "slowestLatency": 420.61179999999877,
+            "sampleError": ""
+          }
+        ]
+      },
+      {
+        "route": "/api/contentStatuses",
+        "totalCalls": 60,
+        "totalBytes": 13140,
+        "totalTimeMs": 5507.199800000001,
+        "avgLatency": 91.78666333333335,
+        "minLatency": 69.2835,
+        "p50Latency": 90.23400000000038,
+        "p90Latency": 116.48110000000088,
+        "p95Latency": 128.10849999999846,
+        "p99Latency": 152.3607000000011,
+        "maxLatency": 152.3607000000011,
+        "statusCounts": {
+          "200": 60
+        },
+        "topVariances": [
+          {
+            "statusCode": 200,
+            "count": 60,
+            "percentage": "100.00",
+            "minLatency": 69.2835,
+            "medianLatency": 90.23400000000038,
+            "slowestLatency": 152.3607000000011,
+            "sampleError": ""
+          }
+        ]
+      }
+    ]
+  }
+}

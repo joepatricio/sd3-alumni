@@ -1,0 +1,292 @@
+{
+  "timestamp": "2026-11-10T22:26:05Z",
+  "routes": [
+    {
+      "route": "[Auth] Official User Login",
+      "method": "POST",
+      "totalCalls": 2,
+      "totalTimeMs": 967.156800000339,
+      "minLatency": 397.42480000040814,
+      "p50Latency": 569.7319999999308,
+      "p95Latency": 569.7319999999308,
+      "p99Latency": 569.7319999999308,
+      "maxLatency": 569.7319999999308,
+      "statusCounts": {
+        "0": 2
+      },
+      "recentErrors": []
+    },
+    {
+      "route": "[Auth] Regular User Login",
+      "method": "POST",
+      "totalCalls": 5,
+      "totalTimeMs": 2431.364100000792,
+      "minLatency": 382.1809999999459,
+      "p50Latency": 468.2516000002579,
+      "p95Latency": 637.605099999746,
+      "p99Latency": 637.605099999746,
+      "maxLatency": 637.605099999746,
+      "statusCounts": {
+        "0": 5
+      },
+      "recentErrors": []
+    },
+    {
+      "route": "/api/bulletins [Official Post]",
+      "method": "POST",
+      "totalCalls": 8,
+      "totalTimeMs": 909.4223000001875,
+      "minLatency": 94.14790000028006,
+      "p50Latency": 112.15989999982412,
+      "p95Latency": 132.92730000011943,
+      "p99Latency": 132.92730000011943,
+      "maxLatency": 132.92730000011943,
+      "statusCounts": {
+        "0": 8
+      },
+      "recentErrors": []
+    },
+    {
+      "route": "/api/bulletins [_include=category,author,status]",
+      "method": "GET",
+      "totalCalls": 6,
+      "totalTimeMs": 1624.9780000007377,
+      "minLatency": 128.74080000074173,
+      "p50Latency": 182.26229999982024,
+      "p95Latency": 829.9379000000044,
+      "p99Latency": 829.9379000000044,
+      "maxLatency": 829.9379000000044,
+      "statusCounts": {
+        "0": 6
+      },
+      "recentErrors": []
+    },
+    {
+      "route": "/api/auth/register [Worst-Case Write]",
+      "method": "POST",
+      "totalCalls": 7,
+      "totalTimeMs": 2234.210399999938,
+      "minLatency": 189.68039999981556,
+      "p50Latency": 284.46340000027703,
+      "p95Latency": 501.8425999996907,
+      "p99Latency": 501.8425999996907,
+      "maxLatency": 501.8425999996907,
+      "statusCounts": {
+        "0": 7
+      },
+      "recentErrors": []
+    },
+    {
+      "route": "/api/users [_include=profile,userStatus]",
+      "method": "GET",
+      "totalCalls": 4,
+      "totalTimeMs": 812.5183000001925,
+      "minLatency": 84.22160000009171,
+      "p50Latency": 141.72309999958088,
+      "p95Latency": 463.67499999996653,
+      "p99Latency": 463.67499999996653,
+      "maxLatency": 463.67499999996653,
+      "statusCounts": {
+        "0": 4
+      },
+      "recentErrors": []
+    },
+    {
+      "route": "/api/bulletins [Filtered Page]",
+      "method": "GET",
+      "totalCalls": 7,
+      "totalTimeMs": 2381.158799998957,
+      "minLatency": 165.29890000037994,
+      "p50Latency": 278.62219999951776,
+      "p95Latency": 719.6375000003172,
+      "p99Latency": 719.6375000003172,
+      "maxLatency": 719.6375000003172,
+      "statusCounts": {
+        "0": 7
+      },
+      "recentErrors": []
+    },
+    {
+      "route": "/api/bulletins [Regular Post]",
+      "method": "POST",
+      "totalCalls": 1,
+      "totalTimeMs": 91.05559999989055,
+      "minLatency": 91.05559999989055,
+      "p50Latency": 91.05559999989055,
+      "p95Latency": 91.05559999989055,
+      "p99Latency": 91.05559999989055,
+      "maxLatency": 91.05559999989055,
+      "statusCounts": {
+        "0": 1
+      },
+      "recentErrors": []
+    },
+    {
+      "route": "[Auth] Admin Login",
+      "method": "POST",
+      "totalCalls": 1,
+      "totalTimeMs": 815.3886000000057,
+      "minLatency": 815.3886000000057,
+      "p50Latency": 815.3886000000057,
+      "p95Latency": 815.3886000000057,
+      "p99Latency": 815.3886000000057,
+      "maxLatency": 815.3886000000057,
+      "statusCounts": {
+        "0": 1
+      },
+      "recentErrors": []
+    },
+    {
+      "route": "/api/admin/dashboard-stats",
+      "method": "GET",
+      "totalCalls": 7,
+      "totalTimeMs": 974.0708000008453,
+      "minLatency": 112.044400000741,
+      "p50Latency": 130.81009999950766,
+      "p95Latency": 211.87629999985802,
+      "p99Latency": 211.87629999985802,
+      "maxLatency": 211.87629999985802,
+      "statusCounts": {
+        "0": 7
+      },
+      "recentErrors": []
+    },
+    {
+      "route": "/api/events [Filtered Page]",
+      "method": "GET",
+      "totalCalls": 5,
+      "totalTimeMs": 1462.564200000088,
+      "minLatency": 185.15949999982695,
+      "p50Latency": 310.378899999705,
+      "p95Latency": 364.43640000015876,
+      "p99Latency": 364.43640000015876,
+      "maxLatency": 364.43640000015876,
+      "statusCounts": {
+        "0": 5
+      },
+      "recentErrors": []
+    },
+    {
+      "route": "/api/donations/summary",
+      "method": "GET",
+      "totalCalls": 3,
+      "totalTimeMs": 477.8218999990713,
+      "minLatency": 107.05849999976635,
+      "p50Latency": 110.16579999977694,
+      "p95Latency": 260.59759999952803,
+      "p99Latency": 260.59759999952803,
+      "maxLatency": 260.59759999952803,
+      "statusCounts": {
+        "0": 3
+      },
+      "recentErrors": []
+    },
+    {
+      "route": "/api/donations [Table]",
+      "method": "GET",
+      "totalCalls": 3,
+      "totalTimeMs": 451.36830000046757,
+      "minLatency": 99.6248999999807,
+      "p50Latency": 123.90500000037719,
+      "p95Latency": 227.8384000001097,
+      "p99Latency": 227.8384000001097,
+      "maxLatency": 227.8384000001097,
+      "statusCounts": {
+        "0": 3
+      },
+      "recentErrors": []
+    },
+    {
+      "route": "/api/users/:id [Profile Patch]",
+      "method": "PATCH",
+      "totalCalls": 1,
+      "totalTimeMs": 112.19200000050478,
+      "minLatency": 112.19200000050478,
+      "p50Latency": 112.19200000050478,
+      "p95Latency": 112.19200000050478,
+      "p99Latency": 112.19200000050478,
+      "maxLatency": 112.19200000050478,
+      "statusCounts": {
+        "0": 1
+      },
+      "recentErrors": []
+    },
+    {
+      "route": "/api/userRsvps [Official RSVP]",
+      "method": "POST",
+      "totalCalls": 4,
+      "totalTimeMs": 626.6790999998193,
+      "minLatency": 89.05719999984285,
+      "p50Latency": 105.40260000016133,
+      "p95Latency": 328.16039999943314,
+      "p99Latency": 328.16039999943314,
+      "maxLatency": 328.16039999943314,
+      "statusCounts": {
+        "0": 4
+      },
+      "recentErrors": [
+        "500 Server Error: Internal Server Error for url: /api/userRsvps [Official RSVP]"
+      ]
+    },
+    {
+      "route": "/api/contentStatuses",
+      "method": "GET",
+      "totalCalls": 1,
+      "totalTimeMs": 99.32180000032531,
+      "minLatency": 99.32180000032531,
+      "p50Latency": 99.32180000032531,
+      "p95Latency": 99.32180000032531,
+      "p99Latency": 99.32180000032531,
+      "maxLatency": 99.32180000032531,
+      "statusCounts": {
+        "0": 1
+      },
+      "recentErrors": []
+    },
+    {
+      "route": "/api/userRsvps [RSVP Post]",
+      "method": "POST",
+      "totalCalls": 1,
+      "totalTimeMs": 100.42909999992844,
+      "minLatency": 100.42909999992844,
+      "p50Latency": 100.42909999992844,
+      "p95Latency": 100.42909999992844,
+      "p99Latency": 100.42909999992844,
+      "maxLatency": 100.42909999992844,
+      "statusCounts": {
+        "0": 1
+      },
+      "recentErrors": []
+    },
+    {
+      "route": "/api/degrees",
+      "method": "GET",
+      "totalCalls": 1,
+      "totalTimeMs": 101.32140000041545,
+      "minLatency": 101.32140000041545,
+      "p50Latency": 101.32140000041545,
+      "p95Latency": 101.32140000041545,
+      "p99Latency": 101.32140000041545,
+      "maxLatency": 101.32140000041545,
+      "statusCounts": {
+        "0": 1
+      },
+      "recentErrors": []
+    },
+    {
+      "route": "/api/admin/bulletins/:id/status [Moderate]",
+      "method": "PATCH",
+      "totalCalls": 1,
+      "totalTimeMs": 103.90019999977085,
+      "minLatency": 103.90019999977085,
+      "p50Latency": 103.90019999977085,
+      "p95Latency": 103.90019999977085,
+      "p99Latency": 103.90019999977085,
+      "maxLatency": 103.90019999977085,
+      "statusCounts": {
+        "0": 1
+      },
+      "recentErrors": []
+    }
+  ]
+}
