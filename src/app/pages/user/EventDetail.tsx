@@ -347,7 +347,7 @@ export function EventDetail() {
                     <p className="text-amber-800 font-medium text-sm">
                         {eventData.adminNotes && eventData.adminNotes.trim()
                             ? `Administrative note: ${eventData.adminNotes.trim()}`
-                            : "Reviewing admin did not provide any additional notes or feedback."}
+                            : "Reviewing administrator did not provide any additional notes or feedback."}
                     </p>
                 </div>
             )}
