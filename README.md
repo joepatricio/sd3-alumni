@@ -37,8 +37,8 @@ The application is built on a full-stack architecture tailored for production de
 ### 2) Environment Setup
 Create a `.env` file in the project root (or verify `.env.development`). 
 
-> [!CAUTION]
-> **Crucial Local Dev Rule**: If you do **NOT** have Cloudflare AI credentials configured, you **MUST** set `CLASSIFIER_INTERVAL_MINUTES=0` or `-1` in your `.env`. Otherwise, the server startup guard will crash immediately with a fatal error!
+> [!IMPORTANT]
+> If you do **NOT** have Cloudflare AI credentials configured, you **MUST** set `CLASSIFIER_INTERVAL_MINUTES=0` or `-1` in your `.env`. Otherwise, the server startup guard will prevent you from running the backend server!
 
 Example `.env` configuration for local development:
 ```env
@@ -60,6 +60,9 @@ CLOUDFLARE_ACCOUNT_ID=""
 PAYMONGO_PUBLIC_KEY="pk_test_..."
 PAYMONGO_SECRET_KEY="sk_test_..."
 PAYMONGO_WEBHOOK="whsk_..."
+
+# Ngrok can also be used as a reverse-proxy
+NGROK_AUTHTOKEN="ngrok_auth_here"
 
 # Client API Configuration
 VITE_API_BASE_URL="/api/"
@@ -85,7 +88,8 @@ VITE_DEBUG_MODE=true
 Local development requires running both the backend API and frontend Vite server:
 1. **Backend Server** (runs on port `3000` with hot-reloading):
    ```bash
-   pnpm server
+   # To use Ngrok as a reverse proxy, run `pnpm server` instead
+   pnpm server:local
    ```
 2. **Frontend Dev Server** (runs Vite on port `5173`):
    ```bash
