@@ -11,7 +11,7 @@
 
 - **Table CRUD Operations & Query Syntax**
   - Standard table and entity CRUD operations utilize the project's query parser (`api/queryParser.js`).
-  - Consult **`.agents/table-api.md`** for query parameters (`_where`, `_include`, `_sort`, `_order`, `_page`, `_per_page`), filtering operators, relation hydration rules, and concrete request/response examples.
+  - Consult **`.agents/api-tables.md`** for query parameters (`_where`, `_include`, `_sort`, `_order`, `_page`, `_per_page`), filtering operators, relation hydration rules, and concrete request/response examples.
 
 - **Verification Protocol (HTTP-First Testing & Code Introspection)**
   - **Runtime & Contract Verification**: When verifying or testing API endpoints, response shapes, and query syntax, always execute HTTP requests against the live running API server (e.g., using `curl.exe` or lightweight HTTP test scripts).
@@ -25,7 +25,7 @@
   - **Differentiating Active Contracts from Legacy Residue**: If an identifier or status string appears in frontend/backend code (e.g., `disabledUsers`) but is absent from the database lookup table or Prisma schema, treat it as obsolete legacy code—do not propagate it to API requests, query parameters, or documentation.
 
 - **Documentation Synchronization**
-  - Whenever an implementation changes the REST API's behavior, `.agents/api.md` and/or `.agents/table-api.md` must be updated to reflect the changes. Coordinate these changes with your operator.
+  - Whenever an implementation changes the REST API's behavior, `.agents/api.md` and/or `.agents/api-tables.md` must be updated to reflect the changes. Coordinate these changes with your operator.
   - Ensure documentation accurately describes the implemented API, including affected endpoints, request parameters, response structures, status codes, and error handling.
   - Do not consider API-related implementation work complete until the corresponding documentation has been reviewed and updated.
 

@@ -2,7 +2,7 @@
 This document outlines the core styling conventions, color palettes, and structural layouts governing the USJ-R SEA Alumni Platform.
 
 ## Agent Workflow: Iterative Delivery
-- **Prioritize Rapid Iteration**: Agents should prioritize quick, small, verifiable iterations and incremental design revisions over prolonged, single-turn efforts unless explicitly instructed otherwise by the operator.
+- **Prioritize Rapid Iteration**: Agents should prioritize quick, small, verifiable iterations and incremental design revisions over prolonged, single-turn efforts unless explicitly instructed otherwise by the operator. Verification is visual and runtime-based via the active dev server; do not run build or lint commands to verify UI edits.
 - **Early Feedback Alignment**: Keep UI and stylistic changes targeted and check in frequently with working previews or focused updates to ensure visual alignment before committing to extensive overhauls.
 
 ### Communication: Concise Responses

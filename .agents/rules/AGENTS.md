@@ -7,6 +7,9 @@
 - Do not introduce unnecessary dependencies.
 - Preserve backward compatibility unless explicitly authorized.
 - When interacting with Cloudflare, use the cf CLI unless the project has a Wrangler configuration file.
+- **No Unsolicited Builds or Repository-Wide Linting**:
+  - NEVER run full project builds (`npm run build`, `pnpm run build`, `tsc`, `vite build`) or workspace lint sweeps (`npm run lint`, `eslint .`) unless explicitly directed to do so by the operator.
+  - Rely on targeted code inspection, language server feedback, and the active development server (HMR). Do not run whole-codebase verification steps after routine file edits.
 
 ## Specialized Instructions
 
@@ -14,7 +17,7 @@ Before executing any request, perform a **Domain Assessment**:
 1. Identify all applicable domains involved in the task:
    - Python operations/scripts → `.agents/python.md`
    - General REST API usage, conventions, verification protocol → `.agents/api.md`
-   - REST API table CRUD operations, query filters, and relations → `.agents/table-api.md`
+   - REST API table CRUD operations, query filters, and relations → `.agents/api-tables.md`
    - Specialized endpoints (user auth, sessions, custom workflows) → Inspect `api/index.js`
    - UI, styling, layout, or frontend components → `.agents/design.md`
 2. **Cross-Domain Requirement**: If more than one domain is touched (e.g., frontend code that calls REST endpoints, or Python scripts consuming APIs), you **MUST** read and consult all corresponding references before writing code.

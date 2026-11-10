@@ -149,19 +149,21 @@ VALUES ('usr-reg-05', 3, 1, 0, 1, 3, 1, 50.0, CURRENT_TIMESTAMP);
 -- ------------------------------------------------------------------------------
 
 -- Pending Bulletins ('a6ze5OaKs0')
-INSERT OR REPLACE INTO Bulletin (id, title, content, contentStatusId, authorId, bulletinDate)
+-- Bulletin Categories: Announcements ('ueMRjAn-P0'), Careers ('nEA2WEPc5f'), Donations ('xd67TtDe0d')
+INSERT OR REPLACE INTO Bulletin (id, title, content, contentStatusId, authorId, bulletinDate, bulletinCategoryId, readTimeMinutes)
 VALUES 
-    ('blt-pending-01', 'Alumni Homecoming Planning 2026', 'Draft agenda for the upcoming grand homecoming banquet and symposium.', 'a6ze5OaKs0', 'usr-off-01', CURRENT_TIMESTAMP),
-    ('blt-pending-02', 'Mentorship Program Signups', 'Seeking senior engineers to mentor graduating batch of 2026.', 'a6ze5OaKs0', 'usr-off-02', CURRENT_TIMESTAMP),
-    ('blt-pending-03', 'Robotics Lab Equipment Fund', 'Call for donations to upgrade university microcontroller kits.', 'a6ze5OaKs0', 'usr-reg-02', CURRENT_TIMESTAMP),
-    ('blt-pending-04', 'Start-up Pitch Night Cebu', 'Calling all alumni founders to pitch in front of angel investors.', 'a6ze5OaKs0', 'usr-off-03', CURRENT_TIMESTAMP),
-    ('blt-pending-05', 'Career Transition AMA', 'Join us next week for an AMA on transitioning from hardware to cloud dev.', 'a6ze5OaKs0', 'usr-reg-05', CURRENT_TIMESTAMP);
+    ('blt-pending-01', 'Alumni Homecoming Planning 2026', 'Draft agenda for the upcoming grand homecoming banquet and symposium.', 'a6ze5OaKs0', 'usr-off-01', CURRENT_TIMESTAMP, COALESCE((SELECT id FROM BulletinCategory WHERE bulletinCategoryName = 'Announcements' LIMIT 1), 'ueMRjAn-P0'), 3),
+    ('blt-pending-02', 'Mentorship Program Signups', 'Seeking senior engineers to mentor graduating batch of 2026.', 'a6ze5OaKs0', 'usr-off-02', CURRENT_TIMESTAMP, COALESCE((SELECT id FROM BulletinCategory WHERE bulletinCategoryName = 'Careers' LIMIT 1), 'nEA2WEPc5f'), 2),
+    ('blt-pending-03', 'Robotics Lab Equipment Fund', 'Call for donations to upgrade university microcontroller kits.', 'a6ze5OaKs0', 'usr-reg-02', CURRENT_TIMESTAMP, COALESCE((SELECT id FROM BulletinCategory WHERE bulletinCategoryName = 'Donations' LIMIT 1), 'xd67TtDe0d'), 4),
+    ('blt-pending-04', 'Start-up Pitch Night Cebu', 'Calling all alumni founders to pitch in front of angel investors.', 'a6ze5OaKs0', 'usr-off-03', CURRENT_TIMESTAMP, COALESCE((SELECT id FROM BulletinCategory WHERE bulletinCategoryName = 'Careers' LIMIT 1), 'nEA2WEPc5f'), 3),
+    ('blt-pending-05', 'Career Transition AMA', 'Join us next week for an AMA on transitioning from hardware to cloud dev.', 'a6ze5OaKs0', 'usr-reg-05', CURRENT_TIMESTAMP, COALESCE((SELECT id FROM BulletinCategory WHERE bulletinCategoryName = 'Careers' LIMIT 1), 'nEA2WEPc5f'), 5);
 
 -- Pending Events ('G0sRtXA38I') & Approved Events for RSVP ('j3Ua4WQwdl')
-INSERT OR REPLACE INTO Event (id, title, description, eventStatusId, authorId, eventDate, modality)
+-- Event Categories: Reunion ('lkIFfpktVL'), Conference ('iH-gzGZDnh'), Networking ('d3Kg5La8vg'), Workshop ('73JAuNaAoA')
+INSERT OR REPLACE INTO Event (id, title, description, eventStatusId, authorId, eventDate, modality, eventCategoryId)
 VALUES 
-    ('evt-pending-01', 'Annual General Assembly 2026', 'Official election of new alumni board officers and annual report.', 'G0sRtXA38I', 'usr-off-01', '2026-12-15 09:00:00', 'In-Person'),
-    ('evt-pending-02', 'Tech Leadership Panel', 'A keynote panel discussing AI agents and sustainable computing.', 'G0sRtXA38I', 'usr-off-02', '2026-11-25 14:00:00', 'Virtual'),
-    ('evt-active-rsvp-01', 'High Concurrency Mega Meetup', 'Active event receiving massive RSVPs from Regular & Official members.', 'j3Ua4WQwdl', 'usr-off-01', '2026-11-30 18:00:00', 'In-Person'),
-    ('evt-active-rsvp-02', 'Alumni Hackathon 2026', 'Active event receiving massive RSVPs to test event concluding workflow.', 'j3Ua4WQwdl', 'usr-off-03', '2026-11-28 10:00:00', 'Virtual');
+    ('evt-pending-01', 'Annual General Assembly 2026', 'Official election of new alumni board officers and annual report.', 'G0sRtXA38I', 'usr-off-01', '2026-12-15 09:00:00', 'In-Person', COALESCE((SELECT id FROM EventCategory WHERE eventCategoryName = 'Reunion' LIMIT 1), 'lkIFfpktVL')),
+    ('evt-pending-02', 'Tech Leadership Panel', 'A keynote panel discussing AI agents and sustainable computing.', 'G0sRtXA38I', 'usr-off-02', '2026-11-25 14:00:00', 'Virtual', COALESCE((SELECT id FROM EventCategory WHERE eventCategoryName = 'Conference' LIMIT 1), 'iH-gzGZDnh')),
+    ('evt-active-rsvp-01', 'High Concurrency Mega Meetup', 'Active event receiving massive RSVPs from Regular & Official members.', 'j3Ua4WQwdl', 'usr-off-01', '2026-11-30 18:00:00', 'In-Person', COALESCE((SELECT id FROM EventCategory WHERE eventCategoryName = 'Networking' LIMIT 1), 'd3Kg5La8vg')),
+    ('evt-active-rsvp-02', 'Alumni Hackathon 2026', 'Active event receiving massive RSVPs to test event concluding workflow.', 'j3Ua4WQwdl', 'usr-off-03', '2026-11-28 10:00:00', 'Virtual', COALESCE((SELECT id FROM EventCategory WHERE eventCategoryName = 'Workshop' LIMIT 1), '73JAuNaAoA'));
 
