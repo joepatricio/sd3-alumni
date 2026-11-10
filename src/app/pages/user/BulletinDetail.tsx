@@ -330,7 +330,7 @@ export function BulletinDetail() {
                     <p className="text-amber-800 font-medium text-sm">
                         {bulletin.adminNotes && bulletin.adminNotes.trim()
                             ? `Administrative note: ${bulletin.adminNotes.trim()}`
-                            : "The admin did not provide a reason for this decision."}
+                            : "Reviewing administrator did not provide any additional notes or feedback."}
                     </p>
                 </div>
             )}
