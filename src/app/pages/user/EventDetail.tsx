@@ -20,7 +20,6 @@ import {
 import { CreateEventModal, type EventModalInitialData } from '@components/user/CreateEventModal';
 import { PublicGuestListModal } from '@components/user/PublicGuestListModal';
 const Analytics = lazy(() => import('@components/admin/Analytics').then(m => ({ default: m.Analytics })));
-const FullGuestListModal = lazy(() => import('@components/user/FullGuestListModal').then(m => ({ default: m.FullGuestListModal })));
 import { Button } from '@components/ui/button';
 import { Badge } from '@components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@components/ui/avatar';
@@ -449,6 +448,38 @@ export function EventDetail() {
 
             <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
 
+                {/* RSVP Analytics for author view and in admin preview */}
+                {(isAuthor || isAdminPreview) && (
+                    <Suspense
+                        fallback={
+                            <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-8 flex flex-col items-center justify-center min-h-[300px]">
+                                <Loader2 className="w-8 h-8 text-brand-primary animate-spin mb-2" />
+                                <p className="text-sm text-gray-500 font-medium">Loading RSVP Analytics...</p>
+                            </div>
+                        }
+                    >
+                        <Analytics
+                            guestList={enrichedGuestList}
+                            title="RSVP Analytics"
+                            description="Visual distribution of attendee degree programs, generational cohorts, and profile privacy preferences."
+                            headerExtra={
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    asChild
+                                    className="gap-1.5 text-xs font-semibold text-brand-primary border-brand-primary hover:bg-brand-primary hover:text-white transition-colors"
+                                >
+                                    <Link to={`/events/${eventData.id}/guests`}>
+                                        <Users className="w-3.5 h-3.5" />
+                                        Manage Guest List
+                                    </Link>
+                                </Button>
+                            }
+                        />
+                    </Suspense>
+                )}
+
+                {/* Event Details */}
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                     {/* Left Column: Main Content */}
                     <div className="lg:col-span-2 space-y-8">
@@ -660,38 +691,6 @@ export function EventDetail() {
                         )}
                     </div>
                 </div>
-
-                {/* RSVP Analytics for author view and in admin preview */}
-                {(isAuthor || isAdminPreview) && (
-                    <Suspense
-                        fallback={
-                            <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-8 flex flex-col items-center justify-center min-h-[300px]">
-                                <Loader2 className="w-8 h-8 text-brand-primary animate-spin mb-2" />
-                                <p className="text-sm text-gray-500 font-medium">Loading RSVP Analytics...</p>
-                            </div>
-                        }
-                    >
-                        <Analytics
-                            guestList={enrichedGuestList}
-                            title="RSVP Analytics"
-                            description="Visual distribution of attendee degree programs, generational cohorts, and profile privacy preferences."
-                            headerExtra={
-                                <FullGuestListModal
-                                    guestList={enrichedGuestList}
-                                    currentUserId={session?.userId ? String(session.userId) : null}
-                                    friendIds={friendIds}
-                                    eventTitle={eventData.title}
-                                    trigger={
-                                        <Button variant="outline" size="sm" className="gap-1.5 text-xs font-semibold text-brand-primary border-brand-primary hover:bg-brand-primary hover:text-white transition-colors">
-                                            <Users className="w-3.5 h-3.5" />
-                                            View Guest List
-                                        </Button>
-                                    }
-                                />
-                            }
-                        />
-                    </Suspense>
-                )}
             </main>
         </div>
     );

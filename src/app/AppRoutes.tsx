@@ -13,6 +13,7 @@ const Home = lazy(() => import('@pages/user/Home').then(m => ({ default: m.Home 
 const Events = lazy(() => import('@pages/user/Events').then(m => ({ default: m.Events })));
 const Bulletin = lazy(() => import('@pages/user/Bulletin').then(m => ({ default: m.Bulletin })));
 const EventDetail = lazy(() => import('@pages/user/EventDetail').then(m => ({ default: m.EventDetail })));
+const EventGuestList = lazy(() => import('@pages/user/EventGuestList').then(m => ({ default: m.EventGuestList })));
 const BulletinDetail = lazy(() => import('@pages/user/BulletinDetail').then(m => ({ default: m.BulletinDetail })));
 const About = lazy(() => import('@pages/user/About').then(m => ({ default: m.About })));
 const Login = lazy(() => import('@pages/user/Login').then(m => ({ default: m.Login })));
@@ -75,6 +76,7 @@ export default function AppRoutes() {
                 <Route path="/events" element={withSuspense(Events)} />
                 <Route path="/bulletin/:id" element={withSuspense(BulletinDetail)} />
                 <Route path="/events/:id" element={withSuspense(EventDetail)} />
+                <Route path="/events/:id/guests" element={withSuspense(EventGuestList)} />
                 <Route path="/login" element={withSuspense(Login)} />
                 <Route path="/register" element={withSuspense(Register)} />
                 <Route path="/forgot-password" element={withSuspense(ForgotPassword)} />
