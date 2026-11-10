@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import {
     Dialog,
     DialogContent,
@@ -9,12 +9,15 @@ import {
 } from '@components/ui/dialog';
 import { Avatar, AvatarFallback, AvatarImage } from '@components/ui/avatar';
 import { Badge } from '@components/ui/badge';
+import { Button } from '@components/ui/button';
 import { Input } from '@components/ui/input';
 import { Link } from 'react-router-dom';
 import {
     Users,
     Search,
-    UserCheck
+    UserCheck,
+    ChevronLeft,
+    ChevronRight
 } from 'lucide-react';
 
 export interface PublicGuestItem {
@@ -48,6 +51,8 @@ export interface PublicGuestListModalProps {
     eventTitle?: string;
 }
 
+const MODAL_PAGE_SIZE = 20;
+
 export function PublicGuestListModal({
     isOpen,
     onOpenChange,
@@ -58,6 +63,13 @@ export function PublicGuestListModal({
     eventTitle
 }: PublicGuestListModalProps) {
     const [searchTerm, setSearchTerm] = useState('');
+    const [currentPage, setCurrentPage] = useState(1);
+    const listRef = useRef<HTMLDivElement>(null);
+
+    const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setSearchTerm(e.target.value);
+        setCurrentPage(1);
+    };
 
     // Public list: confirmed attendees only + visibility rules
     // (Public profiles OR connections who aren't Private OR current user)
@@ -87,8 +99,35 @@ export function PublicGuestListModal({
         });
     }, [guestList, currentUserId, friendIds, searchTerm]);
 
+    const totalPages = Math.max(1, Math.ceil(visibleGuests.length / MODAL_PAGE_SIZE));
+
+    // Clamp current page when visibleGuests length changes
+    useEffect(() => {
+        if (currentPage > totalPages) {
+            setCurrentPage(totalPages);
+        }
+    }, [currentPage, totalPages]);
+
+    const handleOpenChange = (open: boolean) => {
+        if (!open) {
+            setSearchTerm('');
+            setCurrentPage(1);
+        }
+        onOpenChange?.(open);
+    };
+
+    const handlePageChange = (newPage: number) => {
+        setCurrentPage(newPage);
+        listRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
+    const startIndex = (currentPage - 1) * MODAL_PAGE_SIZE;
+    const paginatedGuests = useMemo(() => {
+        return visibleGuests.slice(startIndex, startIndex + MODAL_PAGE_SIZE);
+    }, [visibleGuests, startIndex]);
+
     return (
-        <Dialog open={isOpen} onOpenChange={onOpenChange}>
+        <Dialog open={isOpen} onOpenChange={handleOpenChange}>
             {trigger && <DialogTrigger asChild>{trigger}</DialogTrigger>}
             <DialogContent className="sm:max-w-xl max-h-[85vh] flex flex-col p-0 overflow-hidden bg-white">
                 <DialogHeader className="px-6 pt-6 pb-4 border-b border-gray-100">
@@ -106,16 +145,16 @@ export function PublicGuestListModal({
                         <Input
                             placeholder="Search attendees by name, degree, or job..."
                             value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
+                            onChange={handleSearchChange}
                             className="pl-9 h-9 text-sm bg-gray-50/50 border-gray-200"
                         />
                     </div>
                 </DialogHeader>
 
                 {/* Attendees list */}
-                <div className="flex-1 overflow-y-auto px-6 py-4 space-y-3">
+                <div ref={listRef} className="flex-1 overflow-y-auto px-6 py-4 space-y-3">
                     {visibleGuests.length > 0 ? (
-                        visibleGuests.map((guest) => {
+                        paginatedGuests.map((guest) => {
                             const profile = guest.user?.profile;
                             const userId = guest.userId || guest.user?.id || '';
                             const userName = profile?.userName || 'Anonymous Alumnus';
@@ -200,14 +239,48 @@ export function PublicGuestListModal({
                     )}
                 </div>
 
-                {/* Footer summary */}
-                <div className="px-6 py-3 bg-gray-50 border-t border-gray-100 flex items-center justify-between text-xs text-gray-500">
-                    <span>
-                        Showing {visibleGuests.length} {visibleGuests.length === 1 ? 'attendee' : 'attendees'}
-                    </span>
-                    <span className="italic text-[11px] text-gray-400">
-                        Only showing visible profiles
-                    </span>
+                {/* Footer summary and pagination */}
+                <div className="px-6 py-3 bg-gray-50 border-t border-gray-100 flex items-center justify-between gap-3 text-xs text-gray-500">
+                    <div className="min-w-0">
+                        <span className="font-medium text-gray-700">
+                            {visibleGuests.length > 0
+                                ? `Showing ${startIndex + 1}–${Math.min(startIndex + MODAL_PAGE_SIZE, visibleGuests.length)} of ${visibleGuests.length}`
+                                : 'Showing 0 attendees'}
+                        </span>
+                        <span className="hidden sm:inline text-gray-400 ml-2 italic text-[11px]">
+                            (Visible profiles only)
+                        </span>
+                    </div>
+
+                    {totalPages > 1 && (
+                        <div className="flex items-center gap-1.5 shrink-0">
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
+                                disabled={currentPage === 1}
+                                className="h-7 px-2 text-xs text-gray-700 hover:text-brand-primary"
+                                aria-label="Previous page"
+                            >
+                                <ChevronLeft className="w-3.5 h-3.5 sm:mr-1" />
+                                <span className="hidden sm:inline">Prev</span>
+                            </Button>
+                            <span className="text-xs font-semibold px-1 text-gray-800">
+                                {currentPage} / {totalPages}
+                            </span>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))}
+                                disabled={currentPage >= totalPages}
+                                className="h-7 px-2 text-xs text-gray-700 hover:text-brand-primary"
+                                aria-label="Next page"
+                            >
+                                <span className="hidden sm:inline">Next</span>
+                                <ChevronRight className="w-3.5 h-3.5 sm:ml-1" />
+                            </Button>
+                        </div>
+                    )}
                 </div>
             </DialogContent>
         </Dialog>

@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useParams, Link, useLocation } from 'react-router-dom';
 import { api, unwrapListResponse, type EventData } from '@/app/views/api';
 import { useAuth } from '@/app/views/auth';
@@ -32,7 +32,9 @@ import {
     Loader2,
     ShieldAlert,
     GraduationCap,
-    Briefcase
+    Briefcase,
+    ChevronLeft,
+    ChevronRight
 } from 'lucide-react';
 import { formatDate } from '@/app/views/formatters';
 
@@ -213,6 +215,7 @@ export function EventGuestList() {
         setSelectedPrivacy('all');
         setSearchTerm('');
         setFilterTab('all');
+        setCurrentPage(1);
     };
 
     // Filtered list applying RSVP tab, Degree, Demographics, Privacy, and Search (name, job, company, contact info)
@@ -335,6 +338,66 @@ export function EventGuestList() {
         document.body.removeChild(link);
         URL.revokeObjectURL(url);
     };
+
+    // Responsive viewport detection:
+    // Single column viewport (< lg / < 1024px): 20 rows = 20 entries
+    // Double column viewport (>= lg / >= 1024px): 20 rows = 40 entries
+    const [isDoubleColumn, setIsDoubleColumn] = useState<boolean>(() => {
+        if (typeof window === 'undefined') return true;
+        return window.matchMedia('(min-width: 1024px)').matches;
+    });
+
+    useEffect(() => {
+        if (typeof window === 'undefined') return;
+        const mql = window.matchMedia('(min-width: 1024px)');
+        const onChange = (e: MediaQueryListEvent) => {
+            setIsDoubleColumn(e.matches);
+        };
+
+        mql.addEventListener('change', onChange);
+        setIsDoubleColumn(mql.matches);
+
+        return () => {
+            mql.removeEventListener('change', onChange);
+        };
+    }, []);
+
+    const pageSize = isDoubleColumn ? 40 : 20;
+    const [currentPage, setCurrentPage] = useState(1);
+    const guestListTopRef = useRef<HTMLDivElement>(null);
+
+    const totalPages = Math.max(1, Math.ceil(filteredGuests.length / pageSize));
+
+    // Reset pagination to page 1 whenever search, tab, or dropdown filters change
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [filterTab, selectedDegree, selectedDemographic, selectedPrivacy, searchTerm]);
+
+    // Keep page clamped within valid range
+    useEffect(() => {
+        if (currentPage > totalPages) {
+            setCurrentPage(totalPages);
+        }
+    }, [currentPage, totalPages]);
+
+    const handlePageChange = (newPage: number) => {
+        setCurrentPage(newPage);
+        guestListTopRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    };
+
+    const startIndex = (currentPage - 1) * pageSize;
+    const endIndex = Math.min(startIndex + pageSize, filteredGuests.length);
+
+    const paginatedGuests = useMemo(() => {
+        return filteredGuests.slice(startIndex, endIndex);
+    }, [filteredGuests, startIndex, endIndex]);
+
+    const visiblePages = useMemo(() => {
+        if (totalPages <= 7) return Array.from({ length: totalPages }, (_, i) => i + 1);
+        if (currentPage <= 4) return [1, 2, 3, 4, 5, '...', totalPages];
+        if (currentPage >= totalPages - 3) return [1, '...', totalPages - 4, totalPages - 3, totalPages - 2, totalPages - 1, totalPages];
+        return [1, '...', currentPage - 1, currentPage, currentPage + 1, '...', totalPages];
+    }, [currentPage, totalPages]);
 
     const formatTime = (timeStr?: string) => {
         if (!timeStr) return '';
@@ -579,10 +642,13 @@ export function EventGuestList() {
                     </div>
                 </div>
 
+                <div ref={guestListTopRef} />
+
                 {/* Guest List Grid Body (Responsive 2-column card grid) */}
                 {filteredGuests.length > 0 ? (
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                        {filteredGuests.map((guest) => {
+                    <>
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                            {paginatedGuests.map((guest) => {
                             const profile = guest.user?.profile;
                             const userId = guest.userId || guest.user?.id || '';
                             const userName = profile?.userName || 'Anonymous Alumnus';
@@ -738,6 +804,62 @@ export function EventGuestList() {
                             );
                         })}
                     </div>
+
+                    {/* Pagination Controls */}
+                    {totalPages > 1 && (
+                        <div className="flex flex-wrap items-center justify-center gap-1 sm:gap-2 pt-2">
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
+                                disabled={currentPage === 1}
+                                className="h-9 px-3 text-xs gap-1 border-gray-200 text-gray-700 hover:text-brand-primary disabled:opacity-40"
+                            >
+                                <ChevronLeft className="w-4 h-4" />
+                                <span className="hidden sm:inline">Previous</span>
+                            </Button>
+
+                            <div className="flex items-center gap-1">
+                                {visiblePages.map((page, index) => {
+                                    if (page === '...') {
+                                        return (
+                                            <span key={`ellipsis-${index}`} className="px-2 text-xs text-gray-400 select-none">
+                                                ...
+                                            </span>
+                                        );
+                                    }
+                                    const isCurrent = currentPage === page;
+                                    return (
+                                        <button
+                                            key={page}
+                                            type="button"
+                                            onClick={() => handlePageChange(page as number)}
+                                            className={`min-w-9 h-9 px-3 flex items-center justify-center rounded-lg text-xs font-semibold transition-colors border shadow-xs ${
+                                                isCurrent
+                                                    ? 'bg-brand-primary text-white border-brand-primary'
+                                                    : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50 hover:text-brand-primary'
+                                            }`}
+                                            aria-current={isCurrent ? 'page' : undefined}
+                                        >
+                                            {page}
+                                        </button>
+                                    );
+                                })}
+                            </div>
+
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))}
+                                disabled={currentPage === totalPages}
+                                className="h-9 px-3 text-xs gap-1 border-gray-200 text-gray-700 hover:text-brand-primary disabled:opacity-40"
+                            >
+                                <span className="hidden sm:inline">Next</span>
+                                <ChevronRight className="w-4 h-4" />
+                            </Button>
+                        </div>
+                    )}
+                </>
                 ) : (
                     <div className="bg-white rounded-2xl border border-gray-200/80 text-center py-16 px-4">
                         <Users className="w-12 h-12 text-gray-300 mx-auto mb-3" />
@@ -759,16 +881,26 @@ export function EventGuestList() {
                 )}
 
                 {/* Footer summary card */}
-                <div className="bg-white rounded-xl border border-gray-200/80 px-6 py-3.5 flex items-center justify-between text-xs text-gray-500">
+                <div className="bg-white rounded-xl border border-gray-200/80 px-6 py-3.5 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-gray-500">
                     <span>
-                        Showing <strong className="text-gray-900">{filteredGuests.length}</strong> of{' '}
-                        <strong className="text-gray-900">{enrichedGuestList.length}</strong> total responses
+                        Showing <strong className="text-gray-900">{filteredGuests.length > 0 ? `${startIndex + 1}–${endIndex}` : 0}</strong> of{' '}
+                        <strong className="text-gray-900">{filteredGuests.length}</strong> {filteredGuests.length === 1 ? 'response' : 'responses'}
+                        {hasActiveFilters && (
+                            <span> (filtered from <strong className="text-gray-900">{enrichedGuestList.length}</strong> total)</span>
+                        )}
                     </span>
-                    {hasActiveFilters && (
-                        <span className="text-[11px] text-brand-primary font-medium">
-                            Filters applied
-                        </span>
-                    )}
+                    <div className="flex items-center gap-3">
+                        {totalPages > 1 && (
+                            <span className="text-gray-600 font-medium">
+                                Page {currentPage} of {totalPages}
+                            </span>
+                        )}
+                        {hasActiveFilters && (
+                            <span className="text-[11px] text-brand-primary font-medium">
+                                Filters applied
+                            </span>
+                        )}
+                    </div>
                 </div>
             </div>
         </div>

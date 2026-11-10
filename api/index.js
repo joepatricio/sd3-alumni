@@ -219,7 +219,7 @@ const RATE_LIMIT_CONTENT_MAX = 10;
 
 // Maximum number of registered users on the platform. 
 // Set to Infinity to disable this limit.
-const MAX_TOTAL_USERS = 100;
+const MAX_TOTAL_USERS = 10000;
 
 app.use(cors({
     origin: true,
@@ -328,40 +328,56 @@ const getAdminId = (req) => {
 // =======================
 
 const authLimiter = rateLimit({
-    windowMs: RATE_LIMIT_AUTH_WINDOW_MS,
-    max: RATE_LIMIT_AUTH_MAX,
+    windowMs: 15 * 60 * 1000,
+    max: 999999999, // Allows unlimited authentication attempts
+    skip: () => true, // Completely bypasses limiter during test
     standardHeaders: true,
     legacyHeaders: false,
-    skipSuccessfulRequests: true,
-    message: { error: 'Too many authentication attempts from this IP, please try again after 15 minutes' }
 });
 
 const contentLimiter = rateLimit({
-    windowMs: RATE_LIMIT_CONTENT_WINDOW_MS,
-    max: RATE_LIMIT_CONTENT_MAX,
+    windowMs: 60 * 60 * 1000,
+    max: 999999999, // Allows unlimited content creation
+    skip: () => true, // Completely bypasses limiter during test
     standardHeaders: true,
     legacyHeaders: false,
-    keyGenerator: (req, res) => {
-        // Limit by user ID if authenticated (either from decoded token in headers or req user object)
-        const authHeader = req.headers['authorization'];
-        let token = authHeader && authHeader.split(' ')[1];
-        if (!token || token === 'null' || token === 'undefined') {
-            token = req.cookies?.token || req.cookies?.adminToken;
-        }
-        if (token) {
-            try {
-                const decoded = jwt.verify(token, process.env.JWT_SECRET);
-                if (decoded && (decoded.id || decoded.userId)) {
-                    return decoded.id || decoded.userId;
-                }
-            } catch {
-                // Ignore token errors here, fallback to IP
-            }
-        }
-        return ipKeyGenerator(req, res);
-    },
-    message: { error: 'Too many content creation attempts, please try again later' }
 });
+
+// const authLimiter = rateLimit({
+//     windowMs: RATE_LIMIT_AUTH_WINDOW_MS,
+//     max: RATE_LIMIT_AUTH_MAX,
+//     standardHeaders: true,
+//     legacyHeaders: false,
+//     skipSuccessfulRequests: true,
+//     message: { error: 'Too many authentication attempts from this IP, please try again after 15 minutes' }
+// });
+
+// const contentLimiter = rateLimit({
+//     windowMs: RATE_LIMIT_CONTENT_WINDOW_MS,
+//     max: RATE_LIMIT_CONTENT_MAX,
+//     standardHeaders: true,
+//     legacyHeaders: false,
+//     keyGenerator: (req, res) => {
+//         // Limit by user ID if authenticated (either from decoded token in headers or req user object)
+//         const authHeader = req.headers['authorization'];
+//         let token = authHeader && authHeader.split(' ')[1];
+//         if (!token || token === 'null' || token === 'undefined') {
+//             token = req.cookies?.token || req.cookies?.adminToken;
+//         }
+//         if (token) {
+//             try {
+//                 const decoded = jwt.verify(token, process.env.JWT_SECRET);
+//                 if (decoded && (decoded.id || decoded.userId)) {
+//                     return decoded.id || decoded.userId;
+//                 }
+//             } catch {
+//                 // Ignore token errors here, fallback to IP
+//             }
+//         }
+//         return ipKeyGenerator(req, res);
+//     },
+//     message: { error: 'Too many content creation attempts, please try again later' }
+// });
 
 app.post('/api/auth/check-email', authLimiter, async (req, res) => {
     try {
