@@ -1,2 +1,192 @@
 timeStamp,elapsed,label,responseCode,responseMessage,threadName,dataType,success,failureMessage,bytes,sentBytes,grpThreads,allThreads,URL,Latency,IdleTime,Connect
-1794363968241,7969,"[Setup] Sign Credentials, Verify All Tokens & Discover Seed IDs",401,Admin authentication & token verification failed for all accounts,setUp Thread Group (Auth & Token Verification) 1-1,text,false,,789,0,1,1,null,0,0,0
+1794364870878,12353,"[Setup] Sign Credentials, Verify All Tokens & Discover Seed IDs",200,All credential pools signed and verified,setUp Thread Group (Auth & Token Verification) 1-1,text,true,,1314,0,1,1,null,0,0,0
+1794364883387,992,[Setup Verify] GET /api/auth/admin/me,200,OK,setUp Thread Group (Auth & Token Verification) 1-1,text,true,,372,419,1,1,https://najealp.top/api/auth/admin/me,982,0,576
+1794364884381,264,[Setup Verify] GET /api/admin/dashboard-stats,200,OK,setUp Thread Group (Auth & Token Verification) 1-1,text,true,,5340,427,1,1,https://najealp.top/api/admin/dashboard-stats,263,0,0
+1794364884647,228,[Setup Verify] GET /api/auth/me (Official),200,OK,setUp Thread Group (Auth & Token Verification) 1-1,text,true,,825,381,1,1,https://najealp.top/api/auth/me,228,0,0
+1794364884876,225,[Setup Verify] GET /api/auth/me (Regular),200,OK,setUp Thread Group (Auth & Token Verification) 1-1,text,true,,905,424,1,1,https://najealp.top/api/auth/me,225,0,0
+1794364885242,952,[Coverage] GET / (SPA Root),200,OK,Full Endpoint Coverage & CRUD Matrix 1-1,text,true,,763,145,1,1,https://najealp.top/,952,0,537
+1794364886195,279,[Coverage] GET /images/engineer.png,200,OK,Full Endpoint Coverage & CRUD Matrix 1-1,bin,true,,13424,164,1,1,https://najealp.top/images/engineer.png,278,0,0
+1794364886474,245,[Coverage] GET /api/server-time,200,OK,Full Endpoint Coverage & CRUD Matrix 1-1,text,true,,364,160,1,1,https://najealp.top/api/server-time,245,0,0
+1794364886721,252,[Coverage] GET /api/hero/images,200,OK,Full Endpoint Coverage & CRUD Matrix 1-1,text,true,,5024,160,1,1,https://najealp.top/api/hero/images,252,0,0
+1794364887038,766,[Coverage] GET /images/:hero (Hero Static Image),200,OK,Full Endpoint Coverage & CRUD Matrix 1-1,bin,true,,478887,198,1,1,https://najealp.top/images/albums/page_2_album_62/img_3_1780137279126.jpg,342,0,0
+1794364887805,255,[Coverage] GET /api/donations/summary,200,OK,Full Endpoint Coverage & CRUD Matrix 1-1,text,true,,5817,166,1,1,https://najealp.top/api/donations/summary,255,0,0
+1794364888073,405,[Coverage] POST /api/upload,200,OK,Full Endpoint Coverage & CRUD Matrix 1-1,text,true,,363,551,1,1,https://najealp.top/api/upload,405,0,0
+1794364888490,238,[Coverage] GET /uploads/:file (Uploaded Static File),200,OK,Full Endpoint Coverage & CRUD Matrix 1-1,bin,true,,431,200,1,1,https://najealp.top/uploads/upload-8b3c2fb4-2469-4df5-8924-d28fb2db5e24.png,238,0,0
+1794364888729,239,[Coverage] POST /api/auth/check-email,200,OK,Full Endpoint Coverage & CRUD Matrix 1-1,text,true,,311,262,1,1,https://najealp.top/api/auth/check-email,239,0,0
+1794364888969,351,[Coverage] POST /api/auth/admin/login,200,OK,Full Endpoint Coverage & CRUD Matrix 1-1,text,true,,916,259,1,1,https://najealp.top/api/auth/admin/login,351,0,0
+1794364889321,242,[Coverage] GET /api/auth/admin/me,200,OK,Full Endpoint Coverage & CRUD Matrix 1-1,text,true,,372,419,1,1,https://najealp.top/api/auth/admin/me,242,0,0
+1794364889564,322,[Coverage] POST /api/auth/login (Official),200,OK,Full Endpoint Coverage & CRUD Matrix 1-1,text,true,,891,270,1,1,https://najealp.top/api/auth/login,322,0,0
+1794364889887,237,[Coverage] GET /api/auth/me (Official),200,OK,Full Endpoint Coverage & CRUD Matrix 1-1,text,true,,825,381,1,1,https://najealp.top/api/auth/me,237,0,0
+1794364890129,324,[Coverage] POST /api/auth/login (Regular),200,OK,Full Endpoint Coverage & CRUD Matrix 1-1,text,true,,1034,276,1,1,https://najealp.top/api/auth/login,324,0,0
+1794364890455,240,[Coverage] GET /api/auth/me (Regular),200,OK,Full Endpoint Coverage & CRUD Matrix 1-1,text,true,,905,424,1,1,https://najealp.top/api/auth/me,240,0,0
+1794364890726,356,[Coverage] POST /api/auth/register,201,Created,Full Endpoint Coverage & CRUD Matrix 1-1,text,true,,344,373,1,1,https://najealp.top/api/auth/register,356,0,0
+1794364891085,337,[Coverage] POST /api/auth/reset-password (Disposable),200,OK,Full Endpoint Coverage & CRUD Matrix 1-1,text,true,,340,290,1,1,https://najealp.top/api/auth/reset-password,337,0,0
+1794364891423,237,[Coverage] POST /api/auth/logout,200,OK,Full Endpoint Coverage & CRUD Matrix 1-1,text,true,,406,214,1,1,https://najealp.top/api/auth/logout,237,0,0
+1794364891662,238,[Coverage] POST /api/auth/admin/logout,200,OK,Full Endpoint Coverage & CRUD Matrix 1-1,text,true,,412,220,1,1,https://najealp.top/api/auth/admin/logout,238,0,0
+1794364891901,239,[Coverage] GET /api/degrees,200,OK,Full Endpoint Coverage & CRUD Matrix 1-1,text,true,,783,156,1,1,https://najealp.top/api/degrees,239,0,0
+1794364892153,239,[Coverage] GET /api/degrees/:id,200,OK,Full Endpoint Coverage & CRUD Matrix 1-1,text,true,,373,167,1,1,https://najealp.top/api/degrees/hd2F5ini8q,239,0,0
+1794364892396,243,[Coverage] GET /api/connectionStatuses,200,OK,Full Endpoint Coverage & CRUD Matrix 1-1,text,true,,541,167,1,1,https://najealp.top/api/connectionStatuses,243,0,0
+1794364892670,241,[Coverage] GET /api/connectionStatuses/:id,200,OK,Full Endpoint Coverage & CRUD Matrix 1-1,text,true,,346,178,1,1,https://najealp.top/api/connectionStatuses/UwcFn3TCPH,241,0,0
+1794364892913,240,[Coverage] GET /api/contentStatuses,200,OK,Full Endpoint Coverage & CRUD Matrix 1-1,text,true,,517,164,1,1,https://najealp.top/api/contentStatuses,240,0,0
+1794364893166,249,[Coverage] GET /api/contentStatuses/:id,200,OK,Full Endpoint Coverage & CRUD Matrix 1-1,text,true,,339,175,1,1,https://najealp.top/api/contentStatuses/a6ze5OaKs0,249,0,0
+1794364893418,240,[Coverage] GET /api/userStatuses,200,OK,Full Endpoint Coverage & CRUD Matrix 1-1,text,true,,564,161,1,1,https://najealp.top/api/userStatuses,240,0,0
+1794364893684,242,[Coverage] GET /api/userStatuses/:id,200,OK,Full Endpoint Coverage & CRUD Matrix 1-1,text,true,,339,172,1,1,https://najealp.top/api/userStatuses/2Ue2cfwVMa,242,0,0
+1794364893929,241,[Coverage] GET /api/donationStatuses,200,OK,Full Endpoint Coverage & CRUD Matrix 1-1,text,true,,475,165,1,1,https://najealp.top/api/donationStatuses,241,0,0
+1794364894181,239,[Coverage] GET /api/donationStatuses/:id,200,OK,Full Endpoint Coverage & CRUD Matrix 1-1,text,true,,339,176,1,1,https://najealp.top/api/donationStatuses/Jhk842d-jV,239,0,0
+1794364894421,237,[Coverage] GET /api/eventStatuses,200,OK,Full Endpoint Coverage & CRUD Matrix 1-1,text,true,,565,162,1,1,https://najealp.top/api/eventStatuses,237,0,0
+1794364894676,239,[Coverage] GET /api/eventStatuses/:id,200,OK,Full Endpoint Coverage & CRUD Matrix 1-1,text,true,,339,173,1,1,https://najealp.top/api/eventStatuses/G0sRtXA38I,239,0,0
+1794364894917,241,[Coverage] GET /api/eventCategories,200,OK,Full Endpoint Coverage & CRUD Matrix 1-1,text,true,,606,164,1,1,https://najealp.top/api/eventCategories,241,0,0
+1794364895178,238,[Coverage] GET /api/eventCategories/:id,200,OK,Full Endpoint Coverage & CRUD Matrix 1-1,text,true,,349,175,1,1,https://najealp.top/api/eventCategories/d3Kg5La8vg,238,0,0
+1794364895416,251,[Coverage] GET /api/bulletinCategories,200,OK,Full Endpoint Coverage & CRUD Matrix 1-1,text,true,,580,167,1,1,https://najealp.top/api/bulletinCategories,251,0,0
+1794364895678,243,[Coverage] GET /api/bulletinCategories/:id,200,OK,Full Endpoint Coverage & CRUD Matrix 1-1,text,true,,355,178,1,1,https://najealp.top/api/bulletinCategories/ueMRjAn-P0,243,0,0
+1794364895922,235,[Coverage] GET /api/profileStatuses,200,OK,Full Endpoint Coverage & CRUD Matrix 1-1,text,true,,436,164,1,1,https://najealp.top/api/profileStatuses,235,0,0
+1794364896167,243,[Coverage] GET /api/profileStatuses/:id,200,OK,Full Endpoint Coverage & CRUD Matrix 1-1,text,true,,338,175,1,1,https://najealp.top/api/profileStatuses/kvf-XCOljU,242,0,0
+1794364896411,240,[Coverage] GET /api/achievements,200,OK,Full Endpoint Coverage & CRUD Matrix 1-1,text,true,,2735,161,1,1,https://najealp.top/api/achievements,240,0,0
+1794364896662,239,[Coverage] GET /api/achievements/:id,200,OK,Full Endpoint Coverage & CRUD Matrix 1-1,text,true,,476,172,1,1,https://najealp.top/api/achievements/CQG0tXGlRI,239,0,0
+1794364896902,250,[Coverage] GET /api/users (Paginated),200,OK,Full Endpoint Coverage & CRUD Matrix 1-1,text,true,,7098,174,1,1,https://najealp.top/api/users?_page=1&_per_page=5,250,0,0
+1794364897163,242,[Coverage] GET /api/users/:id,200,OK,Full Endpoint Coverage & CRUD Matrix 1-1,text,true,,1411,191,1,1,https://najealp.top/api/users/b903d544-f228-4d3f-929b-33964fc25071,242,0,0
+1794364897407,245,[Coverage] GET /api/profiles (Paginated),200,OK,Full Endpoint Coverage & CRUD Matrix 1-1,text,true,,3564,177,1,1,https://najealp.top/api/profiles?_page=1&_per_page=5,245,0,0
+1794364897675,252,[Coverage] GET /api/profiles/:id,200,OK,Full Endpoint Coverage & CRUD Matrix 1-1,text,true,,902,194,1,1,https://najealp.top/api/profiles/b903d544-f228-4d3f-929b-33964fc25071,252,0,0
+1794364897929,247,[Coverage] GET /api/userAuths (Paginated),200,OK,Full Endpoint Coverage & CRUD Matrix 1-1,text,true,,4774,178,1,1,https://najealp.top/api/userAuths?_page=1&_per_page=5,247,0,0
+1794364898189,246,[Coverage] GET /api/userAuths/:id,200,OK,Full Endpoint Coverage & CRUD Matrix 1-1,text,true,,1168,195,1,1,https://najealp.top/api/userAuths/b903d544-f228-4d3f-929b-33964fc25071,246,0,0
+1794364898437,245,[Coverage] GET /api/userStatistics (Paginated),200,OK,Full Endpoint Coverage & CRUD Matrix 1-1,text,true,,1574,183,1,1,https://najealp.top/api/userStatistics?_page=1&_per_page=5,245,0,0
+1794364898698,254,[Coverage] GET /api/userStatistics/:id,200,OK,Full Endpoint Coverage & CRUD Matrix 1-1,text,true,,569,200,1,1,https://najealp.top/api/userStatistics/b903d544-f228-4d3f-929b-33964fc25071,254,0,0
+1794364898954,255,[Coverage] GET /api/records (Paginated),200,OK,Full Endpoint Coverage & CRUD Matrix 1-1,text,true,,1555,176,1,1,https://najealp.top/api/records?_page=1&_per_page=5,255,0,0
+1794364899235,245,[Coverage] GET /api/records/:id,200,OK,Full Endpoint Coverage & CRUD Matrix 1-1,text,true,,523,167,1,1,https://najealp.top/api/records/-9l6ErM0Xz,245,0,0
+1794364899481,343,[Coverage] GET /api/bulletins (Paginated),200,OK,Full Endpoint Coverage & CRUD Matrix 1-1,text,true,,21778,178,1,1,https://najealp.top/api/bulletins?_page=1&_per_page=5,284,0,0
+1794364899842,257,[Coverage] GET /api/bulletins/:id,200,OK,Full Endpoint Coverage & CRUD Matrix 1-1,text,true,,2143,169,1,1,https://najealp.top/api/bulletins/-2T-ut0mL4,257,0,0
+1794364900100,357,[Coverage] GET /api/events (Paginated),200,OK,Full Endpoint Coverage & CRUD Matrix 1-1,text,true,,49852,175,1,1,https://najealp.top/api/events?_page=1&_per_page=5,263,0,0
+1794364900468,247,[Coverage] GET /api/events/:id,200,OK,Full Endpoint Coverage & CRUD Matrix 1-1,text,true,,7909,166,1,1,https://najealp.top/api/events/-QX8mHi_MZ,247,0,0
+1794364900716,252,[Coverage] GET /api/comments (Paginated),200,OK,Full Endpoint Coverage & CRUD Matrix 1-1,text,true,,12200,177,1,1,https://najealp.top/api/comments?_page=1&_per_page=5,252,0,0
+1794364900979,253,[Coverage] GET /api/comments/:id,200,OK,Full Endpoint Coverage & CRUD Matrix 1-1,text,true,,2681,194,1,1,https://najealp.top/api/comments/0487a542-7f7d-4b3b-96f9-63428ef84612,253,0,0
+1794364901234,244,[Coverage] GET /api/donations (Paginated),200,OK,Full Endpoint Coverage & CRUD Matrix 1-1,text,true,,2507,178,1,1,https://najealp.top/api/donations?_page=1&_per_page=5,244,0,0
+1794364901500,241,[Coverage] GET /api/donations/:id,200,OK,Full Endpoint Coverage & CRUD Matrix 1-1,text,true,,697,169,1,1,https://najealp.top/api/donations/0ldKSUlR2o,241,0,0
+1794364901743,242,[Coverage] GET /api/locations (Paginated),200,OK,Full Endpoint Coverage & CRUD Matrix 1-1,text,true,,1811,178,1,1,https://najealp.top/api/locations?_page=1&_per_page=5,242,0,0
+1794364901996,243,[Coverage] GET /api/locations/:id,200,OK,Full Endpoint Coverage & CRUD Matrix 1-1,text,true,,590,195,1,1,https://najealp.top/api/locations/06c2ad8d-c7ce-4d93-8194-bd4195cfcd38,242,0,0
+1794364902240,282,[Coverage] GET /api/userConnections (Paginated),200,OK,Full Endpoint Coverage & CRUD Matrix 1-1,text,true,,7622,184,1,1,https://najealp.top/api/userConnections?_page=1&_per_page=5,282,0,0
+1794364902543,253,[Coverage] GET /api/userConnections/:id,200,OK,Full Endpoint Coverage & CRUD Matrix 1-1,text,true,,1740,175,1,1,https://najealp.top/api/userConnections/-IZ1htvknv,253,0,0
+1794364902798,242,[Coverage] GET /api/userAchievements (Paginated),200,OK,Full Endpoint Coverage & CRUD Matrix 1-1,text,true,,2185,185,1,1,https://najealp.top/api/userAchievements?_page=1&_per_page=5,242,0,0
+1794364903051,239,[Coverage] GET /api/userAchievements/:id,200,OK,Full Endpoint Coverage & CRUD Matrix 1-1,text,true,,656,202,1,1,https://najealp.top/api/userAchievements/031c2c15-e550-4c4f-88c5-aecc5a670fe5,239,0,0
+1794364903291,249,[Coverage] GET /api/userRsvps (Paginated),200,OK,Full Endpoint Coverage & CRUD Matrix 1-1,text,true,,7086,178,1,1,https://najealp.top/api/userRsvps?_page=1&_per_page=5,249,0,0
+1794364903549,258,[Coverage] GET /api/userRsvps/:id,200,OK,Full Endpoint Coverage & CRUD Matrix 1-1,text,true,,1710,169,1,1,https://najealp.top/api/userRsvps/-8njlHtWkt,258,0,0
+1794364903809,244,[Coverage] GET /api/bulletinLikes (Paginated),200,OK,Full Endpoint Coverage & CRUD Matrix 1-1,text,true,,790,182,1,1,https://najealp.top/api/bulletinLikes?_page=1&_per_page=5,244,0,0
+1794364904068,238,[Coverage] GET /api/bulletinLikes/:id,200,OK,Full Endpoint Coverage & CRUD Matrix 1-1,text,true,,380,173,1,1,https://najealp.top/api/bulletinLikes/-1rODZ1WbT,238,0,0
+1794364904307,247,[Coverage] GET /api/commentLikes (Paginated),200,OK,Full Endpoint Coverage & CRUD Matrix 1-1,text,true,,785,181,1,1,https://najealp.top/api/commentLikes?_page=1&_per_page=5,247,0,0
+1794364904574,241,[Coverage] GET /api/commentLikes/:id,200,OK,Full Endpoint Coverage & CRUD Matrix 1-1,text,true,,378,172,1,1,https://najealp.top/api/commentLikes/-41mVOpUt_,241,0,0
+1794364904817,243,[Coverage] GET /api/notifications (Paginated),200,OK,Full Endpoint Coverage & CRUD Matrix 1-1,text,true,,2291,182,1,1,https://najealp.top/api/notifications?_page=1&_per_page=5,243,0,0
+1794364905076,242,[Coverage] GET /api/notifications/:id,200,OK,Full Endpoint Coverage & CRUD Matrix 1-1,text,true,,692,199,1,1,https://najealp.top/api/notifications/02218fbf-fe3b-410e-97ff-28d483865711,242,0,0
+1794364905319,243,[Coverage] GET /api/clefLogs (Paginated),200,OK,Full Endpoint Coverage & CRUD Matrix 1-1,text,true,,3438,177,1,1,https://najealp.top/api/clefLogs?_page=1&_per_page=5,243,0,0
+1794364905573,239,[Coverage] GET /api/clefLogs/:id,200,OK,Full Endpoint Coverage & CRUD Matrix 1-1,text,true,,687,194,1,1,https://najealp.top/api/clefLogs/01d48969-079f-4011-b145-a3ae7d5129c4,239,0,0
+1794364905815,251,[Coverage] GET /api/achievements (_where gt),200,OK,Full Endpoint Coverage & CRUD Matrix 1-1,text,true,,1410,217,1,1,https://najealp.top/api/achievements?_where=%7B%22achievementTier%22%3A%7B%22gt%22%3A1%7D%7D,251,0,0
+1794364906067,247,[Coverage] GET /api/achievements (_where contains),200,OK,Full Endpoint Coverage & CRUD Matrix 1-1,text,true,,662,233,1,1,https://najealp.top/api/achievements?_where=%7B%22achievementTitle%22%3A%7B%22contains%22%3A%22Club%22%7D%7D,247,0,0
+1794364906316,242,[Coverage] GET /api/achievements (_where startsWith),200,OK,Full Endpoint Coverage & CRUD Matrix 1-1,text,true,,847,236,1,1,https://najealp.top/api/achievements?_where=%7B%22achievementTitle%22%3A%7B%22startsWith%22%3A%22Event%22%7D%7D,242,0,0
+1794364906559,256,[Coverage] GET /api/achievements (_where endsWith),200,OK,Full Endpoint Coverage & CRUD Matrix 1-1,text,true,,486,232,1,1,https://najealp.top/api/achievements?_where=%7B%22achievementTitle%22%3A%7B%22endsWith%22%3A%22III%22%7D%7D,256,0,0
+1794364906817,253,[Coverage] GET /api/achievements (_sort desc),200,OK,Full Endpoint Coverage & CRUD Matrix 1-1,text,true,,2735,184,1,1,https://najealp.top/api/achievements?_sort=-achievementTier,253,0,0
+1794364907072,245,[Coverage] GET /api/users (_where notIn + _include),200,OK,Full Endpoint Coverage & CRUD Matrix 1-1,text,true,,3740,336,1,1,https://najealp.top/api/users?_where=%7B%22userStatus%22%3A%7B%22statusName%22%3A%7B%22notIn%22%3A%5B%22Banned%22%2C%22Deactivated%22%2C%22Pending%22%5D%7D%7D%7D&_include=profile%2CuserStatus&_page=1&_per_page=5,244,0,0
+1794364907317,243,[Coverage] GET /api/users (_where nested degree + _include),200,OK,Full Endpoint Coverage & CRUD Matrix 1-1,text,true,,4299,307,1,1,https://najealp.top/api/users?_where=%7B%22profile%22%3A%7B%22degree%22%3A%7B%22degreeAbbr%22%3A%22BSCpE%22%7D%7D%7D&_include=profile%2CuserStatus%2CprofileStatus&_page=1&_per_page=5,243,0,0
+1794364907561,301,[Coverage] GET /api/bulletins (_include + _sort + page),200,OK,Full Endpoint Coverage & CRUD Matrix 1-1,text,true,,19007,235,1,1,https://najealp.top/api/bulletins?_include=category%2Cauthor%2Cstatus&_sort=-bulletinDate&_page=1&_per_page=10,266,0,0
+1794364907862,255,[Coverage] GET /api/events (_include + _sort + page),200,OK,Full Endpoint Coverage & CRUD Matrix 1-1,text,true,,16922,239,1,1,https://najealp.top/api/events?_include=category%2Cauthor%2Cstatus%2Clocation&_sort=eventDate&_page=1&_per_page=10,255,0,0
+1794364908119,247,[Coverage] GET /api/userConnections (_include),200,OK,Full Endpoint Coverage & CRUD Matrix 1-1,text,true,,7622,216,1,1,https://najealp.top/api/userConnections?_include=user%2Cfriend%2Cstatus&_page=1&_per_page=5,247,0,0
+1794364908367,237,[Coverage] GET /api/achievements (_where in + gte + lte),200,OK,Full Endpoint Coverage & CRUD Matrix 1-1,text,true,,2197,292,1,1,https://najealp.top/api/achievements?_where=%7B%22achievementTier%22%3A%7B%22gte%22%3A1%2C%22lte%22%3A3%7D%2C%22achievementTitle%22%3A%7B%22contains%22%3A%22a%22%7D%7D,237,0,0
+1794364908605,309,[Coverage] HEAD /api/bulletins,200,OK,Full Endpoint Coverage & CRUD Matrix 1-1,text,true,,342,159,1,1,https://najealp.top/api/bulletins,0,0,0
+1794364908916,283,[Coverage] HEAD /api/events,200,OK,Full Endpoint Coverage & CRUD Matrix 1-1,text,true,,342,156,1,1,https://najealp.top/api/events,0,0,0
+1794364909199,260,[Coverage] POST /api/locations,201,Created,Full Endpoint Coverage & CRUD Matrix 1-1,text,true,,540,337,1,1,https://najealp.top/api/locations,260,0,0
+1794364909470,235,[Coverage] GET /api/locations/:id (Created),200,OK,Full Endpoint Coverage & CRUD Matrix 1-1,text,true,,535,195,1,1,https://najealp.top/api/locations/2585c5a3-9ee6-47da-b29f-1ad813d5cfaf,235,0,0
+1794364909706,255,[Coverage] PATCH /api/locations/:id,200,OK,Full Endpoint Coverage & CRUD Matrix 1-1,text,true,,553,284,1,1,https://najealp.top/api/locations/2585c5a3-9ee6-47da-b29f-1ad813d5cfaf,255,0,0
+1794364909962,243,[Coverage] PUT /api/locations/:id,200,OK,Full Endpoint Coverage & CRUD Matrix 1-1,text,true,,543,300,1,1,https://najealp.top/api/locations/2585c5a3-9ee6-47da-b29f-1ad813d5cfaf,242,0,0
+1794364910206,242,[Coverage] DELETE /api/locations/:id,204,No Content,Full Endpoint Coverage & CRUD Matrix 1-1,,true,,196,281,1,1,https://najealp.top/api/locations/2585c5a3-9ee6-47da-b29f-1ad813d5cfaf,0,0,0
+1794364910449,272,[Coverage] POST /api/bulletins,201,Created,Full Endpoint Coverage & CRUD Matrix 1-1,text,true,,1758,661,1,1,https://najealp.top/api/bulletins,272,0,0
+1794364910747,243,[Coverage] GET /api/bulletins/:id (Created),200,OK,Full Endpoint Coverage & CRUD Matrix 1-1,text,true,,1817,195,1,1,https://najealp.top/api/bulletins/4edc5b7c-8978-4fdb-abb7-e2cb1147af48,243,0,0
+1794364910993,270,[Coverage] PATCH /api/bulletins/:id,200,OK,Full Endpoint Coverage & CRUD Matrix 1-1,text,true,,1715,549,1,1,https://najealp.top/api/bulletins/4edc5b7c-8978-4fdb-abb7-e2cb1147af48,270,0,0
+1794364911266,247,[Coverage] PUT /api/bulletins/:id,200,OK,Full Endpoint Coverage & CRUD Matrix 1-1,text,true,,678,543,1,1,https://najealp.top/api/bulletins/4edc5b7c-8978-4fdb-abb7-e2cb1147af48,247,0,0
+1794364911515,243,[Coverage] POST /api/bulletinLikes,201,Created,Full Endpoint Coverage & CRUD Matrix 1-1,text,true,,463,332,1,1,https://najealp.top/api/bulletinLikes,243,0,0
+1794364911770,239,[Coverage] GET /api/bulletinLikes/:id (Created),200,OK,Full Endpoint Coverage & CRUD Matrix 1-1,text,true,,458,199,1,1,https://najealp.top/api/bulletinLikes/991190cd-5b99-4bc4-bf78-01287a7bc178,239,0,0
+1794364912010,245,[Coverage] PATCH /api/bulletinLikes/:id,200,OK,Full Endpoint Coverage & CRUD Matrix 1-1,text,true,,459,270,1,1,https://najealp.top/api/bulletinLikes/991190cd-5b99-4bc4-bf78-01287a7bc178,245,0,0
+1794364912259,244,[Coverage] PUT /api/bulletinLikes/:id,200,OK,Full Endpoint Coverage & CRUD Matrix 1-1,text,true,,458,267,1,1,https://najealp.top/api/bulletinLikes/991190cd-5b99-4bc4-bf78-01287a7bc178,244,0,0
+1794364912505,252,[Coverage] DELETE /api/bulletinLikes/:id,204,No Content,Full Endpoint Coverage & CRUD Matrix 1-1,,true,,196,285,1,1,https://najealp.top/api/bulletinLikes/991190cd-5b99-4bc4-bf78-01287a7bc178,0,0,0
+1794364912761,254,[Coverage] POST /api/comments,201,Created,Full Endpoint Coverage & CRUD Matrix 1-1,text,true,,1790,345,1,1,https://najealp.top/api/comments,254,0,0
+1794364913028,241,[Coverage] GET /api/comments/:id (Created),200,OK,Full Endpoint Coverage & CRUD Matrix 1-1,text,true,,1785,194,1,1,https://najealp.top/api/comments/dce82d68-e00f-46cf-bc90-db456455d2da,241,0,0
+1794364913271,248,[Coverage] PATCH /api/comments/:id,200,OK,Full Endpoint Coverage & CRUD Matrix 1-1,text,true,,1784,281,1,1,https://najealp.top/api/comments/dce82d68-e00f-46cf-bc90-db456455d2da,248,0,0
+1794364913521,243,[Coverage] PUT /api/comments/:id,200,OK,Full Endpoint Coverage & CRUD Matrix 1-1,text,true,,522,275,1,1,https://najealp.top/api/comments/dce82d68-e00f-46cf-bc90-db456455d2da,243,0,0
+1794364913767,244,[Coverage] POST /api/commentLikes,201,Created,Full Endpoint Coverage & CRUD Matrix 1-1,text,true,,462,330,1,1,https://najealp.top/api/commentLikes,244,0,0
+1794364914050,239,[Coverage] GET /api/commentLikes/:id (Created),200,OK,Full Endpoint Coverage & CRUD Matrix 1-1,text,true,,457,198,1,1,https://najealp.top/api/commentLikes/890f6145-1079-4613-896a-9f2ad6fd888e,239,0,0
+1794364914290,240,[Coverage] PATCH /api/commentLikes/:id,200,OK,Full Endpoint Coverage & CRUD Matrix 1-1,text,true,,458,269,1,1,https://najealp.top/api/commentLikes/890f6145-1079-4613-896a-9f2ad6fd888e,240,0,0
+1794364914531,244,[Coverage] PUT /api/commentLikes/:id,200,OK,Full Endpoint Coverage & CRUD Matrix 1-1,text,true,,457,266,1,1,https://najealp.top/api/commentLikes/890f6145-1079-4613-896a-9f2ad6fd888e,244,0,0
+1794364914776,248,[Coverage] DELETE /api/commentLikes/:id,204,No Content,Full Endpoint Coverage & CRUD Matrix 1-1,,true,,196,284,1,1,https://najealp.top/api/commentLikes/890f6145-1079-4613-896a-9f2ad6fd888e,0,0,0
+1794364915027,244,[Coverage] DELETE /api/comments/:id,204,No Content,Full Endpoint Coverage & CRUD Matrix 1-1,,true,,196,280,1,1,https://najealp.top/api/comments/dce82d68-e00f-46cf-bc90-db456455d2da,0,0,0
+1794364915274,248,[Coverage] DELETE /api/bulletins/:id,204,No Content,Full Endpoint Coverage & CRUD Matrix 1-1,,true,,196,549,1,1,https://najealp.top/api/bulletins/4edc5b7c-8978-4fdb-abb7-e2cb1147af48,0,0,0
+1794364915522,267,[Coverage] POST /api/events,201,Created,Full Endpoint Coverage & CRUD Matrix 1-1,text,true,,1488,729,1,1,https://najealp.top/api/events,267,0,0
+1794364915798,249,[Coverage] GET /api/events/:id (Created),200,OK,Full Endpoint Coverage & CRUD Matrix 1-1,text,true,,1547,192,1,1,https://najealp.top/api/events/31045354-2aa4-46f0-9b48-9329462fa98e,249,0,0
+1794364916048,248,[Coverage] PATCH /api/events/:id,200,OK,Full Endpoint Coverage & CRUD Matrix 1-1,text,true,,1445,543,1,1,https://najealp.top/api/events/31045354-2aa4-46f0-9b48-9329462fa98e,248,0,0
+1794364916298,255,[Coverage] PUT /api/events/:id,200,OK,Full Endpoint Coverage & CRUD Matrix 1-1,text,true,,728,537,1,1,https://najealp.top/api/events/31045354-2aa4-46f0-9b48-9329462fa98e,255,0,0
+1794364916554,244,[Coverage] POST /api/userRsvps,201,Created,Full Endpoint Coverage & CRUD Matrix 1-1,text,true,,1613,329,1,1,https://najealp.top/api/userRsvps,243,0,0
+1794364916807,245,[Coverage] GET /api/userRsvps/:id (Created),200,OK,Full Endpoint Coverage & CRUD Matrix 1-1,text,true,,1608,195,1,1,https://najealp.top/api/userRsvps/f740c517-2066-4fdb-a567-1448f9bcba10,245,0,0
+1794364917054,245,[Coverage] PATCH /api/userRsvps/:id,200,OK,Full Endpoint Coverage & CRUD Matrix 1-1,text,true,,1609,270,1,1,https://najealp.top/api/userRsvps/f740c517-2066-4fdb-a567-1448f9bcba10,245,0,0
+1794364917303,242,[Coverage] PUT /api/userRsvps/:id,200,OK,Full Endpoint Coverage & CRUD Matrix 1-1,text,true,,474,267,1,1,https://najealp.top/api/userRsvps/f740c517-2066-4fdb-a567-1448f9bcba10,242,0,0
+1794364917547,284,[Coverage] POST /api/events/:id/conclude,200,OK,Full Endpoint Coverage & CRUD Matrix 1-1,text,true,,340,523,1,1,https://najealp.top/api/events/31045354-2aa4-46f0-9b48-9329462fa98e/conclude,284,0,0
+1794364917859,252,[Coverage] DELETE /api/userRsvps/:id,204,No Content,Full Endpoint Coverage & CRUD Matrix 1-1,,true,,196,281,1,1,https://najealp.top/api/userRsvps/f740c517-2066-4fdb-a567-1448f9bcba10,0,0,0
+1794364918111,243,[Coverage] DELETE /api/events/:id,204,No Content,Full Endpoint Coverage & CRUD Matrix 1-1,,true,,196,546,1,1,https://najealp.top/api/events/31045354-2aa4-46f0-9b48-9329462fa98e,0,0,0
+1794364918357,244,[Coverage] POST /api/donations,201,Created,Full Endpoint Coverage & CRUD Matrix 1-1,text,true,,800,509,1,1,https://najealp.top/api/donations,244,0,0
+1794364918631,241,[Coverage] GET /api/donations/:id (Created),200,OK,Full Endpoint Coverage & CRUD Matrix 1-1,text,true,,795,195,1,1,https://najealp.top/api/donations/5bec63f0-d1ae-4137-9e2d-289074615010,241,0,0
+1794364918874,244,[Coverage] PATCH /api/donations/:id,200,OK,Full Endpoint Coverage & CRUD Matrix 1-1,text,true,,794,268,1,1,https://najealp.top/api/donations/5bec63f0-d1ae-4137-9e2d-289074615010,243,0,0
+1794364919118,239,[Coverage] PUT /api/donations/:id,200,OK,Full Endpoint Coverage & CRUD Matrix 1-1,text,true,,681,266,1,1,https://najealp.top/api/donations/5bec63f0-d1ae-4137-9e2d-289074615010,239,0,0
+1794364919357,238,[Coverage] DELETE /api/donations/:id,204,No Content,Full Endpoint Coverage & CRUD Matrix 1-1,,true,,196,281,1,1,https://najealp.top/api/donations/5bec63f0-d1ae-4137-9e2d-289074615010,0,0,0
+1794364919595,243,[Coverage] POST /api/clefLogs,201,Created,Full Endpoint Coverage & CRUD Matrix 1-1,text,true,,504,329,1,1,https://najealp.top/api/clefLogs,243,0,0
+1794364919862,238,[Coverage] GET /api/clefLogs/:id (Created),200,OK,Full Endpoint Coverage & CRUD Matrix 1-1,text,true,,499,194,1,1,https://najealp.top/api/clefLogs/37417772-d0ec-4c66-a10c-d2a77b8819e0,238,0,0
+1794364920104,249,[Coverage] PATCH /api/clefLogs/:id,200,OK,Full Endpoint Coverage & CRUD Matrix 1-1,text,true,,497,269,1,1,https://najealp.top/api/clefLogs/37417772-d0ec-4c66-a10c-d2a77b8819e0,249,0,0
+1794364920354,244,[Coverage] PUT /api/clefLogs/:id,200,OK,Full Endpoint Coverage & CRUD Matrix 1-1,text,true,,499,269,1,1,https://najealp.top/api/clefLogs/37417772-d0ec-4c66-a10c-d2a77b8819e0,243,0,0
+1794364920600,245,[Coverage] DELETE /api/clefLogs/:id,204,No Content,Full Endpoint Coverage & CRUD Matrix 1-1,,true,,196,280,1,1,https://najealp.top/api/clefLogs/37417772-d0ec-4c66-a10c-d2a77b8819e0,0,0,0
+1794364920846,246,[Coverage] POST /api/records,201,Created,Full Endpoint Coverage & CRUD Matrix 1-1,text,true,,535,323,1,1,https://najealp.top/api/records,246,0,0
+1794364921125,242,[Coverage] GET /api/records/:id (Created),200,OK,Full Endpoint Coverage & CRUD Matrix 1-1,text,true,,530,193,1,1,https://najealp.top/api/records/913907b7-4393-4bcd-81e3-9b9970c70690,242,0,0
+1794364921369,242,[Coverage] PATCH /api/records/:id,200,OK,Full Endpoint Coverage & CRUD Matrix 1-1,text,true,,529,283,1,1,https://najealp.top/api/records/913907b7-4393-4bcd-81e3-9b9970c70690,241,0,0
+1794364921612,240,[Coverage] PUT /api/records/:id,200,OK,Full Endpoint Coverage & CRUD Matrix 1-1,text,true,,525,277,1,1,https://najealp.top/api/records/913907b7-4393-4bcd-81e3-9b9970c70690,240,0,0
+1794364921853,243,[Coverage] DELETE /api/records/:id,204,No Content,Full Endpoint Coverage & CRUD Matrix 1-1,,true,,196,279,1,1,https://najealp.top/api/records/913907b7-4393-4bcd-81e3-9b9970c70690,0,0,0
+1794364922106,243,[Coverage] POST /api/notifications,201,Created,Full Endpoint Coverage & CRUD Matrix 1-1,text,true,,593,400,1,1,https://najealp.top/api/notifications,243,0,0
+1794364922357,239,[Coverage] GET /api/notifications/:id (Created),200,OK,Full Endpoint Coverage & CRUD Matrix 1-1,text,true,,588,199,1,1,https://najealp.top/api/notifications/bfc2e763-4f13-4d5c-905c-39d47efbd411,239,0,0
+1794364922597,243,[Coverage] PATCH /api/notifications/:id,200,OK,Full Endpoint Coverage & CRUD Matrix 1-1,text,true,,587,268,1,1,https://najealp.top/api/notifications/bfc2e763-4f13-4d5c-905c-39d47efbd411,243,0,0
+1794364922842,241,[Coverage] PUT /api/notifications/:id,200,OK,Full Endpoint Coverage & CRUD Matrix 1-1,text,true,,588,267,1,1,https://najealp.top/api/notifications/bfc2e763-4f13-4d5c-905c-39d47efbd411,241,0,0
+1794364923084,242,[Coverage] DELETE /api/notifications/:id,204,No Content,Full Endpoint Coverage & CRUD Matrix 1-1,,true,,196,285,1,1,https://najealp.top/api/notifications/bfc2e763-4f13-4d5c-905c-39d47efbd411,0,0,0
+1794364923336,244,[Coverage] POST /api/userAchievements,201,Created,Full Endpoint Coverage & CRUD Matrix 1-1,text,true,,686,322,1,1,https://najealp.top/api/userAchievements,244,0,0
+1794364923589,238,[Coverage] GET /api/userAchievements/:id (Created),200,OK,Full Endpoint Coverage & CRUD Matrix 1-1,text,true,,681,202,1,1,https://najealp.top/api/userAchievements/1b6cedd0-bf03-4662-aaa4-fc9f5ded65bc,238,0,0
+1794364923828,249,[Coverage] PATCH /api/userAchievements/:id,200,OK,Full Endpoint Coverage & CRUD Matrix 1-1,text,true,,681,282,1,1,https://najealp.top/api/userAchievements/1b6cedd0-bf03-4662-aaa4-fc9f5ded65bc,248,0,0
+1794364924078,243,[Coverage] PUT /api/userAchievements/:id,200,OK,Full Endpoint Coverage & CRUD Matrix 1-1,text,true,,487,280,1,1,https://najealp.top/api/userAchievements/1b6cedd0-bf03-4662-aaa4-fc9f5ded65bc,243,0,0
+1794364924322,243,[Coverage] DELETE /api/userAchievements/:id,204,No Content,Full Endpoint Coverage & CRUD Matrix 1-1,,true,,196,288,1,1,https://najealp.top/api/userAchievements/1b6cedd0-bf03-4662-aaa4-fc9f5ded65bc,0,0,0
+1794364924566,250,[Coverage] PATCH /api/profiles/:id,200,OK,Full Endpoint Coverage & CRUD Matrix 1-1,text,true,,919,277,1,1,https://najealp.top/api/profiles/b903d544-f228-4d3f-929b-33964fc25071,250,0,0
+1794364924817,249,[Coverage] PUT /api/profiles/:id,200,OK,Full Endpoint Coverage & CRUD Matrix 1-1,text,true,,662,273,1,1,https://najealp.top/api/profiles/b903d544-f228-4d3f-929b-33964fc25071,249,0,0
+1794364925066,258,[Coverage] PATCH /api/users/:id,200,OK,Full Endpoint Coverage & CRUD Matrix 1-1,text,true,,1416,277,1,1,https://najealp.top/api/users/b903d544-f228-4d3f-929b-33964fc25071,258,0,0
+1794364925324,249,[Coverage] PUT /api/users/:id,200,OK,Full Endpoint Coverage & CRUD Matrix 1-1,text,true,,459,275,1,1,https://najealp.top/api/users/b903d544-f228-4d3f-929b-33964fc25071,249,0,0
+1794364925574,245,[Coverage] PATCH /api/userStatistics/:id,200,OK,Full Endpoint Coverage & CRUD Matrix 1-1,text,true,,569,275,1,1,https://najealp.top/api/userStatistics/b903d544-f228-4d3f-929b-33964fc25071,245,0,0
+1794364925822,242,[Coverage] PUT /api/userStatistics/:id,200,OK,Full Endpoint Coverage & CRUD Matrix 1-1,text,true,,569,273,1,1,https://najealp.top/api/userStatistics/b903d544-f228-4d3f-929b-33964fc25071,242,0,0
+1794364926065,245,[Coverage] POST /api/connections/action (pre-clean),200,OK,Full Endpoint Coverage & CRUD Matrix 1-1,text,true,,340,614,1,1,https://najealp.top/api/connections/action,245,0,0
+1794364926310,249,[Coverage] POST /api/connections/action (add),200,OK,Full Endpoint Coverage & CRUD Matrix 1-1,text,true,,348,611,1,1,https://najealp.top/api/connections/action,249,0,0
+1794364926559,251,[Coverage] POST /api/connections/action (accept),200,OK,Full Endpoint Coverage & CRUD Matrix 1-1,text,true,,369,617,1,1,https://najealp.top/api/connections/action,251,0,0
+1794364926811,244,[Coverage] POST /api/connections/action (remove),200,OK,Full Endpoint Coverage & CRUD Matrix 1-1,text,true,,363,614,1,1,https://najealp.top/api/connections/action,244,0,0
+1794364927057,249,[Coverage] POST /api/connections/action (add 2),200,OK,Full Endpoint Coverage & CRUD Matrix 1-1,text,true,,348,611,1,1,https://najealp.top/api/connections/action,249,0,0
+1794364927308,250,[Coverage] POST /api/connections/action (reject),200,OK,Full Endpoint Coverage & CRUD Matrix 1-1,text,true,,340,617,1,1,https://najealp.top/api/connections/action,250,0,0
+1794364927559,267,[Coverage] POST /api/connections/action (block),200,OK,Full Endpoint Coverage & CRUD Matrix 1-1,text,true,,346,613,1,1,https://najealp.top/api/connections/action,267,0,0
+1794364927827,243,[Coverage] POST /api/connections/action (unblock),200,OK,Full Endpoint Coverage & CRUD Matrix 1-1,text,true,,340,615,1,1,https://najealp.top/api/connections/action,243,0,0
+1794364928071,241,[Coverage] POST /api/donations/webhook,200,OK,Full Endpoint Coverage & CRUD Matrix 1-1,text,true,,306,267,1,1,https://najealp.top/api/donations/webhook,241,0,0
+1794364928368,5426,[Coverage] POST /api/donations/checkout,200,OK,Full Endpoint Coverage & CRUD Matrix 1-1,text,true,,369,350,1,1,https://najealp.top/api/donations/checkout,5426,0,0
+1794364933795,235,[Coverage] GET /api/donations (Lookup Checkout),200,OK,Full Endpoint Coverage & CRUD Matrix 1-1,text,true,,715,220,1,1,https://najealp.top/api/donations?_where=%7B%22donationReference%22%3A%22JMX-CHK-3a213b0f%22%7D,235,0,0
+1794364934039,242,[Coverage] DELETE /api/donations/:id (Cleanup Checkout),204,No Content,Full Endpoint Coverage & CRUD Matrix 1-1,,true,,196,281,1,1,https://najealp.top/api/donations/7a4673b2-9abc-4330-9a17-5f22b6e6eec2,0,0,0
+1794364934282,254,[Coverage] GET /api/admin/dashboard-stats,200,OK,Full Endpoint Coverage & CRUD Matrix 1-1,text,true,,5367,427,1,1,https://najealp.top/api/admin/dashboard-stats,254,0,0
+1794364934538,348,[Coverage] GET /api/admin/events,200,OK,Full Endpoint Coverage & CRUD Matrix 1-1,text,true,,16660,439,1,1,https://najealp.top/api/admin/events?_page=1&_per_page=10,348,0,0
+1794364934887,273,[Coverage] GET /api/admin/bulletins,200,OK,Full Endpoint Coverage & CRUD Matrix 1-1,text,true,,19893,442,1,1,https://najealp.top/api/admin/bulletins?_page=1&_per_page=10,245,0,0
+1794364935161,256,[Coverage] POST /api/admin/events,201,Created,Full Endpoint Coverage & CRUD Matrix 1-1,text,true,,1672,715,1,1,https://najealp.top/api/admin/events,256,0,0
+1794364935430,247,[Coverage] PATCH /api/admin/events/:id,200,OK,Full Endpoint Coverage & CRUD Matrix 1-1,text,true,,1636,542,1,1,https://najealp.top/api/admin/events/9c44b122-fddf-43d4-bfcb-f7f7e6918de9,247,0,0
+1794364935679,249,[Coverage] PUT /api/admin/events/:id,200,OK,Full Endpoint Coverage & CRUD Matrix 1-1,text,true,,1634,538,1,1,https://najealp.top/api/admin/events/9c44b122-fddf-43d4-bfcb-f7f7e6918de9,249,0,0
+1794364935929,262,[Coverage] PATCH /api/admin/events/:id/status,200,OK,Full Endpoint Coverage & CRUD Matrix 1-1,text,true,,1649,569,1,1,https://najealp.top/api/admin/events/9c44b122-fddf-43d4-bfcb-f7f7e6918de9/status,262,0,0
+1794364936192,266,[Coverage] POST /api/admin/events/:id/status,200,OK,Full Endpoint Coverage & CRUD Matrix 1-1,text,true,,1647,566,1,1,https://najealp.top/api/admin/events/9c44b122-fddf-43d4-bfcb-f7f7e6918de9/status,266,0,0
+1794364936461,258,[Coverage] PUT /api/admin/events/:id/status,200,OK,Full Endpoint Coverage & CRUD Matrix 1-1,text,true,,1647,565,1,1,https://najealp.top/api/admin/events/9c44b122-fddf-43d4-bfcb-f7f7e6918de9/status,258,0,0
+1794364936720,246,[Coverage] DELETE /api/events/:id (Cleanup Admin Event),204,No Content,Full Endpoint Coverage & CRUD Matrix 1-1,,true,,196,535,1,1,https://najealp.top/api/events/9c44b122-fddf-43d4-bfcb-f7f7e6918de9,0,0,0
+1794364936969,262,[Coverage] POST /api/admin/bulletins,201,Created,Full Endpoint Coverage & CRUD Matrix 1-1,text,true,,2054,645,1,1,https://najealp.top/api/admin/bulletins,262,0,0
+1794364937257,251,[Coverage] PATCH /api/admin/bulletins/:id,200,OK,Full Endpoint Coverage & CRUD Matrix 1-1,text,true,,2018,548,1,1,https://najealp.top/api/admin/bulletins/f29a3b57-055d-4563-90ce-e0f261b4e7c9,251,0,0
+1794364937508,252,[Coverage] PUT /api/admin/bulletins/:id,200,OK,Full Endpoint Coverage & CRUD Matrix 1-1,text,true,,2016,544,1,1,https://najealp.top/api/admin/bulletins/f29a3b57-055d-4563-90ce-e0f261b4e7c9,252,0,0
+1794364937761,257,[Coverage] PATCH /api/admin/bulletins/:id/status,200,OK,Full Endpoint Coverage & CRUD Matrix 1-1,text,true,,2031,572,1,1,https://najealp.top/api/admin/bulletins/f29a3b57-055d-4563-90ce-e0f261b4e7c9/status,257,0,0
+1794364938019,260,[Coverage] POST /api/admin/bulletins/:id/status,200,OK,Full Endpoint Coverage & CRUD Matrix 1-1,text,true,,2029,569,1,1,https://najealp.top/api/admin/bulletins/f29a3b57-055d-4563-90ce-e0f261b4e7c9/status,259,0,0
+1794364938285,246,[Coverage] PUT /api/admin/bulletins/:id/status,200,OK,Full Endpoint Coverage & CRUD Matrix 1-1,text,true,,2029,568,1,1,https://najealp.top/api/admin/bulletins/f29a3b57-055d-4563-90ce-e0f261b4e7c9/status,246,0,0
+1794364938539,244,[Coverage] DELETE /api/bulletins/:id (Cleanup Admin Bulletin),204,No Content,Full Endpoint Coverage & CRUD Matrix 1-1,,true,,196,538,1,1,https://najealp.top/api/bulletins/f29a3b57-055d-4563-90ce-e0f261b4e7c9,0,0,0
+1794364938785,344,[Coverage] POST /api/admin/users,201,Created,Full Endpoint Coverage & CRUD Matrix 1-1,text,true,,1456,735,1,1,https://najealp.top/api/admin/users,344,0,0
+1794364939143,246,[Coverage] POST /api/admin/users/:id/status,200,OK,Full Endpoint Coverage & CRUD Matrix 1-1,text,true,,1852,572,1,1,https://najealp.top/api/admin/users/3f94b3cf-5df3-4f86-adfd-7a7db2ca3225/status,246,0,0
+1794364939390,252,[Coverage] PATCH /api/admin/users/:id/status,200,OK,Full Endpoint Coverage & CRUD Matrix 1-1,text,true,,2251,573,1,1,https://najealp.top/api/admin/users/3f94b3cf-5df3-4f86-adfd-7a7db2ca3225/status,252,0,0
+1794364939645,259,[Coverage] PUT /api/admin/users/:id/status,200,OK,Full Endpoint Coverage & CRUD Matrix 1-1,text,true,,2675,611,1,1,https://najealp.top/api/admin/users/3f94b3cf-5df3-4f86-adfd-7a7db2ca3225/status,259,0,0

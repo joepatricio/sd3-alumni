@@ -10,6 +10,7 @@
 .EXAMPLE
     .\test\load\run_jmeter.ps1 -DryRun
     .\test\load\run_jmeter.ps1 -Tiers 200,500,1000,1500,2000 -Duration 60 -HtmlReport
+    .\test\load\run_jmeter.ps1 -Tiers 100,250,500,750,1000 -SkipCoverage -AllReports
 #>
 
 [CmdletBinding()]
@@ -24,18 +25,32 @@ param(
     [switch]$IncludeWritesInLoad,
     [switch]$CoverageOnly,
     [switch]$SkipCoverage,
-    [int]$ThinkMinMs = 100,
-    [int]$ThinkRangeMs = 400,
+    [int]$ThinkMinMs = -1,
+    [int]$ThinkRangeMs = -1,
     [int]$GranularityMs = 1000,
     [switch]$HtmlReport,
+    [switch]$ExcelReport,
+    [switch]$PdfReport,
+    [switch]$AllReports,
     [string]$JMeterPath = "",
     [string]$JtlOutPath = "",
     [string]$LogOutPath = "",
     [string]$BaselineOutPath = "",
-    [string]$HtmlReportOutDir = ""
+    [string]$HtmlReportOutDir = "",
+    [string]$ExcelOutPath = "",
+    [string]$PdfOutPath = ""
 )
 
 $ErrorActionPreference = "Stop"
+
+if ($AllReports) {
+    $HtmlReport = $true
+    $ExcelReport = $true
+    $PdfReport = $true
+}
+if ($PdfReport) {
+    $HtmlReport = $true
+}
 
 $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $RepoRoot = Resolve-Path (Join-Path $ScriptDir "..\..")
@@ -138,7 +153,42 @@ elseif ($Config -and $Config.durationSeconds) {
 else {
     30
 }
-$EffectiveRamp = if ($RampUp -gt 0) { $RampUp } elseif ($DryRun) { 2 } else { 10 }
+$EffectiveRamp = if ($RampUp -gt 0) {
+    $RampUp
+}
+elseif ($DryRun) {
+    2
+}
+elseif ($Config -and $Config.defaultRampUpSec) {
+    [int]$Config.defaultRampUpSec
+}
+else {
+    30
+}
+$EffectiveThinkMinMs = if ($ThinkMinMs -ge 0) {
+    $ThinkMinMs
+}
+elseif ($DryRun) {
+    100
+}
+elseif ($Config -and $null -ne $Config.defaultThinkMinMs) {
+    [int]$Config.defaultThinkMinMs
+}
+else {
+    1500
+}
+$EffectiveThinkRangeMs = if ($ThinkRangeMs -ge 0) {
+    $ThinkRangeMs
+}
+elseif ($DryRun) {
+    400
+}
+elseif ($Config -and $null -ne $Config.defaultThinkRangeMs) {
+    [int]$Config.defaultThinkRangeMs
+}
+else {
+    2500
+}
 
 # Pad tiers to 5 thread groups (0 threads skips a tier group)
 $TierValues = @(0, 0, 0, 0, 0)
@@ -172,7 +222,7 @@ $RunCoverageVal = if ($SkipCoverage) { "false" } else { "true" }
 Write-Host "[*] Target        : $TargetUrl" -ForegroundColor Gray
 Write-Host "[*] Tiers (VUs)   : $($TierValues -join ', ')" -ForegroundColor Gray
 Write-Host "[*] Tier Duration : ${EffectiveDuration}s (RampUp=${EffectiveRamp}s)" -ForegroundColor Gray
-Write-Host "[*] Think Time    : ${ThinkMinMs}ms + rand(0..${ThinkRangeMs}ms) | Granularity: ${GranularityMs}ms" -ForegroundColor Gray
+Write-Host "[*] Think Time    : ${EffectiveThinkMinMs}ms + rand(0..${EffectiveThinkRangeMs}ms) | Granularity: ${GranularityMs}ms" -ForegroundColor Gray
 Write-Host "[*] RunCoverage   : $RunCoverageVal | External APIs: $ExtApiVal | WritesInLoad: $WritesInLoadVal" -ForegroundColor Gray
 
 $JMeterArgs = @(
@@ -188,8 +238,8 @@ $JMeterArgs = @(
     "-JdefaultPassword=$DefaultPassword",
     "-JcoverageThreads=1",
     "-JrunCoverage=$RunCoverageVal",
-    "-JloadThinkMinMs=$ThinkMinMs",
-    "-JloadThinkRangeMs=$ThinkRangeMs",
+    "-JloadThinkMinMs=$EffectiveThinkMinMs",
+    "-JloadThinkRangeMs=$EffectiveThinkRangeMs",
     "-Jtier1Threads=$($TierValues[0])",
     "-Jtier2Threads=$($TierValues[1])",
     "-Jtier3Threads=$($TierValues[2])",
@@ -479,7 +529,12 @@ foreach ($Lbl in ($RankingBuckets.Keys | Sort-Object)) {
         if ($ParsedCode -ge 400 -or $ParsedCode -eq 0) {
             $FirstErr = $CodeItems | Where-Object { $_.failureMessage -or $_.responseMessage } | Select-Object -First 1
             if ($FirstErr) {
-                $ErrSample = if ($FirstErr.failureMessage) { [string]$FirstErr.failureMessage } else { [string]$FirstErr.responseMessage }
+                if ($ParsedCode -eq 0 -and $FirstErr.responseMessage) {
+                    $ErrSample = "$CodeStr ($($FirstErr.responseMessage))"
+                }
+                else {
+                    $ErrSample = if ($FirstErr.failureMessage) { [string]$FirstErr.failureMessage } else { [string]$FirstErr.responseMessage }
+                }
                 if ($ErrSample -eq "" -and $CodeStr -ne "0") { $ErrSample = "HTTP $CodeStr" }
             }
         }
@@ -526,8 +581,8 @@ $SummaryPayload = [ordered]@{
     dryRun          = [bool]$DryRun
     runCoverage     = (-not [bool]$SkipCoverage)
     granularityMs   = $GranularityMs
-    thinkMinMs      = $ThinkMinMs
-    thinkRangeMs    = $ThinkRangeMs
+    thinkMinMs      = $EffectiveThinkMinMs
+    thinkRangeMs    = $EffectiveThinkRangeMs
     tiers           = $TierValues
     durationSeconds = $EffectiveDuration
     totalSamples    = $Rows.Count
@@ -557,9 +612,75 @@ foreach ($Key in $TierSummary.Keys) {
     Write-Host ("{0,-12} | Reqs: {1,6} | Errs: {2,4} (401={3}) | RPS: {4,7} | p50: {5,6}ms | p95: {6,6}ms | p99: {7,6}ms" -f `
             $Key, $T.requests, $T.errors, $T.count401, $T.rps, $T.p50Ms, $T.p95Ms, $T.p99Ms)
 }
+function Resolve-VenvPython {
+    param([string]$RootDir)
+
+    $repoRootResolved = (Resolve-Path $RootDir).Path
+    $activateScript = Join-Path $repoRootResolved "Scripts\Activate.ps1"
+    $expectedVenvPython = Join-Path $repoRootResolved "Scripts\python.exe"
+    if (-not (Test-Path $activateScript) -or -not (Test-Path $expectedVenvPython)) {
+        throw "Virtual environment activation script or python.exe missing under $repoRootResolved. Stopping without fallback."
+    }
+    $expectedVenvPython = (Resolve-Path $expectedVenvPython).Path
+
+    Push-Location $repoRootResolved
+    try {
+        & $activateScript
+        if (-not $env:VIRTUAL_ENV) {
+            throw "Validation failed: `$env:VIRTUAL_ENV is not set after activating $activateScript."
+        }
+        if ((Resolve-Path $env:VIRTUAL_ENV).Path -ne $repoRootResolved) {
+            throw "Validation failed: `$env:VIRTUAL_ENV does not match $repoRootResolved."
+        }
+        $pyCmd = Get-Command python -ErrorAction Stop
+        $resolvedPy = (Resolve-Path $pyCmd.Source).Path
+        if ($resolvedPy -ne $expectedVenvPython) {
+            throw "Validation failed: Get-Command python ($resolvedPy) does not resolve to $expectedVenvPython."
+        }
+        & $resolvedPy -c "import sys; assert sys.prefix != sys.base_prefix"
+        if ($LASTEXITCODE -ne 0) {
+            throw "Validation failed: Python reported sys.prefix == sys.base_prefix."
+        }
+        return $resolvedPy
+    }
+    finally {
+        Pop-Location
+    }
+}
+
 Write-Host "`n[*] Exported JSON summary: $SummaryJsonPath" -ForegroundColor Green
 if ($HtmlReport) {
     Write-Host "[*] Exported HTML report : $HtmlReportDir\index.html" -ForegroundColor Green
+}
+
+if ($ExcelReport) {
+    $GenReportScript = Join-Path $ScriptDir "generate_report.py"
+    if (-not (Test-Path $GenReportScript)) {
+        throw "Excel report generator not found: $GenReportScript"
+    }
+    $EffectiveExcelPath = if ($ExcelOutPath) { $ExcelOutPath } else { Join-Path $RepoRoot "docs\jmeter_stress_test_report.xlsx" }
+    $VenvPython = Resolve-VenvPython -RootDir $RepoRoot
+    Write-Host "[*] Generating JMeter-only Excel workbook..." -ForegroundColor Cyan
+    & $VenvPython $GenReportScript --source jmeter --no-locust --baseline $SummaryJsonPath --out $EffectiveExcelPath
+    if ($LASTEXITCODE -ne 0) {
+        throw "JMeter Excel report generation failed with exit code $LASTEXITCODE"
+    }
+    Write-Host "[*] Exported Excel report: $EffectiveExcelPath" -ForegroundColor Green
+}
+
+if ($PdfReport) {
+    $ExportPdfScript = Join-Path $ScriptDir "export_reports_pdf.mjs"
+    if (-not (Test-Path $ExportPdfScript)) {
+        throw "PDF exporter not found: $ExportPdfScript"
+    }
+    $PdfResultsDir = Split-Path -Parent $HtmlReportDir
+    $EffectivePdfPath = if ($PdfOutPath) { $PdfOutPath } else { Join-Path $ResultsDir "jmeter_report.pdf" }
+    Write-Host "[*] Exporting JMeter-only PDF report..." -ForegroundColor Cyan
+    & node $ExportPdfScript --results-dir $PdfResultsDir --jmeter-only --out $EffectivePdfPath
+    if ($LASTEXITCODE -ne 0) {
+        throw "JMeter PDF export failed with exit code $LASTEXITCODE"
+    }
+    Write-Host "[*] Exported PDF report  : $EffectivePdfPath" -ForegroundColor Green
 }
 
 if ($Total401 -gt 0) {

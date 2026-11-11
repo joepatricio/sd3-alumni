@@ -56,9 +56,14 @@ def load_telemetry_data(
     source: str = "auto",
     explicit_baseline: Optional[str] = None,
     explicit_locust: Optional[str] = None,
+    include_locust: bool = True,
 ) -> Tuple[Optional[Dict[str, Any]], Optional[Dict[str, Any]], Optional[str]]:
     baseline_file = resolve_baseline_path(source=source, explicit_baseline=explicit_baseline)
-    locust_file = explicit_locust or os.path.join(RESULTS_DIR, "locust_metrics.json")
+    locust_file = (
+        (explicit_locust or os.path.join(RESULTS_DIR, "locust_metrics.json"))
+        if include_locust
+        else None
+    )
 
     baseline_data = None
     locust_data = None
@@ -79,12 +84,14 @@ def create_report(
     explicit_baseline: Optional[str] = None,
     explicit_locust: Optional[str] = None,
     out_path: Optional[str] = None,
+    include_locust: bool = True,
 ):
-    print(f"[*] Loading telemetry data from results (source={source})...")
+    print(f"[*] Loading telemetry data from results (source={source}, include_locust={include_locust})...")
     node_data, locust_data, baseline_file = load_telemetry_data(
         source=source,
         explicit_baseline=explicit_baseline,
         explicit_locust=explicit_locust,
+        include_locust=include_locust,
     )
 
     if not node_data and not locust_data:
@@ -462,7 +469,7 @@ def create_report(
             var_row += 1
 
     # ==============================================================================
-    # SHEET 5: Comparative Metrics (Baseline Engine vs Locust Personas)
+    # SHEET 5: Comparative Metrics (or Standalone Phase Breakdown when --no-locust)
     # ==============================================================================
     engine_label = "Node.js High-Concurrency Engine"
     if node_data:
@@ -472,88 +479,181 @@ def create_report(
             engine_label = "Apache JMeter (Stepped Concurrency)"
     is_jmeter = "jmeter" in engine_label.lower()
 
-    ws5 = wb.create_sheet(title="Baseline vs Personas")
-    ws5.views.sheetView[0].showGridLines = True
+    if locust_data is not None:
+        ws5 = wb.create_sheet(title="Baseline vs Personas")
+        ws5.views.sheetView[0].showGridLines = True
 
-    ws5.merge_cells("A1:G1")
-    ws5["A1"] = (
-        "COMPARATIVE ANALYSIS: APACHE JMETER STEPPED LOAD VS REALISTIC LOCUST PERSONAS"
-        if is_jmeter
-        else "COMPARATIVE ANALYSIS: RAW NODE.JS BASELINE VS REALISTIC LOCUST PERSONAS"
-    )
-    ws5["A1"].font = font_title
-    ws5["A1"].fill = fill_dark_navy
-    ws5["A1"].alignment = align_center
-    ws5.row_dimensions[1].height = 30
+        ws5.merge_cells("A1:G1")
+        ws5["A1"] = (
+            "COMPARATIVE ANALYSIS: APACHE JMETER STEPPED LOAD VS REALISTIC LOCUST PERSONAS"
+            if is_jmeter
+            else "COMPARATIVE ANALYSIS: RAW NODE.JS BASELINE VS REALISTIC LOCUST PERSONAS"
+        )
+        ws5["A1"].font = font_title
+        ws5["A1"].fill = fill_dark_navy
+        ws5["A1"].alignment = align_center
+        ws5.row_dimensions[1].height = 30
 
-    headers_ws5 = [
-        "Benchmark Dimension", engine_label, "Locust Realistic Persona Suite",
-        "Variance / Impact", "SQLite Behavior Observed", "Infrastructure Implication"
-    ]
-    for col_idx, h in enumerate(headers_ws5, 1):
-        cell = ws5.cell(row=3, column=col_idx, value=h)
-        cell.font = font_header
-        cell.fill = fill_slate_header
-        cell.alignment = align_center
-        cell.border = border_cell
-    ws5.row_dimensions[3].height = 24
-
-    locust_conc_label = (
-        f"{locust_data.get('totalUsers', locust_data.get('users', 'Parallel'))} VUs (Admin + Official + Regular + Reg)"
-        if locust_data and (locust_data.get("totalUsers") or locust_data.get("users"))
-        else "Admins + Official + Regular + Registration"
-    )
-    comp_rows = [
-        ("Peak Concurrency Handled", f"{max((t.get('concurrency', 0) for t in tiers), default=0)} VUs", locust_conc_label, "JMeter stepped tiers run in parallel with paced Locust personas" if is_jmeter else "Node pushes raw pipe; Locust mimics user pauses", "Read locks serialize in DELETE mode under peak", "Network headroom intact; lock queuing observed"),
-        ("Throughput (Peak RPS)", f"{max_rps:.1f} req/s", "Realistic Paced Simulation", "Paced requests prevent artificial socket swamping", "Sub-millisecond reads keep RPS high until write lock", "Sufficient for expected alumni association traffic"),
-        ("Network Uplink Utilization", f"{max_mbps:.2f} Mbps (of 70 Mbps)", "Estimated ~15-25 Mbps", "Payload caching significantly lowers WAN usage", "Zero network overhead on SQLite in-process queries", "70 Mbps is viable with gzip/brotli compression"),
-        ("Median Latency (P50)", f"{avg_p50:.1f} ms", "Realistic Session P50", "Consistent sub-200ms user experience", "SQLite in-process B-tree cache hits dominate", "Satisfactory interactive performance"),
-        ("Tail Latency (P95/P99)", f"P95: {max_p95:.1f} ms | P99: {max_p99:.1f} ms", "P95 under write contention", "Write transactions cause tail latency spikes", "PRAGMA journal_mode=DELETE lock contention", "WAL mode will smooth out P95 and P99 tails"),
-        ("Registration Burst Behavior", "Tested via POST /api/auth/register", "Tested via RegistrationWorstCase", "Bcrypt CPU + DB write locks compound", "Exclusive lock holds for transaction duration", "Offload bcrypt and rate-limit registrations")
-    ]
-
-    for idx, c_data in enumerate(comp_rows, 1):
-        r = 3 + idx
-        for col_idx, val in enumerate(c_data, 1):
-            cell = ws5.cell(row=r, column=col_idx, value=val)
-            cell.alignment = align_center if col_idx in [1, 2, 3] else align_left
+        headers_ws5 = [
+            "Benchmark Dimension", engine_label, "Locust Realistic Persona Suite",
+            "Variance / Impact", "SQLite Behavior Observed", "Infrastructure Implication"
+        ]
+        for col_idx, h in enumerate(headers_ws5, 1):
+            cell = ws5.cell(row=3, column=col_idx, value=h)
+            cell.font = font_header
+            cell.fill = fill_slate_header
+            cell.alignment = align_center
             cell.border = border_cell
-            cell.font = font_normal
-        ws5.row_dimensions[r].height = 22
+        ws5.row_dimensions[3].height = 24
 
-    # Add Granular Locust Persona Route Table
-    locust_routes = locust_data.get("routes", []) if locust_data else []
-    if locust_routes:
-        l_header_row = len(comp_rows) + 6
-        ws5.merge_cells(start_row=l_header_row, start_column=1, end_row=l_header_row, end_column=7)
-        ws5.cell(row=l_header_row, column=1, value="LOCUST USER PERSONA SIMULATION BREAKDOWN").font = font_header
-        ws5.cell(row=l_header_row, column=1).fill = fill_blue_header
-        ws5.cell(row=l_header_row, column=1).alignment = align_center
-        ws5.row_dimensions[l_header_row].height = 24
+        locust_conc_label = (
+            f"{locust_data.get('totalUsers', locust_data.get('users', 'Parallel'))} VUs (Admin + Official + Regular + Reg)"
+            if locust_data and (locust_data.get("totalUsers") or locust_data.get("users"))
+            else "Admins + Official + Regular + Registration"
+        )
+        comp_rows = [
+            ("Peak Concurrency Handled", f"{max((t.get('concurrency', 0) for t in tiers), default=0)} VUs", locust_conc_label, "JMeter stepped tiers run in parallel with paced Locust personas" if is_jmeter else "Node pushes raw pipe; Locust mimics user pauses", "Read locks serialize in DELETE mode under peak", "Network headroom intact; lock queuing observed"),
+            ("Throughput (Peak RPS)", f"{max_rps:.1f} req/s", "Realistic Paced Simulation", "Paced requests prevent artificial socket swamping", "Sub-millisecond reads keep RPS high until write lock", "Sufficient for expected alumni association traffic"),
+            ("Network Uplink Utilization", f"{max_mbps:.2f} Mbps (of 70 Mbps)", "Estimated ~15-25 Mbps", "Payload caching significantly lowers WAN usage", "Zero network overhead on SQLite in-process queries", "70 Mbps is viable with gzip/brotli compression"),
+            ("Median Latency (P50)", f"{avg_p50:.1f} ms", "Realistic Session P50", "Consistent sub-200ms user experience", "SQLite in-process B-tree cache hits dominate", "Satisfactory interactive performance"),
+            ("Tail Latency (P95/P99)", f"P95: {max_p95:.1f} ms | P99: {max_p99:.1f} ms", "P95 under write contention", "Write transactions cause tail latency spikes", "PRAGMA journal_mode=DELETE lock contention", "WAL mode will smooth out P95 and P99 tails"),
+            ("Registration Burst Behavior", "Tested via POST /api/auth/register", "Tested via RegistrationWorstCase", "Bcrypt CPU + DB write locks compound", "Exclusive lock holds for transaction duration", "Offload bcrypt and rate-limit registrations")
+        ]
 
-        subheaders = ["Persona Task / Route", "HTTP Method", "Calls", "Min (ms)", "P50 Med (ms)", "P95 (ms)", "Max (ms)"]
-        for c_idx, sh in enumerate(subheaders, 1):
-            sc = ws5.cell(row=l_header_row + 1, column=c_idx, value=sh)
-            sc.font = font_header
-            sc.fill = fill_slate_header
-            sc.alignment = align_center
-            sc.border = border_cell
-        ws5.row_dimensions[l_header_row + 1].height = 22
+        for idx, c_data in enumerate(comp_rows, 1):
+            r = 3 + idx
+            for col_idx, val in enumerate(c_data, 1):
+                cell = ws5.cell(row=r, column=col_idx, value=val)
+                cell.alignment = align_center if col_idx in [1, 2, 3] else align_left
+                cell.border = border_cell
+                cell.font = font_normal
+            ws5.row_dimensions[r].height = 22
 
-        for l_idx, lr in enumerate(locust_routes, 1):
-            cur_r = l_header_row + 1 + l_idx
-            ws5.cell(row=cur_r, column=1, value=lr.get("route", "")).alignment = align_left
-            ws5.cell(row=cur_r, column=2, value=lr.get("method", "")).alignment = align_center
-            ws5.cell(row=cur_r, column=3, value=lr.get("totalCalls", 0)).alignment = align_right
-            ws5.cell(row=cur_r, column=4, value=round(lr.get("minLatency", 0), 1)).alignment = align_right
-            ws5.cell(row=cur_r, column=5, value=round(lr.get("p50Latency", 0), 1)).alignment = align_right
-            ws5.cell(row=cur_r, column=6, value=round(lr.get("p95Latency", 0), 1)).alignment = align_right
-            ws5.cell(row=cur_r, column=7, value=round(lr.get("maxLatency", 0), 1)).alignment = align_right
-            
-            for c in range(1, 8):
-                ws5.cell(row=cur_r, column=c).border = border_cell
-                ws5.cell(row=cur_r, column=c).font = font_normal
-            ws5.row_dimensions[cur_r].height = 20
+        # Add Granular Locust Persona Route Table
+        locust_routes = locust_data.get("routes", []) if locust_data else []
+        if locust_routes:
+            l_header_row = len(comp_rows) + 6
+            ws5.merge_cells(start_row=l_header_row, start_column=1, end_row=l_header_row, end_column=7)
+            ws5.cell(row=l_header_row, column=1, value="LOCUST USER PERSONA SIMULATION BREAKDOWN").font = font_header
+            ws5.cell(row=l_header_row, column=1).fill = fill_blue_header
+            ws5.cell(row=l_header_row, column=1).alignment = align_center
+            ws5.row_dimensions[l_header_row].height = 24
+
+            subheaders = ["Persona Task / Route", "HTTP Method", "Calls", "Min (ms)", "P50 Med (ms)", "P95 (ms)", "Max (ms)"]
+            for c_idx, sh in enumerate(subheaders, 1):
+                sc = ws5.cell(row=l_header_row + 1, column=c_idx, value=sh)
+                sc.font = font_header
+                sc.fill = fill_slate_header
+                sc.alignment = align_center
+                sc.border = border_cell
+            ws5.row_dimensions[l_header_row + 1].height = 22
+
+            for l_idx, lr in enumerate(locust_routes, 1):
+                cur_r = l_header_row + 1 + l_idx
+                ws5.cell(row=cur_r, column=1, value=lr.get("route", "")).alignment = align_left
+                ws5.cell(row=cur_r, column=2, value=lr.get("method", "")).alignment = align_center
+                ws5.cell(row=cur_r, column=3, value=lr.get("totalCalls", 0)).alignment = align_right
+                ws5.cell(row=cur_r, column=4, value=round(lr.get("minLatency", 0), 1)).alignment = align_right
+                ws5.cell(row=cur_r, column=5, value=round(lr.get("p50Latency", 0), 1)).alignment = align_right
+                ws5.cell(row=cur_r, column=6, value=round(lr.get("p95Latency", 0), 1)).alignment = align_right
+                ws5.cell(row=cur_r, column=7, value=round(lr.get("maxLatency", 0), 1)).alignment = align_right
+
+                for c in range(1, 8):
+                    ws5.cell(row=cur_r, column=c).border = border_cell
+                    ws5.cell(row=cur_r, column=c).font = font_normal
+                ws5.row_dimensions[cur_r].height = 20
+    else:
+        ws5 = wb.create_sheet(title="JMeter Phase Breakdown" if is_jmeter else "Baseline Breakdown")
+        ws5.views.sheetView[0].showGridLines = True
+
+        ws5.merge_cells("A1:K1")
+        ws5["A1"] = (
+            "APACHE JMETER STANDALONE EXECUTION & PHASE BREAKDOWN"
+            if is_jmeter
+            else "STANDALONE BASELINE EXECUTION & PHASE BREAKDOWN"
+        )
+        ws5["A1"].font = font_title
+        ws5["A1"].fill = fill_dark_navy
+        ws5["A1"].alignment = align_center
+        ws5.row_dimensions[1].height = 30
+
+        headers_ws5 = [
+            "Phase / Bucket", "Requests", "Errors", "HTTP 401", "Error Rate (%)",
+            "RPS", "Avg (ms)", "P50 (ms)", "P95 (ms)", "P99 (ms)", "Max (ms)"
+        ]
+        for col_idx, h in enumerate(headers_ws5, 1):
+            cell = ws5.cell(row=3, column=col_idx, value=h)
+            cell.font = font_header
+            cell.fill = fill_slate_header
+            cell.alignment = align_center
+            cell.border = border_cell
+        ws5.row_dimensions[3].height = 24
+
+        tier_breakdown = node_data.get("tierBreakdown", {}) if node_data else {}
+        ordered_buckets = [
+            k for k in ["Setup", "Coverage", "Tier_1", "Tier_2", "Tier_3", "Tier_4", "Tier_5", "Other"]
+            if k in tier_breakdown
+        ]
+        for extra_k in sorted(tier_breakdown.keys()):
+            if extra_k not in ordered_buckets:
+                ordered_buckets.append(extra_k)
+
+        for b_idx, b_name in enumerate(ordered_buckets, 1):
+            b_row = 3 + b_idx
+            b = tier_breakdown[b_name]
+            ws5.cell(row=b_row, column=1, value=b_name).alignment = align_left
+            ws5.cell(row=b_row, column=2, value=b.get("requests", 0)).alignment = align_right
+            ws5.cell(row=b_row, column=3, value=b.get("errors", 0)).alignment = align_right
+            ws5.cell(row=b_row, column=4, value=b.get("count401", 0)).alignment = align_right
+
+            err_pct = float(b.get("errorRate", 0))
+            err_cell = ws5.cell(row=b_row, column=5, value=round(err_pct, 2))
+            err_cell.alignment = align_right
+            if err_pct > 5.0:
+                err_cell.fill = fill_highlight_red
+            elif err_pct > 0.0:
+                err_cell.fill = fill_highlight_yellow
+            else:
+                err_cell.fill = fill_highlight_green
+
+            ws5.cell(row=b_row, column=6, value=round(b.get("rps", 0), 2)).alignment = align_right
+            ws5.cell(row=b_row, column=7, value=round(b.get("avgMs", 0), 1)).alignment = align_right
+            ws5.cell(row=b_row, column=8, value=round(b.get("p50Ms", 0), 1)).alignment = align_right
+            ws5.cell(row=b_row, column=9, value=round(b.get("p95Ms", 0), 1)).alignment = align_right
+            ws5.cell(row=b_row, column=10, value=round(b.get("p99Ms", 0), 1)).alignment = align_right
+            ws5.cell(row=b_row, column=11, value=round(b.get("maxMs", 0), 1)).alignment = align_right
+
+            for c in range(1, 12):
+                ws5.cell(row=b_row, column=c).border = border_cell
+                ws5.cell(row=b_row, column=c).font = font_normal
+            ws5.row_dimensions[b_row].height = 20
+
+        meta_start = 3 + len(ordered_buckets) + 3
+        ws5.merge_cells(start_row=meta_start, start_column=1, end_row=meta_start, end_column=4)
+        ws5.cell(row=meta_start, column=1, value="STANDALONE EXECUTION ENVELOPE").font = font_header
+        ws5.cell(row=meta_start, column=1).fill = fill_blue_header
+        ws5.cell(row=meta_start, column=1).alignment = align_center
+        ws5.row_dimensions[meta_start].height = 24
+
+        meta_rows = [
+            ("Engine", engine_label),
+            ("Target URL", str(node_data.get("targetUrl", "")) if node_data else ""),
+            ("Total Samples / Load Samples", f"{node_data.get('totalSamples', 0)} / {node_data.get('loadSamples', 0)}" if node_data else "0 / 0"),
+            ("Failures (401 / 403 / 5xx)", f"{node_data.get('totalFailed', 0)} ({node_data.get('total401', 0)} / {node_data.get('total403', 0)} / {node_data.get('total5xx', 0)})" if node_data else "0"),
+            ("Think-Time Envelope", f"{node_data.get('thinkMinMs', 0)}..{int(node_data.get('thinkMinMs', 0)) + int(node_data.get('thinkRangeMs', 0))} ms" if node_data else ""),
+            ("Granularity", f"{node_data.get('granularityMs', 1000)} ms" if node_data else ""),
+        ]
+        for m_idx, (m_k, m_v) in enumerate(meta_rows, 1):
+            mr = meta_start + m_idx
+            ws5.cell(row=mr, column=1, value=m_k).font = font_bold
+            ws5.cell(row=mr, column=1).alignment = align_left
+            ws5.cell(row=mr, column=1).border = border_cell
+            ws5.merge_cells(start_row=mr, start_column=2, end_row=mr, end_column=4)
+            ws5.cell(row=mr, column=2, value=m_v).font = font_normal
+            ws5.cell(row=mr, column=2).alignment = align_left
+            for c in range(2, 5):
+                ws5.cell(row=mr, column=c).border = border_cell
+            ws5.row_dimensions[mr].height = 20
 
     # Adjust Column Widths for all sheets
     for ws in [ws1, ws2, ws3, ws4, ws5]:
@@ -590,9 +690,16 @@ def main():
     parser.add_argument("--source", choices=["auto", "jmeter", "node"], default="auto", help="Preferred baseline JSON source.")
     parser.add_argument("--baseline", default=None, help="Explicit path to baseline JSON file.")
     parser.add_argument("--locust", default=None, help="Explicit path to locust_metrics.json file.")
+    parser.add_argument("--no-locust", action="store_true", help="Exclude Locust persona telemetry and build a standalone JMeter/baseline workbook.")
     parser.add_argument("--out", default=None, help="Explicit output .xlsx path.")
     args = parser.parse_args()
-    create_report(source=args.source, explicit_baseline=args.baseline, explicit_locust=args.locust, out_path=args.out)
+    create_report(
+        source=args.source,
+        explicit_baseline=args.baseline,
+        explicit_locust=args.locust,
+        out_path=args.out,
+        include_locust=not args.no_locust,
+    )
 
 
 if __name__ == "__main__":

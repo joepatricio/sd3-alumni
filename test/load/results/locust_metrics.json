@@ -1,0 +1,618 @@
+{
+  "timestamp": "2026-11-11T10:48:18Z",
+  "summary": {
+    "totalCalls": 5429,
+    "totalErrors": 466,
+    "count401": 0,
+    "count5xx": 0,
+    "setupError": "",
+    "exceptionsCount": 0,
+    "exceptions": [],
+    "verifiedPools": {
+      "admins": 10,
+      "officials": 5,
+      "regulars": 7
+    }
+  },
+  "routes": [
+    {
+      "route": "[Auth] Verify Regular Token",
+      "method": "GET",
+      "totalCalls": 55,
+      "totalTimeMs": 65218.87,
+      "minLatency": 832.74,
+      "p50Latency": 1156.48,
+      "p95Latency": 1565.04,
+      "p99Latency": 1574.29,
+      "maxLatency": 1574.29,
+      "statusCounts": {
+        "200": 55
+      },
+      "recentErrors": []
+    },
+    {
+      "route": "/api/auth/register [Worst-Case Write]",
+      "method": "POST",
+      "totalCalls": 596,
+      "totalTimeMs": 958651.51,
+      "minLatency": 24.63,
+      "p50Latency": 1114.44,
+      "p95Latency": 4622.44,
+      "p99Latency": 11248.11,
+      "maxLatency": 12062.55,
+      "statusCounts": {
+        "201": 545,
+        "0": 51
+      },
+      "recentErrors": [
+        "Remote end closed connection without response",
+        "Remote end closed connection without response",
+        "[SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1082)",
+        "[SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1082)",
+        "[SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1082)"
+      ]
+    },
+    {
+      "route": "[Auth] Verify Official Token",
+      "method": "GET",
+      "totalCalls": 20,
+      "totalTimeMs": 22750.79,
+      "minLatency": 890.03,
+      "p50Latency": 1111.81,
+      "p95Latency": 1558.4,
+      "p99Latency": 1558.4,
+      "maxLatency": 1558.4,
+      "statusCounts": {
+        "200": 20
+      },
+      "recentErrors": []
+    },
+    {
+      "route": "/api/bulletins [_include=category,author,status]",
+      "method": "GET",
+      "totalCalls": 698,
+      "totalTimeMs": 1140977.97,
+      "minLatency": 27.42,
+      "p50Latency": 1091.57,
+      "p95Latency": 5237.79,
+      "p99Latency": 11167.44,
+      "maxLatency": 12976.85,
+      "statusCounts": {
+        "200": 635,
+        "0": 63
+      },
+      "recentErrors": [
+        "Remote end closed connection without response",
+        "Remote end closed connection without response",
+        "Remote end closed connection without response",
+        "[SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1082)",
+        "[SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1082)"
+      ]
+    },
+    {
+      "route": "/api/bulletins [Official Post]",
+      "method": "POST",
+      "totalCalls": 525,
+      "totalTimeMs": 715060.63,
+      "minLatency": 24.09,
+      "p50Latency": 1013.99,
+      "p95Latency": 3316.2,
+      "p99Latency": 8295.55,
+      "maxLatency": 15530.89,
+      "statusCounts": {
+        "201": 483,
+        "0": 42
+      },
+      "recentErrors": [
+        "Remote end closed connection without response",
+        "[SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1082)",
+        "[SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1082)",
+        "[SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1082)",
+        "[SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1082)"
+      ]
+    },
+    {
+      "route": "[Auth] Verify Admin Token",
+      "method": "GET",
+      "totalCalls": 10,
+      "totalTimeMs": 12185.16,
+      "minLatency": 820.36,
+      "p50Latency": 1259.98,
+      "p95Latency": 1558.79,
+      "p99Latency": 1558.79,
+      "maxLatency": 1558.79,
+      "statusCounts": {
+        "200": 10
+      },
+      "recentErrors": []
+    },
+    {
+      "route": "/api/userStatuses",
+      "method": "GET",
+      "totalCalls": 53,
+      "totalTimeMs": 64846.43,
+      "minLatency": 97.98,
+      "p50Latency": 912.93,
+      "p95Latency": 4078.48,
+      "p99Latency": 7073.55,
+      "maxLatency": 7073.55,
+      "statusCounts": {
+        "200": 49,
+        "0": 4
+      },
+      "recentErrors": [
+        "[SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1082)",
+        "Remote end closed connection without response",
+        "[SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1082)",
+        "[SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1082)"
+      ]
+    },
+    {
+      "route": "/api/events [Exclusive RSVP Target]",
+      "method": "POST",
+      "totalCalls": 56,
+      "totalTimeMs": 46639.54,
+      "minLatency": 242.34,
+      "p50Latency": 846.87,
+      "p95Latency": 1454.62,
+      "p99Latency": 2950.24,
+      "maxLatency": 2950.24,
+      "statusCounts": {
+        "201": 55,
+        "0": 1
+      },
+      "recentErrors": [
+        "[SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1082)"
+      ]
+    },
+    {
+      "route": "/api/bulletins [Filtered Page]",
+      "method": "GET",
+      "totalCalls": 561,
+      "totalTimeMs": 884037.72,
+      "minLatency": 112.79,
+      "p50Latency": 1164.78,
+      "p95Latency": 3995.67,
+      "p99Latency": 9883.19,
+      "maxLatency": 12408.35,
+      "statusCounts": {
+        "200": 517,
+        "0": 44
+      },
+      "recentErrors": [
+        "Remote end closed connection without response",
+        "Remote end closed connection without response",
+        "Remote end closed connection without response",
+        "[SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1082)",
+        "[SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1082)"
+      ]
+    },
+    {
+      "route": "/api/events [Official RSVP Target]",
+      "method": "POST",
+      "totalCalls": 20,
+      "totalTimeMs": 10642.44,
+      "minLatency": 238.6,
+      "p50Latency": 489.78,
+      "p95Latency": 982.37,
+      "p99Latency": 982.37,
+      "maxLatency": 982.37,
+      "statusCounts": {
+        "201": 20
+      },
+      "recentErrors": []
+    },
+    {
+      "route": "/api/admin/dashboard-stats",
+      "method": "GET",
+      "totalCalls": 262,
+      "totalTimeMs": 319688.27,
+      "minLatency": 127.28,
+      "p50Latency": 927.34,
+      "p95Latency": 2956.75,
+      "p99Latency": 11690.45,
+      "maxLatency": 11811.83,
+      "statusCounts": {
+        "200": 251,
+        "0": 11
+      },
+      "recentErrors": [
+        "Remote end closed connection without response",
+        "[SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1082)",
+        "[SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1082)",
+        "[SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1082)",
+        "[SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1082)"
+      ]
+    },
+    {
+      "route": "/api/userRsvps [RSVP Post]",
+      "method": "POST",
+      "totalCalls": 55,
+      "totalTimeMs": 40595.63,
+      "minLatency": 228.88,
+      "p50Latency": 827.48,
+      "p95Latency": 1163.53,
+      "p99Latency": 1560.98,
+      "maxLatency": 1560.98,
+      "statusCounts": {
+        "201": 55
+      },
+      "recentErrors": []
+    },
+    {
+      "route": "/api/userRsvps [Official RSVP]",
+      "method": "POST",
+      "totalCalls": 20,
+      "totalTimeMs": 10146.59,
+      "minLatency": 236.23,
+      "p50Latency": 492.27,
+      "p95Latency": 1038.33,
+      "p99Latency": 1038.33,
+      "maxLatency": 1038.33,
+      "statusCounts": {
+        "201": 20
+      },
+      "recentErrors": []
+    },
+    {
+      "route": "/api/contentStatuses",
+      "method": "GET",
+      "totalCalls": 37,
+      "totalTimeMs": 41875.73,
+      "minLatency": 10.07,
+      "p50Latency": 1063.91,
+      "p95Latency": 3090.97,
+      "p99Latency": 3881.43,
+      "maxLatency": 3881.43,
+      "statusCounts": {
+        "200": 34,
+        "0": 3
+      },
+      "recentErrors": [
+        "Remote end closed connection without response",
+        "[SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1082)",
+        "[SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1082)"
+      ]
+    },
+    {
+      "route": "/api/admin/events/:id/status [Conclude]",
+      "method": "PATCH",
+      "totalCalls": 54,
+      "totalTimeMs": 60328.13,
+      "minLatency": 21.45,
+      "p50Latency": 940.23,
+      "p95Latency": 3115.99,
+      "p99Latency": 7679.82,
+      "maxLatency": 7679.82,
+      "statusCounts": {
+        "200": 43,
+        "0": 11
+      },
+      "recentErrors": [
+        "[SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1082)",
+        "[SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1082)",
+        "Remote end closed connection without response",
+        "Remote end closed connection without response",
+        "[SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1082)"
+      ]
+    },
+    {
+      "route": "/api/bulletins [Regular Post]",
+      "method": "POST",
+      "totalCalls": 144,
+      "totalTimeMs": 217035.31,
+      "minLatency": 231.68,
+      "p50Latency": 1014.45,
+      "p95Latency": 3838.37,
+      "p99Latency": 11987.23,
+      "maxLatency": 12088.22,
+      "statusCounts": {
+        "201": 134,
+        "0": 10
+      },
+      "recentErrors": [
+        "[SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1082)",
+        "[SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1082)",
+        "[SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1082)",
+        "[SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1082)",
+        "[SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1082)"
+      ]
+    },
+    {
+      "route": "/api/degrees",
+      "method": "GET",
+      "totalCalls": 47,
+      "totalTimeMs": 69942.28,
+      "minLatency": 230.16,
+      "p50Latency": 1091.09,
+      "p95Latency": 3864.32,
+      "p99Latency": 9629.12,
+      "maxLatency": 9629.12,
+      "statusCounts": {
+        "200": 39,
+        "0": 8
+      },
+      "recentErrors": [
+        "[SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1082)",
+        "[SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1082)",
+        "[SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1082)",
+        "[SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1082)",
+        "[SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1082)"
+      ]
+    },
+    {
+      "route": "/api/donations/summary",
+      "method": "GET",
+      "totalCalls": 163,
+      "totalTimeMs": 181308.01,
+      "minLatency": 185.08,
+      "p50Latency": 895.89,
+      "p95Latency": 2370.76,
+      "p99Latency": 8300.59,
+      "maxLatency": 8333.08,
+      "statusCounts": {
+        "200": 156,
+        "0": 7
+      },
+      "recentErrors": [
+        "[SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1082)",
+        "Remote end closed connection without response",
+        "Remote end closed connection without response",
+        "[SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1082)",
+        "Remote end closed connection without response"
+      ]
+    },
+    {
+      "route": "/api/events [Filtered Page]",
+      "method": "GET",
+      "totalCalls": 421,
+      "totalTimeMs": 727582.71,
+      "minLatency": 11.01,
+      "p50Latency": 1148.22,
+      "p95Latency": 5323.93,
+      "p99Latency": 12060.77,
+      "maxLatency": 13277.8,
+      "statusCounts": {
+        "200": 382,
+        "0": 39
+      },
+      "recentErrors": [
+        "Remote end closed connection without response",
+        "[SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1082)",
+        "[SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1082)",
+        "[SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1082)",
+        "[SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1082)"
+      ]
+    },
+    {
+      "route": "/api/donations [Table]",
+      "method": "GET",
+      "totalCalls": 163,
+      "totalTimeMs": 179014.59,
+      "minLatency": 228.91,
+      "p50Latency": 893.41,
+      "p95Latency": 2372.54,
+      "p99Latency": 7122.33,
+      "maxLatency": 10212.27,
+      "statusCounts": {
+        "200": 153,
+        "0": 10
+      },
+      "recentErrors": [
+        "Remote end closed connection without response",
+        "[SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1082)",
+        "[SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1082)",
+        "[SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1082)",
+        "Remote end closed connection without response"
+      ]
+    },
+    {
+      "route": "/api/users [_include=profile,userStatus]",
+      "method": "GET",
+      "totalCalls": 266,
+      "totalTimeMs": 413927.98,
+      "minLatency": 229.45,
+      "p50Latency": 1038.51,
+      "p95Latency": 4501.06,
+      "p99Latency": 11607.52,
+      "maxLatency": 12412.61,
+      "statusCounts": {
+        "200": 246,
+        "0": 20
+      },
+      "recentErrors": [
+        "[SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1082)",
+        "[SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1082)",
+        "[SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1082)",
+        "[SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1082)",
+        "[SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1082)"
+      ]
+    },
+    {
+      "route": "/api/userRsvps/:id [Official Toggle]",
+      "method": "PATCH",
+      "totalCalls": 316,
+      "totalTimeMs": 422107.04,
+      "minLatency": 33.67,
+      "p50Latency": 978.75,
+      "p95Latency": 3740.19,
+      "p99Latency": 8217.8,
+      "maxLatency": 11604.72,
+      "statusCounts": {
+        "200": 285,
+        "0": 31
+      },
+      "recentErrors": [
+        "Remote end closed connection without response",
+        "[SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1082)",
+        "[SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1082)",
+        "Remote end closed connection without response",
+        "[SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1082)"
+      ]
+    },
+    {
+      "route": "/api/profiles/:id [Profile Patch]",
+      "method": "PATCH",
+      "totalCalls": 149,
+      "totalTimeMs": 183807.25,
+      "minLatency": 24.3,
+      "p50Latency": 1088.63,
+      "p95Latency": 2567.82,
+      "p99Latency": 4549.8,
+      "maxLatency": 8666.59,
+      "statusCounts": {
+        "200": 137,
+        "0": 12
+      },
+      "recentErrors": [
+        "Remote end closed connection without response",
+        "[SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1082)",
+        "[SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1082)",
+        "[SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1082)",
+        "[SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1082)"
+      ]
+    },
+    {
+      "route": "/api/admin/events/:id/status [Moderate]",
+      "method": "PATCH",
+      "totalCalls": 101,
+      "totalTimeMs": 138667.17,
+      "minLatency": 24.78,
+      "p50Latency": 902.9,
+      "p95Latency": 5493.27,
+      "p99Latency": 8351.03,
+      "maxLatency": 11730.1,
+      "statusCounts": {
+        "200": 94,
+        "0": 7
+      },
+      "recentErrors": [
+        "Remote end closed connection without response",
+        "[SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1082)",
+        "Remote end closed connection without response",
+        "Remote end closed connection without response",
+        "Remote end closed connection without response"
+      ]
+    },
+    {
+      "route": "/api/admin/bulletins/:id/status [Moderate]",
+      "method": "PATCH",
+      "totalCalls": 147,
+      "totalTimeMs": 163433.92,
+      "minLatency": 3.24,
+      "p50Latency": 858.95,
+      "p95Latency": 2863.14,
+      "p99Latency": 5980.03,
+      "maxLatency": 7058.19,
+      "statusCounts": {
+        "200": 136,
+        "0": 11
+      },
+      "recentErrors": [
+        "[SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1082)",
+        "[SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1082)",
+        "[SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1082)",
+        "[SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1082)",
+        "Remote end closed connection without response"
+      ]
+    },
+    {
+      "route": "/api/eventStatuses",
+      "method": "GET",
+      "totalCalls": 54,
+      "totalTimeMs": 96365.84,
+      "minLatency": 305.58,
+      "p50Latency": 1003.5,
+      "p95Latency": 8774.07,
+      "p99Latency": 11520.37,
+      "maxLatency": 11520.37,
+      "statusCounts": {
+        "200": 49,
+        "0": 5
+      },
+      "recentErrors": [
+        "[SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1082)",
+        "[SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1082)",
+        "[SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1082)",
+        "[SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1082)",
+        "[SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1082)"
+      ]
+    },
+    {
+      "route": "/api/userRsvps/:id [RSVP Toggle]",
+      "method": "PATCH",
+      "totalCalls": 246,
+      "totalTimeMs": 395697.43,
+      "minLatency": 44.71,
+      "p50Latency": 1090.75,
+      "p95Latency": 5071.55,
+      "p99Latency": 8718.06,
+      "maxLatency": 10777.48,
+      "statusCounts": {
+        "200": 232,
+        "0": 14
+      },
+      "recentErrors": [
+        "Remote end closed connection without response",
+        "[SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1082)",
+        "[SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1082)",
+        "[SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1082)",
+        "[SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1082)"
+      ]
+    },
+    {
+      "route": "/api/bulletinCategories",
+      "method": "GET",
+      "totalCalls": 40,
+      "totalTimeMs": 62750.0,
+      "minLatency": 217.83,
+      "p50Latency": 1064.73,
+      "p95Latency": 7188.44,
+      "p99Latency": 7657.45,
+      "maxLatency": 7657.45,
+      "statusCounts": {
+        "200": 35,
+        "0": 5
+      },
+      "recentErrors": [
+        "[SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1082)",
+        "[SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1082)",
+        "[SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1082)",
+        "[SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1082)",
+        "[SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1082)"
+      ]
+    },
+    {
+      "route": "/api/userRsvps/:id [Cleanup]",
+      "method": "DELETE",
+      "totalCalls": 75,
+      "totalTimeMs": 409174.13,
+      "minLatency": 778.12,
+      "p50Latency": 6871.69,
+      "p95Latency": 8018.72,
+      "p99Latency": 11551.38,
+      "maxLatency": 11551.38,
+      "statusCounts": {
+        "204": 66,
+        "0": 9
+      },
+      "recentErrors": []
+    },
+    {
+      "route": "/api/events/:id [Cleanup]",
+      "method": "DELETE",
+      "totalCalls": 75,
+      "totalTimeMs": 172748.76,
+      "minLatency": 285.82,
+      "p50Latency": 2680.96,
+      "p95Latency": 5029.69,
+      "p99Latency": 8804.55,
+      "maxLatency": 8804.55,
+      "statusCounts": {
+        "204": 27,
+        "0": 48
+      },
+      "recentErrors": []
+    }
+  ]
+}
