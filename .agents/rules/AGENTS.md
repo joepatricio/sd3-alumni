@@ -10,6 +10,7 @@
 - Follow existing project conventions and architecture.
 - Do not introduce unnecessary dependencies.
 - Preserve backward compatibility unless explicitly authorized.
+- The repo uses `prisma db push` (there is no `prisma/migrations/` directory). Apply schema changes with `pnpm prisma:push && pnpm prisma:generate` rather than `pnpm prisma:deploy` or `pnpm prisma:dev` in `package.json`.
 - When interacting with Cloudflare, use the cf CLI unless the project has a Wrangler configuration file.
 
 ## Specialized Instructions
