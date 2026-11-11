@@ -14,8 +14,7 @@ Generic table endpoints (e.g., `GET /api/<entities>`) support the following quer
 | Parameter | Type / Format | Description | Example |
 |---|---|---|---|
 | `_where` | JSON String | Prisma-compatible where filter object | `_where={"achievementTier":{"gt":1}}` |
-| `_include` | Comma-separated list | Relations to hydrate into response records | `_include=profile,userStatus` |
-| `_sort` | Field name | Field to sort results by | `_sort=createdAt` |
+| `_include` | Comma-separated list (or `none`) | Relations to hydrate into response records; omit for endpoint list/detail defaults, or pass `none` for scalars only | `_include=profile,userStatus` || `_sort` | Field name | Field to sort results by | `_sort=createdAt` |
 | `_order` | `asc` \| `desc` | Sort direction (default: `asc`) | `_order=desc` |
 | `_page` | Integer | 1-based page number | `_page=1` |
 | `_per_page` | Integer | Maximum items per page (triggers paginated response) | `_per_page=10` |
@@ -26,19 +25,39 @@ Generic table endpoints (e.g., `GET /api/<entities>`) support the following quer
 
 ---
 
-## Model Relation Hydration Rules
+## Flat Query Filters & Aliases (`api/queryParser.js`)
 
-When querying entities with `_include` (or omitting `_include` when default relationships exist), the API server hydrates nested relational trees:
+In addition to `_where` JSON filters, any non-`_` query parameter is parsed as a filter (and combined with `_where` via `AND`):
+- **Suffix operators**: `:in`, `:nin` / `:notIn` / `:not_in` (comma-separated values), `:gte`, `:gt`, `:lte`, `:lt`, `:ne` / `:not`, `:eq` / `:equals`, `:contains`, `:startsWith` / `:starts_with`, `:endsWith` / `:ends_with`.
+- **Nested dot paths**: Flat keys support dot notation (e.g., `status.statusName:in=Approved,Flagged`, `profile.batch:gte=2020`), wrapped into Prisma `{ is: { ... } }` filters.
+- **`_where` shorthand keys**: `or` → `OR`, `and` → `AND`, `eq` → `equals`, `ne` → `not`, `nin` → `notIn`.
+- **Field & relation normalization**: `snake_case` keys convert to `camelCase`; model aliases map `user.userId` → `id`, `bulletin.profileId` → `authorId`, `comment.profileId` → `userId`, `contentStatus`/`eventStatus`/`donationStatus` → `status`, `bulletinCategory`/`eventCategory` → `category`, and `userRsvps` → `rsvps`.
 
-| Model / Endpoint | Requested Relation (`_include`) | Hydrated Nested Structure |
-|---|---|---|
-| `/api/users` | `profile` | Includes `degree: true` (`user.profile.degree`) |
-| `/api/users` | `userStatus` | Includes user status record (`user.userStatus`) |
-| `/api/users` | *(default when omitted)* | `profile` (with `degree`), `userStatus`, `profileStatus`, `records` |
-| `/api/bulletins` | `category`, `status`, `author` | Author includes `profile` and `userStatus` |
-| `/api/events` | `location`, `category`, `status`, `author` | Author includes `profile` and `userStatus` |
-| `/api/userConnections` | `user`, `friend` | Both include `profile` (with `degree`) |
+## Output Normalization, Write Endpoints & Excluded Models
+- **PK normalization**: `profile`, `userAuth`, and `userStatistic` use `userId` as their DB primary key; `formatOutput` copies `userId` to `id`.
+- **Write endpoints**: `POST /api/:table` and `PATCH /api/:table/:id` strip unknown fields (`filterModelFields`) and hydrate detail `defaultIncludes`; `PUT /api/:table/:id` returns scalar columns only (no `include`).
+- **Sanitization**: `passwordHash` is recursively stripped from all generic table responses.
+- **Models not on `/api/:table`**: `Admin`, `NotificationType`, and `HeroGallery` are omitted from `tableToModel` (e.g., use `GET /api/hero/images` for hero gallery images).
 
+## Model Relation Hydration Rules 
+
+Generic endpoints resolve `_include` (or `_embed` / `_expand`) via `resolveQueryIncludes` in `api/index.js`:
+- **Omitted `_include`**: List (`GET /api/:table`) uses slim defaults (`defaultListIncludes`), while single-item (`GET /api/:table/:id`, `POST`, `PATCH`) uses detail defaults (`defaultIncludes`).
+- **`_include=none`**: Suppresses default includes and returns scalar columns only across any table endpoint.
+- **Public profile sanitization (`publicProfileOmit`)**: Nested `author.profile` (bulletins/events), `comment.user.profile`, and `userConnection` `user`/`friend` `profile` omit `email`, `phone`, `birthday`, and `bio`.
+
+| Model / Endpoint | Omitted `_include` (List `GET /api/:table`) | Omitted `_include` (Detail `GET /api/:table/:id`) | Explicit `_include` Support & Hydrated Structure |
+|---|---|---|---|
+| `/api/users` | `profile` (with `degree`), `userStatus`, `profileStatus` *(omits `records`)* | `profile` (with `degree`), `userStatus`, `profileStatus`, `records` (ordered `dateCreated` desc, with `userStatus` and `admin: { id, username }`) | `profile` (with `degree`), `userStatus`, `profileStatus`, `records`, `achievements` (with `achievement`; aliases: `user_achievement`, `userachievement`, `userachievements`) |
+| `/api/bulletins` | `status` (mapped to `contentStatus`), `category` (mapped to `bulletinCategory`), `author` (`userStatus` + sanitized `profile`; also aliased to top-level `profile`) *(omits `comments`, `likes`, `admin`)* | Same as list (`status`, `category`, `author`) | `comments` (sanitized `user` + `likesList`), `likes`, `admin` (`{ id, username }`), `status` (`contentStatus`), `category` (`categories`, `bulletinCategory`), `author` |
+| `/api/events` | `location`, `status` (mapped to `eventStatus`), `category` (mapped to `eventCategory`), `author` (`userStatus` + sanitized `profile`) *(omits `rsvps`, `admin`)* | Same as list + `rsvps` (mapped to `userRsvps`, each with `user` including `profile` + `degree`, `userStatus`, `profileStatus`) | `rsvps` (aliases: `userRsvps`, `userRsvp`; mapped to `userRsvps`), `location`, `status` (`eventStatus`), `category` (`eventCategory`), `author`, `admin` (`{ id, username }`) |
+| `/api/userConnections` | `status` only | `status` only | `status`, `user`, `friend` (`user`/`friend` use sanitized `userSummaryInclude`: `profile` omitting `email`/`phone`/`birthday`/`bio` with `degree`) |
+| `/api/comments` | Sanitized `user` (`profile` omitting `email`/`phone`/`birthday`/`bio`; also aliased to `profile`/`profileId`) + `likesList` *(omits `bulletin`)* | Same as list (`user`, `likesList`) | `user`, `bulletin`, `likesList` |
+| `/api/userRsvps` | *(none — scalars only)* | `user` (with `profile` + `degree`, `userStatus`, `profileStatus`) | `user` (alias: `users`), `event` (alias: `events`) |
+| `/api/profiles` | `degree` only | `degree` only | `degree`, `user` (`_include=none` omits all relations) |
+| `/api/userAchievements` | `achievement` | `achievement` | `achievement` |
+| `/api/donations` | `status` (mapped to `donationStatus`), `user` (`profile.userName` only) | Same as list | `status`, `user` |
+| `/api/userAuths` | `user` (`profile` with `degree`, `userStatus`, `profileStatus`) | Same as list | `user` |
 ---
 
 ## Filter by condition (Numeric Comparison)
