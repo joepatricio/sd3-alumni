@@ -17,7 +17,8 @@ export default defineConfig([
       "src/assets/**",
       ".temp-repair/**",
       "node_modules/**",
-      "analyze-eslint.mjs"
+      "analyze-eslint.mjs",
+      "test/**"
     ]
   },
   {

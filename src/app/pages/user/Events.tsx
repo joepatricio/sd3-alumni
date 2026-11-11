@@ -9,7 +9,7 @@ import { getCategoryColor, formatDate } from '@/app/views/formatters';
 const loadCreateEventModal = () => import('@components/user/CreateEventModal').then(m => ({ default: m.CreateEventModal }));
 const CreateEventModal = lazy(loadCreateEventModal);
 
-import { api, unwrapListResponse, type EventData, type EventCategoryData, type User, type LocationData } from '@/app/views/api';
+import { api, unwrapListResponse, type EventData, type EventCategoryData, type LocationData } from '@/app/views/api';
 import { useAuth } from '@/app/views/auth';
 
 const EVENTS_PER_PAGE = 6;
@@ -89,14 +89,9 @@ export function Events() {
         const fetchEvents = async () => {
             setLoading(true);
             try {
-                const [usersRes] = await Promise.all([
-                    api.get('/users')
-                ]);
-
-                const allUsers = unwrapListResponse<User>(usersRes).items;
-
                 if (session?.userId) {
-                    const currentU = allUsers.find((u: User) => String(u.id) === String(session.userId));
+                    const userRes = await api.get(`/users/${session.userId}?_include=userStatus`);
+                    const currentU = userRes?.data || userRes;
                     if (currentU) {
                         setCurrentUserStatus(currentU.userStatus?.statusName || '');
                     }

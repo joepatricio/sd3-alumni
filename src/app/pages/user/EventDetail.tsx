@@ -37,7 +37,7 @@ import {
 } from '@components/ui/alert-dialog';
 import { NotFound } from '@pages/NotFound';
 import { useAuth } from '@/app/views/auth';
-import { api, unwrapListResponse, type EventData, type ProfileData } from '@/app/views/api';
+import { api, unwrapListResponse, type EventData, type ProfileData, type RSVPData, type User } from '@/app/views/api';
 import { formatDate } from '@/app/views/formatters';
 
 export function EventDetail() {
@@ -48,30 +48,49 @@ export function EventDetail() {
     const [eventData, setEventData] = useState<EventData | null>(null);
     const [organizer, setOrganizer] = useState<ProfileData | null>(null);
     const [authorUser, setAuthorUser] = useState<{ id: string; userStatus?: { statusName?: string } } | null>(null);
-    const [allUsers, setAllUsers] = useState<any[]>([]);
+    const [allUsers, setAllUsers] = useState<User[]>([]);
     const [friendIds, setFriendIds] = useState<Set<string>>(new Set());
     const [loading, setLoading] = useState(true);
     const [rsvpLoading, setRsvpLoading] = useState(false);
     const [isAdmin, setIsAdmin] = useState(false);
 
     useEffect(() => {
+        if (!session?.userId) {
+            setAllUsers([]);
+            return;
+        }
+        api.get(`/users/${session.userId}`, {
+            params: { _include: 'profile,userStatus,profileStatus' }
+        })
+            .then(res => {
+                setAllUsers(res?.data ? [res.data] : []);
+            })
+            .catch(() => {
+                setAllUsers([]);
+            });
+    }, [session?.userId]);
+
+    useEffect(() => {
         const fetchEventAndOrganizer = async () => {
             try {
                 const isPreview = location.pathname.includes('/admin/preview');
-                const [eventRes, usersRes, adminRes] = await Promise.all([
+                const [eventRes, adminRes] = await Promise.all([
                     api.get(`/events/${id}`),
-                    api.get('/users'),
                     isPreview ? api.get('/auth/admin/me').catch(() => null) : Promise.resolve(null)
                 ]);
                 if (adminRes && adminRes.data?.admin) {
                     setIsAdmin(true);
                 }
                 const event = eventRes.data;
-                const usersList = Array.isArray(usersRes.data) ? usersRes.data : (usersRes.data?.data || []);
-                setAllUsers(usersList);
 
                 if (event?.authorId) {
-                    const foundAuthor = event.author || usersList.find((u: { id: string; userStatus?: { statusName?: string } }) => String(u.id) === String(event.authorId));
+                    let foundAuthor = event.author || null;
+                    if (!foundAuthor) {
+                        const authorRes = await api.get(`/users/${event.authorId}`, {
+                            params: { _include: 'userStatus' }
+                        }).catch(() => null);
+                        foundAuthor = authorRes?.data || null;
+                    }
                     if (foundAuthor) {
                         setAuthorUser(foundAuthor);
                     }
@@ -120,7 +139,7 @@ export function EventDetail() {
     }, [session?.userId]);
 
     const userMap = useMemo(() => {
-        const map = new Map<string, any>();
+        const map = new Map<string, User>();
         allUsers.forEach(u => {
             if (u?.id) map.set(String(u.id), u);
         });
@@ -128,7 +147,7 @@ export function EventDetail() {
     }, [allUsers]);
 
     const enrichedGuestList = useMemo(() => {
-        return (eventData?.userRsvps || []).map((rsvp: any) => ({
+        return (eventData?.userRsvps || []).map((rsvp: RSVPData) => ({
             ...rsvp,
             user: rsvp.user || userMap.get(String(rsvp.userId))
         }));

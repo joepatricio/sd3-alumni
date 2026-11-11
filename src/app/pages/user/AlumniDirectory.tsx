@@ -101,7 +101,8 @@ export function AlumniDirectory() {
                     params: {
                         _page: currentPage,
                         _per_page: ITEMS_PER_PAGE,
-                        _where: JSON.stringify(whereClause)
+                        _where: JSON.stringify(whereClause),
+                        _include: 'none'
                     }
                 });
 

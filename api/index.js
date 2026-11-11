@@ -221,6 +221,8 @@ const RATE_LIMIT_AUTH_WINDOW_MS = 15 * 60 * 1000;
 const RATE_LIMIT_CONTENT_WINDOW_MS = 60 * 60 * 1000;
 const RATE_LIMIT_AUTH_MAX = 5;
 const RATE_LIMIT_CONTENT_MAX = 10;
+// Set to false to re-enable rate limiting outside load testing
+const RATE_LIMIT_DISABLED = true;
 
 // Maximum number of registered users on the platform. 
 // Set to Infinity to disable this limit.
@@ -333,56 +335,42 @@ const getAdminId = (req) => {
 // =======================
 
 const authLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000,
-    max: 999999999, // Allows unlimited authentication attempts
-    skip: () => true, // Completely bypasses limiter during test
+    windowMs: RATE_LIMIT_AUTH_WINDOW_MS,
+    max: RATE_LIMIT_DISABLED ? 999999999 : RATE_LIMIT_AUTH_MAX, // Allows unlimited authentication attempts when disabled
+    skip: () => RATE_LIMIT_DISABLED, // Completely bypasses limiter during test
     standardHeaders: true,
     legacyHeaders: false,
+    skipSuccessfulRequests: !RATE_LIMIT_DISABLED,
+    message: { error: 'Too many authentication attempts from this IP, please try again after 15 minutes' }
 });
 
 const contentLimiter = rateLimit({
-    windowMs: 60 * 60 * 1000,
-    max: 999999999, // Allows unlimited content creation
-    skip: () => true, // Completely bypasses limiter during test
+    windowMs: RATE_LIMIT_CONTENT_WINDOW_MS,
+    max: RATE_LIMIT_DISABLED ? 999999999 : RATE_LIMIT_CONTENT_MAX, // Allows unlimited content creation when disabled
+    skip: () => RATE_LIMIT_DISABLED, // Completely bypasses limiter during test
     standardHeaders: true,
     legacyHeaders: false,
+    keyGenerator: (req) => {
+        // Limit by user ID if authenticated (either from decoded token in headers or req user object)
+        const authHeader = req.headers['authorization'];
+        let token = authHeader && authHeader.split(' ')[1];
+        if (!token || token === 'null' || token === 'undefined') {
+            token = req.cookies?.token || req.cookies?.adminToken;
+        }
+        if (token) {
+            try {
+                const decoded = jwt.verify(token, process.env.JWT_SECRET);
+                if (decoded && (decoded.id || decoded.userId)) {
+                    return decoded.id || decoded.userId;
+                }
+            } catch {
+                // Ignore token errors here, fallback to IP
+            }
+        }
+        return ipKeyGenerator(req.ip ?? '');
+    },
+    message: { error: 'Too many content creation attempts, please try again later' }
 });
-
-// const authLimiter = rateLimit({
-//     windowMs: RATE_LIMIT_AUTH_WINDOW_MS,
-//     max: RATE_LIMIT_AUTH_MAX,
-//     standardHeaders: true,
-//     legacyHeaders: false,
-//     skipSuccessfulRequests: true,
-//     message: { error: 'Too many authentication attempts from this IP, please try again after 15 minutes' }
-// });
-
-// const contentLimiter = rateLimit({
-//     windowMs: RATE_LIMIT_CONTENT_WINDOW_MS,
-//     max: RATE_LIMIT_CONTENT_MAX,
-//     standardHeaders: true,
-//     legacyHeaders: false,
-//     keyGenerator: (req, res) => {
-//         // Limit by user ID if authenticated (either from decoded token in headers or req user object)
-//         const authHeader = req.headers['authorization'];
-//         let token = authHeader && authHeader.split(' ')[1];
-//         if (!token || token === 'null' || token === 'undefined') {
-//             token = req.cookies?.token || req.cookies?.adminToken;
-//         }
-//         if (token) {
-//             try {
-//                 const decoded = jwt.verify(token, process.env.JWT_SECRET);
-//                 if (decoded && (decoded.id || decoded.userId)) {
-//                     return decoded.id || decoded.userId;
-//                 }
-//             } catch {
-//                 // Ignore token errors here, fallback to IP
-//             }
-//         }
-//         return ipKeyGenerator(req, res);
-//     },
-//     message: { error: 'Too many content creation attempts, please try again later' }
-// });
 
 app.post('/api/auth/check-email', authLimiter, async (req, res) => {
     try {
@@ -1016,7 +1004,7 @@ app.get('/api/admin/events', authenticateAdminToken, async (req, res) => {
         let queryArgs = {
             where,
             orderBy,
-            include: { location: true, status: true, category: true, author: { include: { profile: true, userStatus: true } } }
+            include: { location: true, status: true, category: true, author: publicAuthorInclude }
         };
 
         if (page !== undefined && perPage !== undefined) {
@@ -1398,7 +1386,7 @@ app.get('/api/admin/bulletins', authenticateAdminToken, async (req, res) => {
         let queryArgs = {
             where,
             orderBy,
-            include: { status: true, author: { include: { profile: true, userStatus: true } }, category: true }
+            include: { status: true, author: publicAuthorInclude, category: true }
         };
 
         if (page !== undefined && perPage !== undefined) {
@@ -1429,7 +1417,7 @@ app.get('/api/admin/bulletins', authenticateAdminToken, async (req, res) => {
 
 // Helper to update event status, admin audit info (adminId, reviewDate), and userStatistics eventsCreated count
 async function updateEventStatusAndStats({ eventId, newStatusName, adminId, additionalData = {} }) {
-    return await prisma.$transaction(async (tx) => {
+    const result = await prisma.$transaction(async (tx) => {
         const existing = await tx.event.findUnique({
             where: { id: eventId },
             include: { status: true }
@@ -1515,7 +1503,7 @@ async function updateEventStatusAndStats({ eventId, newStatusName, adminId, addi
 
 // Helper to update bulletin status, admin audit info (adminId, reviewDate), and userStatistics bulletinsCreated count
 async function updateBulletinStatusAndStats({ bulletinId, newStatusName, adminId, additionalData = {} }) {
-    return await prisma.$transaction(async (tx) => {
+    const result = await prisma.$transaction(async (tx) => {
         const existing = await tx.bulletin.findUnique({
             where: { id: bulletinId },
             include: { status: true }
@@ -2224,15 +2212,76 @@ const tableToModel = {
     clefLog: 'clefLog'
 };
 
-const defaultIncludes = {
+const publicProfileOmit = {
+    email: true,
+    phone: true,
+    birthday: true,
+    bio: true
+};
+
+const publicAuthorInclude = {
+    include: {
+        profile: { omit: publicProfileOmit },
+        userStatus: true
+    }
+};
+
+const commentUserInclude = {
+    include: {
+        profile: { omit: publicProfileOmit }
+    }
+};
+
+const userSummaryInclude = {
+    include: {
+        profile: {
+            omit: publicProfileOmit,
+            include: { degree: true }
+        }
+    }
+};
+
+// Full relation definitions supported by explicit `_include` queries
+const relationIncludes = {
     profile: { degree: true, user: true },
-    user: { profile: { include: { degree: true } }, userStatus: true, profileStatus: true, records: { include: { userStatus: true, admin: { select: { id: true, username: true } } }, orderBy: { dateCreated: 'desc' } } },
-    bulletin: { comments: { include: { user: { include: { profile: true } }, likesList: true } }, status: true, category: true, author: { include: { profile: true, userStatus: true } }, likes: true, admin: true },
-    event: { location: true, rsvps: { include: { user: { include: { profile: { include: { degree: true } }, userStatus: true, profileStatus: true } } } }, status: true, category: true, author: { include: { profile: true, userStatus: true } }, admin: true },
-    userConnection: { status: true, user: { include: { profile: { include: { degree: true } } } }, friend: { include: { profile: { include: { degree: true } } } } },
-    comment: { user: { include: { profile: true } }, bulletin: true, likesList: true },
+    user: {
+        profile: { include: { degree: true } },
+        userStatus: true,
+        profileStatus: true,
+        records: { include: { userStatus: true, admin: { select: { id: true, username: true } } }, orderBy: { dateCreated: 'desc' } },
+        achievements: { include: { achievement: true } }
+    },
+    bulletin: {
+        comments: { include: { user: commentUserInclude, likesList: true } },
+        status: true,
+        category: true,
+        author: publicAuthorInclude,
+        likes: true,
+        admin: { select: { id: true, username: true } }
+    },
+    event: {
+        location: true,
+        rsvps: { include: { user: { include: { profile: { include: { degree: true } }, userStatus: true, profileStatus: true } } } },
+        status: true,
+        category: true,
+        author: publicAuthorInclude,
+        admin: { select: { id: true, username: true } }
+    },
+    userConnection: {
+        status: true,
+        user: userSummaryInclude,
+        friend: userSummaryInclude
+    },
+    comment: {
+        user: commentUserInclude,
+        bulletin: true,
+        likesList: true
+    },
     userAchievement: { achievement: true },
-    userRsvp: { event: true, user: { include: { profile: { include: { degree: true } }, userStatus: true, profileStatus: true } } },
+    userRsvp: {
+        event: true,
+        user: { include: { profile: { include: { degree: true } }, userStatus: true, profileStatus: true } }
+    },
     donation: { status: true, user: { select: { profile: { select: { userName: true } } } } },
     userAuth: {
         user: {
@@ -2244,6 +2293,109 @@ const defaultIncludes = {
         }
     }
 };
+
+// Default includes for single-item endpoints (`GET /api/:table/:id`, POST, PATCH, and admin mutations)
+const defaultIncludes = {
+    profile: { degree: relationIncludes.profile.degree },
+    user: {
+        profile: relationIncludes.user.profile,
+        userStatus: relationIncludes.user.userStatus,
+        profileStatus: relationIncludes.user.profileStatus,
+        records: relationIncludes.user.records
+    },
+    bulletin: {
+        status: relationIncludes.bulletin.status,
+        category: relationIncludes.bulletin.category,
+        author: relationIncludes.bulletin.author
+    },
+    event: {
+        location: relationIncludes.event.location,
+        rsvps: relationIncludes.event.rsvps,
+        status: relationIncludes.event.status,
+        category: relationIncludes.event.category,
+        author: relationIncludes.event.author
+    },
+    userConnection: { status: relationIncludes.userConnection.status },
+    comment: {
+        user: relationIncludes.comment.user,
+        likesList: relationIncludes.comment.likesList
+    },
+    userAchievement: relationIncludes.userAchievement,
+    userRsvp: { user: relationIncludes.userRsvp.user },
+    donation: relationIncludes.donation,
+    userAuth: relationIncludes.userAuth
+};
+
+// Slim list defaults when `_include` is omitted on `GET /api/:table`
+const defaultListIncludes = {
+    profile: defaultIncludes.profile,
+    user: {
+        profile: relationIncludes.user.profile,
+        userStatus: relationIncludes.user.userStatus,
+        profileStatus: relationIncludes.user.profileStatus
+    },
+    bulletin: defaultIncludes.bulletin,
+    event: {
+        location: relationIncludes.event.location,
+        status: relationIncludes.event.status,
+        category: relationIncludes.event.category,
+        author: relationIncludes.event.author
+    },
+    userConnection: defaultIncludes.userConnection,
+    comment: defaultIncludes.comment,
+    userAchievement: relationIncludes.userAchievement,
+    donation: relationIncludes.donation,
+    userAuth: relationIncludes.userAuth
+};
+
+const INCLUDE_FIELD_ALIASES = {
+    bulletin: {
+        categories: 'category',
+        bulletinCategory: 'category',
+        contentStatus: 'status'
+    },
+    event: {
+        eventCategory: 'category',
+        eventStatus: 'status',
+        userRsvps: 'rsvps',
+        userrsvps: 'rsvps',
+        userRsvp: 'rsvps',
+        userrsvp: 'rsvps'
+    },
+    userRsvp: {
+        users: 'user',
+        events: 'event'
+    },
+    user: {
+        user_achievement: 'achievements',
+        userachievement: 'achievements',
+        userachievements: 'achievements'
+    }
+};
+
+function resolveQueryIncludes(modelName, query, { isDetail = false } = {}) {
+    const rawInclude = query._include ?? query._embed ?? query._expand;
+    if (rawInclude !== undefined) {
+        const includes = {};
+        const aliases = INCLUDE_FIELD_ALIASES[modelName];
+        const includeFields = typeof rawInclude === 'string'
+            ? rawInclude.split(',')
+            : (Array.isArray(rawInclude) ? rawInclude : [rawInclude]);
+        for (const rawField of includeFields) {
+            let f = String(rawField).trim();
+            if (aliases) {
+                f = aliases[f] || aliases[f.toLowerCase()] || f;
+            }
+            if (f && f !== 'none') {
+                includes[f] = relationIncludes[modelName]?.[f] ?? true;
+            }
+        }
+        return Object.keys(includes).length > 0 ? includes : undefined;
+    }
+
+    const defaultMap = isDetail ? defaultIncludes[modelName] : defaultListIncludes[modelName];
+    return defaultMap ? { ...defaultMap } : undefined;
+}
 
 // ==============================================================================
 // FEED & LOOKUP HTTP / IN-MEMORY CACHE
@@ -2759,40 +2911,7 @@ app.get('/api/:table', async (req, res, next) => {
 
         const where = parseWhere(req.query, modelName);
         const orderBy = parseSort(req.query._sort);
-
-        let includes;
-        const rawInclude = req.query._include ?? req.query._embed ?? req.query._expand;
-        if (rawInclude !== undefined) {
-            includes = {};
-            const includeFields = typeof rawInclude === 'string' ? rawInclude.split(',') : (Array.isArray(rawInclude) ? rawInclude : [rawInclude]);
-            includeFields.forEach(field => {
-                let f = field.trim();
-                if (modelName === 'bulletin') {
-                    if (f === 'categories' || f === 'bulletinCategory') f = 'category';
-                    else if (f === 'contentStatus') f = 'status';
-                } else if (modelName === 'event') {
-                    if (f === 'eventCategory') f = 'category';
-                    else if (f === 'eventStatus') f = 'status';
-                    else if (f === 'userRsvps' || f === 'userrsvps' || f === 'userRsvp' || f === 'userrsvp') f = 'rsvps';
-                } else if (modelName === 'userRsvp') {
-                    if (f === 'users') f = 'user';
-                    else if (f === 'events') f = 'event';
-                } else if (modelName === 'user') {
-                    if (f.toLowerCase() === 'user_achievement' || f.toLowerCase() === 'userachievement' || f.toLowerCase() === 'userachievements') {
-                        f = 'achievements';
-                    }
-                }
-                if (f && f !== 'none') {
-                    if (defaultIncludes[modelName] && defaultIncludes[modelName][f]) {
-                        includes[f] = defaultIncludes[modelName][f];
-                    } else {
-                        includes[f] = true;
-                    }
-                }
-            });
-        } else {
-            includes = defaultIncludes[modelName] ? { ...defaultIncludes[modelName] } : undefined;
-        }
+        const includes = resolveQueryIncludes(modelName, req.query, { isDetail: false });
 
         const page = req.query._page ? parseInt(req.query._page, 10) : undefined;
         const perPage = req.query._per_page ? parseInt(req.query._per_page, 10) : (req.query._limit ? parseInt(req.query._limit, 10) : undefined);
@@ -2870,39 +2989,7 @@ app.get('/api/:table/:id', async (req, res, next) => {
         const delegate = prisma[modelName];
         if (!delegate) return res.status(404).json({ error: `Model for ${table} not found` });
 
-        let includes;
-        const rawInclude = req.query._include ?? req.query._embed ?? req.query._expand;
-        if (rawInclude !== undefined) {
-            includes = {};
-            const includeFields = typeof rawInclude === 'string' ? rawInclude.split(',') : (Array.isArray(rawInclude) ? rawInclude : [rawInclude]);
-            includeFields.forEach(field => {
-                let f = field.trim();
-                if (modelName === 'bulletin') {
-                    if (f === 'categories' || f === 'bulletinCategory') f = 'category';
-                    else if (f === 'contentStatus') f = 'status';
-                } else if (modelName === 'event') {
-                    if (f === 'eventCategory') f = 'category';
-                    else if (f === 'eventStatus') f = 'status';
-                    else if (f === 'userRsvps' || f === 'userrsvps' || f === 'userRsvp' || f === 'userrsvp') f = 'rsvps';
-                } else if (modelName === 'userRsvp') {
-                    if (f === 'users') f = 'user';
-                    else if (f === 'events') f = 'event';
-                } else if (modelName === 'user') {
-                    if (f.toLowerCase() === 'user_achievement' || f.toLowerCase() === 'userachievement' || f.toLowerCase() === 'userachievements') {
-                        f = 'achievements';
-                    }
-                }
-                if (f && f !== 'none') {
-                    if (defaultIncludes[modelName] && defaultIncludes[modelName][f]) {
-                        includes[f] = defaultIncludes[modelName][f];
-                    } else {
-                        includes[f] = true;
-                    }
-                }
-            });
-        } else {
-            includes = defaultIncludes[modelName] ? { ...defaultIncludes[modelName] } : undefined;
-        }
+        const includes = resolveQueryIncludes(modelName, req.query, { isDetail: true });
         const pkField = (modelName === 'profile' || modelName === 'userAuth' || modelName === 'userStatistic') ? 'userId' : 'id';
 
         const item = await delegate.findUnique({

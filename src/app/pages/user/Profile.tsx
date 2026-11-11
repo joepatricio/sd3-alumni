@@ -162,7 +162,8 @@ export function Profile() {
                                 params: {
                                     'id:in': eventIds,
                                     'status.statusName:in': 'Approved,Concluded',
-                                    '_sort': '-eventDate'
+                                    '_sort': '-eventDate',
+                                    '_include': 'location,status'
                                 }
                             }).catch(() => ({ data: [] }));
                             const data = Array.isArray(eventRes.data) ? eventRes.data : (eventRes.data?.data || []);

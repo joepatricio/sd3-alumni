@@ -651,7 +651,9 @@ export function AdminContentTable({
                             <span className="text-sm text-gray-500 shrink-0">Date:</span>
                             <Select value={datePreset} onValueChange={(val: string) => {
                                 setDatePreset(val);
-                                if (val !== 'custom') applyQuickFilter(val as any);
+                                if (val === 'this_week' || val === 'this_month' || val === 'this_year' || val === 'all') {
+                                    applyQuickFilter(val);
+                                }
                             }}>
                                 <SelectTrigger className="w-[140px] h-10 bg-white text-gray-700 border border-gray-300 shrink-0">
                                     <SelectValue placeholder="Preset Dates" />

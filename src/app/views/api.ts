@@ -120,6 +120,8 @@ export interface RSVPData {
     userId: string;
     eventId: string;
     isAttending: boolean;
+    isValid?: boolean | null;
+    user?: User | null;
 }
 
 export interface EventData {

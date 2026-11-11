@@ -93,7 +93,6 @@ export function EventGuestList() {
     const { session } = useAuth();
 
     const [eventData, setEventData] = useState<EventData | null>(null);
-    const [allUsers, setAllUsers] = useState<any[]>([]);
     const [friendIds, setFriendIds] = useState<Set<string>>(new Set());
     const [isAdmin, setIsAdmin] = useState(false);
     const [loading, setLoading] = useState(true);
@@ -111,9 +110,8 @@ export function EventGuestList() {
             if (!id) return;
             setLoading(true);
             try {
-                const [eventRes, usersRes, adminRes] = await Promise.all([
+                const [eventRes, adminRes] = await Promise.all([
                     api.get(`/events/${id}`),
-                    api.get('/users'),
                     api.get('/auth/admin/me').catch(() => null)
                 ]);
 
@@ -124,8 +122,6 @@ export function EventGuestList() {
                 }
 
                 setEventData(eventRes.data);
-                const usersList = Array.isArray(usersRes.data) ? usersRes.data : (usersRes.data?.data || []);
-                setAllUsers(usersList);
             } catch (err) {
                 console.error('Failed to load event attendee data:', err);
             } finally {
@@ -170,20 +166,9 @@ export function EventGuestList() {
         fetchFriends();
     }, [session?.userId]);
 
-    const userMap = useMemo(() => {
-        const map = new Map<string, any>();
-        allUsers.forEach(u => {
-            if (u?.id) map.set(String(u.id), u);
-        });
-        return map;
-    }, [allUsers]);
-
     const enrichedGuestList: FullGuestItem[] = useMemo(() => {
-        return (eventData?.userRsvps || []).map((rsvp: any) => ({
-            ...rsvp,
-            user: rsvp.user || userMap.get(String(rsvp.userId))
-        }));
-    }, [eventData?.userRsvps, userMap]);
+        return (eventData?.userRsvps || []) as FullGuestItem[];
+    }, [eventData?.userRsvps]);
 
     const isAuthor = Boolean(session?.userId && eventData?.authorId && String(session.userId) === String(eventData.authorId));
     const isAuthorized = isAuthor || isAdmin;
@@ -287,7 +272,7 @@ export function EventGuestList() {
             'Location / Address'
         ];
 
-        const escapeCsv = (val: any) => {
+        const escapeCsv = (val: unknown) => {
             if (val === null || val === undefined) return '""';
             const str = String(val).replace(/"/g, '""');
             return `"${str}"`;
@@ -409,7 +394,7 @@ export function EventGuestList() {
         return `${displayHours}:${minutes} ${ampm}`;
     };
 
-    const formatLocation = (event: any) => {
+    const formatLocation = (event: EventData | null) => {
         if (!event) return '';
         if (event.eventCategory?.eventCategoryName === 'Virtual') return `Virtual (${event.modality || 'Online'})`;
         const loc = event.location;

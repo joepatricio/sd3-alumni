@@ -75,12 +75,51 @@ export function BulletinDetail() {
     }, [id, commentsLimit, sortOrder]);
 
     useEffect(() => {
+        if (!session?.userId) {
+            setIsSuspended(false);
+            setUserCommentsCount(0);
+            setCurrentUserProfile(null);
+            return;
+        }
+
+        const fetchViewerContext = async () => {
+            const [viewerRes, statsRes, profileRes] = await Promise.all([
+                api.get(`/users/${session.userId}`, { params: { _include: 'userStatus' } }).catch(() => null),
+                api.get('/userStatistics', { params: { userId: session.userId } }).catch(() => null),
+                api.get('/profiles', { params: { userId: session.userId, _include: 'none' } }).catch(() => null)
+            ]);
+
+            if (viewerRes?.data?.userStatus?.statusName === 'Suspended') {
+                setIsSuspended(true);
+                toast.error('You are suspended from commenting.');
+            } else {
+                setIsSuspended(false);
+            }
+
+            if (statsRes?.data) {
+                const stats = Array.isArray(statsRes.data) ? statsRes.data : (statsRes.data?.data || []);
+                if (stats.length > 0) {
+                    setUserCommentsCount(stats[0].commentsWritten || 0);
+                }
+            }
+
+            if (profileRes?.data) {
+                const profileData = Array.isArray(profileRes.data) ? profileRes.data : (profileRes.data?.data || []);
+                if (profileData.length > 0) {
+                    setCurrentUserProfile(profileData[0]);
+                }
+            }
+        };
+
+        fetchViewerContext();
+    }, [session?.userId]);
+
+    useEffect(() => {
         const fetchBulletinAndProfiles = async () => {
             try {
                 const isPreview = location.pathname.includes('/admin/preview');
-                const [bRes, usersRes, adminRes] = await Promise.all([
+                const [bRes, adminRes] = await Promise.all([
                     api.get(`/bulletins`, { params: { id: id } }),
-                    api.get('/users'),
                     isPreview ? api.get('/auth/admin/me').catch(() => null) : Promise.resolve(null)
                 ]);
 
@@ -90,7 +129,6 @@ export function BulletinDetail() {
 
                 const bData = Array.isArray(bRes.data) ? bRes.data : (bRes.data?.data || []);
                 const bulletinData = bData[0];
-                const allUsers = Array.isArray(usersRes.data) ? usersRes.data : (usersRes.data?.data || []);
 
                 if (bulletinData) {
                     const statusName = bulletinData.contentStatus?.statusName
@@ -101,7 +139,11 @@ export function BulletinDetail() {
                     setBulletinStatus(statusName);
 
                     const authorUserId = bulletinData.profile?.userId || bulletinData.author?.profile?.userId || bulletinData.authorId || bulletinData.author?.id;
-                    const foundAuthor = (allUsers as Array<{ id: string | number; userStatus?: { statusName?: string } }>).find(u => String(u.id) === String(authorUserId)) || bulletinData.author;
+                    let foundAuthor = bulletinData.author || null;
+                    if (!foundAuthor && authorUserId) {
+                        const authorRes = await api.get(`/users/${authorUserId}`, { params: { _include: 'userStatus' } }).catch(() => null);
+                        foundAuthor = authorRes?.data || null;
+                    }
                     if (foundAuthor) {
                         setAuthorUser(foundAuthor);
                     }
@@ -109,33 +151,6 @@ export function BulletinDetail() {
                         setBulletin(null);
                         setLoading(false);
                         return;
-                    }
-                }
-
-                if (session?.userId) {
-                    const currentU = (allUsers as Array<{ id: string | number; userStatus?: { statusName?: string } }>).find(u => String(u.id) === String(session.userId));
-                    if (currentU && currentU.userStatus?.statusName === 'Suspended') {
-                        setIsSuspended(true);
-                        toast.error('You are suspended from commenting.');
-                    }
-                    try {
-                        const statsRes = await api.get('/userStatistics', { params: { userId: session.userId } });
-                        const stats = Array.isArray(statsRes.data) ? statsRes.data : (statsRes.data?.data || []);
-                        if (stats && stats.length > 0) {
-                            setUserCommentsCount(stats[0].commentsWritten || 0);
-                        }
-                    } catch (statErr) {
-                        console.error("Failed to fetch user stats:", statErr);
-                    }
-
-                    try {
-                        const profileRes = await api.get('/profiles', { params: { userId: session.userId, _include: '' } });
-                        const profileData = Array.isArray(profileRes.data) ? profileRes.data : (profileRes.data?.data || []);
-                        if (profileData && profileData.length > 0) {
-                            setCurrentUserProfile(profileData[0]);
-                        }
-                    } catch (profErr) {
-                        console.error("Failed to fetch user profile:", profErr);
                     }
                 }
 
