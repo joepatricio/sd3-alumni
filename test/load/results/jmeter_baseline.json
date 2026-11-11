@@ -1,8 +1,13 @@
 {
-  "timestamp": "2026-11-11T08:45:52.9445448+08:00",
+  "timestamp": "2026-11-11T09:47:19.2968867+08:00",
   "engine": "apache-jmeter-5.6.3",
+  "engineLabel": "Apache JMeter (Stepped Concurrency)",
   "targetUrl": "https://najealp.top",
   "dryRun": true,
+  "runCoverage": false,
+  "granularityMs": 1000,
+  "thinkMinMs": 100,
+  "thinkRangeMs": 400,
   "tiers": [
     10,
     25,
@@ -10,2853 +15,2289 @@
     0,
     0
   ],
-  "durationSeconds": 5,
-  "totalSamples": 668,
+  "durationSeconds": 10,
+  "totalSamples": 504,
+  "loadSamples": 499,
   "totalFailed": 0,
   "total401": 0,
   "total403": 0,
   "total5xx": 0,
-  "tierBreakdown": {
-    "Coverage": {
-      "requests": 186,
-      "errors": 0,
-      "count401": 0,
+  "steppedTiers": [
+    {
+      "tier": 1,
+      "concurrency": 10,
+      "durationSec": 9.62,
+      "totalRequests": 141,
+      "errorCount": 0,
       "errorRate": 0.0,
-      "rps": 3.86,
-      "avgMs": 252.81,
-      "p50Ms": 240.0,
-      "p95Ms": 319.0,
-      "p99Ms": 715.0,
-      "maxMs": 961.0
+      "rps": 14.66,
+      "mbps": 0.85,
+      "totalBytes": 1023914,
+      "percentiles": {
+        "min": 208.0,
+        "avg": 331.6,
+        "p50": 239.0,
+        "p90": 411.0,
+        "p95": 916.0,
+        "p99": 1881.0,
+        "max": 1935.0
+      }
     },
+    {
+      "tier": 2,
+      "concurrency": 25,
+      "durationSec": 10.06,
+      "totalRequests": 358,
+      "errorCount": 0,
+      "errorRate": 0.0,
+      "rps": 35.59,
+      "mbps": 3.53,
+      "totalBytes": 4434881,
+      "percentiles": {
+        "min": 219.0,
+        "avg": 327.62,
+        "p50": 245.0,
+        "p90": 497.0,
+        "p95": 884.0,
+        "p99": 1039.0,
+        "max": 1066.0
+      }
+    }
+  ],
+  "rankings": {
+    "mostTimeConsuming": [
+      {
+        "route": "/api/events?_sort=eventDate&_order=asc&_page=1&_per_page=10",
+        "totalCalls": 12,
+        "totalBytes": 1026375,
+        "totalTimeMs": 7650.0,
+        "avgLatency": 637.5,
+        "minLatency": 461.0,
+        "p50Latency": 497.0,
+        "p90Latency": 1051.0,
+        "p95Latency": 1066.0,
+        "p99Latency": 1066.0,
+        "maxLatency": 1066.0,
+        "statusCounts": {
+          "200": 12
+        },
+        "topVariances": [
+          {
+            "statusCode": 200,
+            "count": 12,
+            "percentage": 100.0,
+            "minLatency": 461.0,
+            "medianLatency": 497.0,
+            "slowestLatency": 1066.0,
+            "sampleError": ""
+          }
+        ]
+      },
+      {
+        "route": "/api/events?_sort=eventDate&_order=desc&_page=2&_per_page=5",
+        "totalCalls": 11,
+        "totalBytes": 507150,
+        "totalTimeMs": 6474.0,
+        "avgLatency": 588.55,
+        "minLatency": 340.0,
+        "p50Latency": 413.0,
+        "p90Latency": 1065.0,
+        "p95Latency": 1240.0,
+        "p99Latency": 1240.0,
+        "maxLatency": 1240.0,
+        "statusCounts": {
+          "200": 11
+        },
+        "topVariances": [
+          {
+            "statusCode": 200,
+            "count": 11,
+            "percentage": 100.0,
+            "minLatency": 340.0,
+            "medianLatency": 413.0,
+            "slowestLatency": 1240.0,
+            "sampleError": ""
+          }
+        ]
+      },
+      {
+        "route": "/api/commentLikes?_page=1&_per_page=10",
+        "totalCalls": 17,
+        "totalBytes": 20281,
+        "totalTimeMs": 6227.0,
+        "avgLatency": 366.29,
+        "minLatency": 219.0,
+        "p50Latency": 243.0,
+        "p90Latency": 874.0,
+        "p95Latency": 877.0,
+        "p99Latency": 877.0,
+        "maxLatency": 877.0,
+        "statusCounts": {
+          "200": 17
+        },
+        "topVariances": [
+          {
+            "statusCode": 200,
+            "count": 17,
+            "percentage": 100.0,
+            "minLatency": 219.0,
+            "medianLatency": 243.0,
+            "slowestLatency": 877.0,
+            "sampleError": ""
+          }
+        ]
+      },
+      {
+        "route": "/api/users?_where=active&_include",
+        "totalCalls": 14,
+        "totalBytes": 49868,
+        "totalTimeMs": 5560.0,
+        "avgLatency": 397.14,
+        "minLatency": 222.0,
+        "p50Latency": 247.0,
+        "p90Latency": 648.0,
+        "p95Latency": 1935.0,
+        "p99Latency": 1935.0,
+        "maxLatency": 1935.0,
+        "statusCounts": {
+          "200": 14
+        },
+        "topVariances": [
+          {
+            "statusCode": 200,
+            "count": 14,
+            "percentage": 100.0,
+            "minLatency": 222.0,
+            "medianLatency": 247.0,
+            "slowestLatency": 1935.0,
+            "sampleError": ""
+          }
+        ]
+      },
+      {
+        "route": "/api/donations?_page=1&_per_page=10&_sort=donationDate&_order=desc",
+        "totalCalls": 17,
+        "totalBytes": 73542,
+        "totalTimeMs": 4777.0,
+        "avgLatency": 281.0,
+        "minLatency": 225.0,
+        "p50Latency": 242.0,
+        "p90Latency": 267.0,
+        "p95Latency": 875.0,
+        "p99Latency": 875.0,
+        "maxLatency": 875.0,
+        "statusCounts": {
+          "200": 17
+        },
+        "topVariances": [
+          {
+            "statusCode": 200,
+            "count": 17,
+            "percentage": 100.0,
+            "minLatency": 225.0,
+            "medianLatency": 242.0,
+            "slowestLatency": 875.0,
+            "sampleError": ""
+          }
+        ]
+      },
+      {
+        "route": "/images/engineer.png",
+        "totalCalls": 15,
+        "totalBytes": 201360,
+        "totalTimeMs": 4772.0,
+        "avgLatency": 318.13,
+        "minLatency": 234.0,
+        "p50Latency": 270.0,
+        "p90Latency": 399.0,
+        "p95Latency": 954.0,
+        "p99Latency": 954.0,
+        "maxLatency": 954.0,
+        "statusCounts": {
+          "200": 15
+        },
+        "topVariances": [
+          {
+            "statusCode": 200,
+            "count": 15,
+            "percentage": 100.0,
+            "minLatency": 234.0,
+            "medianLatency": 270.0,
+            "slowestLatency": 954.0,
+            "sampleError": ""
+          }
+        ]
+      },
+      {
+        "route": "/api/events?_page=1&_per_page=10",
+        "totalCalls": 8,
+        "totalBytes": 560822,
+        "totalTimeMs": 4517.0,
+        "avgLatency": 564.62,
+        "minLatency": 382.0,
+        "p50Latency": 455.0,
+        "p90Latency": 1039.0,
+        "p95Latency": 1039.0,
+        "p99Latency": 1039.0,
+        "maxLatency": 1039.0,
+        "statusCounts": {
+          "200": 8
+        },
+        "topVariances": [
+          {
+            "statusCode": 200,
+            "count": 8,
+            "percentage": 100.0,
+            "minLatency": 382.0,
+            "medianLatency": 455.0,
+            "slowestLatency": 1039.0,
+            "sampleError": ""
+          }
+        ]
+      },
+      {
+        "route": "/api/userStatistics?_page=1&_per_page=10",
+        "totalCalls": 15,
+        "totalBytes": 44730,
+        "totalTimeMs": 4334.0,
+        "avgLatency": 288.93,
+        "minLatency": 224.0,
+        "p50Latency": 231.0,
+        "p90Latency": 369.0,
+        "p95Latency": 903.0,
+        "p99Latency": 903.0,
+        "maxLatency": 903.0,
+        "statusCounts": {
+          "200": 15
+        },
+        "topVariances": [
+          {
+            "statusCode": 200,
+            "count": 15,
+            "percentage": 100.0,
+            "minLatency": 224.0,
+            "medianLatency": 231.0,
+            "slowestLatency": 903.0,
+            "sampleError": ""
+          }
+        ]
+      },
+      {
+        "route": "/api/users/:id",
+        "totalCalls": 18,
+        "totalBytes": 25830,
+        "totalTimeMs": 4303.0,
+        "avgLatency": 239.06,
+        "minLatency": 219.0,
+        "p50Latency": 237.0,
+        "p90Latency": 271.0,
+        "p95Latency": 277.0,
+        "p99Latency": 277.0,
+        "maxLatency": 277.0,
+        "statusCounts": {
+          "200": 18
+        },
+        "topVariances": [
+          {
+            "statusCode": 200,
+            "count": 18,
+            "percentage": 100.0,
+            "minLatency": 219.0,
+            "medianLatency": 237.0,
+            "slowestLatency": 277.0,
+            "sampleError": ""
+          }
+        ]
+      },
+      {
+        "route": "/api/clefLogs?_page=1&_per_page=10",
+        "totalCalls": 8,
+        "totalBytes": 36400,
+        "totalTimeMs": 4193.0,
+        "avgLatency": 524.12,
+        "minLatency": 226.0,
+        "p50Latency": 239.0,
+        "p90Latency": 1881.0,
+        "p95Latency": 1881.0,
+        "p99Latency": 1881.0,
+        "maxLatency": 1881.0,
+        "statusCounts": {
+          "200": 8
+        },
+        "topVariances": [
+          {
+            "statusCode": 200,
+            "count": 8,
+            "percentage": 100.0,
+            "minLatency": 226.0,
+            "medianLatency": 239.0,
+            "slowestLatency": 1881.0,
+            "sampleError": ""
+          }
+        ]
+      },
+      {
+        "route": "/api/bulletins?_page=1&_per_page=10",
+        "totalCalls": 10,
+        "totalBytes": 589948,
+        "totalTimeMs": 4186.0,
+        "avgLatency": 418.6,
+        "minLatency": 356.0,
+        "p50Latency": 421.0,
+        "p90Latency": 444.0,
+        "p95Latency": 452.0,
+        "p99Latency": 452.0,
+        "maxLatency": 452.0,
+        "statusCounts": {
+          "200": 10
+        },
+        "topVariances": [
+          {
+            "statusCode": 200,
+            "count": 10,
+            "percentage": 100.0,
+            "minLatency": 356.0,
+            "medianLatency": 421.0,
+            "slowestLatency": 452.0,
+            "sampleError": ""
+          }
+        ]
+      },
+      {
+        "route": "/api/userRsvps?_page=1&_per_page=10",
+        "totalCalls": 10,
+        "totalBytes": 137720,
+        "totalTimeMs": 4181.0,
+        "avgLatency": 418.1,
+        "minLatency": 307.0,
+        "p50Latency": 352.0,
+        "p90Latency": 505.0,
+        "p95Latency": 924.0,
+        "p99Latency": 924.0,
+        "maxLatency": 924.0,
+        "statusCounts": {
+          "200": 10
+        },
+        "topVariances": [
+          {
+            "statusCode": 200,
+            "count": 10,
+            "percentage": 100.0,
+            "minLatency": 307.0,
+            "medianLatency": 352.0,
+            "slowestLatency": 924.0,
+            "sampleError": ""
+          }
+        ]
+      },
+      {
+        "route": "/api/connectionStatuses",
+        "totalCalls": 14,
+        "totalBytes": 7574,
+        "totalTimeMs": 4160.0,
+        "avgLatency": 297.14,
+        "minLatency": 220.0,
+        "p50Latency": 235.0,
+        "p90Latency": 299.0,
+        "p95Latency": 958.0,
+        "p99Latency": 958.0,
+        "maxLatency": 958.0,
+        "statusCounts": {
+          "200": 14
+        },
+        "topVariances": [
+          {
+            "statusCode": 200,
+            "count": 14,
+            "percentage": 100.0,
+            "minLatency": 220.0,
+            "medianLatency": 235.0,
+            "slowestLatency": 958.0,
+            "sampleError": ""
+          }
+        ]
+      },
+      {
+        "route": "/api/bulletinCategories",
+        "totalCalls": 11,
+        "totalBytes": 6380,
+        "totalTimeMs": 4105.0,
+        "avgLatency": 373.18,
+        "minLatency": 222.0,
+        "p50Latency": 238.0,
+        "p90Latency": 916.0,
+        "p95Latency": 1042.0,
+        "p99Latency": 1042.0,
+        "maxLatency": 1042.0,
+        "statusCounts": {
+          "200": 11
+        },
+        "topVariances": [
+          {
+            "statusCode": 200,
+            "count": 11,
+            "percentage": 100.0,
+            "minLatency": 222.0,
+            "medianLatency": 238.0,
+            "slowestLatency": 1042.0,
+            "sampleError": ""
+          }
+        ]
+      },
+      {
+        "route": "/api/comments?_page=1&_per_page=10",
+        "totalCalls": 10,
+        "totalBytes": 243590,
+        "totalTimeMs": 3954.0,
+        "avgLatency": 395.4,
+        "minLatency": 258.0,
+        "p50Latency": 355.0,
+        "p90Latency": 374.0,
+        "p95Latency": 926.0,
+        "p99Latency": 926.0,
+        "maxLatency": 926.0,
+        "statusCounts": {
+          "200": 10
+        },
+        "topVariances": [
+          {
+            "statusCode": 200,
+            "count": 10,
+            "percentage": 100.0,
+            "minLatency": 258.0,
+            "medianLatency": 355.0,
+            "slowestLatency": 926.0,
+            "sampleError": ""
+          }
+        ]
+      },
+      {
+        "route": "/api/server-time",
+        "totalCalls": 16,
+        "totalBytes": 5824,
+        "totalTimeMs": 3749.0,
+        "avgLatency": 234.31,
+        "minLatency": 208.0,
+        "p50Latency": 231.0,
+        "p90Latency": 252.0,
+        "p95Latency": 293.0,
+        "p99Latency": 293.0,
+        "maxLatency": 293.0,
+        "statusCounts": {
+          "200": 16
+        },
+        "topVariances": [
+          {
+            "statusCode": 200,
+            "count": 16,
+            "percentage": 100.0,
+            "minLatency": 208.0,
+            "medianLatency": 231.0,
+            "slowestLatency": 293.0,
+            "sampleError": ""
+          }
+        ]
+      },
+      {
+        "route": "/api/bulletins?_include=category,author,status&_page=1&_per_page=10",
+        "totalCalls": 9,
+        "totalBytes": 157715,
+        "totalTimeMs": 3681.0,
+        "avgLatency": 409.0,
+        "minLatency": 265.0,
+        "p50Latency": 345.0,
+        "p90Latency": 934.0,
+        "p95Latency": 934.0,
+        "p99Latency": 934.0,
+        "maxLatency": 934.0,
+        "statusCounts": {
+          "200": 9
+        },
+        "topVariances": [
+          {
+            "statusCode": 200,
+            "count": 9,
+            "percentage": 100.0,
+            "minLatency": 265.0,
+            "medianLatency": 345.0,
+            "slowestLatency": 934.0,
+            "sampleError": ""
+          }
+        ]
+      },
+      {
+        "route": "/api/degrees",
+        "totalCalls": 10,
+        "totalBytes": 7830,
+        "totalTimeMs": 3664.0,
+        "avgLatency": 366.4,
+        "minLatency": 225.0,
+        "p50Latency": 237.0,
+        "p90Latency": 863.0,
+        "p95Latency": 933.0,
+        "p99Latency": 933.0,
+        "maxLatency": 933.0,
+        "statusCounts": {
+          "200": 10
+        },
+        "topVariances": [
+          {
+            "statusCode": 200,
+            "count": 10,
+            "percentage": 100.0,
+            "minLatency": 225.0,
+            "medianLatency": 237.0,
+            "slowestLatency": 933.0,
+            "sampleError": ""
+          }
+        ]
+      },
+      {
+        "route": "/api/users?_page=1&_per_page=10",
+        "totalCalls": 9,
+        "totalBytes": 124857,
+        "totalTimeMs": 3630.0,
+        "avgLatency": 403.33,
+        "minLatency": 267.0,
+        "p50Latency": 351.0,
+        "p90Latency": 972.0,
+        "p95Latency": 972.0,
+        "p99Latency": 972.0,
+        "maxLatency": 972.0,
+        "statusCounts": {
+          "200": 9
+        },
+        "topVariances": [
+          {
+            "statusCode": 200,
+            "count": 9,
+            "percentage": 100.0,
+            "minLatency": 267.0,
+            "medianLatency": 351.0,
+            "slowestLatency": 972.0,
+            "sampleError": ""
+          }
+        ]
+      },
+      {
+        "route": "/api/userAuths?_page=1&_per_page=10",
+        "totalCalls": 11,
+        "totalBytes": 100320,
+        "totalTimeMs": 3484.0,
+        "avgLatency": 316.73,
+        "minLatency": 231.0,
+        "p50Latency": 263.0,
+        "p90Latency": 288.0,
+        "p95Latency": 892.0,
+        "p99Latency": 892.0,
+        "maxLatency": 892.0,
+        "statusCounts": {
+          "200": 11
+        },
+        "topVariances": [
+          {
+            "statusCode": 200,
+            "count": 11,
+            "percentage": 100.0,
+            "minLatency": 231.0,
+            "medianLatency": 263.0,
+            "slowestLatency": 892.0,
+            "sampleError": ""
+          }
+        ]
+      },
+      {
+        "route": "/api/users?_where=BSCpE&_include",
+        "totalCalls": 9,
+        "totalBytes": 31293,
+        "totalTimeMs": 3428.0,
+        "avgLatency": 380.89,
+        "minLatency": 221.0,
+        "p50Latency": 243.0,
+        "p90Latency": 867.0,
+        "p95Latency": 867.0,
+        "p99Latency": 867.0,
+        "maxLatency": 867.0,
+        "statusCounts": {
+          "200": 9
+        },
+        "topVariances": [
+          {
+            "statusCode": 200,
+            "count": 9,
+            "percentage": 100.0,
+            "minLatency": 221.0,
+            "medianLatency": 243.0,
+            "slowestLatency": 867.0,
+            "sampleError": ""
+          }
+        ]
+      },
+      {
+        "route": "/api/bulletins?_sort=bulletinDate&_order=desc&_page=1&_per_page=10",
+        "totalCalls": 5,
+        "totalBytes": 444259,
+        "totalTimeMs": 3086.0,
+        "avgLatency": 617.2,
+        "minLatency": 390.0,
+        "p50Latency": 482.0,
+        "p90Latency": 1011.0,
+        "p95Latency": 1011.0,
+        "p99Latency": 1011.0,
+        "maxLatency": 1011.0,
+        "statusCounts": {
+          "200": 5
+        },
+        "topVariances": [
+          {
+            "statusCode": 200,
+            "count": 5,
+            "percentage": 100.0,
+            "minLatency": 390.0,
+            "medianLatency": 482.0,
+            "slowestLatency": 1011.0,
+            "sampleError": ""
+          }
+        ]
+      },
+      {
+        "route": "/api/contentStatuses",
+        "totalCalls": 10,
+        "totalBytes": 5170,
+        "totalTimeMs": 3036.0,
+        "avgLatency": 303.6,
+        "minLatency": 219.0,
+        "p50Latency": 232.0,
+        "p90Latency": 270.0,
+        "p95Latency": 886.0,
+        "p99Latency": 886.0,
+        "maxLatency": 886.0,
+        "statusCounts": {
+          "200": 10
+        },
+        "topVariances": [
+          {
+            "statusCode": 200,
+            "count": 10,
+            "percentage": 100.0,
+            "minLatency": 219.0,
+            "medianLatency": 232.0,
+            "slowestLatency": 886.0,
+            "sampleError": ""
+          }
+        ]
+      },
+      {
+        "route": "/api/locations?_page=1&_per_page=10",
+        "totalCalls": 13,
+        "totalBytes": 34918,
+        "totalTimeMs": 3009.0,
+        "avgLatency": 231.46,
+        "minLatency": 210.0,
+        "p50Latency": 235.0,
+        "p90Latency": 244.0,
+        "p95Latency": 247.0,
+        "p99Latency": 247.0,
+        "maxLatency": 247.0,
+        "statusCounts": {
+          "200": 13
+        },
+        "topVariances": [
+          {
+            "statusCode": 200,
+            "count": 13,
+            "percentage": 100.0,
+            "minLatency": 210.0,
+            "medianLatency": 235.0,
+            "slowestLatency": 247.0,
+            "sampleError": ""
+          }
+        ]
+      },
+      {
+        "route": "/api/hero/images",
+        "totalCalls": 12,
+        "totalBytes": 60226,
+        "totalTimeMs": 2982.0,
+        "avgLatency": 248.5,
+        "minLatency": 221.0,
+        "p50Latency": 239.0,
+        "p90Latency": 267.0,
+        "p95Latency": 285.0,
+        "p99Latency": 285.0,
+        "maxLatency": 285.0,
+        "statusCounts": {
+          "200": 12
+        },
+        "topVariances": [
+          {
+            "statusCode": 200,
+            "count": 12,
+            "percentage": 100.0,
+            "minLatency": 221.0,
+            "medianLatency": 239.0,
+            "slowestLatency": 285.0,
+            "sampleError": ""
+          }
+        ]
+      },
+      {
+        "route": "/api/events/:id",
+        "totalCalls": 12,
+        "totalBytes": 94902,
+        "totalTimeMs": 2907.0,
+        "avgLatency": 242.25,
+        "minLatency": 218.0,
+        "p50Latency": 235.0,
+        "p90Latency": 268.0,
+        "p95Latency": 273.0,
+        "p99Latency": 273.0,
+        "maxLatency": 273.0,
+        "statusCounts": {
+          "200": 12
+        },
+        "topVariances": [
+          {
+            "statusCode": 200,
+            "count": 12,
+            "percentage": 100.0,
+            "minLatency": 218.0,
+            "medianLatency": 235.0,
+            "slowestLatency": 273.0,
+            "sampleError": ""
+          }
+        ]
+      },
+      {
+        "route": "/api/events?_include=category,author,status,location&_page=1&_per_page=10",
+        "totalCalls": 8,
+        "totalBytes": 127231,
+        "totalTimeMs": 2805.0,
+        "avgLatency": 350.62,
+        "minLatency": 335.0,
+        "p50Latency": 349.0,
+        "p90Latency": 373.0,
+        "p95Latency": 373.0,
+        "p99Latency": 373.0,
+        "maxLatency": 373.0,
+        "statusCounts": {
+          "200": 8
+        },
+        "topVariances": [
+          {
+            "statusCode": 200,
+            "count": 8,
+            "percentage": 100.0,
+            "minLatency": 335.0,
+            "medianLatency": 349.0,
+            "slowestLatency": 373.0,
+            "sampleError": ""
+          }
+        ]
+      },
+      {
+        "route": "/api/profileStatuses",
+        "totalCalls": 11,
+        "totalBytes": 4796,
+        "totalTimeMs": 2696.0,
+        "avgLatency": 245.09,
+        "minLatency": 218.0,
+        "p50Latency": 236.0,
+        "p90Latency": 254.0,
+        "p95Latency": 346.0,
+        "p99Latency": 346.0,
+        "maxLatency": 346.0,
+        "statusCounts": {
+          "200": 11
+        },
+        "topVariances": [
+          {
+            "statusCode": 200,
+            "count": 11,
+            "percentage": 100.0,
+            "minLatency": 218.0,
+            "medianLatency": 236.0,
+            "slowestLatency": 346.0,
+            "sampleError": ""
+          }
+        ]
+      },
+      {
+        "route": "/api/donations/summary",
+        "totalCalls": 10,
+        "totalBytes": 58170,
+        "totalTimeMs": 2695.0,
+        "avgLatency": 269.5,
+        "minLatency": 223.0,
+        "p50Latency": 263.0,
+        "p90Latency": 273.0,
+        "p95Latency": 396.0,
+        "p99Latency": 396.0,
+        "maxLatency": 396.0,
+        "statusCounts": {
+          "200": 10
+        },
+        "topVariances": [
+          {
+            "statusCode": 200,
+            "count": 10,
+            "percentage": 100.0,
+            "minLatency": 223.0,
+            "medianLatency": 263.0,
+            "slowestLatency": 396.0,
+            "sampleError": ""
+          }
+        ]
+      },
+      {
+        "route": "/api/admin/bulletins?_page=1&_per_page=10",
+        "totalCalls": 8,
+        "totalBytes": 149184,
+        "totalTimeMs": 2669.0,
+        "avgLatency": 333.62,
+        "minLatency": 235.0,
+        "p50Latency": 332.0,
+        "p90Latency": 402.0,
+        "p95Latency": 402.0,
+        "p99Latency": 402.0,
+        "maxLatency": 402.0,
+        "statusCounts": {
+          "200": 8
+        },
+        "topVariances": [
+          {
+            "statusCode": 200,
+            "count": 8,
+            "percentage": 100.0,
+            "minLatency": 235.0,
+            "medianLatency": 332.0,
+            "slowestLatency": 402.0,
+            "sampleError": ""
+          }
+        ]
+      },
+      {
+        "route": "/api/userConnections?_include=user,friend,status&_page=1&_per_page=10",
+        "totalCalls": 8,
+        "totalBytes": 118872,
+        "totalTimeMs": 2562.0,
+        "avgLatency": 320.25,
+        "minLatency": 239.0,
+        "p50Latency": 341.0,
+        "p90Latency": 365.0,
+        "p95Latency": 365.0,
+        "p99Latency": 365.0,
+        "maxLatency": 365.0,
+        "statusCounts": {
+          "200": 8
+        },
+        "topVariances": [
+          {
+            "statusCode": 200,
+            "count": 8,
+            "percentage": 100.0,
+            "minLatency": 239.0,
+            "medianLatency": 341.0,
+            "slowestLatency": 365.0,
+            "sampleError": ""
+          }
+        ]
+      },
+      {
+        "route": "/api/records?_page=1&_per_page=10",
+        "totalCalls": 8,
+        "totalBytes": 22584,
+        "totalTimeMs": 2482.0,
+        "avgLatency": 310.25,
+        "minLatency": 221.0,
+        "p50Latency": 232.0,
+        "p90Latency": 826.0,
+        "p95Latency": 826.0,
+        "p99Latency": 826.0,
+        "maxLatency": 826.0,
+        "statusCounts": {
+          "200": 8
+        },
+        "topVariances": [
+          {
+            "statusCode": 200,
+            "count": 8,
+            "percentage": 100.0,
+            "minLatency": 221.0,
+            "medianLatency": 232.0,
+            "slowestLatency": 826.0,
+            "sampleError": ""
+          }
+        ]
+      },
+      {
+        "route": "/api/userStatuses",
+        "totalCalls": 10,
+        "totalBytes": 5640,
+        "totalTimeMs": 2434.0,
+        "avgLatency": 243.4,
+        "minLatency": 221.0,
+        "p50Latency": 232.0,
+        "p90Latency": 256.0,
+        "p95Latency": 321.0,
+        "p99Latency": 321.0,
+        "maxLatency": 321.0,
+        "statusCounts": {
+          "200": 10
+        },
+        "topVariances": [
+          {
+            "statusCode": 200,
+            "count": 10,
+            "percentage": 100.0,
+            "minLatency": 221.0,
+            "medianLatency": 232.0,
+            "slowestLatency": 321.0,
+            "sampleError": ""
+          }
+        ]
+      },
+      {
+        "route": "/api/auth/check-email [POST]",
+        "totalCalls": 10,
+        "totalBytes": 3110,
+        "totalTimeMs": 2422.0,
+        "avgLatency": 242.2,
+        "minLatency": 220.0,
+        "p50Latency": 229.0,
+        "p90Latency": 236.0,
+        "p95Latency": 375.0,
+        "p99Latency": 375.0,
+        "maxLatency": 375.0,
+        "statusCounts": {
+          "200": 10
+        },
+        "topVariances": [
+          {
+            "statusCode": 200,
+            "count": 10,
+            "percentage": 100.0,
+            "minLatency": 220.0,
+            "medianLatency": 229.0,
+            "slowestLatency": 375.0,
+            "sampleError": ""
+          }
+        ]
+      },
+      {
+        "route": "HEAD /api/bulletins?_page=1&_per_page=10",
+        "totalCalls": 7,
+        "totalBytes": 2393,
+        "totalTimeMs": 2375.0,
+        "avgLatency": 339.29,
+        "minLatency": 229.0,
+        "p50Latency": 238.0,
+        "p90Latency": 905.0,
+        "p95Latency": 905.0,
+        "p99Latency": 905.0,
+        "maxLatency": 905.0,
+        "statusCounts": {
+          "200": 7
+        },
+        "topVariances": [
+          {
+            "statusCode": 200,
+            "count": 7,
+            "percentage": 100.0,
+            "minLatency": 229.0,
+            "medianLatency": 238.0,
+            "slowestLatency": 905.0,
+            "sampleError": ""
+          }
+        ]
+      },
+      {
+        "route": "/api/auth/me [Official]",
+        "totalCalls": 10,
+        "totalBytes": 9100,
+        "totalTimeMs": 2331.0,
+        "avgLatency": 233.1,
+        "minLatency": 217.0,
+        "p50Latency": 230.0,
+        "p90Latency": 239.0,
+        "p95Latency": 263.0,
+        "p99Latency": 263.0,
+        "maxLatency": 263.0,
+        "statusCounts": {
+          "200": 10
+        },
+        "topVariances": [
+          {
+            "statusCode": 200,
+            "count": 10,
+            "percentage": 100.0,
+            "minLatency": 217.0,
+            "medianLatency": 230.0,
+            "slowestLatency": 263.0,
+            "sampleError": ""
+          }
+        ]
+      },
+      {
+        "route": "/api/userAchievements?_page=1&_per_page=10",
+        "totalCalls": 7,
+        "totalBytes": 27720,
+        "totalTimeMs": 2303.0,
+        "avgLatency": 329.0,
+        "minLatency": 221.0,
+        "p50Latency": 238.0,
+        "p90Latency": 901.0,
+        "p95Latency": 901.0,
+        "p99Latency": 901.0,
+        "maxLatency": 901.0,
+        "statusCounts": {
+          "200": 7
+        },
+        "topVariances": [
+          {
+            "statusCode": 200,
+            "count": 7,
+            "percentage": 100.0,
+            "minLatency": 221.0,
+            "medianLatency": 238.0,
+            "slowestLatency": 901.0,
+            "sampleError": ""
+          }
+        ]
+      },
+      {
+        "route": "/api/achievements?_where=tier_gt_1",
+        "totalCalls": 10,
+        "totalBytes": 14100,
+        "totalTimeMs": 2268.0,
+        "avgLatency": 226.8,
+        "minLatency": 219.0,
+        "p50Latency": 225.0,
+        "p90Latency": 230.0,
+        "p95Latency": 236.0,
+        "p99Latency": 236.0,
+        "maxLatency": 236.0,
+        "statusCounts": {
+          "200": 10
+        },
+        "topVariances": [
+          {
+            "statusCode": 200,
+            "count": 10,
+            "percentage": 100.0,
+            "minLatency": 219.0,
+            "medianLatency": 225.0,
+            "slowestLatency": 236.0,
+            "sampleError": ""
+          }
+        ]
+      },
+      {
+        "route": "/api/admin/dashboard-stats",
+        "totalCalls": 6,
+        "totalBytes": 33596,
+        "totalTimeMs": 2266.0,
+        "avgLatency": 377.67,
+        "minLatency": 241.0,
+        "p50Latency": 255.0,
+        "p90Latency": 930.0,
+        "p95Latency": 930.0,
+        "p99Latency": 930.0,
+        "maxLatency": 930.0,
+        "statusCounts": {
+          "200": 6
+        },
+        "topVariances": [
+          {
+            "statusCode": 200,
+            "count": 6,
+            "percentage": 100.0,
+            "minLatency": 241.0,
+            "medianLatency": 255.0,
+            "slowestLatency": 930.0,
+            "sampleError": ""
+          }
+        ]
+      },
+      {
+        "route": "/api/achievements",
+        "totalCalls": 9,
+        "totalBytes": 24615,
+        "totalTimeMs": 2158.0,
+        "avgLatency": 239.78,
+        "minLatency": 233.0,
+        "p50Latency": 237.0,
+        "p90Latency": 265.0,
+        "p95Latency": 265.0,
+        "p99Latency": 265.0,
+        "maxLatency": 265.0,
+        "statusCounts": {
+          "200": 9
+        },
+        "topVariances": [
+          {
+            "statusCode": 200,
+            "count": 9,
+            "percentage": 100.0,
+            "minLatency": 233.0,
+            "medianLatency": 237.0,
+            "slowestLatency": 265.0,
+            "sampleError": ""
+          }
+        ]
+      },
+      {
+        "route": "/api/eventCategories",
+        "totalCalls": 9,
+        "totalBytes": 5454,
+        "totalTimeMs": 2153.0,
+        "avgLatency": 239.22,
+        "minLatency": 217.0,
+        "p50Latency": 230.0,
+        "p90Latency": 267.0,
+        "p95Latency": 267.0,
+        "p99Latency": 267.0,
+        "maxLatency": 267.0,
+        "statusCounts": {
+          "200": 9
+        },
+        "topVariances": [
+          {
+            "statusCode": 200,
+            "count": 9,
+            "percentage": 100.0,
+            "minLatency": 217.0,
+            "medianLatency": 230.0,
+            "slowestLatency": 267.0,
+            "sampleError": ""
+          }
+        ]
+      },
+      {
+        "route": "/api/profiles?_page=1&_per_page=10",
+        "totalCalls": 6,
+        "totalBytes": 39396,
+        "totalTimeMs": 2133.0,
+        "avgLatency": 355.5,
+        "minLatency": 231.0,
+        "p50Latency": 243.0,
+        "p90Latency": 884.0,
+        "p95Latency": 884.0,
+        "p99Latency": 884.0,
+        "maxLatency": 884.0,
+        "statusCounts": {
+          "200": 6
+        },
+        "topVariances": [
+          {
+            "statusCode": 200,
+            "count": 6,
+            "percentage": 100.0,
+            "minLatency": 231.0,
+            "medianLatency": 243.0,
+            "slowestLatency": 884.0,
+            "sampleError": ""
+          }
+        ]
+      },
+      {
+        "route": "/api/bulletins/:id",
+        "totalCalls": 9,
+        "totalBytes": 19283,
+        "totalTimeMs": 2131.0,
+        "avgLatency": 236.78,
+        "minLatency": 229.0,
+        "p50Latency": 232.0,
+        "p90Latency": 265.0,
+        "p95Latency": 265.0,
+        "p99Latency": 265.0,
+        "maxLatency": 265.0,
+        "statusCounts": {
+          "200": 9
+        },
+        "topVariances": [
+          {
+            "statusCode": 200,
+            "count": 9,
+            "percentage": 100.0,
+            "minLatency": 229.0,
+            "medianLatency": 232.0,
+            "slowestLatency": 265.0,
+            "sampleError": ""
+          }
+        ]
+      },
+      {
+        "route": "/api/admin/events?_page=1&_per_page=10",
+        "totalCalls": 6,
+        "totalBytes": 93761,
+        "totalTimeMs": 2076.0,
+        "avgLatency": 346.0,
+        "minLatency": 265.0,
+        "p50Latency": 345.0,
+        "p90Latency": 435.0,
+        "p95Latency": 435.0,
+        "p99Latency": 435.0,
+        "maxLatency": 435.0,
+        "statusCounts": {
+          "200": 6
+        },
+        "topVariances": [
+          {
+            "statusCode": 200,
+            "count": 6,
+            "percentage": 100.0,
+            "minLatency": 265.0,
+            "medianLatency": 345.0,
+            "slowestLatency": 435.0,
+            "sampleError": ""
+          }
+        ]
+      },
+      {
+        "route": "/api/users?_include=profile,userStatus,profileStatus&_page=1&_per_page=10",
+        "totalCalls": 8,
+        "totalBytes": 59552,
+        "totalTimeMs": 1944.0,
+        "avgLatency": 243.0,
+        "minLatency": 228.0,
+        "p50Latency": 240.0,
+        "p90Latency": 261.0,
+        "p95Latency": 261.0,
+        "p99Latency": 261.0,
+        "maxLatency": 261.0,
+        "statusCounts": {
+          "200": 8
+        },
+        "topVariances": [
+          {
+            "statusCode": 200,
+            "count": 8,
+            "percentage": 100.0,
+            "minLatency": 228.0,
+            "medianLatency": 240.0,
+            "slowestLatency": 261.0,
+            "sampleError": ""
+          }
+        ]
+      },
+      {
+        "route": "/api/eventStatuses",
+        "totalCalls": 8,
+        "totalBytes": 4520,
+        "totalTimeMs": 1894.0,
+        "avgLatency": 236.75,
+        "minLatency": 228.0,
+        "p50Latency": 233.0,
+        "p90Latency": 252.0,
+        "p95Latency": 252.0,
+        "p99Latency": 252.0,
+        "maxLatency": 252.0,
+        "statusCounts": {
+          "200": 8
+        },
+        "topVariances": [
+          {
+            "statusCode": 200,
+            "count": 8,
+            "percentage": 100.0,
+            "minLatency": 228.0,
+            "medianLatency": 233.0,
+            "slowestLatency": 252.0,
+            "sampleError": ""
+          }
+        ]
+      },
+      {
+        "route": "/api/bulletinLikes?_page=1&_per_page=10",
+        "totalCalls": 8,
+        "totalBytes": 9656,
+        "totalTimeMs": 1885.0,
+        "avgLatency": 235.62,
+        "minLatency": 224.0,
+        "p50Latency": 231.0,
+        "p90Latency": 266.0,
+        "p95Latency": 266.0,
+        "p99Latency": 266.0,
+        "maxLatency": 266.0,
+        "statusCounts": {
+          "200": 8
+        },
+        "topVariances": [
+          {
+            "statusCode": 200,
+            "count": 8,
+            "percentage": 100.0,
+            "minLatency": 224.0,
+            "medianLatency": 231.0,
+            "slowestLatency": 266.0,
+            "sampleError": ""
+          }
+        ]
+      },
+      {
+        "route": "/api/notifications?_page=1&_per_page=10",
+        "totalCalls": 5,
+        "totalBytes": 21170,
+        "totalTimeMs": 1812.0,
+        "avgLatency": 362.4,
+        "minLatency": 228.0,
+        "p50Latency": 234.0,
+        "p90Latency": 876.0,
+        "p95Latency": 876.0,
+        "p99Latency": 876.0,
+        "maxLatency": 876.0,
+        "statusCounts": {
+          "200": 5
+        },
+        "topVariances": [
+          {
+            "statusCode": 200,
+            "count": 5,
+            "percentage": 100.0,
+            "minLatency": 228.0,
+            "medianLatency": 234.0,
+            "slowestLatency": 876.0,
+            "sampleError": ""
+          }
+        ]
+      },
+      {
+        "route": "/api/donationStatuses",
+        "totalCalls": 4,
+        "totalBytes": 1900,
+        "totalTimeMs": 1643.0,
+        "avgLatency": 410.75,
+        "minLatency": 223.0,
+        "p50Latency": 229.0,
+        "p90Latency": 950.0,
+        "p95Latency": 950.0,
+        "p99Latency": 950.0,
+        "maxLatency": 950.0,
+        "statusCounts": {
+          "200": 4
+        },
+        "topVariances": [
+          {
+            "statusCode": 200,
+            "count": 4,
+            "percentage": 100.0,
+            "minLatency": 223.0,
+            "medianLatency": 229.0,
+            "slowestLatency": 950.0,
+            "sampleError": ""
+          }
+        ]
+      },
+      {
+        "route": "/api/auth/admin/me",
+        "totalCalls": 6,
+        "totalBytes": 2232,
+        "totalTimeMs": 1381.0,
+        "avgLatency": 230.17,
+        "minLatency": 212.0,
+        "p50Latency": 229.0,
+        "p90Latency": 244.0,
+        "p95Latency": 244.0,
+        "p99Latency": 244.0,
+        "maxLatency": 244.0,
+        "statusCounts": {
+          "200": 6
+        },
+        "topVariances": [
+          {
+            "statusCode": 200,
+            "count": 6,
+            "percentage": 100.0,
+            "minLatency": 212.0,
+            "medianLatency": 229.0,
+            "slowestLatency": 244.0,
+            "sampleError": ""
+          }
+        ]
+      },
+      {
+        "route": "/api/auth/me [Regular]",
+        "totalCalls": 2,
+        "totalBytes": 1876,
+        "totalTimeMs": 477.0,
+        "avgLatency": 238.5,
+        "minLatency": 235.0,
+        "p50Latency": 235.0,
+        "p90Latency": 242.0,
+        "p95Latency": 242.0,
+        "p99Latency": 242.0,
+        "maxLatency": 242.0,
+        "statusCounts": {
+          "200": 2
+        },
+        "topVariances": [
+          {
+            "statusCode": 200,
+            "count": 2,
+            "percentage": 100.0,
+            "minLatency": 235.0,
+            "medianLatency": 235.0,
+            "slowestLatency": 242.0,
+            "sampleError": ""
+          }
+        ]
+      }
+    ],
+    "slowestRoutes": [
+      {
+        "route": "/api/users?_where=active&_include",
+        "totalCalls": 14,
+        "totalBytes": 49868,
+        "totalTimeMs": 5560.0,
+        "avgLatency": 397.14,
+        "minLatency": 222.0,
+        "p50Latency": 247.0,
+        "p90Latency": 648.0,
+        "p95Latency": 1935.0,
+        "p99Latency": 1935.0,
+        "maxLatency": 1935.0,
+        "statusCounts": {
+          "200": 14
+        },
+        "topVariances": [
+          {
+            "statusCode": 200,
+            "count": 14,
+            "percentage": 100.0,
+            "minLatency": 222.0,
+            "medianLatency": 247.0,
+            "slowestLatency": 1935.0,
+            "sampleError": ""
+          }
+        ]
+      },
+      {
+        "route": "/api/clefLogs?_page=1&_per_page=10",
+        "totalCalls": 8,
+        "totalBytes": 36400,
+        "totalTimeMs": 4193.0,
+        "avgLatency": 524.12,
+        "minLatency": 226.0,
+        "p50Latency": 239.0,
+        "p90Latency": 1881.0,
+        "p95Latency": 1881.0,
+        "p99Latency": 1881.0,
+        "maxLatency": 1881.0,
+        "statusCounts": {
+          "200": 8
+        },
+        "topVariances": [
+          {
+            "statusCode": 200,
+            "count": 8,
+            "percentage": 100.0,
+            "minLatency": 226.0,
+            "medianLatency": 239.0,
+            "slowestLatency": 1881.0,
+            "sampleError": ""
+          }
+        ]
+      },
+      {
+        "route": "/api/events?_sort=eventDate&_order=desc&_page=2&_per_page=5",
+        "totalCalls": 11,
+        "totalBytes": 507150,
+        "totalTimeMs": 6474.0,
+        "avgLatency": 588.55,
+        "minLatency": 340.0,
+        "p50Latency": 413.0,
+        "p90Latency": 1065.0,
+        "p95Latency": 1240.0,
+        "p99Latency": 1240.0,
+        "maxLatency": 1240.0,
+        "statusCounts": {
+          "200": 11
+        },
+        "topVariances": [
+          {
+            "statusCode": 200,
+            "count": 11,
+            "percentage": 100.0,
+            "minLatency": 340.0,
+            "medianLatency": 413.0,
+            "slowestLatency": 1240.0,
+            "sampleError": ""
+          }
+        ]
+      },
+      {
+        "route": "/api/events?_sort=eventDate&_order=asc&_page=1&_per_page=10",
+        "totalCalls": 12,
+        "totalBytes": 1026375,
+        "totalTimeMs": 7650.0,
+        "avgLatency": 637.5,
+        "minLatency": 461.0,
+        "p50Latency": 497.0,
+        "p90Latency": 1051.0,
+        "p95Latency": 1066.0,
+        "p99Latency": 1066.0,
+        "maxLatency": 1066.0,
+        "statusCounts": {
+          "200": 12
+        },
+        "topVariances": [
+          {
+            "statusCode": 200,
+            "count": 12,
+            "percentage": 100.0,
+            "minLatency": 461.0,
+            "medianLatency": 497.0,
+            "slowestLatency": 1066.0,
+            "sampleError": ""
+          }
+        ]
+      },
+      {
+        "route": "/api/bulletinCategories",
+        "totalCalls": 11,
+        "totalBytes": 6380,
+        "totalTimeMs": 4105.0,
+        "avgLatency": 373.18,
+        "minLatency": 222.0,
+        "p50Latency": 238.0,
+        "p90Latency": 916.0,
+        "p95Latency": 1042.0,
+        "p99Latency": 1042.0,
+        "maxLatency": 1042.0,
+        "statusCounts": {
+          "200": 11
+        },
+        "topVariances": [
+          {
+            "statusCode": 200,
+            "count": 11,
+            "percentage": 100.0,
+            "minLatency": 222.0,
+            "medianLatency": 238.0,
+            "slowestLatency": 1042.0,
+            "sampleError": ""
+          }
+        ]
+      },
+      {
+        "route": "/api/events?_page=1&_per_page=10",
+        "totalCalls": 8,
+        "totalBytes": 560822,
+        "totalTimeMs": 4517.0,
+        "avgLatency": 564.62,
+        "minLatency": 382.0,
+        "p50Latency": 455.0,
+        "p90Latency": 1039.0,
+        "p95Latency": 1039.0,
+        "p99Latency": 1039.0,
+        "maxLatency": 1039.0,
+        "statusCounts": {
+          "200": 8
+        },
+        "topVariances": [
+          {
+            "statusCode": 200,
+            "count": 8,
+            "percentage": 100.0,
+            "minLatency": 382.0,
+            "medianLatency": 455.0,
+            "slowestLatency": 1039.0,
+            "sampleError": ""
+          }
+        ]
+      },
+      {
+        "route": "/api/bulletins?_sort=bulletinDate&_order=desc&_page=1&_per_page=10",
+        "totalCalls": 5,
+        "totalBytes": 444259,
+        "totalTimeMs": 3086.0,
+        "avgLatency": 617.2,
+        "minLatency": 390.0,
+        "p50Latency": 482.0,
+        "p90Latency": 1011.0,
+        "p95Latency": 1011.0,
+        "p99Latency": 1011.0,
+        "maxLatency": 1011.0,
+        "statusCounts": {
+          "200": 5
+        },
+        "topVariances": [
+          {
+            "statusCode": 200,
+            "count": 5,
+            "percentage": 100.0,
+            "minLatency": 390.0,
+            "medianLatency": 482.0,
+            "slowestLatency": 1011.0,
+            "sampleError": ""
+          }
+        ]
+      },
+      {
+        "route": "/api/users?_page=1&_per_page=10",
+        "totalCalls": 9,
+        "totalBytes": 124857,
+        "totalTimeMs": 3630.0,
+        "avgLatency": 403.33,
+        "minLatency": 267.0,
+        "p50Latency": 351.0,
+        "p90Latency": 972.0,
+        "p95Latency": 972.0,
+        "p99Latency": 972.0,
+        "maxLatency": 972.0,
+        "statusCounts": {
+          "200": 9
+        },
+        "topVariances": [
+          {
+            "statusCode": 200,
+            "count": 9,
+            "percentage": 100.0,
+            "minLatency": 267.0,
+            "medianLatency": 351.0,
+            "slowestLatency": 972.0,
+            "sampleError": ""
+          }
+        ]
+      },
+      {
+        "route": "/api/connectionStatuses",
+        "totalCalls": 14,
+        "totalBytes": 7574,
+        "totalTimeMs": 4160.0,
+        "avgLatency": 297.14,
+        "minLatency": 220.0,
+        "p50Latency": 235.0,
+        "p90Latency": 299.0,
+        "p95Latency": 958.0,
+        "p99Latency": 958.0,
+        "maxLatency": 958.0,
+        "statusCounts": {
+          "200": 14
+        },
+        "topVariances": [
+          {
+            "statusCode": 200,
+            "count": 14,
+            "percentage": 100.0,
+            "minLatency": 220.0,
+            "medianLatency": 235.0,
+            "slowestLatency": 958.0,
+            "sampleError": ""
+          }
+        ]
+      },
+      {
+        "route": "/images/engineer.png",
+        "totalCalls": 15,
+        "totalBytes": 201360,
+        "totalTimeMs": 4772.0,
+        "avgLatency": 318.13,
+        "minLatency": 234.0,
+        "p50Latency": 270.0,
+        "p90Latency": 399.0,
+        "p95Latency": 954.0,
+        "p99Latency": 954.0,
+        "maxLatency": 954.0,
+        "statusCounts": {
+          "200": 15
+        },
+        "topVariances": [
+          {
+            "statusCode": 200,
+            "count": 15,
+            "percentage": 100.0,
+            "minLatency": 234.0,
+            "medianLatency": 270.0,
+            "slowestLatency": 954.0,
+            "sampleError": ""
+          }
+        ]
+      },
+      {
+        "route": "/api/donationStatuses",
+        "totalCalls": 4,
+        "totalBytes": 1900,
+        "totalTimeMs": 1643.0,
+        "avgLatency": 410.75,
+        "minLatency": 223.0,
+        "p50Latency": 229.0,
+        "p90Latency": 950.0,
+        "p95Latency": 950.0,
+        "p99Latency": 950.0,
+        "maxLatency": 950.0,
+        "statusCounts": {
+          "200": 4
+        },
+        "topVariances": [
+          {
+            "statusCode": 200,
+            "count": 4,
+            "percentage": 100.0,
+            "minLatency": 223.0,
+            "medianLatency": 229.0,
+            "slowestLatency": 950.0,
+            "sampleError": ""
+          }
+        ]
+      },
+      {
+        "route": "/api/bulletins?_include=category,author,status&_page=1&_per_page=10",
+        "totalCalls": 9,
+        "totalBytes": 157715,
+        "totalTimeMs": 3681.0,
+        "avgLatency": 409.0,
+        "minLatency": 265.0,
+        "p50Latency": 345.0,
+        "p90Latency": 934.0,
+        "p95Latency": 934.0,
+        "p99Latency": 934.0,
+        "maxLatency": 934.0,
+        "statusCounts": {
+          "200": 9
+        },
+        "topVariances": [
+          {
+            "statusCode": 200,
+            "count": 9,
+            "percentage": 100.0,
+            "minLatency": 265.0,
+            "medianLatency": 345.0,
+            "slowestLatency": 934.0,
+            "sampleError": ""
+          }
+        ]
+      },
+      {
+        "route": "/api/degrees",
+        "totalCalls": 10,
+        "totalBytes": 7830,
+        "totalTimeMs": 3664.0,
+        "avgLatency": 366.4,
+        "minLatency": 225.0,
+        "p50Latency": 237.0,
+        "p90Latency": 863.0,
+        "p95Latency": 933.0,
+        "p99Latency": 933.0,
+        "maxLatency": 933.0,
+        "statusCounts": {
+          "200": 10
+        },
+        "topVariances": [
+          {
+            "statusCode": 200,
+            "count": 10,
+            "percentage": 100.0,
+            "minLatency": 225.0,
+            "medianLatency": 237.0,
+            "slowestLatency": 933.0,
+            "sampleError": ""
+          }
+        ]
+      },
+      {
+        "route": "/api/admin/dashboard-stats",
+        "totalCalls": 6,
+        "totalBytes": 33596,
+        "totalTimeMs": 2266.0,
+        "avgLatency": 377.67,
+        "minLatency": 241.0,
+        "p50Latency": 255.0,
+        "p90Latency": 930.0,
+        "p95Latency": 930.0,
+        "p99Latency": 930.0,
+        "maxLatency": 930.0,
+        "statusCounts": {
+          "200": 6
+        },
+        "topVariances": [
+          {
+            "statusCode": 200,
+            "count": 6,
+            "percentage": 100.0,
+            "minLatency": 241.0,
+            "medianLatency": 255.0,
+            "slowestLatency": 930.0,
+            "sampleError": ""
+          }
+        ]
+      },
+      {
+        "route": "/api/comments?_page=1&_per_page=10",
+        "totalCalls": 10,
+        "totalBytes": 243590,
+        "totalTimeMs": 3954.0,
+        "avgLatency": 395.4,
+        "minLatency": 258.0,
+        "p50Latency": 355.0,
+        "p90Latency": 374.0,
+        "p95Latency": 926.0,
+        "p99Latency": 926.0,
+        "maxLatency": 926.0,
+        "statusCounts": {
+          "200": 10
+        },
+        "topVariances": [
+          {
+            "statusCode": 200,
+            "count": 10,
+            "percentage": 100.0,
+            "minLatency": 258.0,
+            "medianLatency": 355.0,
+            "slowestLatency": 926.0,
+            "sampleError": ""
+          }
+        ]
+      }
+    ],
+    "mostTraffic": [
+      {
+        "route": "/api/events?_sort=eventDate&_order=asc&_page=1&_per_page=10",
+        "totalCalls": 12,
+        "totalBytes": 1026375,
+        "totalTimeMs": 7650.0,
+        "avgLatency": 637.5,
+        "minLatency": 461.0,
+        "p50Latency": 497.0,
+        "p90Latency": 1051.0,
+        "p95Latency": 1066.0,
+        "p99Latency": 1066.0,
+        "maxLatency": 1066.0,
+        "statusCounts": {
+          "200": 12
+        },
+        "topVariances": [
+          {
+            "statusCode": 200,
+            "count": 12,
+            "percentage": 100.0,
+            "minLatency": 461.0,
+            "medianLatency": 497.0,
+            "slowestLatency": 1066.0,
+            "sampleError": ""
+          }
+        ]
+      },
+      {
+        "route": "/api/bulletins?_page=1&_per_page=10",
+        "totalCalls": 10,
+        "totalBytes": 589948,
+        "totalTimeMs": 4186.0,
+        "avgLatency": 418.6,
+        "minLatency": 356.0,
+        "p50Latency": 421.0,
+        "p90Latency": 444.0,
+        "p95Latency": 452.0,
+        "p99Latency": 452.0,
+        "maxLatency": 452.0,
+        "statusCounts": {
+          "200": 10
+        },
+        "topVariances": [
+          {
+            "statusCode": 200,
+            "count": 10,
+            "percentage": 100.0,
+            "minLatency": 356.0,
+            "medianLatency": 421.0,
+            "slowestLatency": 452.0,
+            "sampleError": ""
+          }
+        ]
+      },
+      {
+        "route": "/api/events?_page=1&_per_page=10",
+        "totalCalls": 8,
+        "totalBytes": 560822,
+        "totalTimeMs": 4517.0,
+        "avgLatency": 564.62,
+        "minLatency": 382.0,
+        "p50Latency": 455.0,
+        "p90Latency": 1039.0,
+        "p95Latency": 1039.0,
+        "p99Latency": 1039.0,
+        "maxLatency": 1039.0,
+        "statusCounts": {
+          "200": 8
+        },
+        "topVariances": [
+          {
+            "statusCode": 200,
+            "count": 8,
+            "percentage": 100.0,
+            "minLatency": 382.0,
+            "medianLatency": 455.0,
+            "slowestLatency": 1039.0,
+            "sampleError": ""
+          }
+        ]
+      },
+      {
+        "route": "/api/events?_sort=eventDate&_order=desc&_page=2&_per_page=5",
+        "totalCalls": 11,
+        "totalBytes": 507150,
+        "totalTimeMs": 6474.0,
+        "avgLatency": 588.55,
+        "minLatency": 340.0,
+        "p50Latency": 413.0,
+        "p90Latency": 1065.0,
+        "p95Latency": 1240.0,
+        "p99Latency": 1240.0,
+        "maxLatency": 1240.0,
+        "statusCounts": {
+          "200": 11
+        },
+        "topVariances": [
+          {
+            "statusCode": 200,
+            "count": 11,
+            "percentage": 100.0,
+            "minLatency": 340.0,
+            "medianLatency": 413.0,
+            "slowestLatency": 1240.0,
+            "sampleError": ""
+          }
+        ]
+      },
+      {
+        "route": "/api/bulletins?_sort=bulletinDate&_order=desc&_page=1&_per_page=10",
+        "totalCalls": 5,
+        "totalBytes": 444259,
+        "totalTimeMs": 3086.0,
+        "avgLatency": 617.2,
+        "minLatency": 390.0,
+        "p50Latency": 482.0,
+        "p90Latency": 1011.0,
+        "p95Latency": 1011.0,
+        "p99Latency": 1011.0,
+        "maxLatency": 1011.0,
+        "statusCounts": {
+          "200": 5
+        },
+        "topVariances": [
+          {
+            "statusCode": 200,
+            "count": 5,
+            "percentage": 100.0,
+            "minLatency": 390.0,
+            "medianLatency": 482.0,
+            "slowestLatency": 1011.0,
+            "sampleError": ""
+          }
+        ]
+      },
+      {
+        "route": "/api/comments?_page=1&_per_page=10",
+        "totalCalls": 10,
+        "totalBytes": 243590,
+        "totalTimeMs": 3954.0,
+        "avgLatency": 395.4,
+        "minLatency": 258.0,
+        "p50Latency": 355.0,
+        "p90Latency": 374.0,
+        "p95Latency": 926.0,
+        "p99Latency": 926.0,
+        "maxLatency": 926.0,
+        "statusCounts": {
+          "200": 10
+        },
+        "topVariances": [
+          {
+            "statusCode": 200,
+            "count": 10,
+            "percentage": 100.0,
+            "minLatency": 258.0,
+            "medianLatency": 355.0,
+            "slowestLatency": 926.0,
+            "sampleError": ""
+          }
+        ]
+      },
+      {
+        "route": "/images/engineer.png",
+        "totalCalls": 15,
+        "totalBytes": 201360,
+        "totalTimeMs": 4772.0,
+        "avgLatency": 318.13,
+        "minLatency": 234.0,
+        "p50Latency": 270.0,
+        "p90Latency": 399.0,
+        "p95Latency": 954.0,
+        "p99Latency": 954.0,
+        "maxLatency": 954.0,
+        "statusCounts": {
+          "200": 15
+        },
+        "topVariances": [
+          {
+            "statusCode": 200,
+            "count": 15,
+            "percentage": 100.0,
+            "minLatency": 234.0,
+            "medianLatency": 270.0,
+            "slowestLatency": 954.0,
+            "sampleError": ""
+          }
+        ]
+      },
+      {
+        "route": "/api/bulletins?_include=category,author,status&_page=1&_per_page=10",
+        "totalCalls": 9,
+        "totalBytes": 157715,
+        "totalTimeMs": 3681.0,
+        "avgLatency": 409.0,
+        "minLatency": 265.0,
+        "p50Latency": 345.0,
+        "p90Latency": 934.0,
+        "p95Latency": 934.0,
+        "p99Latency": 934.0,
+        "maxLatency": 934.0,
+        "statusCounts": {
+          "200": 9
+        },
+        "topVariances": [
+          {
+            "statusCode": 200,
+            "count": 9,
+            "percentage": 100.0,
+            "minLatency": 265.0,
+            "medianLatency": 345.0,
+            "slowestLatency": 934.0,
+            "sampleError": ""
+          }
+        ]
+      },
+      {
+        "route": "/api/admin/bulletins?_page=1&_per_page=10",
+        "totalCalls": 8,
+        "totalBytes": 149184,
+        "totalTimeMs": 2669.0,
+        "avgLatency": 333.62,
+        "minLatency": 235.0,
+        "p50Latency": 332.0,
+        "p90Latency": 402.0,
+        "p95Latency": 402.0,
+        "p99Latency": 402.0,
+        "maxLatency": 402.0,
+        "statusCounts": {
+          "200": 8
+        },
+        "topVariances": [
+          {
+            "statusCode": 200,
+            "count": 8,
+            "percentage": 100.0,
+            "minLatency": 235.0,
+            "medianLatency": 332.0,
+            "slowestLatency": 402.0,
+            "sampleError": ""
+          }
+        ]
+      },
+      {
+        "route": "/api/userRsvps?_page=1&_per_page=10",
+        "totalCalls": 10,
+        "totalBytes": 137720,
+        "totalTimeMs": 4181.0,
+        "avgLatency": 418.1,
+        "minLatency": 307.0,
+        "p50Latency": 352.0,
+        "p90Latency": 505.0,
+        "p95Latency": 924.0,
+        "p99Latency": 924.0,
+        "maxLatency": 924.0,
+        "statusCounts": {
+          "200": 10
+        },
+        "topVariances": [
+          {
+            "statusCode": 200,
+            "count": 10,
+            "percentage": 100.0,
+            "minLatency": 307.0,
+            "medianLatency": 352.0,
+            "slowestLatency": 924.0,
+            "sampleError": ""
+          }
+        ]
+      },
+      {
+        "route": "/api/events?_include=category,author,status,location&_page=1&_per_page=10",
+        "totalCalls": 8,
+        "totalBytes": 127231,
+        "totalTimeMs": 2805.0,
+        "avgLatency": 350.62,
+        "minLatency": 335.0,
+        "p50Latency": 349.0,
+        "p90Latency": 373.0,
+        "p95Latency": 373.0,
+        "p99Latency": 373.0,
+        "maxLatency": 373.0,
+        "statusCounts": {
+          "200": 8
+        },
+        "topVariances": [
+          {
+            "statusCode": 200,
+            "count": 8,
+            "percentage": 100.0,
+            "minLatency": 335.0,
+            "medianLatency": 349.0,
+            "slowestLatency": 373.0,
+            "sampleError": ""
+          }
+        ]
+      },
+      {
+        "route": "/api/users?_page=1&_per_page=10",
+        "totalCalls": 9,
+        "totalBytes": 124857,
+        "totalTimeMs": 3630.0,
+        "avgLatency": 403.33,
+        "minLatency": 267.0,
+        "p50Latency": 351.0,
+        "p90Latency": 972.0,
+        "p95Latency": 972.0,
+        "p99Latency": 972.0,
+        "maxLatency": 972.0,
+        "statusCounts": {
+          "200": 9
+        },
+        "topVariances": [
+          {
+            "statusCode": 200,
+            "count": 9,
+            "percentage": 100.0,
+            "minLatency": 267.0,
+            "medianLatency": 351.0,
+            "slowestLatency": 972.0,
+            "sampleError": ""
+          }
+        ]
+      },
+      {
+        "route": "/api/userConnections?_include=user,friend,status&_page=1&_per_page=10",
+        "totalCalls": 8,
+        "totalBytes": 118872,
+        "totalTimeMs": 2562.0,
+        "avgLatency": 320.25,
+        "minLatency": 239.0,
+        "p50Latency": 341.0,
+        "p90Latency": 365.0,
+        "p95Latency": 365.0,
+        "p99Latency": 365.0,
+        "maxLatency": 365.0,
+        "statusCounts": {
+          "200": 8
+        },
+        "topVariances": [
+          {
+            "statusCode": 200,
+            "count": 8,
+            "percentage": 100.0,
+            "minLatency": 239.0,
+            "medianLatency": 341.0,
+            "slowestLatency": 365.0,
+            "sampleError": ""
+          }
+        ]
+      },
+      {
+        "route": "/api/userAuths?_page=1&_per_page=10",
+        "totalCalls": 11,
+        "totalBytes": 100320,
+        "totalTimeMs": 3484.0,
+        "avgLatency": 316.73,
+        "minLatency": 231.0,
+        "p50Latency": 263.0,
+        "p90Latency": 288.0,
+        "p95Latency": 892.0,
+        "p99Latency": 892.0,
+        "maxLatency": 892.0,
+        "statusCounts": {
+          "200": 11
+        },
+        "topVariances": [
+          {
+            "statusCode": 200,
+            "count": 11,
+            "percentage": 100.0,
+            "minLatency": 231.0,
+            "medianLatency": 263.0,
+            "slowestLatency": 892.0,
+            "sampleError": ""
+          }
+        ]
+      },
+      {
+        "route": "/api/events/:id",
+        "totalCalls": 12,
+        "totalBytes": 94902,
+        "totalTimeMs": 2907.0,
+        "avgLatency": 242.25,
+        "minLatency": 218.0,
+        "p50Latency": 235.0,
+        "p90Latency": 268.0,
+        "p95Latency": 273.0,
+        "p99Latency": 273.0,
+        "maxLatency": 273.0,
+        "statusCounts": {
+          "200": 12
+        },
+        "topVariances": [
+          {
+            "statusCode": 200,
+            "count": 12,
+            "percentage": 100.0,
+            "minLatency": 218.0,
+            "medianLatency": 235.0,
+            "slowestLatency": 273.0,
+            "sampleError": ""
+          }
+        ]
+      }
+    ]
+  },
+  "tierBreakdown": {
     "Setup": {
       "requests": 5,
       "errors": 0,
       "count401": 0,
       "errorRate": 0.0,
-      "rps": 0.17,
-      "avgMs": 5994.8,
-      "p50Ms": 255.0,
-      "p95Ms": 28197.0,
-      "p99Ms": 28197.0,
-      "maxMs": 28197.0
+      "rps": 0.41,
+      "avgMs": 2392.4,
+      "p50Ms": 310.0,
+      "p95Ms": 10128.0,
+      "p99Ms": 10128.0,
+      "maxMs": 10128.0
     },
     "Tier_1": {
-      "requests": 139,
+      "requests": 141,
       "errors": 0,
       "count401": 0,
       "errorRate": 0.0,
-      "rps": 27.05,
-      "avgMs": 301.91,
-      "p50Ms": 235.0,
-      "p95Ms": 890.0,
-      "p99Ms": 1036.0,
-      "maxMs": 1124.0
+      "rps": 14.66,
+      "avgMs": 331.6,
+      "p50Ms": 239.0,
+      "p95Ms": 916.0,
+      "p99Ms": 1881.0,
+      "maxMs": 1935.0
     },
     "Tier_2": {
-      "requests": 338,
+      "requests": 358,
       "errors": 0,
       "count401": 0,
       "errorRate": 0.0,
-      "rps": 63.86,
-      "avgMs": 311.61,
+      "rps": 35.59,
+      "avgMs": 327.62,
       "p50Ms": 245.0,
-      "p95Ms": 867.0,
-      "p99Ms": 921.0,
-      "maxMs": 1059.0
+      "p95Ms": 884.0,
+      "p99Ms": 1039.0,
+      "maxMs": 1066.0
     }
   },
   "routeBreakdown": {
-    "[Coverage] DELETE /api/bulletinLikes/:id": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "204": 1
-      },
-      "minMs": 240.0,
-      "avgMs": 240.0,
-      "p50Ms": 240.0,
-      "p95Ms": 240.0,
-      "p99Ms": 240.0,
-      "maxMs": 240.0,
-      "totalBytes": 196
-    },
-    "[Coverage] DELETE /api/bulletins/:id": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "204": 1
-      },
-      "minMs": 241.0,
-      "avgMs": 241.0,
-      "p50Ms": 241.0,
-      "p95Ms": 241.0,
-      "p99Ms": 241.0,
-      "maxMs": 241.0,
-      "totalBytes": 196
-    },
-    "[Coverage] DELETE /api/bulletins/:id (Cleanup Admin Bulletin)": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "204": 1
-      },
-      "minMs": 240.0,
-      "avgMs": 240.0,
-      "p50Ms": 240.0,
-      "p95Ms": 240.0,
-      "p99Ms": 240.0,
-      "maxMs": 240.0,
-      "totalBytes": 196
-    },
-    "[Coverage] DELETE /api/clefLogs/:id": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "204": 1
-      },
-      "minMs": 238.0,
-      "avgMs": 238.0,
-      "p50Ms": 238.0,
-      "p95Ms": 238.0,
-      "p99Ms": 238.0,
-      "maxMs": 238.0,
-      "totalBytes": 196
-    },
-    "[Coverage] DELETE /api/commentLikes/:id": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "204": 1
-      },
-      "minMs": 243.0,
-      "avgMs": 243.0,
-      "p50Ms": 243.0,
-      "p95Ms": 243.0,
-      "p99Ms": 243.0,
-      "maxMs": 243.0,
-      "totalBytes": 196
-    },
-    "[Coverage] DELETE /api/comments/:id": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "204": 1
-      },
-      "minMs": 245.0,
-      "avgMs": 245.0,
-      "p50Ms": 245.0,
-      "p95Ms": 245.0,
-      "p99Ms": 245.0,
-      "maxMs": 245.0,
-      "totalBytes": 196
-    },
-    "[Coverage] DELETE /api/donations/:id": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "204": 1
-      },
-      "minMs": 240.0,
-      "avgMs": 240.0,
-      "p50Ms": 240.0,
-      "p95Ms": 240.0,
-      "p99Ms": 240.0,
-      "maxMs": 240.0,
-      "totalBytes": 196
-    },
-    "[Coverage] DELETE /api/donations/:id (Cleanup Checkout)": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "204": 1
-      },
-      "minMs": 240.0,
-      "avgMs": 240.0,
-      "p50Ms": 240.0,
-      "p95Ms": 240.0,
-      "p99Ms": 240.0,
-      "maxMs": 240.0,
-      "totalBytes": 196
-    },
-    "[Coverage] DELETE /api/events/:id": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "204": 1
-      },
-      "minMs": 243.0,
-      "avgMs": 243.0,
-      "p50Ms": 243.0,
-      "p95Ms": 243.0,
-      "p99Ms": 243.0,
-      "maxMs": 243.0,
-      "totalBytes": 196
-    },
-    "[Coverage] DELETE /api/events/:id (Cleanup Admin Event)": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "204": 1
-      },
-      "minMs": 245.0,
-      "avgMs": 245.0,
-      "p50Ms": 245.0,
-      "p95Ms": 245.0,
-      "p99Ms": 245.0,
-      "maxMs": 245.0,
-      "totalBytes": 196
-    },
-    "[Coverage] DELETE /api/locations/:id": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "204": 1
-      },
-      "minMs": 239.0,
-      "avgMs": 239.0,
-      "p50Ms": 239.0,
-      "p95Ms": 239.0,
-      "p99Ms": 239.0,
-      "maxMs": 239.0,
-      "totalBytes": 196
-    },
-    "[Coverage] DELETE /api/notifications/:id": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "204": 1
-      },
-      "minMs": 237.0,
-      "avgMs": 237.0,
-      "p50Ms": 237.0,
-      "p95Ms": 237.0,
-      "p99Ms": 237.0,
-      "maxMs": 237.0,
-      "totalBytes": 196
-    },
-    "[Coverage] DELETE /api/records/:id": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "204": 1
-      },
-      "minMs": 238.0,
-      "avgMs": 238.0,
-      "p50Ms": 238.0,
-      "p95Ms": 238.0,
-      "p99Ms": 238.0,
-      "maxMs": 238.0,
-      "totalBytes": 196
-    },
-    "[Coverage] DELETE /api/userAchievements/:id": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "204": 1
-      },
-      "minMs": 239.0,
-      "avgMs": 239.0,
-      "p50Ms": 239.0,
-      "p95Ms": 239.0,
-      "p99Ms": 239.0,
-      "maxMs": 239.0,
-      "totalBytes": 196
-    },
-    "[Coverage] DELETE /api/userRsvps/:id": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "204": 1
-      },
-      "minMs": 239.0,
-      "avgMs": 239.0,
-      "p50Ms": 239.0,
-      "p95Ms": 239.0,
-      "p99Ms": 239.0,
-      "maxMs": 239.0,
-      "totalBytes": 196
-    },
-    "[Coverage] GET / (SPA Root)": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "200": 1
-      },
-      "minMs": 961.0,
-      "avgMs": 961.0,
-      "p50Ms": 961.0,
-      "p95Ms": 961.0,
-      "p99Ms": 961.0,
-      "maxMs": 961.0,
-      "totalBytes": 763
-    },
-    "[Coverage] GET /api/achievements": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "200": 1
-      },
-      "minMs": 239.0,
-      "avgMs": 239.0,
-      "p50Ms": 239.0,
-      "p95Ms": 239.0,
-      "p99Ms": 239.0,
-      "maxMs": 239.0,
-      "totalBytes": 2735
-    },
-    "[Coverage] GET /api/achievements (_sort desc)": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "200": 1
-      },
-      "minMs": 237.0,
-      "avgMs": 237.0,
-      "p50Ms": 237.0,
-      "p95Ms": 237.0,
-      "p99Ms": 237.0,
-      "maxMs": 237.0,
-      "totalBytes": 2735
-    },
-    "[Coverage] GET /api/achievements (_where contains)": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "200": 1
-      },
-      "minMs": 238.0,
-      "avgMs": 238.0,
-      "p50Ms": 238.0,
-      "p95Ms": 238.0,
-      "p99Ms": 238.0,
-      "maxMs": 238.0,
-      "totalBytes": 662
-    },
-    "[Coverage] GET /api/achievements (_where endsWith)": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "200": 1
-      },
-      "minMs": 239.0,
-      "avgMs": 239.0,
-      "p50Ms": 239.0,
-      "p95Ms": 239.0,
-      "p99Ms": 239.0,
-      "maxMs": 239.0,
-      "totalBytes": 486
-    },
-    "[Coverage] GET /api/achievements (_where gt)": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "200": 1
-      },
-      "minMs": 243.0,
-      "avgMs": 243.0,
-      "p50Ms": 243.0,
-      "p95Ms": 243.0,
-      "p99Ms": 243.0,
-      "maxMs": 243.0,
-      "totalBytes": 1410
-    },
-    "[Coverage] GET /api/achievements (_where in + gte + lte)": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "200": 1
-      },
-      "minMs": 238.0,
-      "avgMs": 238.0,
-      "p50Ms": 238.0,
-      "p95Ms": 238.0,
-      "p99Ms": 238.0,
-      "maxMs": 238.0,
-      "totalBytes": 2197
-    },
-    "[Coverage] GET /api/achievements (_where startsWith)": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "200": 1
-      },
-      "minMs": 237.0,
-      "avgMs": 237.0,
-      "p50Ms": 237.0,
-      "p95Ms": 237.0,
-      "p99Ms": 237.0,
-      "maxMs": 237.0,
-      "totalBytes": 847
-    },
-    "[Coverage] GET /api/achievements/:id": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "200": 1
-      },
-      "minMs": 236.0,
-      "avgMs": 236.0,
-      "p50Ms": 236.0,
-      "p95Ms": 236.0,
-      "p99Ms": 236.0,
-      "maxMs": 236.0,
-      "totalBytes": 476
-    },
-    "[Coverage] GET /api/admin/bulletins": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "200": 1
-      },
-      "minMs": 245.0,
-      "avgMs": 245.0,
-      "p50Ms": 245.0,
-      "p95Ms": 245.0,
-      "p99Ms": 245.0,
-      "maxMs": 245.0,
-      "totalBytes": 16741
-    },
-    "[Coverage] GET /api/admin/dashboard-stats": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "200": 1
-      },
-      "minMs": 264.0,
-      "avgMs": 264.0,
-      "p50Ms": 264.0,
-      "p95Ms": 264.0,
-      "p99Ms": 264.0,
-      "maxMs": 264.0,
-      "totalBytes": 5629
-    },
-    "[Coverage] GET /api/admin/events": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "200": 1
-      },
-      "minMs": 284.0,
-      "avgMs": 284.0,
-      "p50Ms": 284.0,
-      "p95Ms": 284.0,
-      "p99Ms": 284.0,
-      "maxMs": 284.0,
-      "totalBytes": 16662
-    },
-    "[Coverage] GET /api/auth/admin/me": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "200": 1
-      },
-      "minMs": 239.0,
-      "avgMs": 239.0,
-      "p50Ms": 239.0,
-      "p95Ms": 239.0,
-      "p99Ms": 239.0,
-      "maxMs": 239.0,
-      "totalBytes": 372
-    },
-    "[Coverage] GET /api/auth/me (Official)": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "200": 1
-      },
-      "minMs": 240.0,
-      "avgMs": 240.0,
-      "p50Ms": 240.0,
-      "p95Ms": 240.0,
-      "p99Ms": 240.0,
-      "maxMs": 240.0,
-      "totalBytes": 825
-    },
-    "[Coverage] GET /api/auth/me (Regular)": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "200": 1
-      },
-      "minMs": 238.0,
-      "avgMs": 238.0,
-      "p50Ms": 238.0,
-      "p95Ms": 238.0,
-      "p99Ms": 238.0,
-      "maxMs": 238.0,
-      "totalBytes": 910
-    },
-    "[Coverage] GET /api/bulletinCategories": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "200": 1
-      },
-      "minMs": 235.0,
-      "avgMs": 235.0,
-      "p50Ms": 235.0,
-      "p95Ms": 235.0,
-      "p99Ms": 235.0,
-      "maxMs": 235.0,
-      "totalBytes": 580
-    },
-    "[Coverage] GET /api/bulletinCategories/:id": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "200": 1
-      },
-      "minMs": 237.0,
-      "avgMs": 237.0,
-      "p50Ms": 237.0,
-      "p95Ms": 237.0,
-      "p99Ms": 237.0,
-      "maxMs": 237.0,
-      "totalBytes": 355
-    },
-    "[Coverage] GET /api/bulletinLikes (Paginated)": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "200": 1
-      },
-      "minMs": 240.0,
-      "avgMs": 240.0,
-      "p50Ms": 240.0,
-      "p95Ms": 240.0,
-      "p99Ms": 240.0,
-      "maxMs": 240.0,
-      "totalBytes": 790
-    },
-    "[Coverage] GET /api/bulletinLikes/:id": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "200": 1
-      },
-      "minMs": 236.0,
-      "avgMs": 236.0,
-      "p50Ms": 236.0,
-      "p95Ms": 236.0,
-      "p99Ms": 236.0,
-      "maxMs": 236.0,
-      "totalBytes": 380
-    },
-    "[Coverage] GET /api/bulletinLikes/:id (Created)": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "200": 1
-      },
-      "minMs": 235.0,
-      "avgMs": 235.0,
-      "p50Ms": 235.0,
-      "p95Ms": 235.0,
-      "p99Ms": 235.0,
-      "maxMs": 235.0,
-      "totalBytes": 458
-    },
-    "[Coverage] GET /api/bulletins (_include + _sort + page)": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "200": 1
-      },
-      "minMs": 274.0,
-      "avgMs": 274.0,
-      "p50Ms": 274.0,
-      "p95Ms": 274.0,
-      "p99Ms": 274.0,
-      "maxMs": 274.0,
-      "totalBytes": 13730
-    },
-    "[Coverage] GET /api/bulletins (Paginated)": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "200": 1
-      },
-      "minMs": 244.0,
-      "avgMs": 244.0,
-      "p50Ms": 244.0,
-      "p95Ms": 244.0,
-      "p99Ms": 244.0,
-      "maxMs": 244.0,
-      "totalBytes": 9381
-    },
-    "[Coverage] GET /api/bulletins/:id": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "200": 1
-      },
-      "minMs": 238.0,
-      "avgMs": 238.0,
-      "p50Ms": 238.0,
-      "p95Ms": 238.0,
-      "p99Ms": 238.0,
-      "maxMs": 238.0,
-      "totalBytes": 2079
-    },
-    "[Coverage] GET /api/bulletins/:id (Created)": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "200": 1
-      },
-      "minMs": 238.0,
-      "avgMs": 238.0,
-      "p50Ms": 238.0,
-      "p95Ms": 238.0,
-      "p99Ms": 238.0,
-      "maxMs": 238.0,
-      "totalBytes": 1783
-    },
-    "[Coverage] GET /api/clefLogs (Paginated)": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "200": 1
-      },
-      "minMs": 241.0,
-      "avgMs": 241.0,
-      "p50Ms": 241.0,
-      "p95Ms": 241.0,
-      "p99Ms": 241.0,
-      "maxMs": 241.0,
-      "totalBytes": 3020
-    },
-    "[Coverage] GET /api/clefLogs/:id": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "200": 1
-      },
-      "minMs": 236.0,
-      "avgMs": 236.0,
-      "p50Ms": 236.0,
-      "p95Ms": 236.0,
-      "p99Ms": 236.0,
-      "maxMs": 236.0,
-      "totalBytes": 687
-    },
-    "[Coverage] GET /api/clefLogs/:id (Created)": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "200": 1
-      },
-      "minMs": 238.0,
-      "avgMs": 238.0,
-      "p50Ms": 238.0,
-      "p95Ms": 238.0,
-      "p99Ms": 238.0,
-      "maxMs": 238.0,
-      "totalBytes": 499
-    },
-    "[Coverage] GET /api/commentLikes (Paginated)": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "200": 1
-      },
-      "minMs": 237.0,
-      "avgMs": 237.0,
-      "p50Ms": 237.0,
-      "p95Ms": 237.0,
-      "p99Ms": 237.0,
-      "maxMs": 237.0,
-      "totalBytes": 785
-    },
-    "[Coverage] GET /api/commentLikes/:id": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "200": 1
-      },
-      "minMs": 241.0,
-      "avgMs": 241.0,
-      "p50Ms": 241.0,
-      "p95Ms": 241.0,
-      "p99Ms": 241.0,
-      "maxMs": 241.0,
-      "totalBytes": 378
-    },
-    "[Coverage] GET /api/commentLikes/:id (Created)": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "200": 1
-      },
-      "minMs": 235.0,
-      "avgMs": 235.0,
-      "p50Ms": 235.0,
-      "p95Ms": 235.0,
-      "p99Ms": 235.0,
-      "maxMs": 235.0,
-      "totalBytes": 457
-    },
-    "[Coverage] GET /api/comments (Paginated)": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "200": 1
-      },
-      "minMs": 276.0,
-      "avgMs": 276.0,
-      "p50Ms": 276.0,
-      "p95Ms": 276.0,
-      "p99Ms": 276.0,
-      "maxMs": 276.0,
-      "totalBytes": 12200
-    },
-    "[Coverage] GET /api/comments/:id": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "200": 1
-      },
-      "minMs": 255.0,
-      "avgMs": 255.0,
-      "p50Ms": 255.0,
-      "p95Ms": 255.0,
-      "p99Ms": 255.0,
-      "maxMs": 255.0,
-      "totalBytes": 2681
-    },
-    "[Coverage] GET /api/comments/:id (Created)": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "200": 1
-      },
-      "minMs": 254.0,
-      "avgMs": 254.0,
-      "p50Ms": 254.0,
-      "p95Ms": 254.0,
-      "p99Ms": 254.0,
-      "maxMs": 254.0,
-      "totalBytes": 1815
-    },
-    "[Coverage] GET /api/connectionStatuses": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "200": 1
-      },
-      "minMs": 235.0,
-      "avgMs": 235.0,
-      "p50Ms": 235.0,
-      "p95Ms": 235.0,
-      "p99Ms": 235.0,
-      "maxMs": 235.0,
-      "totalBytes": 541
-    },
-    "[Coverage] GET /api/connectionStatuses/:id": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "200": 1
-      },
-      "minMs": 259.0,
-      "avgMs": 259.0,
-      "p50Ms": 259.0,
-      "p95Ms": 259.0,
-      "p99Ms": 259.0,
-      "maxMs": 259.0,
-      "totalBytes": 346
-    },
-    "[Coverage] GET /api/contentStatuses": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "200": 1
-      },
-      "minMs": 236.0,
-      "avgMs": 236.0,
-      "p50Ms": 236.0,
-      "p95Ms": 236.0,
-      "p99Ms": 236.0,
-      "maxMs": 236.0,
-      "totalBytes": 517
-    },
-    "[Coverage] GET /api/contentStatuses/:id": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "200": 1
-      },
-      "minMs": 236.0,
-      "avgMs": 236.0,
-      "p50Ms": 236.0,
-      "p95Ms": 236.0,
-      "p99Ms": 236.0,
-      "maxMs": 236.0,
-      "totalBytes": 339
-    },
-    "[Coverage] GET /api/degrees": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "200": 1
-      },
-      "minMs": 234.0,
-      "avgMs": 234.0,
-      "p50Ms": 234.0,
-      "p95Ms": 234.0,
-      "p99Ms": 234.0,
-      "maxMs": 234.0,
-      "totalBytes": 783
-    },
-    "[Coverage] GET /api/degrees/:id": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "200": 1
-      },
-      "minMs": 236.0,
-      "avgMs": 236.0,
-      "p50Ms": 236.0,
-      "p95Ms": 236.0,
-      "p99Ms": 236.0,
-      "maxMs": 236.0,
-      "totalBytes": 373
-    },
-    "[Coverage] GET /api/donations (Lookup Checkout)": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "200": 1
-      },
-      "minMs": 237.0,
-      "avgMs": 237.0,
-      "p50Ms": 237.0,
-      "p95Ms": 237.0,
-      "p99Ms": 237.0,
-      "maxMs": 237.0,
-      "totalBytes": 715
-    },
-    "[Coverage] GET /api/donations (Paginated)": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "200": 1
-      },
-      "minMs": 241.0,
-      "avgMs": 241.0,
-      "p50Ms": 241.0,
-      "p95Ms": 241.0,
-      "p99Ms": 241.0,
-      "maxMs": 241.0,
-      "totalBytes": 2507
-    },
-    "[Coverage] GET /api/donations/:id": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "200": 1
-      },
-      "minMs": 238.0,
-      "avgMs": 238.0,
-      "p50Ms": 238.0,
-      "p95Ms": 238.0,
-      "p99Ms": 238.0,
-      "maxMs": 238.0,
-      "totalBytes": 697
-    },
-    "[Coverage] GET /api/donations/:id (Created)": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "200": 1
-      },
-      "minMs": 235.0,
-      "avgMs": 235.0,
-      "p50Ms": 235.0,
-      "p95Ms": 235.0,
-      "p99Ms": 235.0,
-      "maxMs": 235.0,
-      "totalBytes": 795
-    },
-    "[Coverage] GET /api/donations/summary": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "200": 1
-      },
-      "minMs": 240.0,
-      "avgMs": 240.0,
-      "p50Ms": 240.0,
-      "p95Ms": 240.0,
-      "p99Ms": 240.0,
-      "maxMs": 240.0,
-      "totalBytes": 5831
-    },
-    "[Coverage] GET /api/donationStatuses": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "200": 1
-      },
-      "minMs": 238.0,
-      "avgMs": 238.0,
-      "p50Ms": 238.0,
-      "p95Ms": 238.0,
-      "p99Ms": 238.0,
-      "maxMs": 238.0,
-      "totalBytes": 475
-    },
-    "[Coverage] GET /api/donationStatuses/:id": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "200": 1
-      },
-      "minMs": 236.0,
-      "avgMs": 236.0,
-      "p50Ms": 236.0,
-      "p95Ms": 236.0,
-      "p99Ms": 236.0,
-      "maxMs": 236.0,
-      "totalBytes": 339
-    },
-    "[Coverage] GET /api/eventCategories": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "200": 1
-      },
-      "minMs": 241.0,
-      "avgMs": 241.0,
-      "p50Ms": 241.0,
-      "p95Ms": 241.0,
-      "p99Ms": 241.0,
-      "maxMs": 241.0,
-      "totalBytes": 606
-    },
-    "[Coverage] GET /api/eventCategories/:id": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "200": 1
-      },
-      "minMs": 240.0,
-      "avgMs": 240.0,
-      "p50Ms": 240.0,
-      "p95Ms": 240.0,
-      "p99Ms": 240.0,
-      "maxMs": 240.0,
-      "totalBytes": 349
-    },
-    "[Coverage] GET /api/events (_include + _sort + page)": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "200": 1
-      },
-      "minMs": 274.0,
-      "avgMs": 274.0,
-      "p50Ms": 274.0,
-      "p95Ms": 274.0,
-      "p99Ms": 274.0,
-      "maxMs": 274.0,
-      "totalBytes": 16863
-    },
-    "[Coverage] GET /api/events (Paginated)": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "200": 1
-      },
-      "minMs": 374.0,
-      "avgMs": 374.0,
-      "p50Ms": 374.0,
-      "p95Ms": 374.0,
-      "p99Ms": 374.0,
-      "maxMs": 374.0,
-      "totalBytes": 49791
-    },
-    "[Coverage] GET /api/events/:id": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "200": 1
-      },
-      "minMs": 244.0,
-      "avgMs": 244.0,
-      "p50Ms": 244.0,
-      "p95Ms": 244.0,
-      "p99Ms": 244.0,
-      "maxMs": 244.0,
-      "totalBytes": 7848
-    },
-    "[Coverage] GET /api/events/:id (Created)": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "200": 1
-      },
-      "minMs": 242.0,
-      "avgMs": 242.0,
-      "p50Ms": 242.0,
-      "p95Ms": 242.0,
-      "p99Ms": 242.0,
-      "maxMs": 242.0,
-      "totalBytes": 1498
-    },
-    "[Coverage] GET /api/eventStatuses": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "200": 1
-      },
-      "minMs": 233.0,
-      "avgMs": 233.0,
-      "p50Ms": 233.0,
-      "p95Ms": 233.0,
-      "p99Ms": 233.0,
-      "maxMs": 233.0,
-      "totalBytes": 565
-    },
-    "[Coverage] GET /api/eventStatuses/:id": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "200": 1
-      },
-      "minMs": 234.0,
-      "avgMs": 234.0,
-      "p50Ms": 234.0,
-      "p95Ms": 234.0,
-      "p99Ms": 234.0,
-      "maxMs": 234.0,
-      "totalBytes": 339
-    },
-    "[Coverage] GET /api/hero/images": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "200": 1
-      },
-      "minMs": 243.0,
-      "avgMs": 243.0,
-      "p50Ms": 243.0,
-      "p95Ms": 243.0,
-      "p99Ms": 243.0,
-      "maxMs": 243.0,
-      "totalBytes": 5007
-    },
-    "[Coverage] GET /api/locations (Paginated)": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "200": 1
-      },
-      "minMs": 238.0,
-      "avgMs": 238.0,
-      "p50Ms": 238.0,
-      "p95Ms": 238.0,
-      "p99Ms": 238.0,
-      "maxMs": 238.0,
-      "totalBytes": 1780
-    },
-    "[Coverage] GET /api/locations/:id": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "200": 1
-      },
-      "minMs": 236.0,
-      "avgMs": 236.0,
-      "p50Ms": 236.0,
-      "p95Ms": 236.0,
-      "p99Ms": 236.0,
-      "maxMs": 236.0,
-      "totalBytes": 590
-    },
-    "[Coverage] GET /api/locations/:id (Created)": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "200": 1
-      },
-      "minMs": 237.0,
-      "avgMs": 237.0,
-      "p50Ms": 237.0,
-      "p95Ms": 237.0,
-      "p99Ms": 237.0,
-      "maxMs": 237.0,
-      "totalBytes": 535
-    },
-    "[Coverage] GET /api/notifications (Paginated)": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "200": 1
-      },
-      "minMs": 242.0,
-      "avgMs": 242.0,
-      "p50Ms": 242.0,
-      "p95Ms": 242.0,
-      "p99Ms": 242.0,
-      "maxMs": 242.0,
-      "totalBytes": 2232
-    },
-    "[Coverage] GET /api/notifications/:id": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "200": 1
-      },
-      "minMs": 238.0,
-      "avgMs": 238.0,
-      "p50Ms": 238.0,
-      "p95Ms": 238.0,
-      "p99Ms": 238.0,
-      "maxMs": 238.0,
-      "totalBytes": 692
-    },
-    "[Coverage] GET /api/notifications/:id (Created)": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "200": 1
-      },
-      "minMs": 237.0,
-      "avgMs": 237.0,
-      "p50Ms": 237.0,
-      "p95Ms": 237.0,
-      "p99Ms": 237.0,
-      "maxMs": 237.0,
-      "totalBytes": 588
-    },
-    "[Coverage] GET /api/profiles (Paginated)": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "200": 1
-      },
-      "minMs": 238.0,
-      "avgMs": 238.0,
-      "p50Ms": 238.0,
-      "p95Ms": 238.0,
-      "p99Ms": 238.0,
-      "maxMs": 238.0,
-      "totalBytes": 3542
-    },
-    "[Coverage] GET /api/profiles/:id": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "200": 1
-      },
-      "minMs": 239.0,
-      "avgMs": 239.0,
-      "p50Ms": 239.0,
-      "p95Ms": 239.0,
-      "p99Ms": 239.0,
-      "maxMs": 239.0,
-      "totalBytes": 917
-    },
-    "[Coverage] GET /api/profileStatuses": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "200": 1
-      },
-      "minMs": 237.0,
-      "avgMs": 237.0,
-      "p50Ms": 237.0,
-      "p95Ms": 237.0,
-      "p99Ms": 237.0,
-      "maxMs": 237.0,
-      "totalBytes": 436
-    },
-    "[Coverage] GET /api/profileStatuses/:id": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "200": 1
-      },
-      "minMs": 236.0,
-      "avgMs": 236.0,
-      "p50Ms": 236.0,
-      "p95Ms": 236.0,
-      "p99Ms": 236.0,
-      "maxMs": 236.0,
-      "totalBytes": 338
-    },
-    "[Coverage] GET /api/records (Paginated)": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "200": 1
-      },
-      "minMs": 241.0,
-      "avgMs": 241.0,
-      "p50Ms": 241.0,
-      "p95Ms": 241.0,
-      "p99Ms": 241.0,
-      "maxMs": 241.0,
-      "totalBytes": 1651
-    },
-    "[Coverage] GET /api/records/:id": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "200": 1
-      },
-      "minMs": 235.0,
-      "avgMs": 235.0,
-      "p50Ms": 235.0,
-      "p95Ms": 235.0,
-      "p99Ms": 235.0,
-      "maxMs": 235.0,
-      "totalBytes": 523
-    },
-    "[Coverage] GET /api/records/:id (Created)": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "200": 1
-      },
-      "minMs": 236.0,
-      "avgMs": 236.0,
-      "p50Ms": 236.0,
-      "p95Ms": 236.0,
-      "p99Ms": 236.0,
-      "maxMs": 236.0,
-      "totalBytes": 530
-    },
-    "[Coverage] GET /api/server-time": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "200": 1
-      },
-      "minMs": 238.0,
-      "avgMs": 238.0,
-      "p50Ms": 238.0,
-      "p95Ms": 238.0,
-      "p99Ms": 238.0,
-      "maxMs": 238.0,
-      "totalBytes": 364
-    },
-    "[Coverage] GET /api/userAchievements (Paginated)": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "200": 1
-      },
-      "minMs": 237.0,
-      "avgMs": 237.0,
-      "p50Ms": 237.0,
-      "p95Ms": 237.0,
-      "p99Ms": 237.0,
-      "maxMs": 237.0,
-      "totalBytes": 2227
-    },
-    "[Coverage] GET /api/userAchievements/:id": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "200": 1
-      },
-      "minMs": 240.0,
-      "avgMs": 240.0,
-      "p50Ms": 240.0,
-      "p95Ms": 240.0,
-      "p99Ms": 240.0,
-      "maxMs": 240.0,
-      "totalBytes": 656
-    },
-    "[Coverage] GET /api/userAchievements/:id (Created)": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "200": 1
-      },
-      "minMs": 235.0,
-      "avgMs": 235.0,
-      "p50Ms": 235.0,
-      "p95Ms": 235.0,
-      "p99Ms": 235.0,
-      "maxMs": 235.0,
-      "totalBytes": 681
-    },
-    "[Coverage] GET /api/userAuths (Paginated)": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "200": 1
-      },
-      "minMs": 241.0,
-      "avgMs": 241.0,
-      "p50Ms": 241.0,
-      "p95Ms": 241.0,
-      "p99Ms": 241.0,
-      "maxMs": 241.0,
-      "totalBytes": 4777
-    },
-    "[Coverage] GET /api/userAuths/:id": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "200": 1
-      },
-      "minMs": 235.0,
-      "avgMs": 235.0,
-      "p50Ms": 235.0,
-      "p95Ms": 235.0,
-      "p99Ms": 235.0,
-      "maxMs": 235.0,
-      "totalBytes": 1173
-    },
-    "[Coverage] GET /api/userConnections (_include)": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "200": 1
-      },
-      "minMs": 241.0,
-      "avgMs": 241.0,
-      "p50Ms": 241.0,
-      "p95Ms": 241.0,
-      "p99Ms": 241.0,
-      "maxMs": 241.0,
-      "totalBytes": 7622
-    },
-    "[Coverage] GET /api/userConnections (Paginated)": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "200": 1
-      },
-      "minMs": 243.0,
-      "avgMs": 243.0,
-      "p50Ms": 243.0,
-      "p95Ms": 243.0,
-      "p99Ms": 243.0,
-      "maxMs": 243.0,
-      "totalBytes": 7622
-    },
-    "[Coverage] GET /api/userConnections/:id": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "200": 1
-      },
-      "minMs": 237.0,
-      "avgMs": 237.0,
-      "p50Ms": 237.0,
-      "p95Ms": 237.0,
-      "p99Ms": 237.0,
-      "maxMs": 237.0,
-      "totalBytes": 1740
-    },
-    "[Coverage] GET /api/userRsvps (Paginated)": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "200": 1
-      },
-      "minMs": 273.0,
-      "avgMs": 273.0,
-      "p50Ms": 273.0,
-      "p95Ms": 273.0,
-      "p99Ms": 273.0,
-      "maxMs": 273.0,
-      "totalBytes": 7085
-    },
-    "[Coverage] GET /api/userRsvps/:id": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "200": 1
-      },
-      "minMs": 239.0,
-      "avgMs": 239.0,
-      "p50Ms": 239.0,
-      "p95Ms": 239.0,
-      "p99Ms": 239.0,
-      "maxMs": 239.0,
-      "totalBytes": 1710
-    },
-    "[Coverage] GET /api/userRsvps/:id (Created)": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "200": 1
-      },
-      "minMs": 237.0,
-      "avgMs": 237.0,
-      "p50Ms": 237.0,
-      "p95Ms": 237.0,
-      "p99Ms": 237.0,
-      "maxMs": 237.0,
-      "totalBytes": 1613
-    },
-    "[Coverage] GET /api/users (_where nested degree + _include)": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "200": 1
-      },
-      "minMs": 240.0,
-      "avgMs": 240.0,
-      "p50Ms": 240.0,
-      "p95Ms": 240.0,
-      "p99Ms": 240.0,
-      "maxMs": 240.0,
-      "totalBytes": 3829
-    },
-    "[Coverage] GET /api/users (_where notIn + _include)": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "200": 1
-      },
-      "minMs": 240.0,
-      "avgMs": 240.0,
-      "p50Ms": 240.0,
-      "p95Ms": 240.0,
-      "p99Ms": 240.0,
-      "maxMs": 240.0,
-      "totalBytes": 3618
-    },
-    "[Coverage] GET /api/users (Paginated)": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "200": 1
-      },
-      "minMs": 243.0,
-      "avgMs": 243.0,
-      "p50Ms": 243.0,
-      "p95Ms": 243.0,
-      "p99Ms": 243.0,
-      "maxMs": 243.0,
-      "totalBytes": 7507
-    },
-    "[Coverage] GET /api/users/:id": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "200": 1
-      },
-      "minMs": 238.0,
-      "avgMs": 238.0,
-      "p50Ms": 238.0,
-      "p95Ms": 238.0,
-      "p99Ms": 238.0,
-      "maxMs": 238.0,
-      "totalBytes": 1718
-    },
-    "[Coverage] GET /api/userStatistics (Paginated)": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "200": 1
-      },
-      "minMs": 237.0,
-      "avgMs": 237.0,
-      "p50Ms": 237.0,
-      "p95Ms": 237.0,
-      "p99Ms": 237.0,
-      "maxMs": 237.0,
-      "totalBytes": 1627
-    },
-    "[Coverage] GET /api/userStatistics/:id": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "200": 1
-      },
-      "minMs": 236.0,
-      "avgMs": 236.0,
-      "p50Ms": 236.0,
-      "p95Ms": 236.0,
-      "p99Ms": 236.0,
-      "maxMs": 236.0,
-      "totalBytes": 569
-    },
-    "[Coverage] GET /api/userStatuses": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "200": 1
-      },
-      "minMs": 237.0,
-      "avgMs": 237.0,
-      "p50Ms": 237.0,
-      "p95Ms": 237.0,
-      "p99Ms": 237.0,
-      "maxMs": 237.0,
-      "totalBytes": 564
-    },
-    "[Coverage] GET /api/userStatuses/:id": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "200": 1
-      },
-      "minMs": 242.0,
-      "avgMs": 242.0,
-      "p50Ms": 242.0,
-      "p95Ms": 242.0,
-      "p99Ms": 242.0,
-      "maxMs": 242.0,
-      "totalBytes": 339
-    },
-    "[Coverage] GET /images/:hero (Hero Static Image)": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "200": 1
-      },
-      "minMs": 715.0,
-      "avgMs": 715.0,
-      "p50Ms": 715.0,
-      "p95Ms": 715.0,
-      "p99Ms": 715.0,
-      "maxMs": 715.0,
-      "totalBytes": 363598
-    },
-    "[Coverage] GET /images/engineer.png": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "200": 1
-      },
-      "minMs": 272.0,
-      "avgMs": 272.0,
-      "p50Ms": 272.0,
-      "p95Ms": 272.0,
-      "p99Ms": 272.0,
-      "maxMs": 272.0,
-      "totalBytes": 13424
-    },
-    "[Coverage] GET /uploads/:file (Uploaded Static File)": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "200": 1
-      },
-      "minMs": 238.0,
-      "avgMs": 238.0,
-      "p50Ms": 238.0,
-      "p95Ms": 238.0,
-      "p99Ms": 238.0,
-      "maxMs": 238.0,
-      "totalBytes": 431
-    },
-    "[Coverage] HEAD /api/bulletins": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "200": 1
-      },
-      "minMs": 251.0,
-      "avgMs": 251.0,
-      "p50Ms": 251.0,
-      "p95Ms": 251.0,
-      "p99Ms": 251.0,
-      "maxMs": 251.0,
-      "totalBytes": 304
-    },
-    "[Coverage] HEAD /api/events": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "200": 1
-      },
-      "minMs": 244.0,
-      "avgMs": 244.0,
-      "p50Ms": 244.0,
-      "p95Ms": 244.0,
-      "p99Ms": 244.0,
-      "maxMs": 244.0,
-      "totalBytes": 304
-    },
-    "[Coverage] PATCH /api/admin/bulletins/:id": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "200": 1
-      },
-      "minMs": 246.0,
-      "avgMs": 246.0,
-      "p50Ms": 246.0,
-      "p95Ms": 246.0,
-      "p99Ms": 246.0,
-      "maxMs": 246.0,
-      "totalBytes": 2018
-    },
-    "[Coverage] PATCH /api/admin/bulletins/:id/status": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "200": 1
-      },
-      "minMs": 250.0,
-      "avgMs": 250.0,
-      "p50Ms": 250.0,
-      "p95Ms": 250.0,
-      "p99Ms": 250.0,
-      "maxMs": 250.0,
-      "totalBytes": 2031
-    },
-    "[Coverage] PATCH /api/admin/events/:id": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "200": 1
-      },
-      "minMs": 248.0,
-      "avgMs": 248.0,
-      "p50Ms": 248.0,
-      "p95Ms": 248.0,
-      "p99Ms": 248.0,
-      "maxMs": 248.0,
-      "totalBytes": 1636
-    },
-    "[Coverage] PATCH /api/admin/events/:id/status": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "200": 1
-      },
-      "minMs": 251.0,
-      "avgMs": 251.0,
-      "p50Ms": 251.0,
-      "p95Ms": 251.0,
-      "p99Ms": 251.0,
-      "maxMs": 251.0,
-      "totalBytes": 1649
-    },
-    "[Coverage] PATCH /api/admin/users/:id/status": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "200": 1
-      },
-      "minMs": 244.0,
-      "avgMs": 244.0,
-      "p50Ms": 244.0,
-      "p95Ms": 244.0,
-      "p99Ms": 244.0,
-      "maxMs": 244.0,
-      "totalBytes": 2251
-    },
-    "[Coverage] PATCH /api/bulletinLikes/:id": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "200": 1
-      },
-      "minMs": 240.0,
-      "avgMs": 240.0,
-      "p50Ms": 240.0,
-      "p95Ms": 240.0,
-      "p99Ms": 240.0,
-      "maxMs": 240.0,
-      "totalBytes": 459
-    },
-    "[Coverage] PATCH /api/bulletins/:id": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "200": 1
-      },
-      "minMs": 242.0,
-      "avgMs": 242.0,
-      "p50Ms": 242.0,
-      "p95Ms": 242.0,
-      "p99Ms": 242.0,
-      "maxMs": 242.0,
-      "totalBytes": 1745
-    },
-    "[Coverage] PATCH /api/clefLogs/:id": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "200": 1
-      },
-      "minMs": 239.0,
-      "avgMs": 239.0,
-      "p50Ms": 239.0,
-      "p95Ms": 239.0,
-      "p99Ms": 239.0,
-      "maxMs": 239.0,
-      "totalBytes": 497
-    },
-    "[Coverage] PATCH /api/commentLikes/:id": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "200": 1
-      },
-      "minMs": 241.0,
-      "avgMs": 241.0,
-      "p50Ms": 241.0,
-      "p95Ms": 241.0,
-      "p99Ms": 241.0,
-      "maxMs": 241.0,
-      "totalBytes": 458
-    },
-    "[Coverage] PATCH /api/comments/:id": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "200": 1
-      },
-      "minMs": 243.0,
-      "avgMs": 243.0,
-      "p50Ms": 243.0,
-      "p95Ms": 243.0,
-      "p99Ms": 243.0,
-      "maxMs": 243.0,
-      "totalBytes": 1814
-    },
-    "[Coverage] PATCH /api/donations/:id": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "200": 1
-      },
-      "minMs": 239.0,
-      "avgMs": 239.0,
-      "p50Ms": 239.0,
-      "p95Ms": 239.0,
-      "p99Ms": 239.0,
-      "maxMs": 239.0,
-      "totalBytes": 794
-    },
-    "[Coverage] PATCH /api/events/:id": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "200": 1
-      },
-      "minMs": 246.0,
-      "avgMs": 246.0,
-      "p50Ms": 246.0,
-      "p95Ms": 246.0,
-      "p99Ms": 246.0,
-      "maxMs": 246.0,
-      "totalBytes": 1460
-    },
-    "[Coverage] PATCH /api/locations/:id": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "200": 1
-      },
-      "minMs": 241.0,
-      "avgMs": 241.0,
-      "p50Ms": 241.0,
-      "p95Ms": 241.0,
-      "p99Ms": 241.0,
-      "maxMs": 241.0,
-      "totalBytes": 553
-    },
-    "[Coverage] PATCH /api/notifications/:id": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "200": 1
-      },
-      "minMs": 239.0,
-      "avgMs": 239.0,
-      "p50Ms": 239.0,
-      "p95Ms": 239.0,
-      "p99Ms": 239.0,
-      "maxMs": 239.0,
-      "totalBytes": 587
-    },
-    "[Coverage] PATCH /api/profiles/:id": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "200": 1
-      },
-      "minMs": 239.0,
-      "avgMs": 239.0,
-      "p50Ms": 239.0,
-      "p95Ms": 239.0,
-      "p99Ms": 239.0,
-      "maxMs": 239.0,
-      "totalBytes": 919
-    },
-    "[Coverage] PATCH /api/records/:id": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "200": 1
-      },
-      "minMs": 239.0,
-      "avgMs": 239.0,
-      "p50Ms": 239.0,
-      "p95Ms": 239.0,
-      "p99Ms": 239.0,
-      "maxMs": 239.0,
-      "totalBytes": 529
-    },
-    "[Coverage] PATCH /api/userAchievements/:id": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "200": 1
-      },
-      "minMs": 240.0,
-      "avgMs": 240.0,
-      "p50Ms": 240.0,
-      "p95Ms": 240.0,
-      "p99Ms": 240.0,
-      "maxMs": 240.0,
-      "totalBytes": 680
-    },
-    "[Coverage] PATCH /api/userRsvps/:id": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "200": 1
-      },
-      "minMs": 242.0,
-      "avgMs": 242.0,
-      "p50Ms": 242.0,
-      "p95Ms": 242.0,
-      "p99Ms": 242.0,
-      "maxMs": 242.0,
-      "totalBytes": 1614
-    },
-    "[Coverage] PATCH /api/users/:id": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "200": 1
-      },
-      "minMs": 239.0,
-      "avgMs": 239.0,
-      "p50Ms": 239.0,
-      "p95Ms": 239.0,
-      "p99Ms": 239.0,
-      "maxMs": 239.0,
-      "totalBytes": 1718
-    },
-    "[Coverage] PATCH /api/userStatistics/:id": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "200": 1
-      },
-      "minMs": 239.0,
-      "avgMs": 239.0,
-      "p50Ms": 239.0,
-      "p95Ms": 239.0,
-      "p99Ms": 239.0,
-      "maxMs": 239.0,
-      "totalBytes": 569
-    },
-    "[Coverage] POST /api/admin/bulletins": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "201": 1
-      },
-      "minMs": 251.0,
-      "avgMs": 251.0,
-      "p50Ms": 251.0,
-      "p95Ms": 251.0,
-      "p99Ms": 251.0,
-      "maxMs": 251.0,
-      "totalBytes": 2054
-    },
-    "[Coverage] POST /api/admin/bulletins/:id/status": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "200": 1
-      },
-      "minMs": 244.0,
-      "avgMs": 244.0,
-      "p50Ms": 244.0,
-      "p95Ms": 244.0,
-      "p99Ms": 244.0,
-      "maxMs": 244.0,
-      "totalBytes": 2029
-    },
-    "[Coverage] POST /api/admin/events": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "201": 1
-      },
-      "minMs": 246.0,
-      "avgMs": 246.0,
-      "p50Ms": 246.0,
-      "p95Ms": 246.0,
-      "p99Ms": 246.0,
-      "maxMs": 246.0,
-      "totalBytes": 1672
-    },
-    "[Coverage] POST /api/admin/events/:id/status": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "200": 1
-      },
-      "minMs": 254.0,
-      "avgMs": 254.0,
-      "p50Ms": 254.0,
-      "p95Ms": 254.0,
-      "p99Ms": 254.0,
-      "maxMs": 254.0,
-      "totalBytes": 1647
-    },
-    "[Coverage] POST /api/admin/users": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "201": 1
-      },
-      "minMs": 344.0,
-      "avgMs": 344.0,
-      "p50Ms": 344.0,
-      "p95Ms": 344.0,
-      "p99Ms": 344.0,
-      "maxMs": 344.0,
-      "totalBytes": 1456
-    },
-    "[Coverage] POST /api/admin/users/:id/status": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "200": 1
-      },
-      "minMs": 250.0,
-      "avgMs": 250.0,
-      "p50Ms": 250.0,
-      "p95Ms": 250.0,
-      "p99Ms": 250.0,
-      "maxMs": 250.0,
-      "totalBytes": 1852
-    },
-    "[Coverage] POST /api/auth/admin/login": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "200": 1
-      },
-      "minMs": 319.0,
-      "avgMs": 319.0,
-      "p50Ms": 319.0,
-      "p95Ms": 319.0,
-      "p99Ms": 319.0,
-      "maxMs": 319.0,
-      "totalBytes": 916
-    },
-    "[Coverage] POST /api/auth/admin/logout": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "200": 1
-      },
-      "minMs": 234.0,
-      "avgMs": 234.0,
-      "p50Ms": 234.0,
-      "p95Ms": 234.0,
-      "p99Ms": 234.0,
-      "maxMs": 234.0,
-      "totalBytes": 412
-    },
-    "[Coverage] POST /api/auth/check-email": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "200": 1
-      },
-      "minMs": 243.0,
-      "avgMs": 243.0,
-      "p50Ms": 243.0,
-      "p95Ms": 243.0,
-      "p99Ms": 243.0,
-      "maxMs": 243.0,
-      "totalBytes": 311
-    },
-    "[Coverage] POST /api/auth/login (Official)": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "200": 1
-      },
-      "minMs": 329.0,
-      "avgMs": 329.0,
-      "p50Ms": 329.0,
-      "p95Ms": 329.0,
-      "p99Ms": 329.0,
-      "maxMs": 329.0,
-      "totalBytes": 891
-    },
-    "[Coverage] POST /api/auth/login (Regular)": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "200": 1
-      },
-      "minMs": 327.0,
-      "avgMs": 327.0,
-      "p50Ms": 327.0,
-      "p95Ms": 327.0,
-      "p99Ms": 327.0,
-      "maxMs": 327.0,
-      "totalBytes": 1034
-    },
-    "[Coverage] POST /api/auth/logout": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "200": 1
-      },
-      "minMs": 232.0,
-      "avgMs": 232.0,
-      "p50Ms": 232.0,
-      "p95Ms": 232.0,
-      "p99Ms": 232.0,
-      "maxMs": 232.0,
-      "totalBytes": 406
-    },
-    "[Coverage] POST /api/auth/register": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "201": 1
-      },
-      "minMs": 326.0,
-      "avgMs": 326.0,
-      "p50Ms": 326.0,
-      "p95Ms": 326.0,
-      "p99Ms": 326.0,
-      "maxMs": 326.0,
-      "totalBytes": 344
-    },
-    "[Coverage] POST /api/auth/reset-password (Disposable)": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "200": 1
-      },
-      "minMs": 321.0,
-      "avgMs": 321.0,
-      "p50Ms": 321.0,
-      "p95Ms": 321.0,
-      "p99Ms": 321.0,
-      "maxMs": 321.0,
-      "totalBytes": 340
-    },
-    "[Coverage] POST /api/bulletinLikes": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "201": 1
-      },
-      "minMs": 241.0,
-      "avgMs": 241.0,
-      "p50Ms": 241.0,
-      "p95Ms": 241.0,
-      "p99Ms": 241.0,
-      "maxMs": 241.0,
-      "totalBytes": 463
-    },
-    "[Coverage] POST /api/bulletins": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "201": 1
-      },
-      "minMs": 251.0,
-      "avgMs": 251.0,
-      "p50Ms": 251.0,
-      "p95Ms": 251.0,
-      "p99Ms": 251.0,
-      "maxMs": 251.0,
-      "totalBytes": 1788
-    },
-    "[Coverage] POST /api/clefLogs": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "201": 1
-      },
-      "minMs": 244.0,
-      "avgMs": 244.0,
-      "p50Ms": 244.0,
-      "p95Ms": 244.0,
-      "p99Ms": 244.0,
-      "maxMs": 244.0,
-      "totalBytes": 504
-    },
-    "[Coverage] POST /api/commentLikes": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "201": 1
-      },
-      "minMs": 241.0,
-      "avgMs": 241.0,
-      "p50Ms": 241.0,
-      "p95Ms": 241.0,
-      "p99Ms": 241.0,
-      "maxMs": 241.0,
-      "totalBytes": 462
-    },
-    "[Coverage] POST /api/comments": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "201": 1
-      },
-      "minMs": 250.0,
-      "avgMs": 250.0,
-      "p50Ms": 250.0,
-      "p95Ms": 250.0,
-      "p99Ms": 250.0,
-      "maxMs": 250.0,
-      "totalBytes": 1820
-    },
-    "[Coverage] POST /api/connections/action (accept)": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "200": 1
-      },
-      "minMs": 243.0,
-      "avgMs": 243.0,
-      "p50Ms": 243.0,
-      "p95Ms": 243.0,
-      "p99Ms": 243.0,
-      "maxMs": 243.0,
-      "totalBytes": 369
-    },
-    "[Coverage] POST /api/connections/action (add 2)": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "200": 1
-      },
-      "minMs": 241.0,
-      "avgMs": 241.0,
-      "p50Ms": 241.0,
-      "p95Ms": 241.0,
-      "p99Ms": 241.0,
-      "maxMs": 241.0,
-      "totalBytes": 348
-    },
-    "[Coverage] POST /api/connections/action (add)": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "200": 1
-      },
-      "minMs": 242.0,
-      "avgMs": 242.0,
-      "p50Ms": 242.0,
-      "p95Ms": 242.0,
-      "p99Ms": 242.0,
-      "maxMs": 242.0,
-      "totalBytes": 348
-    },
-    "[Coverage] POST /api/connections/action (block)": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "200": 1
-      },
-      "minMs": 241.0,
-      "avgMs": 241.0,
-      "p50Ms": 241.0,
-      "p95Ms": 241.0,
-      "p99Ms": 241.0,
-      "maxMs": 241.0,
-      "totalBytes": 346
-    },
-    "[Coverage] POST /api/connections/action (pre-clean)": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "200": 1
-      },
-      "minMs": 240.0,
-      "avgMs": 240.0,
-      "p50Ms": 240.0,
-      "p95Ms": 240.0,
-      "p99Ms": 240.0,
-      "maxMs": 240.0,
-      "totalBytes": 340
-    },
-    "[Coverage] POST /api/connections/action (reject)": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "200": 1
-      },
-      "minMs": 242.0,
-      "avgMs": 242.0,
-      "p50Ms": 242.0,
-      "p95Ms": 242.0,
-      "p99Ms": 242.0,
-      "maxMs": 242.0,
-      "totalBytes": 340
-    },
-    "[Coverage] POST /api/connections/action (remove)": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "200": 1
-      },
-      "minMs": 242.0,
-      "avgMs": 242.0,
-      "p50Ms": 242.0,
-      "p95Ms": 242.0,
-      "p99Ms": 242.0,
-      "maxMs": 242.0,
-      "totalBytes": 363
-    },
-    "[Coverage] POST /api/connections/action (unblock)": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "200": 1
-      },
-      "minMs": 241.0,
-      "avgMs": 241.0,
-      "p50Ms": 241.0,
-      "p95Ms": 241.0,
-      "p99Ms": 241.0,
-      "maxMs": 241.0,
-      "totalBytes": 340
-    },
-    "[Coverage] POST /api/donations": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "201": 1
-      },
-      "minMs": 244.0,
-      "avgMs": 244.0,
-      "p50Ms": 244.0,
-      "p95Ms": 244.0,
-      "p99Ms": 244.0,
-      "maxMs": 244.0,
-      "totalBytes": 800
-    },
-    "[Coverage] POST /api/donations/checkout": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "200": 1
-      },
-      "minMs": 394.0,
-      "avgMs": 394.0,
-      "p50Ms": 394.0,
-      "p95Ms": 394.0,
-      "p99Ms": 394.0,
-      "maxMs": 394.0,
-      "totalBytes": 369
-    },
-    "[Coverage] POST /api/donations/webhook": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "200": 1
-      },
-      "minMs": 238.0,
-      "avgMs": 238.0,
-      "p50Ms": 238.0,
-      "p95Ms": 238.0,
-      "p99Ms": 238.0,
-      "maxMs": 238.0,
-      "totalBytes": 306
-    },
-    "[Coverage] POST /api/events": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "201": 1
-      },
-      "minMs": 246.0,
-      "avgMs": 246.0,
-      "p50Ms": 246.0,
-      "p95Ms": 246.0,
-      "p99Ms": 246.0,
-      "maxMs": 246.0,
-      "totalBytes": 1503
-    },
-    "[Coverage] POST /api/events/:id/conclude": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "200": 1
-      },
-      "minMs": 243.0,
-      "avgMs": 243.0,
-      "p50Ms": 243.0,
-      "p95Ms": 243.0,
-      "p99Ms": 243.0,
-      "maxMs": 243.0,
-      "totalBytes": 340
-    },
-    "[Coverage] POST /api/locations": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "201": 1
-      },
-      "minMs": 241.0,
-      "avgMs": 241.0,
-      "p50Ms": 241.0,
-      "p95Ms": 241.0,
-      "p99Ms": 241.0,
-      "maxMs": 241.0,
-      "totalBytes": 540
-    },
-    "[Coverage] POST /api/notifications": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "201": 1
-      },
-      "minMs": 236.0,
-      "avgMs": 236.0,
-      "p50Ms": 236.0,
-      "p95Ms": 236.0,
-      "p99Ms": 236.0,
-      "maxMs": 236.0,
-      "totalBytes": 593
-    },
-    "[Coverage] POST /api/records": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "201": 1
-      },
-      "minMs": 240.0,
-      "avgMs": 240.0,
-      "p50Ms": 240.0,
-      "p95Ms": 240.0,
-      "p99Ms": 240.0,
-      "maxMs": 240.0,
-      "totalBytes": 535
-    },
-    "[Coverage] POST /api/upload": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "200": 1
-      },
-      "minMs": 255.0,
-      "avgMs": 255.0,
-      "p50Ms": 255.0,
-      "p95Ms": 255.0,
-      "p99Ms": 255.0,
-      "maxMs": 255.0,
-      "totalBytes": 363
-    },
-    "[Coverage] POST /api/userAchievements": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "201": 1
-      },
-      "minMs": 240.0,
-      "avgMs": 240.0,
-      "p50Ms": 240.0,
-      "p95Ms": 240.0,
-      "p99Ms": 240.0,
-      "maxMs": 240.0,
-      "totalBytes": 686
-    },
-    "[Coverage] POST /api/userRsvps": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "201": 1
-      },
-      "minMs": 241.0,
-      "avgMs": 241.0,
-      "p50Ms": 241.0,
-      "p95Ms": 241.0,
-      "p99Ms": 241.0,
-      "maxMs": 241.0,
-      "totalBytes": 1618
-    },
-    "[Coverage] PUT /api/admin/bulletins/:id": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "200": 1
-      },
-      "minMs": 249.0,
-      "avgMs": 249.0,
-      "p50Ms": 249.0,
-      "p95Ms": 249.0,
-      "p99Ms": 249.0,
-      "maxMs": 249.0,
-      "totalBytes": 2016
-    },
-    "[Coverage] PUT /api/admin/bulletins/:id/status": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "200": 1
-      },
-      "minMs": 244.0,
-      "avgMs": 244.0,
-      "p50Ms": 244.0,
-      "p95Ms": 244.0,
-      "p99Ms": 244.0,
-      "maxMs": 244.0,
-      "totalBytes": 2029
-    },
-    "[Coverage] PUT /api/admin/events/:id": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "200": 1
-      },
-      "minMs": 251.0,
-      "avgMs": 251.0,
-      "p50Ms": 251.0,
-      "p95Ms": 251.0,
-      "p99Ms": 251.0,
-      "maxMs": 251.0,
-      "totalBytes": 1634
-    },
-    "[Coverage] PUT /api/admin/events/:id/status": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "200": 1
-      },
-      "minMs": 252.0,
-      "avgMs": 252.0,
-      "p50Ms": 252.0,
-      "p95Ms": 252.0,
-      "p99Ms": 252.0,
-      "maxMs": 252.0,
-      "totalBytes": 1647
-    },
-    "[Coverage] PUT /api/admin/users/:id/status": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "200": 1
-      },
-      "minMs": 251.0,
-      "avgMs": 251.0,
-      "p50Ms": 251.0,
-      "p95Ms": 251.0,
-      "p99Ms": 251.0,
-      "maxMs": 251.0,
-      "totalBytes": 2675
-    },
-    "[Coverage] PUT /api/bulletinLikes/:id": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "200": 1
-      },
-      "minMs": 244.0,
-      "avgMs": 244.0,
-      "p50Ms": 244.0,
-      "p95Ms": 244.0,
-      "p99Ms": 244.0,
-      "maxMs": 244.0,
-      "totalBytes": 458
-    },
-    "[Coverage] PUT /api/bulletins/:id": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "200": 1
-      },
-      "minMs": 244.0,
-      "avgMs": 244.0,
-      "p50Ms": 244.0,
-      "p95Ms": 244.0,
-      "p99Ms": 244.0,
-      "maxMs": 244.0,
-      "totalBytes": 678
-    },
-    "[Coverage] PUT /api/clefLogs/:id": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "200": 1
-      },
-      "minMs": 239.0,
-      "avgMs": 239.0,
-      "p50Ms": 239.0,
-      "p95Ms": 239.0,
-      "p99Ms": 239.0,
-      "maxMs": 239.0,
-      "totalBytes": 499
-    },
-    "[Coverage] PUT /api/commentLikes/:id": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "200": 1
-      },
-      "minMs": 241.0,
-      "avgMs": 241.0,
-      "p50Ms": 241.0,
-      "p95Ms": 241.0,
-      "p99Ms": 241.0,
-      "maxMs": 241.0,
-      "totalBytes": 457
-    },
-    "[Coverage] PUT /api/comments/:id": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "200": 1
-      },
-      "minMs": 238.0,
-      "avgMs": 238.0,
-      "p50Ms": 238.0,
-      "p95Ms": 238.0,
-      "p99Ms": 238.0,
-      "maxMs": 238.0,
-      "totalBytes": 522
-    },
-    "[Coverage] PUT /api/donations/:id": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "200": 1
-      },
-      "minMs": 241.0,
-      "avgMs": 241.0,
-      "p50Ms": 241.0,
-      "p95Ms": 241.0,
-      "p99Ms": 241.0,
-      "maxMs": 241.0,
-      "totalBytes": 681
-    },
-    "[Coverage] PUT /api/events/:id": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "200": 1
-      },
-      "minMs": 242.0,
-      "avgMs": 242.0,
-      "p50Ms": 242.0,
-      "p95Ms": 242.0,
-      "p99Ms": 242.0,
-      "maxMs": 242.0,
-      "totalBytes": 728
-    },
-    "[Coverage] PUT /api/locations/:id": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "200": 1
-      },
-      "minMs": 237.0,
-      "avgMs": 237.0,
-      "p50Ms": 237.0,
-      "p95Ms": 237.0,
-      "p99Ms": 237.0,
-      "maxMs": 237.0,
-      "totalBytes": 543
-    },
-    "[Coverage] PUT /api/notifications/:id": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "200": 1
-      },
-      "minMs": 240.0,
-      "avgMs": 240.0,
-      "p50Ms": 240.0,
-      "p95Ms": 240.0,
-      "p99Ms": 240.0,
-      "maxMs": 240.0,
-      "totalBytes": 588
-    },
-    "[Coverage] PUT /api/profiles/:id": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "200": 1
-      },
-      "minMs": 242.0,
-      "avgMs": 242.0,
-      "p50Ms": 242.0,
-      "p95Ms": 242.0,
-      "p99Ms": 242.0,
-      "maxMs": 242.0,
-      "totalBytes": 662
-    },
-    "[Coverage] PUT /api/records/:id": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "200": 1
-      },
-      "minMs": 249.0,
-      "avgMs": 249.0,
-      "p50Ms": 249.0,
-      "p95Ms": 249.0,
-      "p99Ms": 249.0,
-      "maxMs": 249.0,
-      "totalBytes": 525
-    },
-    "[Coverage] PUT /api/userAchievements/:id": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "200": 1
-      },
-      "minMs": 240.0,
-      "avgMs": 240.0,
-      "p50Ms": 240.0,
-      "p95Ms": 240.0,
-      "p99Ms": 240.0,
-      "maxMs": 240.0,
-      "totalBytes": 487
-    },
-    "[Coverage] PUT /api/userRsvps/:id": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "200": 1
-      },
-      "minMs": 239.0,
-      "avgMs": 239.0,
-      "p50Ms": 239.0,
-      "p95Ms": 239.0,
-      "p99Ms": 239.0,
-      "maxMs": 239.0,
-      "totalBytes": 474
-    },
-    "[Coverage] PUT /api/users/:id": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "200": 1
-      },
-      "minMs": 238.0,
-      "avgMs": 238.0,
-      "p50Ms": 238.0,
-      "p95Ms": 238.0,
-      "p99Ms": 238.0,
-      "maxMs": 238.0,
-      "totalBytes": 459
-    },
-    "[Coverage] PUT /api/userStatistics/:id": {
-      "requests": 1,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "200": 1
-      },
-      "minMs": 237.0,
-      "avgMs": 237.0,
-      "p50Ms": 237.0,
-      "p95Ms": 237.0,
-      "p99Ms": 237.0,
-      "maxMs": 237.0,
-      "totalBytes": 569
-    },
     "[Setup Verify] GET /api/admin/dashboard-stats": {
       "requests": 1,
       "errors": 0,
@@ -2864,13 +2305,13 @@
       "statusCodes": {
         "200": 1
       },
-      "minMs": 255.0,
-      "avgMs": 255.0,
-      "p50Ms": 255.0,
-      "p95Ms": 255.0,
-      "p99Ms": 255.0,
-      "maxMs": 255.0,
-      "totalBytes": 5626
+      "minMs": 310.0,
+      "avgMs": 310.0,
+      "p50Ms": 310.0,
+      "p95Ms": 310.0,
+      "p99Ms": 310.0,
+      "maxMs": 310.0,
+      "totalBytes": 5711
     },
     "[Setup Verify] GET /api/auth/admin/me": {
       "requests": 1,
@@ -2879,12 +2320,12 @@
       "statusCodes": {
         "200": 1
       },
-      "minMs": 1037.0,
-      "avgMs": 1037.0,
-      "p50Ms": 1037.0,
-      "p95Ms": 1037.0,
-      "p99Ms": 1037.0,
-      "maxMs": 1037.0,
+      "minMs": 1028.0,
+      "avgMs": 1028.0,
+      "p50Ms": 1028.0,
+      "p95Ms": 1028.0,
+      "p99Ms": 1028.0,
+      "maxMs": 1028.0,
       "totalBytes": 372
     },
     "[Setup Verify] GET /api/auth/me (Official)": {
@@ -2894,13 +2335,13 @@
       "statusCodes": {
         "200": 1
       },
-      "minMs": 245.0,
-      "avgMs": 245.0,
-      "p50Ms": 245.0,
-      "p95Ms": 245.0,
-      "p99Ms": 245.0,
-      "maxMs": 245.0,
-      "totalBytes": 825
+      "minMs": 247.0,
+      "avgMs": 247.0,
+      "p50Ms": 247.0,
+      "p95Ms": 247.0,
+      "p99Ms": 247.0,
+      "maxMs": 247.0,
+      "totalBytes": 910
     },
     "[Setup Verify] GET /api/auth/me (Regular)": {
       "requests": 1,
@@ -2909,12 +2350,12 @@
       "statusCodes": {
         "200": 1
       },
-      "minMs": 240.0,
-      "avgMs": 240.0,
-      "p50Ms": 240.0,
-      "p95Ms": 240.0,
-      "p99Ms": 240.0,
-      "maxMs": 240.0,
+      "minMs": 249.0,
+      "avgMs": 249.0,
+      "p50Ms": 249.0,
+      "p95Ms": 249.0,
+      "p99Ms": 249.0,
+      "maxMs": 249.0,
       "totalBytes": 910
     },
     "[Setup] Sign Credentials, Verify All Tokens & Discover Seed IDs": {
@@ -2924,13 +2365,13 @@
       "statusCodes": {
         "200": 1
       },
-      "minMs": 28197.0,
-      "avgMs": 28197.0,
-      "p50Ms": 28197.0,
-      "p95Ms": 28197.0,
-      "p99Ms": 28197.0,
-      "maxMs": 28197.0,
-      "totalBytes": 1314
+      "minMs": 10128.0,
+      "avgMs": 10128.0,
+      "p50Ms": 10128.0,
+      "p95Ms": 10128.0,
+      "p99Ms": 10128.0,
+      "maxMs": 10128.0,
+      "totalBytes": 1914
     },
     "/api/achievements": {
       "requests": 9,
@@ -2939,283 +2380,283 @@
       "statusCodes": {
         "200": 9
       },
-      "minMs": 221.0,
-      "avgMs": 234.0,
-      "p50Ms": 229.0,
-      "p95Ms": 279.0,
-      "p99Ms": 279.0,
-      "maxMs": 279.0,
+      "minMs": 233.0,
+      "avgMs": 239.78,
+      "p50Ms": 237.0,
+      "p95Ms": 265.0,
+      "p99Ms": 265.0,
+      "maxMs": 265.0,
       "totalBytes": 24615
     },
     "/api/achievements?_where=tier_gt_1": {
-      "requests": 7,
+      "requests": 10,
       "errors": 0,
       "errorRate": 0.0,
       "statusCodes": {
-        "200": 7
+        "200": 10
       },
-      "minMs": 213.0,
-      "avgMs": 316.43,
-      "p50Ms": 230.0,
-      "p95Ms": 843.0,
-      "p99Ms": 843.0,
-      "maxMs": 843.0,
-      "totalBytes": 9870
+      "minMs": 219.0,
+      "avgMs": 226.8,
+      "p50Ms": 225.0,
+      "p95Ms": 236.0,
+      "p99Ms": 236.0,
+      "maxMs": 236.0,
+      "totalBytes": 14100
     },
     "/api/admin/bulletins?_page=1&_per_page=10": {
-      "requests": 12,
+      "requests": 8,
       "errors": 0,
       "errorRate": 0.0,
       "statusCodes": {
-        "200": 12
+        "200": 8
       },
-      "minMs": 245.0,
-      "avgMs": 339.5,
-      "p50Ms": 265.0,
-      "p95Ms": 1036.0,
-      "p99Ms": 1036.0,
-      "maxMs": 1036.0,
-      "totalBytes": 200892
+      "minMs": 235.0,
+      "avgMs": 333.62,
+      "p50Ms": 332.0,
+      "p95Ms": 402.0,
+      "p99Ms": 402.0,
+      "maxMs": 402.0,
+      "totalBytes": 149184
     },
     "/api/admin/dashboard-stats": {
-      "requests": 7,
+      "requests": 6,
       "errors": 0,
       "errorRate": 0.0,
       "statusCodes": {
-        "200": 7
+        "200": 6
       },
-      "minMs": 231.0,
-      "avgMs": 261.71,
-      "p50Ms": 274.0,
-      "p95Ms": 295.0,
-      "p99Ms": 295.0,
-      "maxMs": 295.0,
-      "totalBytes": 39088
+      "minMs": 241.0,
+      "avgMs": 377.67,
+      "p50Ms": 255.0,
+      "p95Ms": 930.0,
+      "p99Ms": 930.0,
+      "maxMs": 930.0,
+      "totalBytes": 33596
     },
     "/api/admin/events?_page=1&_per_page=10": {
-      "requests": 7,
+      "requests": 6,
       "errors": 0,
       "errorRate": 0.0,
       "statusCodes": {
-        "200": 7
+        "200": 6
       },
-      "minMs": 260.0,
-      "avgMs": 307.29,
-      "p50Ms": 271.0,
-      "p95Ms": 404.0,
-      "p99Ms": 404.0,
-      "maxMs": 404.0,
-      "totalBytes": 116634
+      "minMs": 265.0,
+      "avgMs": 346.0,
+      "p50Ms": 345.0,
+      "p95Ms": 435.0,
+      "p99Ms": 435.0,
+      "maxMs": 435.0,
+      "totalBytes": 93761
     },
     "/api/auth/admin/me": {
+      "requests": 6,
+      "errors": 0,
+      "errorRate": 0.0,
+      "statusCodes": {
+        "200": 6
+      },
+      "minMs": 212.0,
+      "avgMs": 230.17,
+      "p50Ms": 229.0,
+      "p95Ms": 244.0,
+      "p99Ms": 244.0,
+      "maxMs": 244.0,
+      "totalBytes": 2232
+    },
+    "/api/auth/check-email [POST]": {
+      "requests": 10,
+      "errors": 0,
+      "errorRate": 0.0,
+      "statusCodes": {
+        "200": 10
+      },
+      "minMs": 220.0,
+      "avgMs": 242.2,
+      "p50Ms": 229.0,
+      "p95Ms": 375.0,
+      "p99Ms": 375.0,
+      "maxMs": 375.0,
+      "totalBytes": 3110
+    },
+    "/api/auth/me [Official]": {
+      "requests": 10,
+      "errors": 0,
+      "errorRate": 0.0,
+      "statusCodes": {
+        "200": 10
+      },
+      "minMs": 217.0,
+      "avgMs": 233.1,
+      "p50Ms": 230.0,
+      "p95Ms": 263.0,
+      "p99Ms": 263.0,
+      "maxMs": 263.0,
+      "totalBytes": 9100
+    },
+    "/api/auth/me [Regular]": {
+      "requests": 2,
+      "errors": 0,
+      "errorRate": 0.0,
+      "statusCodes": {
+        "200": 2
+      },
+      "minMs": 235.0,
+      "avgMs": 238.5,
+      "p50Ms": 235.0,
+      "p95Ms": 242.0,
+      "p99Ms": 242.0,
+      "maxMs": 242.0,
+      "totalBytes": 1876
+    },
+    "/api/bulletinCategories": {
+      "requests": 11,
+      "errors": 0,
+      "errorRate": 0.0,
+      "statusCodes": {
+        "200": 11
+      },
+      "minMs": 222.0,
+      "avgMs": 373.18,
+      "p50Ms": 238.0,
+      "p95Ms": 1042.0,
+      "p99Ms": 1042.0,
+      "maxMs": 1042.0,
+      "totalBytes": 6380
+    },
+    "/api/bulletinLikes?_page=1&_per_page=10": {
+      "requests": 8,
+      "errors": 0,
+      "errorRate": 0.0,
+      "statusCodes": {
+        "200": 8
+      },
+      "minMs": 224.0,
+      "avgMs": 235.62,
+      "p50Ms": 231.0,
+      "p95Ms": 266.0,
+      "p99Ms": 266.0,
+      "maxMs": 266.0,
+      "totalBytes": 9656
+    },
+    "/api/bulletins?_include=category,author,status&_page=1&_per_page=10": {
       "requests": 9,
       "errors": 0,
       "errorRate": 0.0,
       "statusCodes": {
         "200": 9
       },
-      "minMs": 212.0,
-      "avgMs": 242.78,
-      "p50Ms": 236.0,
-      "p95Ms": 280.0,
-      "p99Ms": 280.0,
-      "maxMs": 280.0,
-      "totalBytes": 3244
+      "minMs": 265.0,
+      "avgMs": 409.0,
+      "p50Ms": 345.0,
+      "p95Ms": 934.0,
+      "p99Ms": 934.0,
+      "maxMs": 934.0,
+      "totalBytes": 157715
     },
-    "/api/auth/check-email [POST]": {
-      "requests": 12,
+    "/api/bulletins?_page=1&_per_page=10": {
+      "requests": 10,
       "errors": 0,
       "errorRate": 0.0,
       "statusCodes": {
-        "200": 12
+        "200": 10
       },
-      "minMs": 220.0,
-      "avgMs": 339.33,
-      "p50Ms": 225.0,
-      "p95Ms": 899.0,
-      "p99Ms": 899.0,
-      "maxMs": 899.0,
-      "totalBytes": 3732
+      "minMs": 356.0,
+      "avgMs": 418.6,
+      "p50Ms": 421.0,
+      "p95Ms": 452.0,
+      "p99Ms": 452.0,
+      "maxMs": 452.0,
+      "totalBytes": 589948
     },
-    "/api/auth/me [Official]": {
-      "requests": 16,
+    "/api/bulletins?_sort=bulletinDate&_order=desc&_page=1&_per_page=10": {
+      "requests": 5,
       "errors": 0,
       "errorRate": 0.0,
       "statusCodes": {
-        "200": 16
+        "200": 5
       },
-      "minMs": 220.0,
-      "avgMs": 315.75,
-      "p50Ms": 227.0,
+      "minMs": 390.0,
+      "avgMs": 617.2,
+      "p50Ms": 482.0,
+      "p95Ms": 1011.0,
+      "p99Ms": 1011.0,
+      "maxMs": 1011.0,
+      "totalBytes": 444259
+    },
+    "/api/bulletins/:id": {
+      "requests": 9,
+      "errors": 0,
+      "errorRate": 0.0,
+      "statusCodes": {
+        "200": 9
+      },
+      "minMs": 229.0,
+      "avgMs": 236.78,
+      "p50Ms": 232.0,
+      "p95Ms": 265.0,
+      "p99Ms": 265.0,
+      "maxMs": 265.0,
+      "totalBytes": 19283
+    },
+    "/api/clefLogs?_page=1&_per_page=10": {
+      "requests": 8,
+      "errors": 0,
+      "errorRate": 0.0,
+      "statusCodes": {
+        "200": 8
+      },
+      "minMs": 226.0,
+      "avgMs": 524.12,
+      "p50Ms": 239.0,
+      "p95Ms": 1881.0,
+      "p99Ms": 1881.0,
+      "maxMs": 1881.0,
+      "totalBytes": 36400
+    },
+    "/api/commentLikes?_page=1&_per_page=10": {
+      "requests": 17,
+      "errors": 0,
+      "errorRate": 0.0,
+      "statusCodes": {
+        "200": 17
+      },
+      "minMs": 219.0,
+      "avgMs": 366.29,
+      "p50Ms": 243.0,
+      "p95Ms": 877.0,
+      "p99Ms": 877.0,
+      "maxMs": 877.0,
+      "totalBytes": 20281
+    },
+    "/api/comments?_page=1&_per_page=10": {
+      "requests": 10,
+      "errors": 0,
+      "errorRate": 0.0,
+      "statusCodes": {
+        "200": 10
+      },
+      "minMs": 258.0,
+      "avgMs": 395.4,
+      "p50Ms": 355.0,
       "p95Ms": 926.0,
       "p99Ms": 926.0,
       "maxMs": 926.0,
-      "totalBytes": 13208
-    },
-    "/api/auth/me [Regular]": {
-      "requests": 10,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "200": 10
-      },
-      "minMs": 220.0,
-      "avgMs": 300.8,
-      "p50Ms": 234.0,
-      "p95Ms": 897.0,
-      "p99Ms": 897.0,
-      "maxMs": 897.0,
-      "totalBytes": 8253
-    },
-    "/api/bulletinCategories": {
-      "requests": 7,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "200": 7
-      },
-      "minMs": 219.0,
-      "avgMs": 227.71,
-      "p50Ms": 227.0,
-      "p95Ms": 243.0,
-      "p99Ms": 243.0,
-      "maxMs": 243.0,
-      "totalBytes": 4060
-    },
-    "/api/bulletinLikes?_page=1&_per_page=10": {
-      "requests": 12,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "200": 12
-      },
-      "minMs": 223.0,
-      "avgMs": 238.5,
-      "p50Ms": 234.0,
-      "p95Ms": 287.0,
-      "p99Ms": 287.0,
-      "maxMs": 287.0,
-      "totalBytes": 14484
-    },
-    "/api/bulletins?_include=category,author,status&_page=1&_per_page=10": {
-      "requests": 10,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "200": 10
-      },
-      "minMs": 249.0,
-      "avgMs": 288.0,
-      "p50Ms": 265.0,
-      "p95Ms": 401.0,
-      "p99Ms": 401.0,
-      "maxMs": 401.0,
-      "totalBytes": 167410
-    },
-    "/api/bulletins?_page=1&_per_page=10": {
-      "requests": 11,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "200": 11
-      },
-      "minMs": 252.0,
-      "avgMs": 333.36,
-      "p50Ms": 351.0,
-      "p95Ms": 457.0,
-      "p99Ms": 457.0,
-      "maxMs": 457.0,
-      "totalBytes": 417879
-    },
-    "/api/bulletins?_sort=bulletinDate&_order=desc&_page=1&_per_page=10": {
-      "requests": 11,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "200": 11
-      },
-      "minMs": 297.0,
-      "avgMs": 388.18,
-      "p50Ms": 366.0,
-      "p95Ms": 554.0,
-      "p99Ms": 554.0,
-      "maxMs": 554.0,
-      "totalBytes": 976690
-    },
-    "/api/bulletins/:id": {
-      "requests": 13,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "200": 13
-      },
-      "minMs": 221.0,
-      "avgMs": 232.23,
-      "p50Ms": 226.0,
-      "p95Ms": 270.0,
-      "p99Ms": 270.0,
-      "maxMs": 270.0,
-      "totalBytes": 27027
-    },
-    "/api/clefLogs?_page=1&_per_page=10": {
-      "requests": 9,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "200": 9
-      },
-      "minMs": 217.0,
-      "avgMs": 248.44,
-      "p50Ms": 237.0,
-      "p95Ms": 325.0,
-      "p99Ms": 325.0,
-      "maxMs": 325.0,
-      "totalBytes": 44604
-    },
-    "/api/commentLikes?_page=1&_per_page=10": {
-      "requests": 6,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "200": 6
-      },
-      "minMs": 216.0,
-      "avgMs": 224.5,
-      "p50Ms": 223.0,
-      "p95Ms": 230.0,
-      "p99Ms": 230.0,
-      "maxMs": 230.0,
-      "totalBytes": 7158
-    },
-    "/api/comments?_page=1&_per_page=10": {
-      "requests": 6,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "200": 6
-      },
-      "minMs": 244.0,
-      "avgMs": 261.33,
-      "p50Ms": 256.0,
-      "p95Ms": 293.0,
-      "p99Ms": 293.0,
-      "maxMs": 293.0,
-      "totalBytes": 146154
+      "totalBytes": 243590
     },
     "/api/connectionStatuses": {
-      "requests": 6,
+      "requests": 14,
       "errors": 0,
       "errorRate": 0.0,
       "statusCodes": {
-        "200": 6
+        "200": 14
       },
-      "minMs": 214.0,
-      "avgMs": 237.17,
-      "p50Ms": 234.0,
-      "p95Ms": 272.0,
-      "p99Ms": 272.0,
-      "maxMs": 272.0,
-      "totalBytes": 3246
+      "minMs": 220.0,
+      "avgMs": 297.14,
+      "p50Ms": 235.0,
+      "p95Ms": 958.0,
+      "p99Ms": 958.0,
+      "maxMs": 958.0,
+      "totalBytes": 7574
     },
     "/api/contentStatuses": {
       "requests": 10,
@@ -3224,73 +2665,73 @@
       "statusCodes": {
         "200": 10
       },
-      "minMs": 225.0,
-      "avgMs": 357.5,
-      "p50Ms": 228.0,
-      "p95Ms": 899.0,
-      "p99Ms": 899.0,
-      "maxMs": 899.0,
+      "minMs": 219.0,
+      "avgMs": 303.6,
+      "p50Ms": 232.0,
+      "p95Ms": 886.0,
+      "p99Ms": 886.0,
+      "maxMs": 886.0,
       "totalBytes": 5170
     },
     "/api/degrees": {
-      "requests": 11,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "200": 11
-      },
-      "minMs": 216.0,
-      "avgMs": 239.18,
-      "p50Ms": 225.0,
-      "p95Ms": 319.0,
-      "p99Ms": 319.0,
-      "maxMs": 319.0,
-      "totalBytes": 8613
-    },
-    "/api/donations?_page=1&_per_page=10&_sort=donationDate&_order=desc": {
       "requests": 10,
       "errors": 0,
       "errorRate": 0.0,
       "statusCodes": {
         "200": 10
       },
-      "minMs": 224.0,
-      "avgMs": 299.2,
-      "p50Ms": 233.0,
-      "p95Ms": 859.0,
-      "p99Ms": 859.0,
-      "maxMs": 859.0,
-      "totalBytes": 43260
+      "minMs": 225.0,
+      "avgMs": 366.4,
+      "p50Ms": 237.0,
+      "p95Ms": 933.0,
+      "p99Ms": 933.0,
+      "maxMs": 933.0,
+      "totalBytes": 7830
+    },
+    "/api/donations?_page=1&_per_page=10&_sort=donationDate&_order=desc": {
+      "requests": 17,
+      "errors": 0,
+      "errorRate": 0.0,
+      "statusCodes": {
+        "200": 17
+      },
+      "minMs": 225.0,
+      "avgMs": 281.0,
+      "p50Ms": 242.0,
+      "p95Ms": 875.0,
+      "p99Ms": 875.0,
+      "maxMs": 875.0,
+      "totalBytes": 73542
     },
     "/api/donations/summary": {
-      "requests": 12,
+      "requests": 10,
       "errors": 0,
       "errorRate": 0.0,
       "statusCodes": {
-        "200": 12
-      },
-      "minMs": 229.0,
-      "avgMs": 305.58,
-      "p50Ms": 256.0,
-      "p95Ms": 876.0,
-      "p99Ms": 876.0,
-      "maxMs": 876.0,
-      "totalBytes": 70152
-    },
-    "/api/donationStatuses": {
-      "requests": 5,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "200": 5
+        "200": 10
       },
       "minMs": 223.0,
-      "avgMs": 228.4,
-      "p50Ms": 227.0,
-      "p95Ms": 235.0,
-      "p99Ms": 235.0,
-      "maxMs": 235.0,
-      "totalBytes": 2375
+      "avgMs": 269.5,
+      "p50Ms": 263.0,
+      "p95Ms": 396.0,
+      "p99Ms": 396.0,
+      "maxMs": 396.0,
+      "totalBytes": 58170
+    },
+    "/api/donationStatuses": {
+      "requests": 4,
+      "errors": 0,
+      "errorRate": 0.0,
+      "statusCodes": {
+        "200": 4
+      },
+      "minMs": 223.0,
+      "avgMs": 410.75,
+      "p50Ms": 229.0,
+      "p95Ms": 950.0,
+      "p99Ms": 950.0,
+      "maxMs": 950.0,
+      "totalBytes": 1900
     },
     "/api/eventCategories": {
       "requests": 9,
@@ -3299,88 +2740,88 @@
       "statusCodes": {
         "200": 9
       },
-      "minMs": 214.0,
-      "avgMs": 368.22,
-      "p50Ms": 227.0,
-      "p95Ms": 892.0,
-      "p99Ms": 892.0,
-      "maxMs": 892.0,
+      "minMs": 217.0,
+      "avgMs": 239.22,
+      "p50Ms": 230.0,
+      "p95Ms": 267.0,
+      "p99Ms": 267.0,
+      "maxMs": 267.0,
       "totalBytes": 5454
     },
     "/api/events?_include=category,author,status,location&_page=1&_per_page=10": {
+      "requests": 8,
+      "errors": 0,
+      "errorRate": 0.0,
+      "statusCodes": {
+        "200": 8
+      },
+      "minMs": 335.0,
+      "avgMs": 350.62,
+      "p50Ms": 349.0,
+      "p95Ms": 373.0,
+      "p99Ms": 373.0,
+      "maxMs": 373.0,
+      "totalBytes": 127231
+    },
+    "/api/events?_page=1&_per_page=10": {
+      "requests": 8,
+      "errors": 0,
+      "errorRate": 0.0,
+      "statusCodes": {
+        "200": 8
+      },
+      "minMs": 382.0,
+      "avgMs": 564.62,
+      "p50Ms": 455.0,
+      "p95Ms": 1039.0,
+      "p99Ms": 1039.0,
+      "maxMs": 1039.0,
+      "totalBytes": 560822
+    },
+    "/api/events?_sort=eventDate&_order=asc&_page=1&_per_page=10": {
       "requests": 12,
       "errors": 0,
       "errorRate": 0.0,
       "statusCodes": {
         "200": 12
       },
-      "minMs": 245.0,
-      "avgMs": 347.17,
-      "p50Ms": 272.0,
-      "p95Ms": 970.0,
-      "p99Ms": 970.0,
-      "maxMs": 970.0,
-      "totalBytes": 199944
-    },
-    "/api/events?_page=1&_per_page=10": {
-      "requests": 10,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "200": 10
-      },
-      "minMs": 304.0,
-      "avgMs": 459.5,
-      "p50Ms": 385.0,
-      "p95Ms": 1124.0,
-      "p99Ms": 1124.0,
-      "maxMs": 1124.0,
-      "totalBytes": 972670
-    },
-    "/api/events?_sort=eventDate&_order=asc&_page=1&_per_page=10": {
-      "requests": 18,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "200": 18
-      },
-      "minMs": 265.0,
-      "avgMs": 430.67,
-      "p50Ms": 393.0,
-      "p95Ms": 1059.0,
-      "p99Ms": 1059.0,
-      "maxMs": 1059.0,
-      "totalBytes": 1538064
+      "minMs": 461.0,
+      "avgMs": 637.5,
+      "p50Ms": 497.0,
+      "p95Ms": 1066.0,
+      "p99Ms": 1066.0,
+      "maxMs": 1066.0,
+      "totalBytes": 1026375
     },
     "/api/events?_sort=eventDate&_order=desc&_page=2&_per_page=5": {
-      "requests": 9,
+      "requests": 11,
       "errors": 0,
       "errorRate": 0.0,
       "statusCodes": {
-        "200": 9
+        "200": 11
       },
-      "minMs": 266.0,
-      "avgMs": 299.0,
-      "p50Ms": 276.0,
-      "p95Ms": 357.0,
-      "p99Ms": 357.0,
-      "maxMs": 357.0,
-      "totalBytes": 414162
+      "minMs": 340.0,
+      "avgMs": 588.55,
+      "p50Ms": 413.0,
+      "p95Ms": 1240.0,
+      "p99Ms": 1240.0,
+      "maxMs": 1240.0,
+      "totalBytes": 507150
     },
     "/api/events/:id": {
-      "requests": 10,
+      "requests": 12,
       "errors": 0,
       "errorRate": 0.0,
       "statusCodes": {
-        "200": 10
+        "200": 12
       },
-      "minMs": 230.0,
-      "avgMs": 260.8,
-      "p50Ms": 243.0,
-      "p95Ms": 342.0,
-      "p99Ms": 342.0,
-      "maxMs": 342.0,
-      "totalBytes": 78480
+      "minMs": 218.0,
+      "avgMs": 242.25,
+      "p50Ms": 235.0,
+      "p95Ms": 273.0,
+      "p99Ms": 273.0,
+      "maxMs": 273.0,
+      "totalBytes": 94902
     },
     "/api/eventStatuses": {
       "requests": 8,
@@ -3389,73 +2830,73 @@
       "statusCodes": {
         "200": 8
       },
-      "minMs": 221.0,
-      "avgMs": 415.88,
-      "p50Ms": 237.0,
-      "p95Ms": 921.0,
-      "p99Ms": 921.0,
-      "maxMs": 921.0,
+      "minMs": 228.0,
+      "avgMs": 236.75,
+      "p50Ms": 233.0,
+      "p95Ms": 252.0,
+      "p99Ms": 252.0,
+      "maxMs": 252.0,
       "totalBytes": 4520
     },
     "/api/hero/images": {
-      "requests": 7,
+      "requests": 12,
       "errors": 0,
       "errorRate": 0.0,
       "statusCodes": {
-        "200": 7
+        "200": 12
       },
-      "minMs": 216.0,
-      "avgMs": 331.86,
+      "minMs": 221.0,
+      "avgMs": 248.5,
       "p50Ms": 239.0,
-      "p95Ms": 868.0,
-      "p99Ms": 868.0,
-      "maxMs": 868.0,
-      "totalBytes": 35211
+      "p95Ms": 285.0,
+      "p99Ms": 285.0,
+      "maxMs": 285.0,
+      "totalBytes": 60226
     },
     "/api/locations?_page=1&_per_page=10": {
-      "requests": 7,
+      "requests": 13,
       "errors": 0,
       "errorRate": 0.0,
       "statusCodes": {
-        "200": 7
+        "200": 13
       },
-      "minMs": 215.0,
-      "avgMs": 329.71,
-      "p50Ms": 231.0,
-      "p95Ms": 858.0,
-      "p99Ms": 858.0,
-      "maxMs": 858.0,
-      "totalBytes": 20468
+      "minMs": 210.0,
+      "avgMs": 231.46,
+      "p50Ms": 235.0,
+      "p95Ms": 247.0,
+      "p99Ms": 247.0,
+      "maxMs": 247.0,
+      "totalBytes": 34918
     },
     "/api/notifications?_page=1&_per_page=10": {
-      "requests": 11,
+      "requests": 5,
       "errors": 0,
       "errorRate": 0.0,
       "statusCodes": {
-        "200": 11
+        "200": 5
       },
-      "minMs": 220.0,
-      "avgMs": 294.09,
-      "p50Ms": 229.0,
+      "minMs": 228.0,
+      "avgMs": 362.4,
+      "p50Ms": 234.0,
       "p95Ms": 876.0,
       "p99Ms": 876.0,
       "maxMs": 876.0,
-      "totalBytes": 45771
+      "totalBytes": 21170
     },
     "/api/profiles?_page=1&_per_page=10": {
-      "requests": 7,
+      "requests": 6,
       "errors": 0,
       "errorRate": 0.0,
       "statusCodes": {
-        "200": 7
+        "200": 6
       },
-      "minMs": 221.0,
-      "avgMs": 233.0,
-      "p50Ms": 228.0,
-      "p95Ms": 265.0,
-      "p99Ms": 265.0,
-      "maxMs": 265.0,
-      "totalBytes": 46186
+      "minMs": 231.0,
+      "avgMs": 355.5,
+      "p50Ms": 243.0,
+      "p95Ms": 884.0,
+      "p99Ms": 884.0,
+      "maxMs": 884.0,
+      "totalBytes": 39396
     },
     "/api/profileStatuses": {
       "requests": 11,
@@ -3464,238 +2905,238 @@
       "statusCodes": {
         "200": 11
       },
-      "minMs": 214.0,
-      "avgMs": 353.91,
-      "p50Ms": 231.0,
-      "p95Ms": 910.0,
-      "p99Ms": 910.0,
-      "maxMs": 910.0,
+      "minMs": 218.0,
+      "avgMs": 245.09,
+      "p50Ms": 236.0,
+      "p95Ms": 346.0,
+      "p99Ms": 346.0,
+      "maxMs": 346.0,
       "totalBytes": 4796
     },
     "/api/records?_page=1&_per_page=10": {
-      "requests": 15,
+      "requests": 8,
       "errors": 0,
       "errorRate": 0.0,
       "statusCodes": {
-        "200": 15
+        "200": 8
       },
-      "minMs": 213.0,
-      "avgMs": 277.73,
-      "p50Ms": 226.0,
-      "p95Ms": 886.0,
-      "p99Ms": 886.0,
-      "maxMs": 886.0,
-      "totalBytes": 42300
+      "minMs": 221.0,
+      "avgMs": 310.25,
+      "p50Ms": 232.0,
+      "p95Ms": 826.0,
+      "p99Ms": 826.0,
+      "maxMs": 826.0,
+      "totalBytes": 22584
     },
     "/api/server-time": {
-      "requests": 9,
+      "requests": 16,
       "errors": 0,
       "errorRate": 0.0,
       "statusCodes": {
-        "200": 9
+        "200": 16
       },
-      "minMs": 219.0,
-      "avgMs": 309.56,
-      "p50Ms": 230.0,
-      "p95Ms": 866.0,
-      "p99Ms": 866.0,
-      "maxMs": 866.0,
-      "totalBytes": 3276
+      "minMs": 208.0,
+      "avgMs": 234.31,
+      "p50Ms": 231.0,
+      "p95Ms": 293.0,
+      "p99Ms": 293.0,
+      "maxMs": 293.0,
+      "totalBytes": 5824
     },
     "/api/userAchievements?_page=1&_per_page=10": {
+      "requests": 7,
+      "errors": 0,
+      "errorRate": 0.0,
+      "statusCodes": {
+        "200": 7
+      },
+      "minMs": 221.0,
+      "avgMs": 329.0,
+      "p50Ms": 238.0,
+      "p95Ms": 901.0,
+      "p99Ms": 901.0,
+      "maxMs": 901.0,
+      "totalBytes": 27720
+    },
+    "/api/userAuths?_page=1&_per_page=10": {
+      "requests": 11,
+      "errors": 0,
+      "errorRate": 0.0,
+      "statusCodes": {
+        "200": 11
+      },
+      "minMs": 231.0,
+      "avgMs": 316.73,
+      "p50Ms": 263.0,
+      "p95Ms": 892.0,
+      "p99Ms": 892.0,
+      "maxMs": 892.0,
+      "totalBytes": 100320
+    },
+    "/api/userConnections?_include=user,friend,status&_page=1&_per_page=10": {
+      "requests": 8,
+      "errors": 0,
+      "errorRate": 0.0,
+      "statusCodes": {
+        "200": 8
+      },
+      "minMs": 239.0,
+      "avgMs": 320.25,
+      "p50Ms": 341.0,
+      "p95Ms": 365.0,
+      "p99Ms": 365.0,
+      "maxMs": 365.0,
+      "totalBytes": 118872
+    },
+    "/api/userRsvps?_page=1&_per_page=10": {
       "requests": 10,
       "errors": 0,
       "errorRate": 0.0,
       "statusCodes": {
         "200": 10
       },
-      "minMs": 223.0,
-      "avgMs": 244.7,
-      "p50Ms": 228.0,
-      "p95Ms": 348.0,
-      "p99Ms": 348.0,
-      "maxMs": 348.0,
-      "totalBytes": 40000
-    },
-    "/api/userAuths?_page=1&_per_page=10": {
-      "requests": 8,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "200": 8
-      },
-      "minMs": 219.0,
-      "avgMs": 251.25,
-      "p50Ms": 257.0,
-      "p95Ms": 275.0,
-      "p99Ms": 275.0,
-      "maxMs": 275.0,
-      "totalBytes": 73000
-    },
-    "/api/userConnections?_include=user,friend,status&_page=1&_per_page=10": {
-      "requests": 7,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "200": 7
-      },
-      "minMs": 255.0,
-      "avgMs": 268.86,
-      "p50Ms": 270.0,
-      "p95Ms": 280.0,
-      "p99Ms": 280.0,
-      "maxMs": 280.0,
-      "totalBytes": 104013
-    },
-    "/api/userRsvps?_page=1&_per_page=10": {
-      "requests": 5,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "200": 5
-      },
-      "minMs": 252.0,
-      "avgMs": 287.0,
-      "p50Ms": 277.0,
-      "p95Ms": 322.0,
-      "p99Ms": 322.0,
-      "maxMs": 322.0,
-      "totalBytes": 68855
+      "minMs": 307.0,
+      "avgMs": 418.1,
+      "p50Ms": 352.0,
+      "p95Ms": 924.0,
+      "p99Ms": 924.0,
+      "maxMs": 924.0,
+      "totalBytes": 137720
     },
     "/api/users?_include=profile,userStatus,profileStatus&_page=1&_per_page=10": {
-      "requests": 5,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "200": 5
-      },
-      "minMs": 221.0,
-      "avgMs": 243.6,
-      "p50Ms": 243.0,
-      "p95Ms": 263.0,
-      "p99Ms": 263.0,
-      "maxMs": 263.0,
-      "totalBytes": 37505
-    },
-    "/api/users?_page=1&_per_page=10": {
-      "requests": 11,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "200": 11
-      },
-      "minMs": 241.0,
-      "avgMs": 270.0,
-      "p50Ms": 269.0,
-      "p95Ms": 311.0,
-      "p99Ms": 311.0,
-      "maxMs": 311.0,
-      "totalBytes": 152592
-    },
-    "/api/users?_where=active&_include": {
       "requests": 8,
       "errors": 0,
       "errorRate": 0.0,
       "statusCodes": {
         "200": 8
       },
-      "minMs": 218.0,
-      "avgMs": 388.5,
-      "p50Ms": 232.0,
-      "p95Ms": 893.0,
-      "p99Ms": 893.0,
-      "maxMs": 893.0,
-      "totalBytes": 28944
-    },
-    "/api/users?_where=BSCpE&_include": {
-      "requests": 3,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "200": 3
-      },
-      "minMs": 229.0,
-      "avgMs": 431.67,
-      "p50Ms": 236.0,
-      "p95Ms": 830.0,
-      "p99Ms": 830.0,
-      "maxMs": 830.0,
-      "totalBytes": 10467
-    },
-    "/api/users/:id": {
-      "requests": 11,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "200": 11
-      },
-      "minMs": 219.0,
-      "avgMs": 282.36,
-      "p50Ms": 225.0,
-      "p95Ms": 840.0,
-      "p99Ms": 840.0,
-      "maxMs": 840.0,
-      "totalBytes": 18898
-    },
-    "/api/userStatistics?_page=1&_per_page=10": {
-      "requests": 7,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "200": 7
-      },
-      "minMs": 220.0,
-      "avgMs": 505.86,
+      "minMs": 228.0,
+      "avgMs": 243.0,
       "p50Ms": 240.0,
-      "p95Ms": 890.0,
-      "p99Ms": 890.0,
-      "maxMs": 890.0,
-      "totalBytes": 20510
+      "p95Ms": 261.0,
+      "p99Ms": 261.0,
+      "maxMs": 261.0,
+      "totalBytes": 59552
     },
-    "/api/userStatuses": {
+    "/api/users?_page=1&_per_page=10": {
       "requests": 9,
       "errors": 0,
       "errorRate": 0.0,
       "statusCodes": {
         "200": 9
       },
-      "minMs": 212.0,
-      "avgMs": 309.33,
-      "p50Ms": 229.0,
-      "p95Ms": 921.0,
-      "p99Ms": 921.0,
-      "maxMs": 921.0,
-      "totalBytes": 5076
+      "minMs": 267.0,
+      "avgMs": 403.33,
+      "p50Ms": 351.0,
+      "p95Ms": 972.0,
+      "p99Ms": 972.0,
+      "maxMs": 972.0,
+      "totalBytes": 124857
     },
-    "/images/engineer.png": {
-      "requests": 8,
-      "errors": 0,
-      "errorRate": 0.0,
-      "statusCodes": {
-        "200": 8
-      },
-      "minMs": 242.0,
-      "avgMs": 357.38,
-      "p50Ms": 262.0,
-      "p95Ms": 918.0,
-      "p99Ms": 918.0,
-      "maxMs": 918.0,
-      "totalBytes": 107392
-    },
-    "HEAD /api/bulletins?_page=1&_per_page=10": {
+    "/api/users?_where=active&_include": {
       "requests": 14,
       "errors": 0,
       "errorRate": 0.0,
       "statusCodes": {
         "200": 14
       },
-      "minMs": 230.0,
-      "avgMs": 305.0,
-      "p50Ms": 254.0,
-      "p95Ms": 875.0,
-      "p99Ms": 875.0,
-      "maxMs": 875.0,
-      "totalBytes": 4256
+      "minMs": 222.0,
+      "avgMs": 397.14,
+      "p50Ms": 247.0,
+      "p95Ms": 1935.0,
+      "p99Ms": 1935.0,
+      "maxMs": 1935.0,
+      "totalBytes": 49868
+    },
+    "/api/users?_where=BSCpE&_include": {
+      "requests": 9,
+      "errors": 0,
+      "errorRate": 0.0,
+      "statusCodes": {
+        "200": 9
+      },
+      "minMs": 221.0,
+      "avgMs": 380.89,
+      "p50Ms": 243.0,
+      "p95Ms": 867.0,
+      "p99Ms": 867.0,
+      "maxMs": 867.0,
+      "totalBytes": 31293
+    },
+    "/api/users/:id": {
+      "requests": 18,
+      "errors": 0,
+      "errorRate": 0.0,
+      "statusCodes": {
+        "200": 18
+      },
+      "minMs": 219.0,
+      "avgMs": 239.06,
+      "p50Ms": 237.0,
+      "p95Ms": 277.0,
+      "p99Ms": 277.0,
+      "maxMs": 277.0,
+      "totalBytes": 25830
+    },
+    "/api/userStatistics?_page=1&_per_page=10": {
+      "requests": 15,
+      "errors": 0,
+      "errorRate": 0.0,
+      "statusCodes": {
+        "200": 15
+      },
+      "minMs": 224.0,
+      "avgMs": 288.93,
+      "p50Ms": 231.0,
+      "p95Ms": 903.0,
+      "p99Ms": 903.0,
+      "maxMs": 903.0,
+      "totalBytes": 44730
+    },
+    "/api/userStatuses": {
+      "requests": 10,
+      "errors": 0,
+      "errorRate": 0.0,
+      "statusCodes": {
+        "200": 10
+      },
+      "minMs": 221.0,
+      "avgMs": 243.4,
+      "p50Ms": 232.0,
+      "p95Ms": 321.0,
+      "p99Ms": 321.0,
+      "maxMs": 321.0,
+      "totalBytes": 5640
+    },
+    "/images/engineer.png": {
+      "requests": 15,
+      "errors": 0,
+      "errorRate": 0.0,
+      "statusCodes": {
+        "200": 15
+      },
+      "minMs": 234.0,
+      "avgMs": 318.13,
+      "p50Ms": 270.0,
+      "p95Ms": 954.0,
+      "p99Ms": 954.0,
+      "maxMs": 954.0,
+      "totalBytes": 201360
+    },
+    "HEAD /api/bulletins?_page=1&_per_page=10": {
+      "requests": 7,
+      "errors": 0,
+      "errorRate": 0.0,
+      "statusCodes": {
+        "200": 7
+      },
+      "minMs": 229.0,
+      "avgMs": 339.29,
+      "p50Ms": 238.0,
+      "p95Ms": 905.0,
+      "p99Ms": 905.0,
+      "maxMs": 905.0,
+      "totalBytes": 2393
     }
   }
 }

@@ -22,8 +22,17 @@ param(
     [string]$DefaultPassword = "123456",
     [switch]$SkipExternalApis,
     [switch]$IncludeWritesInLoad,
+    [switch]$CoverageOnly,
+    [switch]$SkipCoverage,
+    [int]$ThinkMinMs = 100,
+    [int]$ThinkRangeMs = 400,
+    [int]$GranularityMs = 1000,
     [switch]$HtmlReport,
-    [string]$JMeterPath = ""
+    [string]$JMeterPath = "",
+    [string]$JtlOutPath = "",
+    [string]$LogOutPath = "",
+    [string]$BaselineOutPath = "",
+    [string]$HtmlReportOutDir = ""
 )
 
 $ErrorActionPreference = "Stop"
@@ -60,6 +69,9 @@ function Resolve-JMeterExecutable {
     }
 
     $searchRoots = @(
+        (Split-Path -Parent $RepoRoot),
+        (Join-Path $env:USERPROFILE "Desktop\bin"),
+        (Join-Path $env:USERPROFILE "Desktop"),
         (Join-Path $env:USERPROFILE "Downloads"),
         "C:\apache-jmeter",
         "C:\Program Files",
@@ -68,10 +80,10 @@ function Resolve-JMeterExecutable {
     foreach ($root in $searchRoots) {
         if (Test-Path $root) {
             $found = Get-ChildItem -Path $root -Directory -Filter "apache-jmeter*" -ErrorAction SilentlyContinue |
-                Sort-Object Name -Descending |
-                ForEach-Object { Join-Path $_.FullName "bin\jmeter.bat" } |
-                Where-Object { Test-Path $_ } |
-                Select-Object -First 1
+            Sort-Object Name -Descending |
+            ForEach-Object { Join-Path $_.FullName "bin\jmeter.bat" } |
+            Where-Object { Test-Path $_ } |
+            Select-Object -First 1
             if ($found) { return $found }
         }
     }
@@ -96,17 +108,36 @@ $Proto = $Uri.Scheme
 $TargetHost = $Uri.Host
 $TargetPort = if ($Uri.IsDefaultPort) { "" } else { [string]$Uri.Port }
 
-if (-not $Tiers -or $Tiers.Count -eq 0) {
+if ($CoverageOnly) {
+    $Tiers = @(0)
+}
+elseif ($null -eq $Tiers -or $Tiers.Count -eq 0) {
     if ($DryRun) {
         $Tiers = @(10, 25)
-    } elseif ($Config -and $Config.steppedTiers) {
+    }
+    elseif ($Config -and $Config.steppedTiers) {
         $Tiers = @($Config.steppedTiers)
-    } else {
+    }
+    else {
         $Tiers = @(200, 500, 1000, 1500, 2000)
     }
 }
 
-$EffectiveDuration = if ($Duration -gt 0) { $Duration } elseif ($DryRun) { 5 } elseif ($Config -and $Config.durationSeconds) { [int]$Config.durationSeconds } else { 60 }
+$EffectiveDuration = if ($Duration -gt 0) {
+    $Duration
+}
+elseif ($DryRun) {
+    if ($Config -and $Config.dryRunTierDurationSec) { [int]$Config.dryRunTierDurationSec } else { 10 }
+}
+elseif ($Config -and $Config.defaultTierDurationSec) {
+    [int]$Config.defaultTierDurationSec
+}
+elseif ($Config -and $Config.durationSeconds) {
+    [int]$Config.durationSeconds
+}
+else {
+    30
+}
 $EffectiveRamp = if ($RampUp -gt 0) { $RampUp } elseif ($DryRun) { 2 } else { 10 }
 
 # Pad tiers to 5 thread groups (0 threads skips a tier group)
@@ -115,20 +146,34 @@ for ($i = 0; $i -lt [Math]::Min($Tiers.Count, 5); $i++) {
     $TierValues[$i] = [int]$Tiers[$i]
 }
 
-$JtlPath = Join-Path $ResultsDir "jmeter_results.jtl"
-$LogPath = Join-Path $ResultsDir "jmeter.log"
-$SummaryJsonPath = Join-Path $ResultsDir "jmeter_baseline.json"
-$HtmlReportDir = Join-Path $ResultsDir "html_report"
+$JtlPath = if ($JtlOutPath) { $JtlOutPath } else { Join-Path $ResultsDir "jmeter_results.jtl" }
+$LogPath = if ($LogOutPath) { $LogOutPath } else { Join-Path $ResultsDir "jmeter.log" }
+$SummaryJsonPath = if ($BaselineOutPath) { $BaselineOutPath } else { Join-Path $ResultsDir "jmeter_baseline.json" }
+$HtmlReportDir = if ($HtmlReportOutDir) { $HtmlReportOutDir } else { Join-Path $ResultsDir "html_report" }
 
-Remove-Item -ErrorAction SilentlyContinue $JtlPath, $LogPath
+$JtlParent = Split-Path -Parent $JtlPath
+if ($JtlParent -and -not (Test-Path $JtlParent)) {
+    New-Item -ItemType Directory -Path $JtlParent -Force | Out-Null
+}
+$SummaryParent = Split-Path -Parent $SummaryJsonPath
+if ($SummaryParent -and -not (Test-Path $SummaryParent)) {
+    New-Item -ItemType Directory -Path $SummaryParent -Force | Out-Null
+}
+
+$LoadJtlPath = Join-Path (Split-Path -Parent $JtlPath) (([System.IO.Path]::GetFileNameWithoutExtension($JtlPath)) + "_load.jtl")
+$ReportLogPath = Join-Path (Split-Path -Parent $LogPath) (([System.IO.Path]::GetFileNameWithoutExtension($LogPath)) + "_report.log")
+
+Remove-Item -ErrorAction SilentlyContinue $JtlPath, $LogPath, $LoadJtlPath, $ReportLogPath
 
 $ExtApiVal = if ($SkipExternalApis) { "false" } else { "true" }
 $WritesInLoadVal = if ($IncludeWritesInLoad) { "true" } else { "false" }
+$RunCoverageVal = if ($SkipCoverage) { "false" } else { "true" }
 
 Write-Host "[*] Target        : $TargetUrl" -ForegroundColor Gray
 Write-Host "[*] Tiers (VUs)   : $($TierValues -join ', ')" -ForegroundColor Gray
 Write-Host "[*] Tier Duration : ${EffectiveDuration}s (RampUp=${EffectiveRamp}s)" -ForegroundColor Gray
-Write-Host "[*] External APIs : $ExtApiVal | WritesInLoad: $WritesInLoadVal" -ForegroundColor Gray
+Write-Host "[*] Think Time    : ${ThinkMinMs}ms + rand(0..${ThinkRangeMs}ms) | Granularity: ${GranularityMs}ms" -ForegroundColor Gray
+Write-Host "[*] RunCoverage   : $RunCoverageVal | External APIs: $ExtApiVal | WritesInLoad: $WritesInLoadVal" -ForegroundColor Gray
 
 $JMeterArgs = @(
     "-n",
@@ -142,6 +187,9 @@ $JMeterArgs = @(
     "-JfixturePath=$FixturePath",
     "-JdefaultPassword=$DefaultPassword",
     "-JcoverageThreads=1",
+    "-JrunCoverage=$RunCoverageVal",
+    "-JloadThinkMinMs=$ThinkMinMs",
+    "-JloadThinkRangeMs=$ThinkRangeMs",
     "-Jtier1Threads=$($TierValues[0])",
     "-Jtier2Threads=$($TierValues[1])",
     "-Jtier3Threads=$($TierValues[2])",
@@ -152,13 +200,6 @@ $JMeterArgs = @(
     "-JincludeExternalApis=$ExtApiVal",
     "-JincludeWritesInLoad=$WritesInLoadVal"
 )
-
-if ($HtmlReport) {
-    if (Test-Path $HtmlReportDir) {
-        Remove-Item -Recurse -Force $HtmlReportDir
-    }
-    $JMeterArgs += @("-e", "-o", $HtmlReportDir)
-}
 
 Write-Host "`n[*] Running Apache JMeter test suite..." -ForegroundColor Yellow
 & $JMeterExe @JMeterArgs
@@ -181,6 +222,76 @@ function Get-Percentile {
     return [Math]::Round($Sorted[$idx], 2)
 }
 
+function Split-CsvLine {
+    param([string]$Line)
+    $fields = [System.Collections.Generic.List[string]]::new()
+    if ($null -eq $Line) { return $fields }
+    $sb = [System.Text.StringBuilder]::new()
+    $inQuotes = $false
+    for ($idx = 0; $idx -lt $Line.Length; $idx++) {
+        $ch = $Line[$idx]
+        if ($ch -eq '"') {
+            if ($inQuotes -and ($idx + 1) -lt $Line.Length -and $Line[$idx + 1] -eq '"') {
+                [void]$sb.Append('"')
+                $idx++
+            }
+            else {
+                $inQuotes = -not $inQuotes
+            }
+        }
+        elseif ($ch -eq ',' -and -not $inQuotes) {
+            [void]$fields.Add($sb.ToString())
+            [void]$sb.Clear()
+        }
+        else {
+            [void]$sb.Append($ch)
+        }
+    }
+    [void]$fields.Add($sb.ToString())
+    return $fields
+}
+
+$LoadRowsCount = 0
+if ($HtmlReport) {
+    $utf8NoBom = [System.Text.UTF8Encoding]::new($false)
+    $sr = [System.IO.StreamReader]::new($JtlPath, $utf8NoBom)
+    $sw = [System.IO.StreamWriter]::new($LoadJtlPath, $false, $utf8NoBom)
+    try {
+        $headerLine = $sr.ReadLine()
+        if ($null -ne $headerLine) {
+            $sw.WriteLine($headerLine)
+            $headers = Split-CsvLine -Line $headerLine
+            $threadIdx = -1
+            for ($hi = 0; $hi -lt $headers.Count; $hi++) {
+                if ($headers[$hi] -eq "threadName") { $threadIdx = $hi; break }
+            }
+            while ($null -ne ($rawLine = $sr.ReadLine())) {
+                if ($threadIdx -ge 0) {
+                    $cols = Split-CsvLine -Line $rawLine
+                    if ($cols.Count -gt $threadIdx -and $cols[$threadIdx] -match "^Stepped Tier \d+") {
+                        $sw.WriteLine($rawLine)
+                        $LoadRowsCount++
+                    }
+                }
+            }
+        }
+    }
+    finally {
+        $sw.Dispose()
+        $sr.Dispose()
+    }
+
+    $ReportSourceJtl = if ($LoadRowsCount -gt 0) { $LoadJtlPath } else { $JtlPath }
+    if (Test-Path $HtmlReportDir) {
+        Remove-Item -Recurse -Force $HtmlReportDir
+    }
+    Write-Host "[*] Generating JMeter HTML Dashboard from $(Split-Path -Leaf $ReportSourceJtl) (granularity=${GranularityMs}ms)..." -ForegroundColor Cyan
+    & $JMeterExe -g $ReportSourceJtl -o $HtmlReportDir -j $ReportLogPath "-Jjmeter.reportgenerator.overall_granularity=$GranularityMs"
+    if ($LASTEXITCODE -ne 0) {
+        Write-Warning "JMeter HTML report generator exited with code $LASTEXITCODE"
+    }
+}
+
 $Rows = @(Import-Csv -Path $JtlPath)
 if ($Rows.Count -eq 0) {
     throw "JTL file $JtlPath contains 0 samples."
@@ -193,14 +304,13 @@ $TotalFailed = 0
 
 $RouteGroups = @{}
 $TierGroups = @{}
+$LoadRows = [System.Collections.Generic.List[object]]::new()
 
 foreach ($Row in $Rows) {
     $Code = $Row.responseCode
     $Ok = ($Row.success -eq "true")
     $Label = $Row.label
     $Thread = $Row.threadName
-    $Elapsed = [double]$Row.elapsed
-    $Bytes = [double]$Row.bytes
 
     if ($Code -eq "401") { $Total401++ }
     if ($Code -eq "403") { $Total403++ }
@@ -210,11 +320,15 @@ foreach ($Row in $Rows) {
     # Categorize into Setup / Coverage / Tier
     $Bucket = if ($Thread -like "setUp*") {
         "Setup"
-    } elseif ($Thread -like "Full Endpoint*") {
+    }
+    elseif ($Thread -like "Full Endpoint*") {
         "Coverage"
-    } elseif ($Thread -match "^Stepped Tier (\d+)") {
+    }
+    elseif ($Thread -match "^Stepped Tier (\d+)") {
+        [void]$LoadRows.Add($Row)
         "Tier_$($Matches[1])"
-    } else {
+    }
+    else {
         "Other"
     }
 
@@ -284,20 +398,152 @@ foreach ($Bucket in ($TierGroups.Keys | Sort-Object)) {
     }
 }
 
+$SteppedTiersList = [System.Collections.Generic.List[object]]::new()
+for ($ti = 1; $ti -le 5; $ti++) {
+    $tKey = "Tier_$ti"
+    if ($TierGroups.ContainsKey($tKey) -and $TierGroups[$tKey].Count -gt 0) {
+        $Items = $TierGroups[$tKey]
+        $Times = @($Items | ForEach-Object { [double]$_.elapsed } | Sort-Object)
+        $ErrCount = @($Items | Where-Object { $_.success -ne "true" }).Count
+        $MinTs = ($Items | ForEach-Object { [double]$_.timeStamp } | Measure-Object -Minimum).Minimum
+        $MaxTs = ($Items | ForEach-Object { [double]$_.timeStamp + [double]$_.elapsed } | Measure-Object -Maximum).Maximum
+        $SpanSec = [Math]::Max(0.1, ($MaxTs - $MinTs) / 1000.0)
+        $TotalTierBytes = 0.0
+        foreach ($It in $Items) { $TotalTierBytes += [double]$It.bytes }
+        $Avg = if ($Times.Count -gt 0) { [Math]::Round((($Times | Measure-Object -Average).Average), 2) } else { 0 }
+        $Mbps = [Math]::Round(($TotalTierBytes * 8.0) / ($SpanSec * 1000000.0), 2)
+        $Conc = if ($TierValues[$ti - 1] -gt 0) { [int]$TierValues[$ti - 1] } else { [int]$ti }
+
+        [void]$SteppedTiersList.Add([ordered]@{
+                tier          = $ti
+                concurrency   = $Conc
+                durationSec   = [Math]::Round($SpanSec, 2)
+                totalRequests = $Items.Count
+                errorCount    = $ErrCount
+                errorRate     = [Math]::Round(($ErrCount / [Math]::Max(1, $Items.Count)) * 100.0, 2)
+                rps           = [Math]::Round($Items.Count / $SpanSec, 2)
+                mbps          = $Mbps
+                totalBytes    = [int64]$TotalTierBytes
+                percentiles   = [ordered]@{
+                    min = $Times[0]
+                    avg = $Avg
+                    p50 = Get-Percentile -Sorted $Times -Pct 50
+                    p90 = Get-Percentile -Sorted $Times -Pct 90
+                    p95 = Get-Percentile -Sorted $Times -Pct 95
+                    p99 = Get-Percentile -Sorted $Times -Pct 99
+                    max = $Times[$Times.Count - 1]
+                }
+            })
+    }
+}
+
+$RankingSourceRows = if ($LoadRows.Count -gt 0) { $LoadRows } else { $Rows }
+$RankingBuckets = @{}
+foreach ($R in $RankingSourceRows) {
+    $Lbl = $R.label
+    if (-not $RankingBuckets.ContainsKey($Lbl)) {
+        $RankingBuckets[$Lbl] = [System.Collections.ArrayList]::new()
+    }
+    [void]$RankingBuckets[$Lbl].Add($R)
+}
+
+$RouteRankList = [System.Collections.Generic.List[object]]::new()
+foreach ($Lbl in ($RankingBuckets.Keys | Sort-Object)) {
+    $Items = $RankingBuckets[$Lbl]
+    $Times = @($Items | ForEach-Object { [double]$_.elapsed } | Sort-Object)
+    $TotalTimeMs = 0.0
+    $TotalBytes = 0.0
+    $StatusBuckets = @{}
+    $StatusCounts = [ordered]@{}
+    foreach ($It in $Items) {
+        $TotalTimeMs += [double]$It.elapsed
+        $TotalBytes += [double]$It.bytes
+        $CodeStr = if ($It.responseCode) { [string]$It.responseCode } else { "0" }
+        if (-not $StatusBuckets.ContainsKey($CodeStr)) {
+            $StatusBuckets[$CodeStr] = [System.Collections.ArrayList]::new()
+            $StatusCounts[$CodeStr] = 0
+        }
+        [void]$StatusBuckets[$CodeStr].Add($It)
+        $StatusCounts[$CodeStr]++
+    }
+    $Avg = if ($Times.Count -gt 0) { [Math]::Round($TotalTimeMs / $Times.Count, 2) } else { 0 }
+
+    $Variances = [System.Collections.Generic.List[object]]::new()
+    $SortedCodes = $StatusBuckets.Keys | Sort-Object { $StatusBuckets[$_].Count } -Descending | Select-Object -First 5
+    foreach ($CodeStr in $SortedCodes) {
+        $CodeItems = $StatusBuckets[$CodeStr]
+        $CodeTimes = @($CodeItems | ForEach-Object { [double]$_.elapsed } | Sort-Object)
+        $ParsedCode = 0
+        [void][int]::TryParse($CodeStr, [ref]$ParsedCode)
+        $ErrSample = ""
+        if ($ParsedCode -ge 400 -or $ParsedCode -eq 0) {
+            $FirstErr = $CodeItems | Where-Object { $_.failureMessage -or $_.responseMessage } | Select-Object -First 1
+            if ($FirstErr) {
+                $ErrSample = if ($FirstErr.failureMessage) { [string]$FirstErr.failureMessage } else { [string]$FirstErr.responseMessage }
+                if ($ErrSample -eq "" -and $CodeStr -ne "0") { $ErrSample = "HTTP $CodeStr" }
+            }
+        }
+        [void]$Variances.Add([ordered]@{
+                statusCode     = $ParsedCode
+                count          = $CodeItems.Count
+                percentage     = [Math]::Round(($CodeItems.Count / [Math]::Max(1, $Items.Count)) * 100.0, 2)
+                minLatency     = $CodeTimes[0]
+                medianLatency  = Get-Percentile -Sorted $CodeTimes -Pct 50
+                slowestLatency = $CodeTimes[$CodeTimes.Count - 1]
+                sampleError    = $ErrSample
+            })
+    }
+
+    [void]$RouteRankList.Add([ordered]@{
+            route        = $Lbl
+            totalCalls   = $Items.Count
+            totalBytes   = [int64]$TotalBytes
+            totalTimeMs  = [Math]::Round($TotalTimeMs, 2)
+            avgLatency   = $Avg
+            minLatency   = $Times[0]
+            p50Latency   = Get-Percentile -Sorted $Times -Pct 50
+            p90Latency   = Get-Percentile -Sorted $Times -Pct 90
+            p95Latency   = Get-Percentile -Sorted $Times -Pct 95
+            p99Latency   = Get-Percentile -Sorted $Times -Pct 99
+            maxLatency   = $Times[$Times.Count - 1]
+            statusCounts = $StatusCounts
+            topVariances = $Variances
+        })
+}
+
+$MostTimeConsuming = [System.Collections.Generic.List[object]]::new()
+foreach ($entry in ($RouteRankList | Sort-Object { $_.totalTimeMs } -Descending)) { [void]$MostTimeConsuming.Add($entry) }
+$SlowestRoutes = [System.Collections.Generic.List[object]]::new()
+foreach ($entry in ($RouteRankList | Sort-Object { $_.p95Latency } -Descending | Select-Object -First 15)) { [void]$SlowestRoutes.Add($entry) }
+$MostTraffic = [System.Collections.Generic.List[object]]::new()
+foreach ($entry in ($RouteRankList | Sort-Object { $_.totalBytes } -Descending | Select-Object -First 15)) { [void]$MostTraffic.Add($entry) }
+
 $SummaryPayload = [ordered]@{
-    timestamp        = (Get-Date).ToString("o")
-    engine           = "apache-jmeter-5.6.3"
-    targetUrl        = $TargetUrl
-    dryRun           = [bool]$DryRun
-    tiers            = $TierValues
-    durationSeconds  = $EffectiveDuration
-    totalSamples     = $Rows.Count
-    totalFailed      = $TotalFailed
-    total401         = $Total401
-    total403         = $Total403
-    total5xx         = $Total5xx
-    tierBreakdown    = $TierSummary
-    routeBreakdown   = $RouteSummary
+    timestamp       = (Get-Date).ToString("o")
+    engine          = "apache-jmeter-5.6.3"
+    engineLabel     = "Apache JMeter (Stepped Concurrency)"
+    targetUrl       = $TargetUrl
+    dryRun          = [bool]$DryRun
+    runCoverage     = (-not [bool]$SkipCoverage)
+    granularityMs   = $GranularityMs
+    thinkMinMs      = $ThinkMinMs
+    thinkRangeMs    = $ThinkRangeMs
+    tiers           = $TierValues
+    durationSeconds = $EffectiveDuration
+    totalSamples    = $Rows.Count
+    loadSamples     = $LoadRows.Count
+    totalFailed     = $TotalFailed
+    total401        = $Total401
+    total403        = $Total403
+    total5xx        = $Total5xx
+    steppedTiers    = $SteppedTiersList
+    rankings        = [ordered]@{
+        mostTimeConsuming = $MostTimeConsuming
+        slowestRoutes     = $SlowestRoutes
+        mostTraffic       = $MostTraffic
+    }
+    tierBreakdown   = $TierSummary
+    routeBreakdown  = $RouteSummary
 }
 
 $SummaryPayload | ConvertTo-Json -Depth 8 | Set-Content -Path $SummaryJsonPath -Encoding UTF8
@@ -309,7 +555,7 @@ Write-Host "`n--- Tier Breakdown ---" -ForegroundColor Yellow
 foreach ($Key in $TierSummary.Keys) {
     $T = $TierSummary[$Key]
     Write-Host ("{0,-12} | Reqs: {1,6} | Errs: {2,4} (401={3}) | RPS: {4,7} | p50: {5,6}ms | p95: {6,6}ms | p99: {7,6}ms" -f `
-        $Key, $T.requests, $T.errors, $T.count401, $T.rps, $T.p50Ms, $T.p95Ms, $T.p99Ms)
+            $Key, $T.requests, $T.errors, $T.count401, $T.rps, $T.p50Ms, $T.p95Ms, $T.p99Ms)
 }
 Write-Host "`n[*] Exported JSON summary: $SummaryJsonPath" -ForegroundColor Green
 if ($HtmlReport) {

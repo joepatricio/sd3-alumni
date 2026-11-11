@@ -1,0 +1,4 @@
+[+] Locust preflight verified -> Admins=3, Officials=1, Regulars=2 | Disposable mod bulletins=5, events=4
+
+[*] Locust test completed. Exporting telemetry to locust_metrics.json...
+[+] Locust telemetry saved to: C:\Users\PATRICIOJOSENAJEAL\Desktop\bin\sd3-alumni\test\load\results\locust_metrics.json (calls=216, errs=0, exc=0, 401=0)

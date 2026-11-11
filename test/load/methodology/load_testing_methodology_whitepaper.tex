@@ -1,0 +1,497 @@
+\documentclass[11pt,letterpaper]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage[margin=0.84in,top=0.88in,bottom=0.88in]{geometry}
+\usepackage{microtype}
+\usepackage{xurl}
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{array}
+\usepackage{enumitem}
+\usepackage{xcolor}
+\usepackage{tcolorbox}
+\usepackage{tikz}
+\usepackage{pgfplots}
+\usepackage{listings}
+\usepackage{fancyhdr}
+\usepackage{titlesec}
+\usepackage{float}
+\usepackage{caption}
+\usepackage{hyperref}
+
+\pgfplotsset{compat=1.18}
+\usetikzlibrary{arrows.meta,positioning,shapes.geometric,fit,backgrounds}
+
+% --- Color Palette (Slate & Deep Navy Engineering Theme) ---
+\definecolor{NavyPrimary}{HTML}{0F172A}
+\definecolor{BlueAccent}{HTML}{1E3A8A}
+\definecolor{SteelSlate}{HTML}{334155}
+\definecolor{TealSignal}{HTML}{0F766E}
+\definecolor{AmberWarn}{HTML}{B45309}
+\definecolor{CrimsonAlert}{HTML}{B91C1C}
+\definecolor{SoftBg}{HTML}{F8FAFC}
+\definecolor{RuleGray}{HTML}{CBD5E1}
+
+\hypersetup{
+    colorlinks=true,
+    linkcolor=BlueAccent,
+    urlcolor=TealSignal,
+    citecolor=BlueAccent,
+    pdftitle={Hybrid Load, Endpoint Coverage, and Concurrency Sustainability Testing Methodology for the SD3 Alumni Platform},
+    pdfauthor={SD3 Alumni Engineering Team}
+}
+
+% --- Typography & Section Styling ---
+\titleformat{\section}
+  {\Large\bfseries\color{NavyPrimary}}
+  {\thesection}{0.8em}{}
+  [\vspace{2pt}{\color{RuleGray}\titlerule[0.8pt]}]
+
+\titleformat{\subsection}
+  {\large\bfseries\color{BlueAccent}}
+  {\thesubsection}{0.7em}{}
+
+\titleformat{\subsubsection}
+  {\normalsize\bfseries\color{SteelSlate}}
+  {\thesubsubsection}{0.6em}{}
+
+\setlist[itemize]{leftmargin=1.4em,itemsep=2pt,topsep=4pt}
+\setlist[enumerate]{leftmargin=1.6em,itemsep=3pt,topsep=4pt}
+\setlength{\emergencystretch}{2.5em}
+\tolerance=1200
+
+% --- Running Headers / Footers ---
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small\color{SteelSlate}\textbf{SD3 Alumni Platform} --- Testing Methodology White Paper}
+\fancyhead[R]{\small\color{SteelSlate}Target: \texttt{https://najealp.top}}
+\fancyfoot[L]{\small\color{SteelSlate}Document Revision 1.0 \quad|\quad November 11, 2026}
+\fancyfoot[R]{\small\color{SteelSlate}Page \thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\footrulewidth}{0.4pt}
+
+% --- Callout Boxes ---
+\tcbuselibrary{breakable}
+\newtcolorbox{calloutbox}[2][BlueAccent]{
+  colback=SoftBg,
+  colframe=#1,
+  coltitle=white,
+  fonttitle=\bfseries\small,
+  title=#2,
+  arc=3pt,
+  boxrule=0.9pt,
+  left=8pt,
+  right=8pt,
+  top=6pt,
+  bottom=6pt,
+  breakable
+}
+
+% --- Code Listings ---
+\lstset{
+  basicstyle=\ttfamily\footnotesize,
+  backgroundcolor=\color{SoftBg},
+  frame=single,
+  rulecolor=\color{RuleGray},
+  breaklines=true,
+  breakatwhitespace=true,
+  showstringspaces=false,
+  tabsize=2,
+  keywordstyle=\bfseries\color{BlueAccent},
+  commentstyle=\itshape\color{TealSignal},
+  stringstyle=\color{AmberWarn},
+  xleftmargin=4pt,
+  xrightmargin=4pt
+}
+
+\begin{document}
+
+% ==============================================================================
+% TITLE HEADER
+% ==============================================================================
+\thispagestyle{empty}
+\begin{tcolorbox}[
+  colback=NavyPrimary,
+  colframe=NavyPrimary,
+  arc=4pt,
+  left=16pt,
+  right=16pt,
+  top=18pt,
+  bottom=18pt
+]
+  {\color{RuleGray}\small\textsc{Engineering White Paper \quad|\quad Performance, Coverage \& Sustainability Validation}}\\[6pt]
+  {\color{white}\LARGE\bfseries Hybrid Load, Endpoint Coverage, and SQLite\\Concurrency Testing Methodology for SD3 Alumni}\\[10pt]
+  {\color{RuleGray}\normalsize
+  A Two-Phase Parallel Orchestration Architecture Combining Fail-Fast JMeter Contract\\
+  Verification, Think-Time-Modulated Stepped Load, Behavioral Locust Personas,\\
+  and Automated Multi-Modal Reporting}
+\end{tcolorbox}
+
+\vspace{6pt}
+\noindent\begin{tabularx}{\textwidth}{@{} >{\raggedright\arraybackslash}p{0.23\textwidth} >{\raggedright\arraybackslash}p{0.26\textwidth} >{\raggedright\arraybackslash}p{0.28\textwidth} >{\raggedright\arraybackslash}X @{}}
+  \textbf{Target Environment:} & \textbf{Database Engine:} & \textbf{Uplink Envelope:} & \textbf{Effective Date:} \\
+  \texttt{https://najealp.top} & SQLite (\texttt{DELETE} mode) & $70\text{ Mbps}$ ($\approx 8.75\text{ MB/s}$) & November 11, 2026 \\
+\end{tabularx}
+\vspace{8pt}
+{\color{RuleGray}\hrule height 1pt}
+\vspace{10pt}
+
+\begin{abstract}
+\noindent Conventional API stress tests frequently mischaracterize production readiness because of three methodological failures: silent HTTP \texttt{401 Unauthorized} cascades that inflate synthetic throughput without exercising database paths, unpaced burst loops whose samples collapse to start/end boundaries of time-series charts, and homogeneous read-only requests that overlook write-lock contention. This white paper formalizes the hybrid testing methodology implemented for the SD3 Alumni platform (\texttt{test/load/}). The architecture separates validation into a deterministic, fail-fast \textbf{Phase~1} credential pre-flight and 191-sample endpoint/CRUD coverage gate in Apache JMeter (\texttt{benchmark.jmx}), followed by a \textbf{Phase~2} parallel execution combining think-time-paced stepped JMeter load tiers with stateful, multi-role Locust personas (\texttt{locustfile.py}), and concluding with a \textbf{Phase~3} automated telemetry compiler (\texttt{generate\_report.py} and \texttt{export\_reports\_pdf.mjs}). Empirical verification against \texttt{https://najealp.top} demonstrates $0\%$ HTTP failure across $191$ coverage requests, $499$ stepped JMeter load samples ($\text{APDEX} = 0.953$, $p_{50} = 244\text{ ms}$, $p_{95} = 886\text{ ms}$), and $216$ parallel Locust behavioral transactions ($p_{50} = 280\text{ ms}$, $p_{95} = 1000\text{ ms}$), while isolating synchronous \texttt{bcrypt} hashing and SQLite \texttt{DELETE}-mode write locking as the principal drivers of tail latency.
+\end{abstract}
+
+\vspace{6pt}
+\tableofcontents
+\vspace{8pt}
+{\color{RuleGray}\hrule height 0.6pt}
+
+% ==============================================================================
+% SECTION 1
+% ==============================================================================
+\section{System Under Test and Operational Envelope}
+
+\subsection{Application Stack and Persistence Layer}
+The SD3 Alumni platform exposes a monolithic Node.js backend (\texttt{api/index.js}) serving both JSON REST routes and a compiled React~19 Single-Page Application (SPA) catch-all handler:
+\begin{itemize}
+  \item \textbf{HTTP \& Routing Layer:} Express~5 (\texttt{express \^{}5.3.0}) with JWT authentication (\texttt{jsonwebtoken \^{}9.0.3}) supporting dual extraction from \texttt{Authorization: Bearer} headers and HTTP cookies (\texttt{token} / \texttt{adminToken}). Role separation is enforced by middleware: \texttt{authenticateToken} rejects missing tokens with HTTP~\texttt{401} and admin tokens with HTTP~\texttt{403}, whereas \texttt{authenticateAdmin\-Token} enforces \texttt{role === "admin"}.
+  \item \textbf{ORM \& In-Process Database:} Prisma ORM (\texttt{@prisma/client \^{}7.10.1}) bound through \texttt{@prisma/adapter-better-sqlite3} to native \texttt{better-sqlite3} (\texttt{\^{}12.11.1}). Generic REST routes (\texttt{GET/\allowbreak POST/\allowbreak PATCH/\allowbreak PUT/\allowbreak DELETE /api/:table}) share dynamic filtering, sorting, and relational hydration via \texttt{queryParser.js} (\texttt{\_where}, \texttt{\_sort}, \texttt{\_order}, \texttt{\_include}, \texttt{\_page}, \texttt{\_per\_page}).
+  \item \textbf{Cryptographic Workloads:} User authentication relies on \texttt{bcryptjs} (\texttt{\^{}3.0.3}, cost factor $10$). Crucially, inspection of \texttt{api/index.js} reveals an asymmetry: login paths invoke asynchronous \texttt{await bcrypt.compare(...)}, whereas write endpoints—\texttt{POST /\allowbreak api/\allowbreak auth/\allowbreak register}, \texttt{POST /\allowbreak api/\allowbreak auth/\allowbreak reset-password}, and \texttt{POST /\allowbreak api/\allowbreak admin/\allowbreak users}—execute synchronous \texttt{bcrypt.hashSync(password, 10)}, blocking the Node.js event loop for the key-derivation duration.
+  \item \textbf{Media, External Integrations \& Rate Limiters:} Image uploads pass through \texttt{multer} and \texttt{sharp} (\texttt{POST /\allowbreak api/\allowbreak upload}); donation checkout flows call PayMongo (\texttt{POST /\allowbreak api/\allowbreak donations/\allowbreak checkout} and \texttt{/\allowbreak api/\allowbreak donations/\allowbreak webhook}). During test campaigns, \texttt{authLimiter} and \texttt{contentLimiter} (\texttt{express-rate-limit}) set \texttt{skip: () => true} to measure server capacity rather than IP-throttling thresholds.
+\end{itemize}
+
+\subsection{Deliberate SQLite Journal Policy and Physical Bandwidth Ceiling}
+Per project architectural constraints (\texttt{api/index.js}), the database explicitly maintains rollback journal mode rather than Write-Ahead Logging:
+\begin{lstlisting}[language=SQL,caption={Active SQLite concurrency pragmas initialized at backend startup (\texttt{api/index.js}).}]
+PRAGMA journal_mode = DELETE;
+PRAGMA busy_timeout = 10000;
+\end{lstlisting}
+In \texttt{DELETE} mode, SQLite permits concurrent shared reads when no writer commits, but acquiring an exclusive commit lock blocks all concurrent readers and writers until the rollback journal is unlinked, bounded by the $10\text{ s}$ adapter and SQLite \texttt{busy\_timeout}. Preserving this constraint intentionally lets the test suite observe lock-queue degradation under realistic write pressure instead of masking it.
+
+Simultaneously, \texttt{test/load/config.json} constrains the target VPS host with a physical network ceiling of $C_{\text{uplink}} = 70\text{ Mbits/s}$ ($\approx 8.75\text{ MB/s}$). For relational catalog responses with average wire payload $\bar{S}$ bytes, the theoretical network-bound request ceiling $\lambda_{\max}$ follows:
+\begin{equation}
+  \label{eq:bandwidth}
+  \lambda_{\max} = \frac{C_{\text{uplink}} \times 10^{6}}{8 \cdot \bar{S}} \quad \text{[req/s]}.
+\end{equation}
+For paginated relational feeds averaging $\bar{S} \in [15, 25]\text{ KB}$, link saturation occurs near $350\text{--}580\text{ req/s}$, meaning load tests must separately resolve WAN queueing from SQLite lock contention.
+
+% ==============================================================================
+% SECTION 2
+% ==============================================================================
+\section{Methodological Foundations and Threat Model}
+
+During suite evolution, three structural pathologies of naive load tests were identified and systematically eliminated:
+
+\begin{enumerate}
+  \item \textbf{The Silent \texttt{401} Throughput Mirage:} If seeded accounts or JWT tokens fail before load generation, protected routes short-circuit in middleware before touching Prisma or SQLite. Throughput rises artificially while real application logic remains untested. Our methodology makes token verification and automatic fallback provisioning mandatory prerequisites, treating \emph{any} \texttt{HTTP 401} across Phase~1 or Phase~2 as a hard suite failure (exit code \texttt{2}).
+  \item \textbf{Edge-Hugging Time-Series Collapse ("Request Slamming"):} Closed-loop threads lacking inter-request think times dispatch requests simultaneously at thread spawn and finish together before sampling intervals settle. With JMeter's default $60\text{ s}$ HTML report granularity and zero timer delay, plots such as \emph{Transactions per Second} exhibit points hugging only the left and right edges. Introducing a randomized per-iteration \texttt{UniformRandomTimer} ($100\text{--}500\text{ ms}$), configuring $1000\text{ ms}$ reporting granularity, and separating setup/coverage samples from load samples restores smooth, physically meaningful per-second waveforms.
+  \item \textbf{Cross-VU State Collisions:} When multiple virtual users target identical primary keys for RSVPs, social connections, or moderation toggles, unique constraints and state-transition races distort error rates with test-harness artifacts rather than genuine server faults. We isolate state via VU-owned disposable resources, dedicated moderation target pools, and deterministic pre/post-test cleanup.
+\end{enumerate}
+
+\begin{calloutbox}[TealSignal]{Unpaced Ceiling Probing vs.\ Paced Realistic Concurrency}
+The repository preserves two complementary load mechanisms: the legacy Node.js worker engine (\texttt{test/load/node\_benchmark.js}, paired with \texttt{run\_suite.ps1}) and the unified JMeter + Locust parallel orchestrator (\texttt{run\_parallel\_suite.ps1}). The Node engine opens up to $2000$ HTTP/HTTPS \texttt{keepAlive} sockets with zero think time across $20$ read endpoints to locate raw network/socket limits quickly, whereas the unified suite pairs paced stepped concurrency (JMeter) with heterogeneous read/write user personas (Locust) to measure end-to-end sustainability.
+\end{calloutbox}
+
+% ==============================================================================
+% SECTION 3
+% ==============================================================================
+\section{Two-Phase Parallel Orchestration Architecture}
+
+The canonical entry point \texttt{test/load/run\_parallel\_suite.ps1} enforces strict environment governance before coordinating three sequential stages (with two parallel load engines inside Phase~2), as illustrated in Figure~\ref{fig:architecture}.
+
+\begin{figure}[H]
+\centering
+\resizebox{\linewidth}{!}{%
+\begin{tikzpicture}[
+  node distance=18mm and 11mm,
+  box/.style={draw=BlueAccent, fill=SoftBg, rounded corners=3pt, thick, minimum width=3.7cm, minimum height=1.05cm, align=center, font=\small},
+  gate/.style={draw=AmberWarn, fill=white, diamond, aspect=2.2, thick, align=center, font=\footnotesize\bfseries},
+  phase/.style={draw=NavyPrimary, fill=NavyPrimary!5, rounded corners=4pt, dashed, inner xsep=10pt, inner ysep=9pt},
+  lane/.style={draw=NavyPrimary, fill=NavyPrimary, text=white, font=\tiny\bfseries, rounded corners=2pt, rotate=90, anchor=south, inner xsep=4pt, inner ysep=2.2pt},
+  arrow/.style={-{Stealth[length=2.3mm]}, thick, color=SteelSlate}
+]
+
+% Env check
+\node[box] (venv) {\textbf{Pre-Flight Venv Guard}\\{\scriptsize \texttt{Scripts/Activate.ps1} + \texttt{sys.prefix}}};
+
+% Phase 1
+\node[box, below=10mm of venv] (p1setup) {\textbf{JMeter SetupThreadGroup}\\{\scriptsize 5 Auth + Seed Discovery Samplers}};
+\node[box, right=11mm of p1setup] (p1cov) {\textbf{Full Coverage \& CRUD Matrix}\\{\scriptsize 186 Functional Samplers (1 VU)}};
+\node[gate, right=11mm of p1cov] (p1gate) {Gate Check\\{\scriptsize Fails=0 \& 401=0?}};
+
+% Phase 2 parallel
+\node[box, below=17mm of p1setup, fill=BlueAccent!8] (p2jm) {\textbf{JMeter Stepped Load}\\{\scriptsize Tiers $\le 5$ ($100\text{--}1000$ VU)}\\{\scriptsize Think: $100 + \mathcal{U}(0,400)\text{ ms}$}};
+\node[box, below=17mm of p1cov, fill=TealSignal!8, draw=TealSignal] (p2loc) {\textbf{Locust Personas (Parallel)}\\{\scriptsize Regular(55), Official(20),}\\{\scriptsize RegWorst(15), Admin(10)}};
+\node[gate, right=11mm of p2loc] (p2gate) {Phase 2 Gate\\{\scriptsize Setup / 401 / Exc}};
+
+% Phase 3
+\node[box, below=17mm of p2jm] (p3xl) {\textbf{Excel Report Compiler}\\{\scriptsize \texttt{generate\_report.py} $\to$ 5 Sheets}};
+\node[box, below=17mm of p2loc] (p3pdf) {\textbf{Multi-Tab PDF Exporter}\\{\scriptsize \texttt{export\_reports\_pdf.mjs} $\to$ Edge/Chrome}};
+
+% Backgrounds + unobstructed vertical swimlane pills
+\begin{scope}[on background layer]
+  \node[phase, fit=(p1setup)(p1cov)(p1gate)] (bg1) {};
+  \node[phase, fit=(p2jm)(p2loc)(p2gate)] (bg2) {};
+  \node[phase, fit=(p3xl)(p3pdf)] (bg3) {};
+  \node[lane] at ([xshift=-4pt]bg1.west) {PHASE 1: GATE};
+  \node[lane] at ([xshift=-4pt]bg2.west) {PHASE 2: LOAD};
+  \node[lane] at ([xshift=-4pt]bg3.west) {PHASE 3: REPORT};
+\end{scope}
+
+% Arrows
+\draw[arrow] (venv.south) -- (p1setup.north);
+\draw[arrow] (p1setup) -- (p1cov);
+\draw[arrow] (p1cov) -- (p1gate);
+\draw[arrow] (p1gate.south) -- ++(0,-6mm) coordinate (junc1) -| (p2loc.north);
+\draw[arrow] (junc1) -| (p2jm.north);
+\draw[arrow] (p2jm.east) -- (p2loc.west);
+\draw[arrow] (p2loc.east) -- (p2gate.west);
+\draw[arrow] (p2gate.south) -- ++(0,-6mm) coordinate (junc2) -| (p3pdf.north);
+\draw[arrow] (junc2) -| (p3xl.north);
+
+\end{tikzpicture}%
+}
+\caption{End-to-end orchestration pipeline in \texttt{test/load/run\_parallel\_suite.ps1}. Phase~1 gates Phase~2 load injection; Phase~2 executes JMeter and Locust concurrently; Phase~3 builds consolidated Excel and expanded PDF artifacts.}
+\label{fig:architecture}
+\end{figure}
+
+Before touching any workload engine, \texttt{run\_parallel\_suite.ps1} activates the repository-local Python virtual environment (\texttt{Scripts/\allowbreak Activate.ps1}), asserts \texttt{\$env:VIRTUAL\_ENV} matches the repository root, verifies \texttt{python} resolves to \texttt{Scripts/\allowbreak python.exe}, and confirms \texttt{sys.prefix != \allowbreak sys.base\_prefix} per \texttt{.agents/\allowbreak python.md}. Stale JTL, JSON, log, and HTML directories in \texttt{test/load/results/} are purged prior to Phase~1.
+
+% ==============================================================================
+% SECTION 4
+% ==============================================================================
+\section{Phase 1: Credential Verification and Full Endpoint Coverage Matrix}
+
+\subsection{Pre-Flight Credential Signing and Token Validation}
+Because \texttt{benchmark.jmx} sets \texttt{TestPlan.serialize\_threadgroups=true}, its \texttt{SetupThreadGroup} executes strictly before any subsequent thread group. It contains five samplers:
+\begin{enumerate}
+  \item A Groovy \texttt{JSR223Sampler} (\texttt{[Setup] Sign Credentials, Verify All Tokens \& Discover Seed IDs}) that reads candidate accounts from \texttt{config.json} (default password \texttt{123456}), authenticates Admin, Official, and Regular accounts, provisions missing functional testers via \texttt{/api/admin/users} or \texttt{/api/auth/reset-password} when absent, and extracts live entity IDs (\texttt{sampleBulletinId}, \texttt{sampleEventId}, status lookup IDs, categories, degrees) into global JMeter properties.
+  \item Four explicit HTTP verification samplers validate the minted tokens end-to-end before Phase~1 proceeds: \texttt{GET /\allowbreak api/\allowbreak auth/\allowbreak admin/\allowbreak me}, \texttt{GET /\allowbreak api/\allowbreak admin/\allowbreak dashboard-stats}, \texttt{GET /\allowbreak api/\allowbreak auth/\allowbreak me (Official)}, and \texttt{GET /\allowbreak api/\allowbreak auth/\allowbreak me (Regular)}.
+\end{enumerate}
+
+\subsection{Comprehensive 186-Sampler Functional \& CRUD Coverage Matrix}
+Immediately following setup verification, the \texttt{Full Endpoint Coverage \& CRUD Matrix} thread group runs as a single serialized thread (\texttt{-CoverageOnly} sets stepped tier threads to zero) exercising \textbf{186 functional requests} ($191$ total including the $5$ setup samplers):
+\begin{itemize}
+  \item \textbf{Lookup \& Relational Catalog Reads:} All read-only status dictionaries (\texttt{userStatuses}, \texttt{contentStatuses}, \texttt{eventStatuses}, \texttt{donationStatuses}, \texttt{profileStatuses}, \texttt{connectionStatuses}, \texttt{degrees}, categories, achievements), \texttt{HEAD} requests, paginated feeds, \texttt{\_include} relational joins, and \texttt{\_sort}/\texttt{\_order} ordering checks.
+  \item \textbf{Query Parser Operator Coverage:} Targeted probes on \texttt{/api/achievements} and \texttt{/api/users} verifying \texttt{\_where} predicates including \texttt{contains}, \texttt{endsWith}, \texttt{startsWith}, \texttt{gt}, combined \texttt{in+gte+lte}, \texttt{notIn}, and nested foreign-key filtering.
+  \item \textbf{Isolated CRUD Lifecycles (\texttt{POST $\to$ GET $\to$ PATCH $\to$ PUT $\to$ DELETE}):} Round-trip creation, retrieval, partial/full updates, and deterministic deletion across domain tables (\texttt{locations}, \texttt{bulletins}, \texttt{bulletinLikes}, \texttt{comments}, \texttt{commentLikes}, \texttt{events}, \texttt{userRsvps}, \texttt{donations}, \texttt{clefLogs}, \texttt{records}, \texttt{notifications}, \texttt{userAchievements}, plus admin user/bulletin/event creation).
+  \item \textbf{Stateful Workflows, Media \& External Gateways:} Multipart fixture upload (\texttt{fixture.png} $\to$ \texttt{POST /api/upload} $\to$ \texttt{GET /uploads/...}), SPA root and hero asset checks, disposable password-reset verification, all social connection transitions on \texttt{/api/connections/action} (\texttt{add}, \texttt{accept}, \texttt{reject}, \texttt{remove}, \texttt{block}, \texttt{unblock}), event conclusion (\texttt{POST /api/events/:id/conclude}), and conditional PayMongo checkout/webhook tests toggled by \texttt{INCLUDE\_EXTERNAL\_APIS}.
+\end{itemize}
+If \texttt{total401 > 0} or \texttt{totalFailed > 0}, \texttt{run\_parallel\_suite.ps1} logs offending route breakdowns and aborts immediately without spawning Phase~2 load.
+
+% ==============================================================================
+% SECTION 5
+% ==============================================================================
+\section{Phase 2: Parallel Stepped Concurrency and Realistic Personas}
+
+When Phase~1 passes cleanly, Phase~2 launches two complementary engines concurrently so background write/moderation contention overlaps with stepped concurrency scaling.
+
+\subsection{Engine A: Apache JMeter Stepped Concurrency (\texttt{-SkipCoverage})}
+During Phase~2, \texttt{run\_jmeter.ps1} invokes \texttt{benchmark.jmx} with \texttt{-JrunCoverage=false}, preserving the 5-sampler auth \texttt{SetupThreadGroup} while disabling the 186-sampler coverage thread group. Five sequential stepped thread groups (\texttt{TIER1}--\texttt{TIER5}) invoke a shared \texttt{ModuleController} referencing \texttt{Load Mix Test Fragment}:
+\begin{itemize}
+  \item \textbf{Tier Profiles:} \texttt{DryRun} evaluates $V \in \{10, 25\}$ VUs for $D_{\text{tier}} = 10\text{ s}$ each ($R_{\text{ramp}} = 2\text{ s}$); \texttt{Full} defaults to $V \in \{100, 250, 500, 750, 1000\}$ VUs for $D_{\text{tier}} = 30\text{ s}$ ($R_{\text{ramp}} = 10\text{ s}$). Thread groups assigned $0$ threads are skipped.
+  \item \textbf{Weighted Mix \& Think-Time Pacing:} A \texttt{RandomController} dispatches uniformly across \textbf{51 enabled endpoints} (lookups, paginated catalogs, relational \texttt{\_include} feeds, sorted feeds, admin dashboards, token checks, server time, static assets, and \texttt{check-email}/\texttt{HEAD}), plus optional write transactions gated by \texttt{-IncludeWritesInLoad}. Every iteration pauses for a uniform random think time:
+  \begin{equation}
+    \label{eq:think}
+    T_{\text{think}} \sim \mathcal{U}(t_{\min},\, t_{\min} + \Delta t) = \mathcal{U}(100,\, 500)\text{ ms}, \qquad \mathbb{E}[T_{\text{think}}] = 300\text{ ms}.
+  \end{equation}
+  \item \textbf{Clean Load-Only Dashboard Filtering:} Prior to invoking JMeter's HTML ReportGenerator at \texttt{overall\_granularity = 1000 ms}, \texttt{run\_jmeter.ps1} filters the raw JTL stream with a \emph{BOM-free UTF-8} writer (\texttt{[System.Text.UTF8Encoding]::new(\$false)}) retaining only rows matching \texttt{\^{}Stepped Tier \textbackslash d+} into \texttt{jmeter\_results\_load.jtl}. Removing the UTF-8 Byte Order Mark prevents JMeter CSV parser header corruption, while excluding Setup rows keeps initial auth warmup outliers out of load APDEX and percentiles.
+\end{itemize}
+
+\subsection{Engine B: Locust Headless Behavioral Personas}
+Running simultaneously alongside JMeter, Locust executes for $T_{\text{locust}} = \max(15,\, N_{\text{active\_tiers}} \cdot D_{\text{tier}} + 4)\text{ s}$ ($24\text{ s}$ in DryRun at $20$ VUs spawned at $5\text{ VU/s}$; $100$ VUs at $10\text{ VU/s}$ in Full defaults). To avoid Windows headless \texttt{Start-Process} stdin errors in \texttt{locust/input\_events.py} (\texttt{isatty()} on a null handle), \texttt{run\_parallel\_suite.ps1} binds standard input to an empty temporary file cleaned up on exit.
+
+\subsubsection{Persona Pool Pre-Flight and Auto-Provisioning}
+In \texttt{on\_test\_start}, Locust tests Admin, Official (prioritizing \texttt{loadtest\_jmx\_official@najealp.top}), and Regular candidate pools in parallel via \texttt{ThreadPoolExecutor(max\_workers=10)}. Missing accounts trigger automatic admin-API provisioning (\texttt{\_provision\_and\_verify\_user}). If any pool remains empty, Locust sets \texttt{SETUP\_ERROR}, triggers \texttt{environment.runner.quit()}, and aborts instead of running failing users. Pre-flight then discovers category IDs and seeds $5$ disposable Pending bulletins plus $4$ disposable events ($2$ moderation targets, $2$ conclude targets).
+
+\begin{table}[H]
+\centering
+\caption{Behavioral workload distribution and pacing parameters in \texttt{test/load/locustfile.py}.}
+\label{tab:personas}
+\small
+\begin{tabularx}{\textwidth}{@{}l c c X@{}}
+\toprule
+\textbf{Persona Class} & \textbf{Weight} & \textbf{Wait Time (s)} & \textbf{Primary Stateful Workflow \& Isolation Strategy} \\
+\midrule
+\texttt{RegularUser} & $55\%$ & $\mathcal{U}(0.5, 2.0)$ & Browses sorted/filtered bulletins \& events, relational directories, lookups; creates VU-exclusive event (\texttt{own\_event\_id}) + toggles private RSVP (\texttt{own\_rsvp\_id}); patches own profile bio; posts tracked community bulletins. \\
+\texttt{OfficialUser} & $20\%$ & $\mathcal{U}(0.3, 1.5)$ & Posts approved official bulletins ($w=4$); manages exclusive official event RSVP lifecycle ($w=3$); inspects relational bulletin catalogs ($w=2$). \\
+\texttt{RegistrationWorstCase} & $15\%$ & $\mathcal{U}(0.8, 2.5)$ & Sends \texttt{POST /api/auth/register} bursts combining synchronous \texttt{bcrypt.hashSync} CPU work with multi-table SQLite writes. \\
+\texttt{CrazyAdmin} & $10\%$ & $\mathcal{U}(0.1, 0.5)$ & Aggressively polls \texttt{/api/admin/dashboard-stats} and donation summaries/tables while flipping moderation statuses across disposable seeded bulletin/event targets. \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+Each Locust user validates its session token in \texttt{on\_start} (\texttt{/api/auth/me} or \texttt{/api/auth/admin/me}), cleans up its VU-owned RSVP and event in \texttt{on\_stop}, and relies on \texttt{on\_test\_stop} to purge all \texttt{CREATED\_BULLETIN\_IDS} and \texttt{CREATED\_EVENT\_IDS}, serialize per-route metrics plus runner exception counts (\texttt{exceptionsCount}) into \texttt{locust\_metrics.json}, and trigger strict failure gates if \texttt{setupError}, \texttt{count401 > 0}, \texttt{totalErrors > 0}, or \texttt{exceptionsCount > 0}.
+
+\subsection{Analytical Timing and APDEX Models}
+For closed-loop paced virtual users of count $V$ experiencing mean server response latency $\bar{L}_{\text{resp}}$ and expected think time $\mathbb{E}[T_{\text{think}}]$, Little's Law predicts steady-state tier throughput:
+\begin{equation}
+  \label{eq:little}
+  \lambda(V) = \frac{V}{\bar{L}_{\text{resp}} + \mathbb{E}[T_{\text{think}}]}.
+\end{equation}
+User-perceived responsiveness is summarized via the standard Application Performance Index (APDEX) with JMeter thresholds $T = 500\text{ ms}$ (satisfied) and $F = 1500\text{ ms}$ (frustrated):
+\begin{equation}
+  \label{eq:apdex}
+  \text{APDEX} = \frac{N_{t \le T} + 0.5 \cdot N_{T < t \le F}}{N_{\text{total}}}.
+\end{equation}
+
+% ==============================================================================
+% SECTION 6
+% ==============================================================================
+\section{Phase 3: Multi-Artifact Telemetry and Report Synthesis}
+
+\subsection{Five-Sheet Executive Workbook (\texttt{generate\_report.py})}
+Configured via \texttt{-{}-source} (\texttt{auto}, \texttt{jmeter}, or \texttt{node}), \texttt{generate\_report.py} compiles \texttt{docs/\allowbreak stress\_test\_report.xlsx} using \texttt{openpyxl} (with timestamped fallback filenames if locked by Excel):
+\begin{enumerate}
+  \item \textbf{Executive Summary \& Verdict:} KPI cards (requests, peak RPS, Mbps, error rate, $p_{50}/p_{95}/p_{99}$, $\%$ of $70\text{ Mbps}$ link) plus narrative analysis contrasting SQLite's $0\text{ ms}$ in-process read latency against \texttt{DELETE}-mode write serialization.
+  \item \textbf{Latency Evolution \& Scaling:} Per-tier concurrency metrics paired with a native Excel line chart tracking $p_{50}$, $p_{95}$, and $p_{99}$ across stepped VU tiers.
+  \item \textbf{Transaction Rankings:} Routes ordered by cumulative time consumption (\texttt{totalTimeMs}) and tagged into \emph{Standard Read}, \emph{Relational Hydration}, \emph{Filtered \& Sorted}, and \emph{Admin Aggregation}.
+  \item \textbf{Transaction Variances:} Top-$5$ HTTP status code distributions per route with per-status min/median/max latencies and error snippets.
+  \item \textbf{Baseline vs.\ Personas:} Side-by-side matrix contrasting JMeter/Node stepped load with granular Locust persona route timings.
+\end{enumerate}
+
+\subsection{Automated Multi-Tab PDF Compiler (\texttt{export\_reports\_pdf.mjs})}
+To assemble visual Flot time-series graphs from JMeter alongside Locust's ECharts/MUI dashboard into a single archival artifact (\texttt{test/load/results/load\_test\_report.pdf}), \texttt{export\_reports\_pdf.mjs} launches an ephemeral static HTTP server over \texttt{test/load/results/} and drives headless Microsoft Edge or Google Chrome via \texttt{puppeteer-core}:
+\begin{itemize}
+  \item \textbf{Iframe Isolation \& Anchor-Navigation Bypass:} Each report tab (\texttt{index.html}, \texttt{OverTime.html}, \texttt{Throughput.html}, \texttt{ResponseTimes.html}, \texttt{CustomsGraphs.html}, \texttt{locust\_report.html}) loads in an isolated $1440\text{ px}$-wide \texttt{<iframe>} (\texttt{deviceScaleFactor: 2}). JMeter's collapsed graph panels use Bootstrap classes \texttt{.collapse.out.portlet-content} and lazy Flot initializers; invoking JMeter's built-in \texttt{collapse()} helper inside an iframe sets \texttt{document.location.href = "\#..."} and breaks relative routing. The exporter instead reveals \texttt{.collapse.portlet-content} containers via DOM/CSS and directly calls all 14 JMeter \texttt{refresh*} functions (\texttt{refreshTransactionsPerSecond(true)}, \texttt{refreshActiveThreadsOverTime(true)}, etc.).
+  \item \textbf{Exact 1-Page-Per-Tab CSS Sizing:} Empty tabs such as \texttt{CustomsGraphs.html} (zero graph panels and zero non-zero canvases) are pruned automatically, while remaining tabs receive dynamically computed CSS named \texttt{@page} dimensions (\texttt{size: 1440px <measuredH>px}) so every dashboard tab exports intact without awkward mid-chart page breaks.
+\end{itemize}
+
+% ==============================================================================
+% SECTION 7
+% ==============================================================================
+\section{Empirical Verification Results}
+
+\subsection{Cross-Engine Dry-Run Telemetry (\texttt{https://najealp.top})}
+On November 11, 2026, executing \texttt{pwsh -NoProfile -ExecutionPolicy Bypass -File test\textbackslash load\textbackslash run\_parallel\_suite.ps1 -DryRun} exited cleanly with code \texttt{0}, producing zero HTTP failures, zero \texttt{401} rejections, and zero Locust exceptions. Table~\ref{tab:results} compares the verified Phase~1/2 telemetry alongside an unpaced closed-loop Node reference run (\texttt{node\_baseline.json}, $[10, 25]$ VUs $\times 5\text{ s}$).
+
+\begin{table}[H]
+\centering
+\caption{Observed benchmark metrics across phases and engines targeting \texttt{https://najealp.top}.}
+\label{tab:results}
+\footnotesize
+\setlength{\tabcolsep}{4.5pt}
+\begin{tabular}{@{}l r r r r r r r@{}}
+\toprule
+\textbf{Execution Stage / Tier} & \textbf{Reqs} & \textbf{Errs / 401} & \textbf{RPS} & \textbf{Mbps} & \textbf{$p_{50}$ (ms)} & \textbf{$p_{95}$ (ms)} & \textbf{$p_{99}$ (ms)} \\
+\midrule
+Phase 1: JMeter Coverage (\texttt{1 VU}) & $186$ & $0 / 0$ & $4.24$ & --- & $212.0$ & $322.0$ & $630.0$ \\
+Phase 1: JMeter Setup Auth & $5$ & $0 / 0$ & $0.39$ & --- & $276.0$ & $10727.0$ & $10727.0$ \\
+\midrule
+Phase 2: JMeter Tier 1 (\texttt{10 VUs}, $9.62\text{ s}$) & $141$ & $0 / 0$ & $14.66$ & $0.85$ & $239.0$ & $916.0$ & $1881.0$ \\
+Phase 2: JMeter Tier 2 (\texttt{25 VUs}, $10.06\text{ s}$) & $358$ & $0 / 0$ & $35.59$ & $3.53$ & $245.0$ & $884.0$ & $1039.0$ \\
+Phase 2: JMeter Aggregate Load & $499$ & $0 / 0$ & $25.04$ & --- & $244.0$ & $886.0$ & $1065.0$ \\
+\midrule
+Phase 2: Locust Parallel (\texttt{20 VUs}, $23\text{ s}$) & $216$ & $0 / 0$ & $9.20$ & --- & $280.0$ & $1000.0$ & $1300.0$ \\
+\midrule
+Reference: Node Unpaced (\texttt{10 VUs}, $5\text{ s}$) & $473$ & $0 / 0$ & $93.18$ & $16.74$ & $89.4$ & $170.8$ & $430.0$ \\
+Reference: Node Unpaced (\texttt{25 VUs}, $5\text{ s}$) & $1066$ & $0 / 0$ & $207.25$ & $35.78$ & $105.4$ & $200.3$ & $382.4$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Validation Against Little's Law:} Using Tier~1 ($\bar{L}_{\text{resp}} = 331.6\text{ ms}$) and Tier~2 ($\bar{L}_{\text{resp}} = 327.62\text{ ms}$) from \texttt{jmeter\_baseline.json} alongside $\mathbb{E}[T_{\text{think}}] = 300\text{ ms}$, Eq.~(\ref{eq:little}) predicts steady-state ceilings of $10 / 0.6316 = 15.83\text{ RPS}$ and $25 / 0.6276 = 39.83\text{ RPS}$. Measured tier rates ($14.66\text{ RPS}$ and $35.59\text{ RPS}$, inclusive of the $2\text{ s}$ ramp-up window inside each $10\text{ s}$ tier) align closely with theoretical expectations, confirming clean pacing without client socket starvation.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+    ybar,
+    bar width=11pt,
+    width=0.95\textwidth,
+    height=6.2cm,
+    ylabel={Response Latency (ms)},
+    symbolic x coords={Node 10 VU, Node 25 VU, JMeter T1 (10 VU), JMeter T2 (25 VU), Locust 20 VU},
+    xtick=data,
+    x tick label style={font=\footnotesize},
+    ymin=0,
+    ymax=2350,
+    ymajorgrids=true,
+    grid style={dashed, color=RuleGray},
+    legend style={at={(0.5,1.03)}, anchor=south, legend columns=-1, font=\footnotesize},
+    enlarge x limits=0.14,
+    nodes near coords,
+    every node near coord/.append style={font=\tiny, rotate=90, anchor=west}
+]
+\addplot[fill=TealSignal!80, draw=TealSignal] coordinates {
+    (Node 10 VU, 89.4) (Node 25 VU, 105.4) (JMeter T1 (10 VU), 239.0) (JMeter T2 (25 VU), 245.0) (Locust 20 VU, 280.0)
+};
+\addplot[fill=BlueAccent!75, draw=BlueAccent] coordinates {
+    (Node 10 VU, 170.8) (Node 25 VU, 200.3) (JMeter T1 (10 VU), 916.0) (JMeter T2 (25 VU), 884.0) (Locust 20 VU, 1000.0)
+};
+\addplot[fill=AmberWarn!80, draw=AmberWarn] coordinates {
+    (Node 10 VU, 430.0) (Node 25 VU, 382.4) (JMeter T1 (10 VU), 1881.0) (JMeter T2 (25 VU), 1039.0) (Locust 20 VU, 1300.0)
+};
+\legend{$p_{50}$ Median, $p_{95}$ Tail, $p_{99}$ Extreme Tail}
+\end{axis}
+\end{tikzpicture}
+\caption{Latency percentile divergence between unpaced read-only Node.js workers and parallel think-time-paced JMeter + write-heavy Locust traffic.}
+\label{fig:latency_comparison}
+\end{figure}
+
+\subsection{Route-Level Bottleneck Attribution}
+Inspecting per-route rankings across \texttt{jmeter\_baseline.json} and \texttt{locust\_metrics.json} isolates three physical drivers behind the $p_{95}/p_{99}$ divergence visible in Figure~\ref{fig:latency_comparison}:
+
+\begin{table}[H]
+\centering
+\caption{Highest-$p_{95}$ routes observed under parallel Phase~2 load (\texttt{JMeter} + \texttt{Locust}).}
+\label{tab:slow_routes}
+\small
+\begin{tabularx}{\textwidth}{@{}l >{\raggedright\arraybackslash}X r r r r@{}}
+\toprule
+\textbf{Engine} & \textbf{Route / Transaction Label} & \textbf{Calls} & \textbf{$p_{50}$ (ms)} & \textbf{$p_{95}$ (ms)} & \textbf{Max (ms)} \\
+\midrule
+JMeter & \texttt{GET /api/users?\_where=active\&\_include} & $14$ & $247.0$ & $1935.0$ & $1935.0$ \\
+JMeter & \texttt{GET /api/clefLogs?\_page=1\&\_per\_page=10} & $8$ & $239.0$ & $1881.0$ & $1881.0$ \\
+JMeter & \texttt{GET /api/events?\_sort=eventDate\&\allowbreak\_order=desc\&\allowbreak\_page=2\&\allowbreak\_per\_page=5} & $11$ & $413.0$ & $1240.0$ & $1240.0$ \\
+JMeter & \texttt{GET /api/events?\_sort=eventDate\&\allowbreak\_order=asc\&\allowbreak\_page=1\&\allowbreak\_per\_page=10} & $12$ & $497.0$ & $1066.0$ & $1066.0$ \\
+\midrule
+Locust & \texttt{GET /api/bulletins [\_include=category,\allowbreak author,\allowbreak status]} & $14$ & $338.0$ & $1591.3$ & $1591.3$ \\
+Locust & \texttt{DELETE /api/userRsvps/:id [Cleanup]} & $10$ & $263.0$ & $1454.5$ & $1454.5$ \\
+Locust & \texttt{GET /api/bulletins [Filtered Page]} & $13$ & $473.7$ & $1257.1$ & $1257.1$ \\
+Locust & \texttt{GET [Auth] Verify Regular Token} & $11$ & $976.5$ & $1197.3$ & $1197.3$ \\
+Locust & \texttt{POST /api/auth/register [Worst-Case Write]} & $17$ & $361.0$ & $1162.0$ & $1162.0$ \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\begin{enumerate}
+  \item \textbf{Relational Hydration \& Payload Volume:} \texttt{/api/events?\_sort=eventDate\&\_order=asc} transmitted $1{,}026{,}375\text{ bytes}$ across $12$ JMeter calls ($\approx 85.5\text{ KB/call}$, highest total time $7.65\text{ s}$), and Locust's \texttt{/api/bulletins [Filtered Page]} averaged $81{,}382\text{ bytes}$ per response. Serialization and WAN transfer time push medians near $338\text{--}497\text{ ms}$ even without contention.
+  \item \textbf{Event-Loop Blocking via Synchronous Hashing:} Concurrent calls to \texttt{POST /api/auth/register} ($17$ calls, $p_{95} = 1162.0\text{ ms}$) execute synchronous \texttt{bcrypt.hashSync(password, 10)}, temporarily stalling concurrent event-loop callbacks (explaining why lightweight token checks \texttt{GET /api/auth/me} reached $p_{50} = 976.5\text{ ms}$ during concurrent spawn bursts).
+  \item \textbf{\texttt{DELETE}-Journal Serialization:} \texttt{DELETE /api/userRsvps/:id} resolves at $p_{50} = 263.0\text{ ms}$ uncontended, yet jumps $5.5\times$ to $p_{95} = 1454.5\text{ ms}$ when queued behind overlapping admin moderation updates and registrations acquiring exclusive SQLite file locks. Meanwhile, network utilization in Tier~2 remained at $3.53\text{ Mbps}$ ($5.04\%$ of the $70\text{ Mbps}$ link), proving tail inflation is CPU- and lock-bound rather than bandwidth-saturated.
+\end{enumerate}
+
+% ==============================================================================
+% SECTION 8
+% ==============================================================================
+\section{Operational Governance and Reproducibility}
+
+\subsection{Database Hygiene and Rate-Limiter Controls}
+After load campaigns execute write bursts (\texttt{POST /api/auth/register}, community bulletins, disposable events), synthetic rows must be purged cleanly:
+\begin{itemize}
+  \item \textbf{Automated API Cleanup:} Both JMeter coverage matrices and Locust's \texttt{on\_test\_stop} hook invoke authenticated \texttt{DELETE} endpoints on tracked entities created during the test.
+  \item \textbf{Database Restoration (\texttt{test/load/teardown.sql}):} Provides an atomic SQLite transaction removing synthetic \texttt{loadtest\_\%@najealp.top}, \texttt{test.official\%}, and \texttt{test.regular\%} records alongside dependent \texttt{Profile}, \texttt{UserStatistic}, \texttt{Record}, \texttt{UserRsvp}, \texttt{Bulletin}, and \texttt{Event} rows, followed by \texttt{VACUUM} (or VPS snapshot restore via \texttt{cp dev.db.bak\_pre\_stress\_* dev.db}).
+  \item \textbf{Rate-Limit Awareness:} Operators deploying from benchmark mode back to public production must verify whether \texttt{authLimiter} and \texttt{contentLimiter} in \texttt{api/index.js} should transition from \texttt{skip: () => true} back to active per-IP and per-user enforcement.
+\end{itemize}
+
+\subsection{Standardized Execution Profiles}
+Reproducing either the fast verification gate or the full 5-tier stress campaign requires a single PowerShell command from the repository root (ensuring Apache JMeter~5.6.3 and Edge/Chrome are discoverable):
+\begin{lstlisting}[language=bash,caption={Reproducible invocation profiles for \texttt{test/load/run\_parallel\_suite.ps1}.}]
+# 1. Pre-flight verification & DryRun ([10, 25] VUs x 10s, 20 Locust VUs x 24s)
+pwsh -NoProfile -ExecutionPolicy Bypass -File test\load\run_parallel_suite.ps1 -DryRun
+
+# 2. Full 5-tier capacity envelope ([100, 250, 500, 750, 1000] VUs x 30s + 100 Locust VUs)
+pwsh -NoProfile -ExecutionPolicy Bypass -File test\load\run_parallel_suite.ps1
+\end{lstlisting}
+
+\begin{calloutbox}[NavyPrimary]{Architectural Recommendations Derived from Methodology}
+\begin{enumerate}
+  \item \textbf{Offload Key Derivation:} Replace \texttt{bcrypt.hashSync(password, 10)} in registration and user-provisioning paths with asynchronous \texttt{await bcrypt.hash(...)} prior to opening any Prisma/SQLite transaction, eliminating Node.js event-loop stalls.
+  \item \textbf{Keep \texttt{DELETE}-Mode Boundaries Explicit:} Because project policy intentionally keeps \texttt{PRAGMA journal\_mode = DELETE}, serialize heavy administrative batch mutations and minimize relational \texttt{\_include} fan-out on public catalog defaults to keep transaction lock hold times sub-$50\text{ ms}$.
+  \item \textbf{Cache Hot Read Catalogs:} Apply short-lived ETag or in-memory TTL caching to heavy sorted feeds (\texttt{/api/events}, \texttt{/api/bulletins}) to preserve margin inside the $70\text{ Mbps}$ VPS uplink under $500+$ VU tiers.
+\end{enumerate}
+\end{calloutbox}
+
+\end{document}

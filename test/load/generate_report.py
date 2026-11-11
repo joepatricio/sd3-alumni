@@ -13,7 +13,8 @@ Complies with docs/stress-test_guidelines.md:
 import os
 import sys
 import json
-from typing import Dict, List, Any
+import argparse
+from typing import Dict, List, Any, Optional, Tuple
 
 # Ensure directories relative to this script
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -31,31 +32,69 @@ except ImportError:
     sys.exit(1)
 
 
-def load_telemetry_data():
+def resolve_baseline_path(source: str = "auto", explicit_baseline: Optional[str] = None) -> Optional[str]:
+    if explicit_baseline:
+        return explicit_baseline if os.path.exists(explicit_baseline) else None
+
     node_file = os.path.join(RESULTS_DIR, "node_baseline.json")
-    locust_file = os.path.join(RESULTS_DIR, "locust_metrics.json")
-    
-    node_data = None
+    jmeter_file = os.path.join(RESULTS_DIR, "jmeter_baseline.json")
+
+    if source == "node":
+        return node_file if os.path.exists(node_file) else None
+    if source == "jmeter":
+        return jmeter_file if os.path.exists(jmeter_file) else None
+
+    candidates = [p for p in (jmeter_file, node_file) if os.path.exists(p)]
+    if not candidates:
+        return None
+    if len(candidates) == 1:
+        return candidates[0]
+    return max(candidates, key=os.path.getmtime)
+
+
+def load_telemetry_data(
+    source: str = "auto",
+    explicit_baseline: Optional[str] = None,
+    explicit_locust: Optional[str] = None,
+) -> Tuple[Optional[Dict[str, Any]], Optional[Dict[str, Any]], Optional[str]]:
+    baseline_file = resolve_baseline_path(source=source, explicit_baseline=explicit_baseline)
+    locust_file = explicit_locust or os.path.join(RESULTS_DIR, "locust_metrics.json")
+
+    baseline_data = None
     locust_data = None
-    
-    if os.path.exists(node_file):
-        with open(node_file, "r", encoding="utf-8") as f:
-            node_data = json.load(f)
-    
-    if os.path.exists(locust_file):
+
+    if baseline_file and os.path.exists(baseline_file):
+        with open(baseline_file, "r", encoding="utf-8") as f:
+            baseline_data = json.load(f)
+
+    if locust_file and os.path.exists(locust_file):
         with open(locust_file, "r", encoding="utf-8") as f:
             locust_data = json.load(f)
-            
-    return node_data, locust_data
+
+    return baseline_data, locust_data, baseline_file
 
 
-def create_report():
-    print("[*] Loading telemetry data from results...")
-    node_data, locust_data = load_telemetry_data()
-    
+def create_report(
+    source: str = "auto",
+    explicit_baseline: Optional[str] = None,
+    explicit_locust: Optional[str] = None,
+    out_path: Optional[str] = None,
+):
+    print(f"[*] Loading telemetry data from results (source={source})...")
+    node_data, locust_data, baseline_file = load_telemetry_data(
+        source=source,
+        explicit_baseline=explicit_baseline,
+        explicit_locust=explicit_locust,
+    )
+
     if not node_data and not locust_data:
-        print("[!] No telemetry results found in test/load/results/. Run node_benchmark.js or locust first.")
+        print("[!] No telemetry results found in test/load/results/. Run run_jmeter.ps1, node_benchmark.js, or locust first.")
         sys.exit(1)
+
+    if baseline_file:
+        print(f"[*] Baseline telemetry : {os.path.basename(baseline_file)}")
+
+    report_out = out_path or REPORT_PATH
 
     wb = openpyxl.Workbook()
     # Remove default sheet
@@ -423,20 +462,32 @@ def create_report():
             var_row += 1
 
     # ==============================================================================
-    # SHEET 5: Comparative Metrics (Node Baseline vs Locust Personas)
+    # SHEET 5: Comparative Metrics (Baseline Engine vs Locust Personas)
     # ==============================================================================
+    engine_label = "Node.js High-Concurrency Engine"
+    if node_data:
+        if node_data.get("engineLabel"):
+            engine_label = str(node_data["engineLabel"])
+        elif "jmeter" in str(node_data.get("engine", "")).lower():
+            engine_label = "Apache JMeter (Stepped Concurrency)"
+    is_jmeter = "jmeter" in engine_label.lower()
+
     ws5 = wb.create_sheet(title="Baseline vs Personas")
     ws5.views.sheetView[0].showGridLines = True
 
     ws5.merge_cells("A1:G1")
-    ws5["A1"] = "COMPARATIVE ANALYSIS: RAW NODE.JS BASELINE VS REALISTIC LOCUST PERSONAS"
+    ws5["A1"] = (
+        "COMPARATIVE ANALYSIS: APACHE JMETER STEPPED LOAD VS REALISTIC LOCUST PERSONAS"
+        if is_jmeter
+        else "COMPARATIVE ANALYSIS: RAW NODE.JS BASELINE VS REALISTIC LOCUST PERSONAS"
+    )
     ws5["A1"].font = font_title
     ws5["A1"].fill = fill_dark_navy
     ws5["A1"].alignment = align_center
     ws5.row_dimensions[1].height = 30
 
     headers_ws5 = [
-        "Benchmark Dimension", "Node.js High-Concurrency Engine", "Locust Realistic Persona Suite",
+        "Benchmark Dimension", engine_label, "Locust Realistic Persona Suite",
         "Variance / Impact", "SQLite Behavior Observed", "Infrastructure Implication"
     ]
     for col_idx, h in enumerate(headers_ws5, 1):
@@ -447,8 +498,13 @@ def create_report():
         cell.border = border_cell
     ws5.row_dimensions[3].height = 24
 
+    locust_conc_label = (
+        f"{locust_data.get('totalUsers', locust_data.get('users', 'Parallel'))} VUs (Admin + Official + Regular + Reg)"
+        if locust_data and (locust_data.get("totalUsers") or locust_data.get("users"))
+        else "Admins + Official + Regular + Registration"
+    )
     comp_rows = [
-        ("Peak Concurrency Handled", f"{max((t.get('concurrency', 0) for t in tiers), default=0)} VUs", "10 Admins + Regular + Official", "Node pushes raw pipe; Locust mimics user pauses", "Read locks serialize in DELETE mode under peak", "Network headroom intact; lock queuing observed"),
+        ("Peak Concurrency Handled", f"{max((t.get('concurrency', 0) for t in tiers), default=0)} VUs", locust_conc_label, "JMeter stepped tiers run in parallel with paced Locust personas" if is_jmeter else "Node pushes raw pipe; Locust mimics user pauses", "Read locks serialize in DELETE mode under peak", "Network headroom intact; lock queuing observed"),
         ("Throughput (Peak RPS)", f"{max_rps:.1f} req/s", "Realistic Paced Simulation", "Paced requests prevent artificial socket swamping", "Sub-millisecond reads keep RPS high until write lock", "Sufficient for expected alumni association traffic"),
         ("Network Uplink Utilization", f"{max_mbps:.2f} Mbps (of 70 Mbps)", "Estimated ~15-25 Mbps", "Payload caching significantly lowers WAN usage", "Zero network overhead on SQLite in-process queries", "70 Mbps is viable with gzip/brotli compression"),
         ("Median Latency (P50)", f"{avg_p50:.1f} ms", "Realistic Session P50", "Consistent sub-200ms user experience", "SQLite in-process B-tree cache hits dominate", "Satisfactory interactive performance"),
@@ -516,10 +572,28 @@ def create_report():
             ws.column_dimensions[col_letter].width = max(max_len + 3, 14)
 
     # Ensure docs directory exists
-    os.makedirs(os.path.dirname(REPORT_PATH), exist_ok=True)
-    wb.save(REPORT_PATH)
-    print(f"[+] Successfully generated Excel report: {REPORT_PATH}")
+    os.makedirs(os.path.dirname(report_out), exist_ok=True)
+    try:
+        wb.save(report_out)
+        print(f"[+] Successfully generated Excel report: {report_out}")
+    except PermissionError:
+        import datetime
+        stem, ext = os.path.splitext(report_out)
+        fallback_out = f"{stem}_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}{ext}"
+        wb.save(fallback_out)
+        print(f"[!] Target Excel file is locked (likely open in Excel): {report_out}")
+        print(f"[+] Successfully generated fallback Excel report: {fallback_out}")
+
+
+def main():
+    parser = argparse.ArgumentParser(description="Generate Excel Stress Test Report from JMeter/Node + Locust telemetry.")
+    parser.add_argument("--source", choices=["auto", "jmeter", "node"], default="auto", help="Preferred baseline JSON source.")
+    parser.add_argument("--baseline", default=None, help="Explicit path to baseline JSON file.")
+    parser.add_argument("--locust", default=None, help="Explicit path to locust_metrics.json file.")
+    parser.add_argument("--out", default=None, help="Explicit output .xlsx path.")
+    args = parser.parse_args()
+    create_report(source=args.source, explicit_baseline=args.baseline, explicit_locust=args.locust, out_path=args.out)
 
 
 if __name__ == "__main__":
-    create_report()
+    main()

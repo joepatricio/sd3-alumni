@@ -219,7 +219,7 @@ def generate_phase_2():
         USER_AUTH.append({
             "userId": user_id,
             "email": email,
-            "passwordHash": "$2a$10$RF01DLY3wzkMTDihPwqMZuOu9dqipFZokMMf14UutW2Zk9IauaJ4y", 
+            "passwordHash": "$2a$10$LpZbWQR6c5vtzloEBHOboeCqR5U9vuHYdXpf3q1c5.PSgBUFlUNH2", 
             "lastLogin": to_iso(random_date_between(date_created_dt, NOW))
         })
         
@@ -392,17 +392,17 @@ def generate_phase_4(USER, USER_STATISTICS):
     # 1. ADMIN
     ADMIN.append({
         "username": "admin1",
-        "passwordHash": "$2a$10$RF01DLY3wzkMTDihPwqMZuOu9dqipFZokMMf14UutW2Zk9IauaJ4y", 
+        "passwordHash": "$2a$10$LpZbWQR6c5vtzloEBHOboeCqR5U9vuHYdXpf3q1c5.PSgBUFlUNH2", 
         "lastLogin": to_iso(random_date_between(datetime.datetime(2025, 1, 1), NOW))
     })
     ADMIN.append({
         "username": "admin2",
-        "passwordHash": "$2a$10$RF01DLY3wzkMTDihPwqMZuOu9dqipFZokMMf14UutW2Zk9IauaJ4y", 
+        "passwordHash": "$2a$10$LpZbWQR6c5vtzloEBHOboeCqR5U9vuHYdXpf3q1c5.PSgBUFlUNH2", 
         "lastLogin": to_iso(random_date_between(datetime.datetime(2025, 1, 1), NOW))
     })
     ADMIN.append({
         "username": "admin3",
-        "passwordHash": "$2a$10$RF01DLY3wzkMTDihPwqMZuOu9dqipFZokMMf14UutW2Zk9IauaJ4y", 
+        "passwordHash": "$2a$10$LpZbWQR6c5vtzloEBHOboeCqR5U9vuHYdXpf3q1c5.PSgBUFlUNH2", 
         "lastLogin": to_iso(random_date_between(datetime.datetime(2025, 1, 1), NOW))
     })
     

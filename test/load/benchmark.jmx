@@ -88,6 +88,21 @@
             <stringProp name="Argument.value">${__P(includeWritesInLoad,false)}</stringProp>
             <stringProp name="Argument.metadata">=</stringProp>
           </elementProp>
+          <elementProp name="RUN_COVERAGE" elementType="Argument">
+            <stringProp name="Argument.name">RUN_COVERAGE</stringProp>
+            <stringProp name="Argument.value">${__P(runCoverage,true)}</stringProp>
+            <stringProp name="Argument.metadata">=</stringProp>
+          </elementProp>
+          <elementProp name="LOAD_THINK_MIN_MS" elementType="Argument">
+            <stringProp name="Argument.name">LOAD_THINK_MIN_MS</stringProp>
+            <stringProp name="Argument.value">${__P(loadThinkMinMs,100)}</stringProp>
+            <stringProp name="Argument.metadata">=</stringProp>
+          </elementProp>
+          <elementProp name="LOAD_THINK_RANGE_MS" elementType="Argument">
+            <stringProp name="Argument.name">LOAD_THINK_RANGE_MS</stringProp>
+            <stringProp name="Argument.value">${__P(loadThinkRangeMs,400)}</stringProp>
+            <stringProp name="Argument.metadata">=</stringProp>
+          </elementProp>
         </collectionProp>
       </elementProp>
       <stringProp name="TestPlan.user_define_classpath"></stringProp>
@@ -151,6 +166,9 @@ import java.net.http.HttpClient
 import java.net.http.HttpRequest
 import java.net.http.HttpResponse
 import java.time.Duration
+import java.util.concurrent.CompletableFuture
+import java.util.concurrent.Executors
+import java.util.function.Supplier
 import org.apache.jmeter.services.FileServer
 
 def proto = vars.get(&quot;PROTOCOL&quot;) ?: &quot;https&quot;
@@ -198,7 +216,15 @@ def client = HttpClient.newBuilder()
     .connectTimeout(Duration.ofSeconds(15))
     .build()
 
-def jsonSlurper = new JsonSlurper()
+def setupPool = Executors.newFixedThreadPool(10)
+def runParallel = { List items, Closure fn -&gt;
+    def futures = items.collect { item -&gt;
+        CompletableFuture.supplyAsync({ fn.call(item) } as Supplier, setupPool)
+    }
+    return futures.collect { it.get() }
+}
+
+try {
 
 def httpCall = { String method, String path, Object bodyObj = null, String bearer = null -&gt;
     def builder = HttpRequest.newBuilder()
@@ -220,7 +246,7 @@ def httpCall = { String method, String path, Object bodyObj = null, String beare
     def raw = resp.body() ?: &quot;&quot;
     def parsed = null
     if (raw.trim().startsWith(&quot;{&quot;) || raw.trim().startsWith(&quot;[&quot;)) {
-        try { parsed = jsonSlurper.parseText(raw) } catch (Exception ignored) {}
+        try { parsed = new JsonSlurper().parseText(raw) } catch (Exception ignored) {}
     }
     return [status: resp.statusCode(), body: raw, json: parsed]
 }
@@ -248,16 +274,18 @@ def fetchList = { String path -&gt;
     return []
 }
 
-def degrees = fetchList(&quot;/api/degrees&quot;)
-def userStatuses = fetchList(&quot;/api/userStatuses&quot;)
-def profileStatuses = fetchList(&quot;/api/profileStatuses&quot;)
-def contentStatuses = fetchList(&quot;/api/contentStatuses&quot;)
-def eventStatuses = fetchList(&quot;/api/eventStatuses&quot;)
-def eventCategories = fetchList(&quot;/api/eventCategories&quot;)
-def bulletinCategories = fetchList(&quot;/api/bulletinCategories&quot;)
-def connectionStatuses = fetchList(&quot;/api/connectionStatuses&quot;)
-def donationStatuses = fetchList(&quot;/api/donationStatuses&quot;)
-def achievements = fetchList(&quot;/api/achievements&quot;)
+def refTables = [&quot;degrees&quot;, &quot;userStatuses&quot;, &quot;profileStatuses&quot;, &quot;contentStatuses&quot;, &quot;eventStatuses&quot;, &quot;eventCategories&quot;, &quot;bulletinCategories&quot;, &quot;connectionStatuses&quot;, &quot;donationStatuses&quot;, &quot;achievements&quot;]
+def refResults = runParallel(refTables) { tbl -&gt; [tbl, fetchList(&quot;/api/&quot; + tbl)] }.collectEntries { [(it[0]): it[1]] }
+def degrees = refResults.degrees
+def userStatuses = refResults.userStatuses
+def profileStatuses = refResults.profileStatuses
+def contentStatuses = refResults.contentStatuses
+def eventStatuses = refResults.eventStatuses
+def eventCategories = refResults.eventCategories
+def bulletinCategories = refResults.bulletinCategories
+def connectionStatuses = refResults.connectionStatuses
+def donationStatuses = refResults.donationStatuses
+def achievements = refResults.achievements
 
 def findId = { List list, String field, String val -&gt;
     def found = list.find { it[field]?.toString()?.equalsIgnoreCase(val) }
@@ -318,28 +346,30 @@ def verifiedAdmins = []
 def authReport = new StringBuilder()
 authReport.append(&quot;Target: &quot;).append(baseUrl).append(&quot;\n&quot;)
 
-for (adm in adminCandidates) {
+def adminCheckResults = runParallel(adminCandidates) { adm -&gt;
     def loginRes = httpCall(&quot;POST&quot;, &quot;/api/auth/admin/login&quot;, [username: adm.username, password: adm.password])
     if (loginRes.status != 200 &amp;&amp; adm.password != defaultPassword) {
         loginRes = httpCall(&quot;POST&quot;, &quot;/api/auth/admin/login&quot;, [username: adm.username, password: defaultPassword])
     }
     if (loginRes.status != 200 || !loginRes.json?.token) {
-        def errMsg = &quot;[-] Admin login failed for ${adm.username} (HTTP ${loginRes.status}); trying next account.&quot;
-        log.warn(errMsg)
-        authReport.append(errMsg).append(&quot;\n&quot;)
-        continue
+        return [ok: false, msg: &quot;[-] Admin login failed for ${adm.username} (HTTP ${loginRes.status}); trying next account.&quot;]
     }
     def tok = loginRes.json.token.toString()
     // Test token on both /api/auth/admin/me and /api/admin/dashboard-stats BEFORE accepting
     def meRes = httpCall(&quot;GET&quot;, &quot;/api/auth/admin/me&quot;, null, tok)
     def dashRes = httpCall(&quot;GET&quot;, &quot;/api/admin/dashboard-stats&quot;, null, tok)
     if (meRes.status == 200 &amp;&amp; dashRes.status == 200 &amp;&amp; meRes.json?.admin?.id) {
-        verifiedAdmins &lt;&lt; [username: adm.username, id: meRes.json.admin.id, token: tok]
-        authReport.append(&quot;[+] Admin verified: &quot;).append(adm.username).append(&quot; (me=200, stats=200)\n&quot;)
+        return [ok: true, entry: [username: adm.username, id: meRes.json.admin.id, token: tok], msg: &quot;[+] Admin verified: ${adm.username} (me=200, stats=200)&quot;]
+    }
+    return [ok: false, msg: &quot;[-] Admin token verification failed for ${adm.username} (me=${meRes.status}, stats=${dashRes.status}); trying next account.&quot;]
+}
+for (r in adminCheckResults) {
+    if (r.ok) {
+        verifiedAdmins &lt;&lt; r.entry
+        authReport.append(r.msg).append(&quot;\n&quot;)
     } else {
-        def errMsg = &quot;[-] Admin token verification failed for ${adm.username} (me=${meRes.status}, stats=${dashRes.status}); trying next account.&quot;
-        log.warn(errMsg)
-        authReport.append(errMsg).append(&quot;\n&quot;)
+        log.warn(r.msg)
+        authReport.append(r.msg).append(&quot;\n&quot;)
     }
 }
 
@@ -425,13 +455,17 @@ if (config?.credentials?.officials) {
 (1..5).each { addOfficialCand(&quot;test.official&quot; + it + &quot;@najealp.top&quot;, defaultPassword) }
 
 def verifiedOfficials = []
-for (off in officialCandidates) {
+def officialCheckResults = runParallel(officialCandidates) { off -&gt;
     def res = verifyUserAccount(off.email, off.password)
+    res.candEmail = off.email
+    return res
+}
+for (res in officialCheckResults) {
     if (res.ok) {
         verifiedOfficials &lt;&lt; res
-        authReport.append(&quot;[+] Official verified: &quot;).append(off.email).append(&quot; (me=200)\n&quot;)
+        authReport.append(&quot;[+] Official verified: &quot;).append(res.candEmail).append(&quot; (me=200)\n&quot;)
     } else {
-        def errMsg = &quot;[-] Official account failed for ${off.email} (${res.reason}); trying next account.&quot;
+        def errMsg = &quot;[-] Official account failed for ${res.candEmail} (${res.reason}); trying next account.&quot;
         log.warn(errMsg)
         authReport.append(errMsg).append(&quot;\n&quot;)
     }
@@ -446,20 +480,21 @@ if (verifiedOfficials.isEmpty()) {
 
 // 5. Sign Own Dedicated JMX Credentials + Test Regular Pool Tokens
 def verifiedRegulars = []
-def ownPrimary = signOrProvisionUser(&quot;loadtest_jmx_primary@najealp.top&quot;, defaultPassword, &quot;JMX Primary Tester&quot;, userStatusRegularId)
-if (ownPrimary.ok) {
-    verifiedRegulars &lt;&lt; ownPrimary
-    authReport.append(&quot;[+] Signed &amp; verified own JMX Primary: &quot;).append(ownPrimary.email).append(&quot; (me=200)\n&quot;)
-} else {
-    authReport.append(&quot;[-] Own JMX Primary failed: &quot;).append(ownPrimary.reason).append(&quot;\n&quot;)
+def ownPair = runParallel([
+    [email: &quot;loadtest_jmx_primary@najealp.top&quot;, name: &quot;JMX Primary Tester&quot;, label: &quot;Primary&quot;],
+    [email: &quot;loadtest_jmx_secondary@najealp.top&quot;, name: &quot;JMX Secondary Tester&quot;, label: &quot;Secondary&quot;]
+]) { spec -&gt;
+    def r = signOrProvisionUser(spec.email, defaultPassword, spec.name, userStatusRegularId)
+    r.label = spec.label
+    return r
 }
-
-def ownSecondary = signOrProvisionUser(&quot;loadtest_jmx_secondary@najealp.top&quot;, defaultPassword, &quot;JMX Secondary Tester&quot;, userStatusRegularId)
-if (ownSecondary.ok) {
-    verifiedRegulars &lt;&lt; ownSecondary
-    authReport.append(&quot;[+] Signed &amp; verified own JMX Secondary: &quot;).append(ownSecondary.email).append(&quot; (me=200)\n&quot;)
-} else {
-    authReport.append(&quot;[-] Own JMX Secondary failed: &quot;).append(ownSecondary.reason).append(&quot;\n&quot;)
+for (own in ownPair) {
+    if (own.ok) {
+        verifiedRegulars &lt;&lt; own
+        authReport.append(&quot;[+] Signed &amp; verified own JMX &quot;).append(own.label).append(&quot;: &quot;).append(own.email).append(&quot; (me=200)\n&quot;)
+    } else {
+        authReport.append(&quot;[-] Own JMX &quot;).append(own.label).append(&quot; failed: &quot;).append(own.reason).append(&quot;\n&quot;)
+    }
 }
 
 def regularCandidates = []
@@ -475,13 +510,17 @@ if (config?.credentials?.regulars) {
 }
 (1..5).each { addRegularCand(&quot;test.regular&quot; + it + &quot;@najealp.top&quot;, defaultPassword) }
 
-for (reg in regularCandidates) {
+def regCheckResults = runParallel(regularCandidates) { reg -&gt;
     def res = verifyUserAccount(reg.email, reg.password)
+    res.candEmail = reg.email
+    return res
+}
+for (res in regCheckResults) {
     if (res.ok) {
         verifiedRegulars &lt;&lt; res
-        authReport.append(&quot;[+] Regular verified: &quot;).append(reg.email).append(&quot; (me=200)\n&quot;)
+        authReport.append(&quot;[+] Regular verified: &quot;).append(res.candEmail).append(&quot; (me=200)\n&quot;)
     } else {
-        def errMsg = &quot;[-] Regular account failed for ${reg.email} (${res.reason}); trying next account.&quot;
+        def errMsg = &quot;[-] Regular account failed for ${res.candEmail} (${res.reason}); trying next account.&quot;
         log.warn(errMsg)
         authReport.append(errMsg).append(&quot;\n&quot;)
     }
@@ -550,22 +589,31 @@ props.put(&quot;sampleProfileId&quot;, verifiedRegulars[0].userId)
 props.put(&quot;sampleUserAuthId&quot;, verifiedRegulars[0].userId)
 props.put(&quot;sampleUserStatisticId&quot;, verifiedRegulars[0].userId)
 
-props.put(&quot;sampleBulletinId&quot;, discoverFirstId(&quot;bulletins&quot;))
-props.put(&quot;sampleEventId&quot;, discoverFirstId(&quot;events&quot;))
-props.put(&quot;sampleCommentId&quot;, discoverFirstId(&quot;comments&quot;))
-props.put(&quot;sampleDonationId&quot;, discoverFirstId(&quot;donations&quot;))
-props.put(&quot;sampleLocationId&quot;, discoverFirstId(&quot;locations&quot;))
-props.put(&quot;sampleRecordId&quot;, discoverFirstId(&quot;records&quot;))
-props.put(&quot;sampleUserConnectionId&quot;, discoverFirstId(&quot;userConnections&quot;))
-props.put(&quot;sampleUserAchievementId&quot;, discoverFirstId(&quot;userAchievements&quot;))
-props.put(&quot;sampleUserRsvpId&quot;, discoverFirstId(&quot;userRsvps&quot;))
-props.put(&quot;sampleBulletinLikeId&quot;, discoverFirstId(&quot;bulletinLikes&quot;))
-props.put(&quot;sampleCommentLikeId&quot;, discoverFirstId(&quot;commentLikes&quot;))
-props.put(&quot;sampleNotificationId&quot;, discoverFirstId(&quot;notifications&quot;))
-props.put(&quot;sampleClefLogId&quot;, discoverFirstId(&quot;clefLogs&quot;))
+def runCovFlag = !((props.get(&quot;runCoverage&quot;) ?: &quot;true&quot;).equalsIgnoreCase(&quot;false&quot;))
+def sampleTables = runCovFlag
+    ? [&quot;bulletins&quot;, &quot;events&quot;, &quot;comments&quot;, &quot;donations&quot;, &quot;locations&quot;, &quot;records&quot;, &quot;userConnections&quot;, &quot;userAchievements&quot;, &quot;userRsvps&quot;, &quot;bulletinLikes&quot;, &quot;commentLikes&quot;, &quot;notifications&quot;, &quot;clefLogs&quot;]
+    : [&quot;bulletins&quot;, &quot;events&quot;]
+def discoveredSamples = runParallel(sampleTables) { tbl -&gt;
+    def rows = fetchList(&quot;/api/&quot; + tbl + &quot;?_per_page=1&amp;_page=1&quot;)
+    def idVal = (rows &amp;&amp; !rows.isEmpty()) ? (rows[0].id?.toString() ?: &quot;&quot;) : &quot;&quot;
+    def extra = (tbl == &quot;notifications&quot; &amp;&amp; rows &amp;&amp; !rows.isEmpty()) ? (rows[0].notificationTypeId?.toString() ?: &quot;&quot;) : &quot;&quot;
+    return [tbl: tbl, id: idVal, extra: extra]
+}.collectEntries { [(it.tbl): it] }
 
-def notifRows = fetchList(&quot;/api/notifications?_per_page=1&amp;_page=1&quot;)
-props.put(&quot;notificationTypeId&quot;, (notifRows &amp;&amp; !notifRows.isEmpty()) ? (notifRows[0].notificationTypeId?.toString() ?: &quot;&quot;) : &quot;&quot;)
+props.put(&quot;sampleBulletinId&quot;, discoveredSamples.bulletins?.id ?: &quot;&quot;)
+props.put(&quot;sampleEventId&quot;, discoveredSamples.events?.id ?: &quot;&quot;)
+props.put(&quot;sampleCommentId&quot;, discoveredSamples.comments?.id ?: &quot;&quot;)
+props.put(&quot;sampleDonationId&quot;, discoveredSamples.donations?.id ?: &quot;&quot;)
+props.put(&quot;sampleLocationId&quot;, discoveredSamples.locations?.id ?: &quot;&quot;)
+props.put(&quot;sampleRecordId&quot;, discoveredSamples.records?.id ?: &quot;&quot;)
+props.put(&quot;sampleUserConnectionId&quot;, discoveredSamples.userConnections?.id ?: &quot;&quot;)
+props.put(&quot;sampleUserAchievementId&quot;, discoveredSamples.userAchievements?.id ?: &quot;&quot;)
+props.put(&quot;sampleUserRsvpId&quot;, discoveredSamples.userRsvps?.id ?: &quot;&quot;)
+props.put(&quot;sampleBulletinLikeId&quot;, discoveredSamples.bulletinLikes?.id ?: &quot;&quot;)
+props.put(&quot;sampleCommentLikeId&quot;, discoveredSamples.commentLikes?.id ?: &quot;&quot;)
+props.put(&quot;sampleNotificationId&quot;, discoveredSamples.notifications?.id ?: &quot;&quot;)
+props.put(&quot;sampleClefLogId&quot;, discoveredSamples.clefLogs?.id ?: &quot;&quot;)
+props.put(&quot;notificationTypeId&quot;, discoveredSamples.notifications?.extra ?: &quot;&quot;)
 
 def heroRes = httpCall(&quot;GET&quot;, &quot;/api/hero/images&quot;)
 def heroImgUrl = (heroRes.status == 200 &amp;&amp; heroRes.json?.images &amp;&amp; !heroRes.json.images.isEmpty()) ? heroRes.json.images[0].url?.toString() : &quot;&quot;
@@ -580,6 +628,10 @@ SampleResult.setSuccessful(true)
 SampleResult.setResponseCode(&quot;200&quot;)
 SampleResult.setResponseData(authReport.toString(), &quot;UTF-8&quot;)
 SampleResult.setResponseMessage(&quot;All credential pools signed and verified&quot;)
+
+} finally {
+    setupPool.shutdownNow()
+}
 </stringProp>
           <stringProp name="scriptLanguage">groovy</stringProp>
         </JSR223Sampler>
@@ -763,7 +815,7 @@ SampleResult.setResponseMessage(&quot;All credential pools signed and verified&q
           <boolProp name="LoopController.continue_forever">false</boolProp>
           <stringProp name="LoopController.loops">1</stringProp>
         </elementProp>
-        <stringProp name="ThreadGroup.num_threads">${COVERAGE_THREADS}</stringProp>
+        <stringProp name="ThreadGroup.num_threads">${__groovy((props.get('runCoverage') ?: 'true').equalsIgnoreCase('false') ? 0 : Integer.parseInt(props.get('coverageThreads') ?: '1'))}</stringProp>
         <stringProp name="ThreadGroup.ramp_time">1</stringProp>
         <boolProp name="ThreadGroup.scheduler">false</boolProp>
         <stringProp name="ThreadGroup.duration"></stringProp>
@@ -9250,6 +9302,11 @@ SampleResult.setResponseMessage(&quot;All credential pools signed and verified&q
       <!-- ================================================================== -->
       <TestFragmentController guiclass="TestFragmentControllerGui" testclass="TestFragmentController" testname="Load Mix Test Fragment" enabled="true"/>
       <hashTree>
+        <UniformRandomTimer guiclass="UniformRandomTimerGui" testclass="UniformRandomTimer" testname="User Think Time (Uniform Random)" enabled="true">
+          <stringProp name="ConstantTimer.delay">${LOAD_THINK_MIN_MS}</stringProp>
+          <stringProp name="RandomTimer.range">${LOAD_THINK_RANGE_MS}</stringProp>
+        </UniformRandomTimer>
+        <hashTree/>
         
         <JSR223PreProcessor guiclass="TestBeanGUI" testclass="JSR223PreProcessor" testname="Select Verified Tokens For Thread" enabled="true">
           <stringProp name="cacheKey">true</stringProp>
