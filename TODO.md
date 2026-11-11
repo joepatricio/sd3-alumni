@@ -1,5 +1,8 @@
 ## Nice to have (optional features)
 
+* Redo tests, remake whitepaper, include pre-sql preparation
+* Simplify hero
+
 * Bulletin likes maybe? Schema is already in place. It just needs to be implemented in the views.
 * Maybe implement email stuff...
 * Simplify the management of content state by adding fields for isHidden and isCatalogued

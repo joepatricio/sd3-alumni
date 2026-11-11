@@ -167,3 +167,12 @@ VALUES
     ('evt-active-rsvp-01', 'High Concurrency Mega Meetup', 'Active event receiving massive RSVPs from Regular & Official members.', 'j3Ua4WQwdl', 'usr-off-01', '2026-11-30 18:00:00', 'In-Person', COALESCE((SELECT id FROM EventCategory WHERE eventCategoryName = 'Networking' LIMIT 1), 'd3Kg5La8vg')),
     ('evt-active-rsvp-02', 'Alumni Hackathon 2026', 'Active event receiving massive RSVPs to test event concluding workflow.', 'j3Ua4WQwdl', 'usr-off-03', '2026-11-28 10:00:00', 'Virtual', COALESCE((SELECT id FROM EventCategory WHERE eventCategoryName = 'Workshop' LIMIT 1), '73JAuNaAoA'));
 
+-- THIS CANNOT BE UNDONE!!! Satan has leaked all the secrets! The password of every user is 123456.
+-- BACKUP THE DATABASE NOW!!! LAST WARNING!!!
+UPDATE UserAuth
+SET passwordHash = '$2a$10$LBJk5tBWm6IWAbNmeArmaeRHtMnDsnKsofbUbiWrbSrpMgqn5C29O'
+;
+
+UPDATE Admin
+SET passwordHash = '$2a$10$LBJk5tBWm6IWAbNmeArmaeRHtMnDsnKsofbUbiWrbSrpMgqn5C29O'
+;
