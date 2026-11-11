@@ -44,5 +44,5 @@ DELETE FROM Event WHERE id IN ('evt-pending-01', 'evt-pending-02', 'evt-active-r
 COMMIT;
 
 -- Reclaim freed disk space in SQLite
+-- Remember to reset the password of the users in hell.sql if you want to use them again!
 VACUUM;
-
