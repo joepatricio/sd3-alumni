@@ -37,6 +37,7 @@ yarn-debug.log*
 yarn-error.log*
 
 #  Project files
+/test/load/results/html_report
 /docs
 /coreutils-docs
 /gallery

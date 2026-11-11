@@ -1,9 +1,9 @@
 {
   "baseUrl": "https://najealp.top",
   "bandwidthLimitMbps": 70,
-  "steppedTiers": [200, 500, 1000, 1500, 2000],
-  "defaultTierDurationSec": 60,
-  "dryRunTierDurationSec": 5,
+  "steppedTiers": [100, 250, 500, 750, 1000],
+  "defaultTierDurationSec": 30,
+  "dryRunTierDurationSec": 10,
   "credentials": {
     "admins": [
       { "username": "admin1", "password": "123456" },

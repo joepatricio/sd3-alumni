@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import 'dotenv/config';
+import crypto from 'crypto';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import cookieParser from 'cookie-parser';
@@ -79,6 +80,9 @@ if (envErrors.length > 0) {
 
 export const CLASSIFIER_INTERVAL_MINUTES = parsedInterval;
 
+// Maintain PRAGMA journal_mode = DELETE; and PRAGMA busy_timeout = 10000;
+// with timeout: 10000 in the adapter to allow write transactions up to 10 seconds
+// to acquire the lock before throwing SQLITE_BUSY while preserving DELETE journal mode.
 const adapter = new PrismaBetterSqlite3({
     url: process.env.DATABASE_URL,
     timeout: 10000,
@@ -89,6 +93,7 @@ const basePrisma = new PrismaClient({ adapter });
     try {
         await basePrisma.$executeRawUnsafe('PRAGMA journal_mode = DELETE;');
         await basePrisma.$executeRawUnsafe('PRAGMA busy_timeout = 10000;');
+        console.log("[SQLite] Maintained PRAGMA journal_mode = DELETE and busy_timeout = 10000 (10s lock timeout).");
     } catch (e) {
         console.warn("Could not set SQLite journal mode / busy_timeout:", e.message);
     }
@@ -939,6 +944,7 @@ const concludeEvent = async (eventId) => {
                 }
             }
         });
+        invalidateFeedCache('event');
         console.log(`Event ${eventId} concluded.`);
     } catch (err) {
         console.error(`Failed to conclude event ${eventId}:`, err);
@@ -1346,6 +1352,7 @@ app.post('/api/admin/events', authenticateAdminToken, contentLimiter, async (req
             }
         }
 
+        invalidateFeedCache('event');
         res.status(201).json(formatOutput('event', newEvent));
     } catch (error) {
         console.error('Failed to create admin event:', error);
@@ -1500,6 +1507,10 @@ async function updateEventStatusAndStats({ eventId, newStatusName, adminId, addi
 
         return updatedEvent;
     });
+    if (result) {
+        invalidateFeedCache('event');
+    }
+    return result;
 }
 
 // Helper to update bulletin status, admin audit info (adminId, reviewDate), and userStatistics bulletinsCreated count
@@ -1574,6 +1585,10 @@ async function updateBulletinStatusAndStats({ bulletinId, newStatusName, adminId
 
         return updatedBulletin;
     });
+    if (result) {
+        invalidateFeedCache('bulletin');
+    }
+    return result;
 }
 
 // Admin Update Bulletin Status
@@ -1638,6 +1653,7 @@ app.post('/api/admin/bulletins', authenticateAdminToken, contentLimiter, async (
             }
         }
 
+        invalidateFeedCache('bulletin');
         res.status(201).json(formatOutput('bulletin', newBulletin));
     } catch (error) {
         console.error('Failed to create admin bulletin:', error);
@@ -2201,6 +2217,121 @@ const defaultIncludes = {
     }
 };
 
+// ==============================================================================
+// FEED HTTP & IN-MEMORY CACHE (/api/bulletins, /api/events)
+// Tuned for 30–60s TTL to prevent repetitive WAN bandwidth consumption
+// against the 70 Mbps link ceiling under high concurrency.
+// ==============================================================================
+export const FEED_CACHE_TTL_SECONDS = Math.max(
+    30,
+    Math.min(60, parseInt(process.env.FEED_CACHE_TTL_SECONDS || '60', 10) || 60)
+);
+const FEED_CACHE_TTL_MS = FEED_CACHE_TTL_SECONDS * 1000;
+const MAX_FEED_CACHE_SIZE = 500;
+
+export const feedCache = new Map();
+
+function isHeavyFeedModel(modelName) {
+    return modelName === 'bulletin' || modelName === 'event';
+}
+
+function getFeedCacheKey(req) {
+    return `${req.method}:${req.originalUrl || req.url}`;
+}
+
+export function invalidateFeedCache(modelName) {
+    if (!modelName) {
+        feedCache.clear();
+        return;
+    }
+    for (const [key, entry] of feedCache.entries()) {
+        if (entry.modelName === modelName) {
+            feedCache.delete(key);
+        }
+    }
+}
+
+function getCachedResponse(req, res, modelName) {
+    if (!isHeavyFeedModel(modelName)) return false;
+    if (req.method !== 'GET' && req.method !== 'HEAD') return false;
+
+    const cacheKey = getFeedCacheKey(req);
+    const cached = feedCache.get(cacheKey);
+    if (!cached) return false;
+
+    // Check expiration (30–60s TTL)
+    if (Date.now() - cached.timestamp >= FEED_CACHE_TTL_MS) {
+        feedCache.delete(cacheKey);
+        return false;
+    }
+
+    res.set('Cache-Control', `public, max-age=${FEED_CACHE_TTL_SECONDS}, s-maxage=${FEED_CACHE_TTL_SECONDS}`);
+    res.set('ETag', cached.etag);
+    res.set('X-Cache', 'HIT');
+
+    const ifNoneMatch = req.headers['if-none-match'];
+    if (ifNoneMatch) {
+        const cleanClient = ifNoneMatch.replace(/^W\//, '').replace(/^"|"$/g, '');
+        const cleanEtag = cached.etag.replace(/^W\//, '').replace(/^"|"$/g, '');
+        if (cleanClient === cleanEtag || ifNoneMatch === cached.etag) {
+            res.status(304).end();
+            return true;
+        }
+    }
+
+    if (req.method === 'HEAD') {
+        res.status(cached.status).type('application/json').end();
+        return true;
+    }
+
+    res.status(cached.status).type('application/json').send(cached.body);
+    return true;
+}
+
+function sendAndCacheResponse(req, res, modelName, data, statusCode = 200) {
+    if (!isHeavyFeedModel(modelName) || (req.method !== 'GET' && req.method !== 'HEAD')) {
+        return res.status(statusCode).json(data);
+    }
+
+    const cacheKey = getFeedCacheKey(req);
+    const body = JSON.stringify(data);
+    const hash = crypto.createHash('md5').update(body).digest('hex');
+    const etag = `W/"${hash}"`;
+
+    if (statusCode === 200) {
+        if (feedCache.size >= MAX_FEED_CACHE_SIZE) {
+            const oldestKey = feedCache.keys().next().value;
+            if (oldestKey) feedCache.delete(oldestKey);
+        }
+
+        feedCache.set(cacheKey, {
+            status: statusCode,
+            body,
+            etag,
+            timestamp: Date.now(),
+            modelName
+        });
+    }
+
+    res.set('Cache-Control', `public, max-age=${FEED_CACHE_TTL_SECONDS}, s-maxage=${FEED_CACHE_TTL_SECONDS}`);
+    res.set('ETag', etag);
+    res.set('X-Cache', 'MISS');
+
+    const ifNoneMatch = req.headers['if-none-match'];
+    if (ifNoneMatch) {
+        const cleanClient = ifNoneMatch.replace(/^W\//, '').replace(/^"|"$/g, '');
+        if (cleanClient === hash || ifNoneMatch === etag) {
+            return res.status(304).end();
+        }
+    }
+
+    if (req.method === 'HEAD') {
+        return res.status(statusCode).type('application/json').end();
+    }
+
+    return res.status(statusCode).type('application/json').send(body);
+}
+
 // Map database entities/relations to json-server expected shapes
 function formatOutput(modelName, data) {
     const sanitizeSensitive = (obj) => {
@@ -2545,6 +2676,11 @@ app.get('/api/:table', async (req, res, next) => {
     const modelName = tableToModel[table] || tableToModel[table?.toLowerCase()];
     if (!modelName) return next();
 
+    // Check feed cache for heavy feed catalog requests (/api/bulletins, /api/events)
+    if (getCachedResponse(req, res, modelName)) {
+        return;
+    }
+
     try {
         const delegate = prisma[modelName];
         if (!delegate) return res.status(404).json({ error: `Model for ${table} not found` });
@@ -2607,7 +2743,7 @@ app.get('/api/:table', async (req, res, next) => {
 
             const totalPages = Math.ceil(totalItems / perPage);
 
-            res.json({
+            return sendAndCacheResponse(req, res, modelName, {
                 first: 1,
                 prev: page > 1 ? page - 1 : null,
                 next: page < totalPages ? page + 1 : null,
@@ -2630,12 +2766,12 @@ app.get('/api/:table', async (req, res, next) => {
             });
 
             if (totalItems !== undefined) {
-                res.json({
+                return sendAndCacheResponse(req, res, modelName, {
                     items: totalItems,
                     data: formatOutput(modelName, data)
                 });
             } else {
-                res.json(formatOutput(modelName, data));
+                return sendAndCacheResponse(req, res, modelName, formatOutput(modelName, data));
             }
         }
     } catch (error) {
@@ -2652,6 +2788,11 @@ app.get('/api/:table/:id', async (req, res, next) => {
     const { table, id } = req.params;
     const modelName = tableToModel[table] || tableToModel[table?.toLowerCase()];
     if (!modelName) return next();
+
+    // Check feed cache for heavy feed requests (/api/bulletins/:id, /api/events/:id)
+    if (getCachedResponse(req, res, modelName)) {
+        return;
+    }
 
     try {
         const delegate = prisma[modelName];
@@ -2699,7 +2840,7 @@ app.get('/api/:table/:id', async (req, res, next) => {
 
         if (!item) return res.status(404).json({ error: `${table} item not found` });
 
-        res.json(formatOutput(modelName, item));
+        return sendAndCacheResponse(req, res, modelName, formatOutput(modelName, item));
     } catch (error) {
         console.error(`Generic GET /api/${table}/${id} failed:`, error);
         res.status(500).json({ error: `Failed to fetch ${table} item` });
@@ -2742,6 +2883,12 @@ app.post('/api/:table', contentLimiter, async (req, res, next) => {
         if ((modelName === 'event' || modelName === 'bulletin') && item.authorId) {
             const link = modelName === 'event' ? `/events/${item.id}` : `/bulletin/${item.id}`;
             await createNotification(prisma, item.authorId, `Your ${modelName} "${item.title || 'submission'}" has been submitted and is currently under review.`, link);
+        }
+
+        if (modelName === 'bulletin' || modelName === 'comment' || modelName === 'bulletinLike') {
+            invalidateFeedCache('bulletin');
+        } else if (modelName === 'event' || modelName === 'userRsvp') {
+            invalidateFeedCache('event');
         }
 
         res.status(201).json(formatOutput(modelName, item));
@@ -2787,6 +2934,12 @@ app.patch('/api/:table/:id', async (req, res, next) => {
             include: defaultIncludes[modelName] ? defaultIncludes[modelName] : undefined
         });
 
+        if (modelName === 'bulletin' || modelName === 'comment' || modelName === 'bulletinLike') {
+            invalidateFeedCache('bulletin');
+        } else if (modelName === 'event' || modelName === 'userRsvp') {
+            invalidateFeedCache('event');
+        }
+
         res.json(formatOutput(modelName, item));
     } catch (error) {
         console.error(`Generic PATCH /api/${table}/${id} failed:`, error);
@@ -2831,6 +2984,12 @@ app.put('/api/:table/:id', async (req, res, next) => {
             data
         });
 
+        if (modelName === 'bulletin' || modelName === 'comment' || modelName === 'bulletinLike') {
+            invalidateFeedCache('bulletin');
+        } else if (modelName === 'event' || modelName === 'userRsvp') {
+            invalidateFeedCache('event');
+        }
+
         res.json(formatOutput(modelName, item));
     } catch (error) {
         console.error(`Generic PUT /api/${table}/${id} failed:`, error);
@@ -2859,6 +3018,7 @@ app.delete('/api/:table/:id', async (req, res, next) => {
                     where: { id }
                 });
             });
+            invalidateFeedCache('bulletin');
             return res.status(204).end();
         }
 
@@ -2884,6 +3044,7 @@ app.delete('/api/:table/:id', async (req, res, next) => {
                     where: { id }
                 });
             });
+            invalidateFeedCache('bulletin');
             return res.status(204).end();
         }
 
@@ -2896,12 +3057,19 @@ app.delete('/api/:table/:id', async (req, res, next) => {
                     where: { id }
                 });
             });
+            invalidateFeedCache('event');
             return res.status(204).end();
         }
 
         await delegate.delete({
             where: { [pkField]: id }
         });
+
+        if (modelName === 'bulletin' || modelName === 'comment' || modelName === 'bulletinLike') {
+            invalidateFeedCache('bulletin');
+        } else if (modelName === 'event' || modelName === 'userRsvp') {
+            invalidateFeedCache('event');
+        }
 
         res.status(204).end();
     } catch (error) {
@@ -3248,6 +3416,7 @@ async function classifyPendingBulletins() {
                 where: { id: bulletin.id },
                 data: { contentStatusId: newStatusId }
             });
+            invalidateFeedCache('bulletin');
 
             // Update user statistics if approved
             if (finalDecision === "Approved" && bulletin.authorId) {
