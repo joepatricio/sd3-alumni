@@ -1,101 +1,156 @@
-2026-11-11 10:26:05,847 INFO o.a.j.u.JMeterUtils: Setting Locale to en_EN
-2026-11-11 10:26:05,880 INFO o.a.j.JMeter: Loading user properties from: C:\Users\PATRICIOJOSENAJEAL\Desktop\bin\apache-jmeter-5.6.3\bin\user.properties
-2026-11-11 10:26:05,881 INFO o.a.j.JMeter: Loading system properties from: C:\Users\PATRICIOJOSENAJEAL\Desktop\bin\apache-jmeter-5.6.3\bin\system.properties
-2026-11-11 10:26:05,882 INFO o.a.j.JMeter: Setting JMeter property: protocol=https
-2026-11-11 10:26:05,882 INFO o.a.j.JMeter: Setting JMeter property: host=najealp.top
-2026-11-11 10:26:05,883 WARN o.a.j.JMeter: Removing JMeter property: port
-2026-11-11 10:26:05,883 INFO o.a.j.JMeter: Setting JMeter property: configPath=C:\Users\PATRICIOJOSENAJEAL\Desktop\bin\sd3-alumni\test\load\config.json
-2026-11-11 10:26:05,883 INFO o.a.j.JMeter: Setting JMeter property: fixturePath=C:\Users\PATRICIOJOSENAJEAL\Desktop\bin\sd3-alumni\test\load\fixture.png
-2026-11-11 10:26:05,883 INFO o.a.j.JMeter: Setting JMeter property: defaultPassword=123456
-2026-11-11 10:26:05,884 INFO o.a.j.JMeter: Setting JMeter property: coverageThreads=1
-2026-11-11 10:26:05,884 INFO o.a.j.JMeter: Setting JMeter property: runCoverage=true
-2026-11-11 10:26:05,884 INFO o.a.j.JMeter: Setting JMeter property: loadThinkMinMs=100
-2026-11-11 10:26:05,884 INFO o.a.j.JMeter: Setting JMeter property: loadThinkRangeMs=400
-2026-11-11 10:26:05,884 INFO o.a.j.JMeter: Setting JMeter property: tier1Threads=0
-2026-11-11 10:26:05,885 INFO o.a.j.JMeter: Setting JMeter property: tier2Threads=0
-2026-11-11 10:26:05,885 INFO o.a.j.JMeter: Setting JMeter property: tier3Threads=0
-2026-11-11 10:26:05,886 INFO o.a.j.JMeter: Setting JMeter property: tier4Threads=0
-2026-11-11 10:26:05,886 INFO o.a.j.JMeter: Setting JMeter property: tier5Threads=0
-2026-11-11 10:26:05,886 INFO o.a.j.JMeter: Setting JMeter property: tierDuration=5
-2026-11-11 10:26:05,886 INFO o.a.j.JMeter: Setting JMeter property: tierRampUp=1
-2026-11-11 10:26:05,886 INFO o.a.j.JMeter: Setting JMeter property: includeExternalApis=true
-2026-11-11 10:26:05,887 INFO o.a.j.JMeter: Setting JMeter property: includeWritesInLoad=false
-2026-11-11 10:26:05,898 INFO o.a.j.JMeter: Copyright (c) 1998-2024 The Apache Software Foundation
-2026-11-11 10:26:05,898 INFO o.a.j.JMeter: Version 5.6.3
-2026-11-11 10:26:05,898 INFO o.a.j.JMeter: java.version=17.0.20.1
-2026-11-11 10:26:05,898 INFO o.a.j.JMeter: java.vm.name=OpenJDK 64-Bit Server VM
-2026-11-11 10:26:05,898 INFO o.a.j.JMeter: os.name=Windows 10
-2026-11-11 10:26:05,898 INFO o.a.j.JMeter: os.arch=amd64
-2026-11-11 10:26:05,899 INFO o.a.j.JMeter: os.version=10.0
-2026-11-11 10:26:05,899 INFO o.a.j.JMeter: file.encoding=Cp1252
-2026-11-11 10:26:05,900 INFO o.a.j.JMeter: java.awt.headless=true
-2026-11-11 10:26:05,900 INFO o.a.j.JMeter: Max memory     =1073741824
-2026-11-11 10:26:05,901 INFO o.a.j.JMeter: Available Processors =4
-2026-11-11 10:26:05,913 INFO o.a.j.JMeter: Default Locale=English (EN)
-2026-11-11 10:26:05,914 INFO o.a.j.JMeter: JMeter  Locale=English (EN)
-2026-11-11 10:26:05,914 INFO o.a.j.JMeter: JMeterHome=C:\Users\PATRICIOJOSENAJEAL\Desktop\bin\apache-jmeter-5.6.3
-2026-11-11 10:26:05,914 INFO o.a.j.JMeter: user.dir  =C:\Users\PATRICIOJOSENAJEAL\Desktop\bin\sd3-alumni
-2026-11-11 10:26:05,914 INFO o.a.j.JMeter: PWD       =C:\Users\PATRICIOJOSENAJEAL\Desktop\bin\sd3-alumni
-2026-11-11 10:26:05,915 INFO o.a.j.JMeter: IP: 172.16.0.2 Name: WINJOE FullName: WINJOE
-2026-11-11 10:26:05,940 INFO o.a.j.s.FileServer: Default base='C:\Users\PATRICIOJOSENAJEAL\Desktop\bin\sd3-alumni'
-2026-11-11 10:26:05,943 INFO o.a.j.s.FileServer: Set new base='C:\Users\PATRICIOJOSENAJEAL\Desktop\bin\sd3-alumni\test\load'
-2026-11-11 10:26:06,316 INFO o.a.j.s.SaveService: Testplan (JMX) version: 2.2. Testlog (JTL) version: 2.2
-2026-11-11 10:26:06,362 INFO o.a.j.s.SaveService: Using SaveService properties version 5.0
-2026-11-11 10:26:06,369 INFO o.a.j.s.SaveService: Using SaveService properties file encoding UTF-8
-2026-11-11 10:26:06,375 INFO o.a.j.s.SaveService: Loading file: C:\Users\PATRICIOJOSENAJEAL\Desktop\bin\sd3-alumni\test\load\benchmark.jmx
-2026-11-11 10:26:06,568 INFO o.a.j.p.h.s.HTTPSamplerBase: Parser for text/html is org.apache.jmeter.protocol.http.parser.LagartoBasedHtmlParser
-2026-11-11 10:26:06,569 INFO o.a.j.p.h.s.HTTPSamplerBase: Parser for application/xhtml+xml is org.apache.jmeter.protocol.http.parser.LagartoBasedHtmlParser
-2026-11-11 10:26:06,569 INFO o.a.j.p.h.s.HTTPSamplerBase: Parser for application/xml is org.apache.jmeter.protocol.http.parser.LagartoBasedHtmlParser
-2026-11-11 10:26:06,569 INFO o.a.j.p.h.s.HTTPSamplerBase: Parser for text/xml is org.apache.jmeter.protocol.http.parser.LagartoBasedHtmlParser
-2026-11-11 10:26:06,569 INFO o.a.j.p.h.s.HTTPSamplerBase: Parser for text/vnd.wap.wml is org.apache.jmeter.protocol.http.parser.RegexpHTMLParser
-2026-11-11 10:26:06,569 INFO o.a.j.p.h.s.HTTPSamplerBase: Parser for text/css is org.apache.jmeter.protocol.http.parser.CssParser
-2026-11-11 10:26:07,366 INFO o.a.j.JMeter: Creating summariser <summary>
-2026-11-11 10:26:07,447 INFO o.a.j.e.StandardJMeterEngine: Running the test!
-2026-11-11 10:26:07,453 INFO o.a.j.s.SampleEvent: List of sample_variables: []
-2026-11-11 10:26:07,454 INFO o.a.j.s.SampleEvent: List of sample_variables: []
-2026-11-11 10:26:07,462 INFO o.a.j.e.u.CompoundVariable: Note: Function class names must contain the string: '.functions.'
-2026-11-11 10:26:07,463 INFO o.a.j.e.u.CompoundVariable: Note: Function class names must not contain the string: '.gui.'
-2026-11-11 10:26:08,214 INFO o.a.j.JMeter: Running test (1794363968214)
-2026-11-11 10:26:08,220 INFO o.a.j.e.StandardJMeterEngine: Starting setUp thread groups
-2026-11-11 10:26:08,220 INFO o.a.j.e.StandardJMeterEngine: Starting setUp ThreadGroup: 1 : setUp Thread Group (Auth & Token Verification) 
-2026-11-11 10:26:08,220 INFO o.a.j.e.StandardJMeterEngine: Starting 1 threads for group setUp Thread Group (Auth & Token Verification).
-2026-11-11 10:26:08,221 INFO o.a.j.e.StandardJMeterEngine: Test will stop abruptly on error
-2026-11-11 10:26:08,221 INFO o.a.j.t.ThreadGroup: Starting thread group... number=1 threads=1 ramp-up=1 delayedStart=false
-2026-11-11 10:26:08,228 INFO o.a.j.t.ThreadGroup: Started thread group number 1
-2026-11-11 10:26:08,228 INFO o.a.j.e.StandardJMeterEngine: Waiting for all setup thread groups to exit
-2026-11-11 10:26:08,231 INFO o.a.j.t.JMeterThread: Thread started: setUp Thread Group (Auth & Token Verification) 1-1
-2026-11-11 10:26:08,240 INFO o.a.j.s.SampleResult: Note: Sample TimeStamps are START times
-2026-11-11 10:26:08,240 INFO o.a.j.s.SampleResult: sampleresult.default.encoding is set to UTF-8
-2026-11-11 10:26:08,240 INFO o.a.j.s.SampleResult: sampleresult.useNanoTime=true
-2026-11-11 10:26:08,240 INFO o.a.j.s.SampleResult: sampleresult.nanoThreadSleep=5000
-2026-11-11 10:26:11,823 INFO o.a.j.p.j.s.J.[Setup] Sign Credentials, Verify All Tokens & Discover Seed IDs: [Setup] Loaded config from: C:\Users\PATRICIOJOSENAJEAL\Desktop\bin\sd3-alumni\test\load\config.json
-2026-11-11 10:26:11,828 INFO o.a.j.p.j.s.J.[Setup] Sign Credentials, Verify All Tokens & Discover Seed IDs: [Setup] Found upload fixture: C:\Users\PATRICIOJOSENAJEAL\Desktop\bin\sd3-alumni\test\load\fixture.png
-2026-11-11 10:26:16,192 WARN o.a.j.p.j.s.J.[Setup] Sign Credentials, Verify All Tokens & Discover Seed IDs: [-] Admin login failed for admin1 (HTTP 500); trying next account.
-2026-11-11 10:26:16,192 WARN o.a.j.p.j.s.J.[Setup] Sign Credentials, Verify All Tokens & Discover Seed IDs: [-] Admin login failed for admin2 (HTTP 500); trying next account.
-2026-11-11 10:26:16,192 WARN o.a.j.p.j.s.J.[Setup] Sign Credentials, Verify All Tokens & Discover Seed IDs: [-] Admin login failed for admin3 (HTTP 500); trying next account.
-2026-11-11 10:26:16,192 WARN o.a.j.p.j.s.J.[Setup] Sign Credentials, Verify All Tokens & Discover Seed IDs: [-] Admin login failed for admin4 (HTTP 401); trying next account.
-2026-11-11 10:26:16,193 WARN o.a.j.p.j.s.J.[Setup] Sign Credentials, Verify All Tokens & Discover Seed IDs: [-] Admin login failed for admin5 (HTTP 401); trying next account.
-2026-11-11 10:26:16,193 WARN o.a.j.p.j.s.J.[Setup] Sign Credentials, Verify All Tokens & Discover Seed IDs: [-] Admin login failed for admin6 (HTTP 401); trying next account.
-2026-11-11 10:26:16,193 WARN o.a.j.p.j.s.J.[Setup] Sign Credentials, Verify All Tokens & Discover Seed IDs: [-] Admin login failed for admin7 (HTTP 401); trying next account.
-2026-11-11 10:26:16,193 WARN o.a.j.p.j.s.J.[Setup] Sign Credentials, Verify All Tokens & Discover Seed IDs: [-] Admin login failed for admin8 (HTTP 401); trying next account.
-2026-11-11 10:26:16,193 WARN o.a.j.p.j.s.J.[Setup] Sign Credentials, Verify All Tokens & Discover Seed IDs: [-] Admin login failed for admin9 (HTTP 401); trying next account.
-2026-11-11 10:26:16,193 WARN o.a.j.p.j.s.J.[Setup] Sign Credentials, Verify All Tokens & Discover Seed IDs: [-] Admin login failed for admin10 (HTTP 401); trying next account.
-2026-11-11 10:26:16,194 ERROR o.a.j.p.j.s.J.[Setup] Sign Credentials, Verify All Tokens & Discover Seed IDs: FATAL: 0 admin accounts passed token verification. Refusing to run with 401 Unauthorized.
-Target: https://najealp.top
-[-] Admin login failed for admin1 (HTTP 500); trying next account.
-[-] Admin login failed for admin2 (HTTP 500); trying next account.
-[-] Admin login failed for admin3 (HTTP 500); trying next account.
-[-] Admin login failed for admin4 (HTTP 401); trying next account.
-[-] Admin login failed for admin5 (HTTP 401); trying next account.
-[-] Admin login failed for admin6 (HTTP 401); trying next account.
-[-] Admin login failed for admin7 (HTTP 401); trying next account.
-[-] Admin login failed for admin8 (HTTP 401); trying next account.
-[-] Admin login failed for admin9 (HTTP 401); trying next account.
-[-] Admin login failed for admin10 (HTTP 401); trying next account.
+2026-11-11 10:41:08,788 INFO o.a.j.u.JMeterUtils: Setting Locale to en_EN
+2026-11-11 10:41:08,814 INFO o.a.j.JMeter: Loading user properties from: C:\Users\PATRICIOJOSENAJEAL\Desktop\bin\apache-jmeter-5.6.3\bin\user.properties
+2026-11-11 10:41:08,815 INFO o.a.j.JMeter: Loading system properties from: C:\Users\PATRICIOJOSENAJEAL\Desktop\bin\apache-jmeter-5.6.3\bin\system.properties
+2026-11-11 10:41:08,815 INFO o.a.j.JMeter: Setting JMeter property: protocol=https
+2026-11-11 10:41:08,816 INFO o.a.j.JMeter: Setting JMeter property: host=najealp.top
+2026-11-11 10:41:08,816 WARN o.a.j.JMeter: Removing JMeter property: port
+2026-11-11 10:41:08,817 INFO o.a.j.JMeter: Setting JMeter property: configPath=C:\Users\PATRICIOJOSENAJEAL\Desktop\bin\sd3-alumni\test\load\config.json
+2026-11-11 10:41:08,817 INFO o.a.j.JMeter: Setting JMeter property: fixturePath=C:\Users\PATRICIOJOSENAJEAL\Desktop\bin\sd3-alumni\test\load\fixture.png
+2026-11-11 10:41:08,817 INFO o.a.j.JMeter: Setting JMeter property: defaultPassword=123456
+2026-11-11 10:41:08,817 INFO o.a.j.JMeter: Setting JMeter property: coverageThreads=1
+2026-11-11 10:41:08,817 INFO o.a.j.JMeter: Setting JMeter property: runCoverage=true
+2026-11-11 10:41:08,817 INFO o.a.j.JMeter: Setting JMeter property: loadThinkMinMs=100
+2026-11-11 10:41:08,817 INFO o.a.j.JMeter: Setting JMeter property: loadThinkRangeMs=400
+2026-11-11 10:41:08,817 INFO o.a.j.JMeter: Setting JMeter property: tier1Threads=0
+2026-11-11 10:41:08,818 INFO o.a.j.JMeter: Setting JMeter property: tier2Threads=0
+2026-11-11 10:41:08,818 INFO o.a.j.JMeter: Setting JMeter property: tier3Threads=0
+2026-11-11 10:41:08,818 INFO o.a.j.JMeter: Setting JMeter property: tier4Threads=0
+2026-11-11 10:41:08,818 INFO o.a.j.JMeter: Setting JMeter property: tier5Threads=0
+2026-11-11 10:41:08,818 INFO o.a.j.JMeter: Setting JMeter property: tierDuration=5
+2026-11-11 10:41:08,818 INFO o.a.j.JMeter: Setting JMeter property: tierRampUp=1
+2026-11-11 10:41:08,818 INFO o.a.j.JMeter: Setting JMeter property: includeExternalApis=true
+2026-11-11 10:41:08,818 INFO o.a.j.JMeter: Setting JMeter property: includeWritesInLoad=false
+2026-11-11 10:41:08,829 INFO o.a.j.JMeter: Copyright (c) 1998-2024 The Apache Software Foundation
+2026-11-11 10:41:08,829 INFO o.a.j.JMeter: Version 5.6.3
+2026-11-11 10:41:08,829 INFO o.a.j.JMeter: java.version=17.0.20.1
+2026-11-11 10:41:08,829 INFO o.a.j.JMeter: java.vm.name=OpenJDK 64-Bit Server VM
+2026-11-11 10:41:08,829 INFO o.a.j.JMeter: os.name=Windows 10
+2026-11-11 10:41:08,829 INFO o.a.j.JMeter: os.arch=amd64
+2026-11-11 10:41:08,829 INFO o.a.j.JMeter: os.version=10.0
+2026-11-11 10:41:08,829 INFO o.a.j.JMeter: file.encoding=Cp1252
+2026-11-11 10:41:08,830 INFO o.a.j.JMeter: java.awt.headless=true
+2026-11-11 10:41:08,830 INFO o.a.j.JMeter: Max memory     =1073741824
+2026-11-11 10:41:08,830 INFO o.a.j.JMeter: Available Processors =4
+2026-11-11 10:41:08,846 INFO o.a.j.JMeter: Default Locale=English (EN)
+2026-11-11 10:41:08,846 INFO o.a.j.JMeter: JMeter  Locale=English (EN)
+2026-11-11 10:41:08,847 INFO o.a.j.JMeter: JMeterHome=C:\Users\PATRICIOJOSENAJEAL\Desktop\bin\apache-jmeter-5.6.3
+2026-11-11 10:41:08,847 INFO o.a.j.JMeter: user.dir  =C:\Users\PATRICIOJOSENAJEAL\Desktop\bin\sd3-alumni
+2026-11-11 10:41:08,847 INFO o.a.j.JMeter: PWD       =C:\Users\PATRICIOJOSENAJEAL\Desktop\bin\sd3-alumni
+2026-11-11 10:41:08,848 INFO o.a.j.JMeter: IP: 172.16.0.2 Name: WINJOE FullName: WINJOE
+2026-11-11 10:41:08,872 INFO o.a.j.s.FileServer: Default base='C:\Users\PATRICIOJOSENAJEAL\Desktop\bin\sd3-alumni'
+2026-11-11 10:41:08,876 INFO o.a.j.s.FileServer: Set new base='C:\Users\PATRICIOJOSENAJEAL\Desktop\bin\sd3-alumni\test\load'
+2026-11-11 10:41:09,227 INFO o.a.j.s.SaveService: Testplan (JMX) version: 2.2. Testlog (JTL) version: 2.2
+2026-11-11 10:41:09,269 INFO o.a.j.s.SaveService: Using SaveService properties version 5.0
+2026-11-11 10:41:09,276 INFO o.a.j.s.SaveService: Using SaveService properties file encoding UTF-8
+2026-11-11 10:41:09,282 INFO o.a.j.s.SaveService: Loading file: C:\Users\PATRICIOJOSENAJEAL\Desktop\bin\sd3-alumni\test\load\benchmark.jmx
+2026-11-11 10:41:09,445 INFO o.a.j.p.h.s.HTTPSamplerBase: Parser for text/html is org.apache.jmeter.protocol.http.parser.LagartoBasedHtmlParser
+2026-11-11 10:41:09,445 INFO o.a.j.p.h.s.HTTPSamplerBase: Parser for application/xhtml+xml is org.apache.jmeter.protocol.http.parser.LagartoBasedHtmlParser
+2026-11-11 10:41:09,445 INFO o.a.j.p.h.s.HTTPSamplerBase: Parser for application/xml is org.apache.jmeter.protocol.http.parser.LagartoBasedHtmlParser
+2026-11-11 10:41:09,445 INFO o.a.j.p.h.s.HTTPSamplerBase: Parser for text/xml is org.apache.jmeter.protocol.http.parser.LagartoBasedHtmlParser
+2026-11-11 10:41:09,445 INFO o.a.j.p.h.s.HTTPSamplerBase: Parser for text/vnd.wap.wml is org.apache.jmeter.protocol.http.parser.RegexpHTMLParser
+2026-11-11 10:41:09,445 INFO o.a.j.p.h.s.HTTPSamplerBase: Parser for text/css is org.apache.jmeter.protocol.http.parser.CssParser
+2026-11-11 10:41:10,154 INFO o.a.j.JMeter: Creating summariser <summary>
+2026-11-11 10:41:10,226 INFO o.a.j.e.StandardJMeterEngine: Running the test!
+2026-11-11 10:41:10,233 INFO o.a.j.s.SampleEvent: List of sample_variables: []
+2026-11-11 10:41:10,233 INFO o.a.j.s.SampleEvent: List of sample_variables: []
+2026-11-11 10:41:10,242 INFO o.a.j.e.u.CompoundVariable: Note: Function class names must contain the string: '.functions.'
+2026-11-11 10:41:10,242 INFO o.a.j.e.u.CompoundVariable: Note: Function class names must not contain the string: '.gui.'
+2026-11-11 10:41:10,859 INFO o.a.j.JMeter: Running test (1794364870859)
+2026-11-11 10:41:10,863 INFO o.a.j.e.StandardJMeterEngine: Starting setUp thread groups
+2026-11-11 10:41:10,863 INFO o.a.j.e.StandardJMeterEngine: Starting setUp ThreadGroup: 1 : setUp Thread Group (Auth & Token Verification) 
+2026-11-11 10:41:10,864 INFO o.a.j.e.StandardJMeterEngine: Starting 1 threads for group setUp Thread Group (Auth & Token Verification).
+2026-11-11 10:41:10,864 INFO o.a.j.e.StandardJMeterEngine: Test will stop abruptly on error
+2026-11-11 10:41:10,864 INFO o.a.j.t.ThreadGroup: Starting thread group... number=1 threads=1 ramp-up=1 delayedStart=false
+2026-11-11 10:41:10,870 INFO o.a.j.t.ThreadGroup: Started thread group number 1
+2026-11-11 10:41:10,870 INFO o.a.j.e.StandardJMeterEngine: Waiting for all setup thread groups to exit
+2026-11-11 10:41:10,873 INFO o.a.j.t.JMeterThread: Thread started: setUp Thread Group (Auth & Token Verification) 1-1
+2026-11-11 10:41:10,877 INFO o.a.j.s.SampleResult: Note: Sample TimeStamps are START times
+2026-11-11 10:41:10,878 INFO o.a.j.s.SampleResult: sampleresult.default.encoding is set to UTF-8
+2026-11-11 10:41:10,878 INFO o.a.j.s.SampleResult: sampleresult.useNanoTime=true
+2026-11-11 10:41:10,878 INFO o.a.j.s.SampleResult: sampleresult.nanoThreadSleep=5000
+2026-11-11 10:41:13,632 INFO o.a.j.p.j.s.J.[Setup] Sign Credentials, Verify All Tokens & Discover Seed IDs: [Setup] Loaded config from: C:\Users\PATRICIOJOSENAJEAL\Desktop\bin\sd3-alumni\test\load\config.json
+2026-11-11 10:41:13,636 INFO o.a.j.p.j.s.J.[Setup] Sign Credentials, Verify All Tokens & Discover Seed IDs: [Setup] Found upload fixture: C:\Users\PATRICIOJOSENAJEAL\Desktop\bin\sd3-alumni\test\load\fixture.png
+2026-11-11 10:41:20,095 INFO o.a.j.p.j.s.J.[Setup] Sign Credentials, Verify All Tokens & Discover Seed IDs: [Setup] Provisioning dedicated JMX credential loadtest_jmx_secondary@najealp.top with default password via /api/admin/users...
+2026-11-11 10:41:20,095 INFO o.a.j.p.j.s.J.[Setup] Sign Credentials, Verify All Tokens & Discover Seed IDs: [Setup] Provisioning dedicated JMX credential loadtest_jmx_primary@najealp.top with default password via /api/admin/users...
+2026-11-11 10:41:23,195 INFO o.a.j.p.j.s.J.[Setup] Sign Credentials, Verify All Tokens & Discover Seed IDs: Target: https://najealp.top
+[+] Admin verified: admin1 (me=200, stats=200)
+[+] Admin verified: admin2 (me=200, stats=200)
+[+] Admin verified: admin3 (me=200, stats=200)
+[+] Admin verified: admin4 (me=200, stats=200)
+[+] Admin verified: admin5 (me=200, stats=200)
+[+] Admin verified: admin6 (me=200, stats=200)
+[+] Admin verified: admin7 (me=200, stats=200)
+[+] Admin verified: admin8 (me=200, stats=200)
+[+] Admin verified: admin9 (me=200, stats=200)
+[+] Admin verified: admin10 (me=200, stats=200)
+[+] Official verified: test.official1@najealp.top (me=200)
+[+] Official verified: test.official2@najealp.top (me=200)
+[+] Official verified: test.official3@najealp.top (me=200)
+[+] Official verified: test.official4@najealp.top (me=200)
+[+] Official verified: test.official5@najealp.top (me=200)
+[+] Signed & verified own JMX Primary: loadtest_jmx_primary@najealp.top (me=200)
+[+] Signed & verified own JMX Secondary: loadtest_jmx_secondary@najealp.top (me=200)
+[+] Regular verified: test.regular1@najealp.top (me=200)
+[+] Regular verified: test.regular2@najealp.top (me=200)
+[+] Regular verified: test.regular3@najealp.top (me=200)
+[+] Regular verified: test.regular4@najealp.top (me=200)
+[+] Regular verified: test.regular5@najealp.top (me=200)
+[+] Verified Tokens Summary -> Admins: 10, Officials: 5, Regulars: 7
 
-2026-11-11 10:26:16,214 INFO o.a.j.t.JMeterThread: Stop Test Now detected by thread: setUp Thread Group (Auth & Token Verification) 1-1
-2026-11-11 10:26:16,216 INFO o.a.j.t.JMeterThread: Thread finished: setUp Thread Group (Auth & Token Verification) 1-1
-2026-11-11 10:26:16,216 INFO o.a.j.e.StandardJMeterEngine: All Setup Threads have ended
-2026-11-11 10:26:16,280 INFO o.a.j.e.StandardJMeterEngine: No enabled thread groups found
-2026-11-11 10:26:16,280 INFO o.a.j.e.StandardJMeterEngine: Notifying test listeners of end of test
-2026-11-11 10:26:16,287 INFO o.a.j.r.Summariser: summary =      1 in 00:00:08 =    0.1/s Avg:  7969 Min:  7969 Max:  7969 Err:     1 (100.00%)
+2026-11-11 10:41:23,261 INFO o.a.j.p.h.s.HTTPHCAbstractImpl: Local host = WINJOE
+2026-11-11 10:41:23,276 INFO o.a.j.p.h.s.HTTPHC4Impl: HTTP request retry count = 0
+2026-11-11 10:41:23,417 INFO o.a.j.p.h.s.h.LazyLayeredConnectionSocketFactory: Setting up HTTPS TrustAll Socket Factory
+2026-11-11 10:41:23,423 INFO o.a.j.u.JsseSSLManager: Using default SSL protocol: TLS
+2026-11-11 10:41:23,423 INFO o.a.j.u.JsseSSLManager: SSL session context: per-thread
+2026-11-11 10:41:23,655 INFO o.a.j.u.SSLManager: JmeterKeyStore Location:  type JKS
+2026-11-11 10:41:23,662 INFO o.a.j.u.SSLManager: KeyStore created OK
+2026-11-11 10:41:23,663 WARN o.a.j.u.SSLManager: Keystore file not found, loading empty keystore
+2026-11-11 10:41:25,102 INFO o.a.j.t.JMeterThread: Thread is done: setUp Thread Group (Auth & Token Verification) 1-1
+2026-11-11 10:41:25,102 INFO o.a.j.t.JMeterThread: Thread finished: setUp Thread Group (Auth & Token Verification) 1-1
+2026-11-11 10:41:25,105 INFO o.a.j.e.StandardJMeterEngine: All Setup Threads have ended
+2026-11-11 10:41:25,165 INFO o.a.j.e.StandardJMeterEngine: Starting ThreadGroup: 1 : Full Endpoint Coverage & CRUD Matrix
+2026-11-11 10:41:25,212 INFO o.a.j.e.StandardJMeterEngine: Starting 1 threads for group Full Endpoint Coverage & CRUD Matrix.
+2026-11-11 10:41:25,212 INFO o.a.j.e.StandardJMeterEngine: Thread will continue on error
+2026-11-11 10:41:25,213 INFO o.a.j.t.ThreadGroup: Starting thread group... number=1 threads=1 ramp-up=1 delayedStart=false
+2026-11-11 10:41:25,222 INFO o.a.j.t.ThreadGroup: Started thread group number 1
+2026-11-11 10:41:25,222 INFO o.a.j.e.StandardJMeterEngine: Waiting for thread group: Full Endpoint Coverage & CRUD Matrix to finish before starting next group
+2026-11-11 10:41:25,238 INFO o.a.j.t.JMeterThread: Thread started: Full Endpoint Coverage & CRUD Matrix 1-1
+2026-11-11 10:41:28,081 INFO o.a.j.s.FileServer: Stored: C:\Users\PATRICIOJOSENAJEAL\Desktop\bin\sd3-alumni\test\load\fixture.png
+2026-11-11 10:41:30,127 INFO o.a.j.r.Summariser: summary +     18 in 00:00:19 =    0.9/s Avg:  1046 Min:   225 Max: 12353 Err:     0 (0.00%) Active: 1 Started: 1 Finished: 0
+2026-11-11 10:42:00,100 INFO o.a.j.r.Summariser: summary +    116 in 00:00:30 =    3.9/s Avg:   251 Min:   235 Max:   357 Err:     0 (0.00%) Active: 1 Started: 1 Finished: 0
+2026-11-11 10:42:00,102 INFO o.a.j.r.Summariser: summary =    134 in 00:00:49 =    2.7/s Avg:   358 Min:   225 Max: 12353 Err:     0 (0.00%)
+2026-11-11 10:42:19,909 INFO o.a.j.t.JMeterThread: Thread is done: Full Endpoint Coverage & CRUD Matrix 1-1
+2026-11-11 10:42:19,909 INFO o.a.j.t.JMeterThread: Thread finished: Full Endpoint Coverage & CRUD Matrix 1-1
+2026-11-11 10:42:19,923 INFO o.a.j.e.StandardJMeterEngine: Starting ThreadGroup: 2 : Stepped Tier 1 (0 VUs)
+2026-11-11 10:42:19,924 INFO o.a.j.e.StandardJMeterEngine: Starting 0 threads for group Stepped Tier 1 (0 VUs).
+2026-11-11 10:42:19,924 INFO o.a.j.e.StandardJMeterEngine: Thread will continue on error
+2026-11-11 10:42:19,925 INFO o.a.j.t.ThreadGroup: Starting thread group... number=2 threads=0 ramp-up=1 delayedStart=false
+2026-11-11 10:42:19,926 INFO o.a.j.t.ThreadGroup: Started thread group number 2
+2026-11-11 10:42:19,927 INFO o.a.j.e.StandardJMeterEngine: Waiting for thread group: Stepped Tier 1 (0 VUs) to finish before starting next group
+2026-11-11 10:42:19,929 INFO o.a.j.e.StandardJMeterEngine: Starting ThreadGroup: 3 : Stepped Tier 2 (0 VUs)
+2026-11-11 10:42:19,936 INFO o.a.j.e.StandardJMeterEngine: Starting 0 threads for group Stepped Tier 2 (0 VUs).
+2026-11-11 10:42:19,937 INFO o.a.j.e.StandardJMeterEngine: Thread will continue on error
+2026-11-11 10:42:19,938 INFO o.a.j.t.ThreadGroup: Starting thread group... number=3 threads=0 ramp-up=1 delayedStart=false
+2026-11-11 10:42:19,938 INFO o.a.j.t.ThreadGroup: Started thread group number 3
+2026-11-11 10:42:19,940 INFO o.a.j.e.StandardJMeterEngine: Waiting for thread group: Stepped Tier 2 (0 VUs) to finish before starting next group
+2026-11-11 10:42:19,941 INFO o.a.j.e.StandardJMeterEngine: Starting ThreadGroup: 4 : Stepped Tier 3 (0 VUs)
+2026-11-11 10:42:19,942 INFO o.a.j.e.StandardJMeterEngine: Starting 0 threads for group Stepped Tier 3 (0 VUs).
+2026-11-11 10:42:19,943 INFO o.a.j.e.StandardJMeterEngine: Thread will continue on error
+2026-11-11 10:42:19,944 INFO o.a.j.t.ThreadGroup: Starting thread group... number=4 threads=0 ramp-up=1 delayedStart=false
+2026-11-11 10:42:19,945 INFO o.a.j.t.ThreadGroup: Started thread group number 4
+2026-11-11 10:42:19,945 INFO o.a.j.e.StandardJMeterEngine: Waiting for thread group: Stepped Tier 3 (0 VUs) to finish before starting next group
+2026-11-11 10:42:19,945 INFO o.a.j.e.StandardJMeterEngine: Starting ThreadGroup: 5 : Stepped Tier 4 (0 VUs)
+2026-11-11 10:42:19,947 INFO o.a.j.e.StandardJMeterEngine: Starting 0 threads for group Stepped Tier 4 (0 VUs).
+2026-11-11 10:42:19,947 INFO o.a.j.e.StandardJMeterEngine: Thread will continue on error
+2026-11-11 10:42:19,948 INFO o.a.j.t.ThreadGroup: Starting thread group... number=5 threads=0 ramp-up=1 delayedStart=false
+2026-11-11 10:42:19,950 INFO o.a.j.t.ThreadGroup: Started thread group number 5
+2026-11-11 10:42:19,952 INFO o.a.j.e.StandardJMeterEngine: Waiting for thread group: Stepped Tier 4 (0 VUs) to finish before starting next group
+2026-11-11 10:42:19,952 INFO o.a.j.e.StandardJMeterEngine: Starting ThreadGroup: 6 : Stepped Tier 5 (0 VUs)
+2026-11-11 10:42:19,952 INFO o.a.j.e.StandardJMeterEngine: Starting 0 threads for group Stepped Tier 5 (0 VUs).
+2026-11-11 10:42:19,954 INFO o.a.j.e.StandardJMeterEngine: Thread will continue on error
+2026-11-11 10:42:19,954 INFO o.a.j.t.ThreadGroup: Starting thread group... number=6 threads=0 ramp-up=1 delayedStart=false
+2026-11-11 10:42:19,957 INFO o.a.j.t.ThreadGroup: Started thread group number 6
+2026-11-11 10:42:19,957 INFO o.a.j.e.StandardJMeterEngine: All thread groups have been started
+2026-11-11 10:42:19,957 INFO o.a.j.e.StandardJMeterEngine: Notifying test listeners of end of test
+2026-11-11 10:42:19,996 INFO o.a.j.r.Summariser: summary +     57 in 00:00:20 =    2.9/s Avg:   342 Min:   235 Max:  5426 Err:     0 (0.00%) Active: 0 Started: 1 Finished: 1
+2026-11-11 10:42:19,998 INFO o.a.j.r.Summariser: summary =    191 in 00:01:09 =    2.8/s Avg:   353 Min:   225 Max: 12353 Err:     0 (0.00%)

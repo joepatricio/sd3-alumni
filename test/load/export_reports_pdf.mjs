@@ -25,6 +25,7 @@ function parseArgs(argv) {
     outPath: "",
     browserPath: "",
     pageWidth: 1440,
+    jmeterOnly: false,
   };
   for (let i = 2; i < argv.length; i++) {
     const k = argv[i];
@@ -42,10 +43,15 @@ function parseArgs(argv) {
       const parsed = Number.parseInt(v, 10);
       if (Number.isFinite(parsed) && parsed >= 800) args.pageWidth = parsed;
       i++;
+    } else if (k === "--jmeter-only") {
+      args.jmeterOnly = true;
     }
   }
   if (!args.outPath) {
-    args.outPath = path.join(args.resultsDir, "load_test_report.pdf");
+    args.outPath = path.join(
+      args.resultsDir,
+      args.jmeterOnly ? "jmeter_report.pdf" : "load_test_report.pdf"
+    );
   }
   return args;
 }
@@ -162,7 +168,7 @@ function startStaticServer(rootDir) {
   });
 }
 
-function buildTabList(resultsDir) {
+function buildTabList(resultsDir, jmeterOnly = false) {
   const candidates = [
     {
       name: "JMeter Dashboard",
@@ -204,6 +210,9 @@ function buildTabList(resultsDir) {
 
   const active = [];
   for (const tab of candidates) {
+    if (jmeterOnly && tab.kind !== "jmeter") {
+      continue;
+    }
     const abs = path.join(resultsDir, tab.relPath);
     if (fs.existsSync(abs)) {
       active.push({
@@ -219,7 +228,7 @@ const delay = (ms) => new Promise((r) => setTimeout(r, ms));
 
 async function exportPdf() {
   const args = parseArgs(process.argv);
-  const tabs = buildTabList(args.resultsDir);
+  const tabs = buildTabList(args.resultsDir, args.jmeterOnly);
   if (tabs.length === 0) {
     throw new Error(
       `No HTML reports found under ${args.resultsDir}. Expected html_report/index.html and/or locust_report.html.`

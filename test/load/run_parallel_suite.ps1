@@ -30,8 +30,8 @@ param(
     [int]$LocustUsers = 0,
     [int]$LocustSpawnRate = 0,
     [int]$LocustDuration = 0,
-    [int]$ThinkMinMs = 100,
-    [int]$ThinkRangeMs = 400,
+    [int]$ThinkMinMs = -1,
+    [int]$ThinkRangeMs = -1,
     [int]$GranularityMs = 1000,
     [string]$TargetUrl = "",
     [string]$DefaultPassword = "123456",
@@ -137,7 +137,42 @@ try {
         30
     }
 
-    $EffectiveRamp = if ($RampUp -gt 0) { $RampUp } elseif ($DryRun) { 2 } else { 10 }
+    $EffectiveRamp = if ($RampUp -gt 0) {
+        $RampUp
+    }
+    elseif ($DryRun) {
+        2
+    }
+    elseif ($Config -and $Config.defaultRampUpSec) {
+        [int]$Config.defaultRampUpSec
+    }
+    else {
+        30
+    }
+    $EffectiveThinkMinMs = if ($ThinkMinMs -ge 0) {
+        $ThinkMinMs
+    }
+    elseif ($DryRun) {
+        100
+    }
+    elseif ($Config -and $null -ne $Config.defaultThinkMinMs) {
+        [int]$Config.defaultThinkMinMs
+    }
+    else {
+        1500
+    }
+    $EffectiveThinkRangeMs = if ($ThinkRangeMs -ge 0) {
+        $ThinkRangeMs
+    }
+    elseif ($DryRun) {
+        400
+    }
+    elseif ($Config -and $null -ne $Config.defaultThinkRangeMs) {
+        [int]$Config.defaultThinkRangeMs
+    }
+    else {
+        2500
+    }
     $EffectiveLocustUsers = if ($LocustUsers -gt 0) { $LocustUsers } elseif ($DryRun) { 20 } else { 100 }
     $EffectiveLocustSpawn = if ($LocustSpawnRate -gt 0) { $LocustSpawnRate } elseif ($DryRun) { 5 } else { 10 }
 
@@ -157,7 +192,7 @@ try {
     Write-Host "=================================================================" -ForegroundColor Cyan
     Write-Host ("  Target          : {0}" -f $TargetUrl) -ForegroundColor White
     Write-Host ("  Mode            : {0}" -f $(if ($DryRun) { "DryRun" } else { "Full" })) -ForegroundColor White
-    Write-Host ("  JMeter Tiers    : [{0}] x {1}s (Ramp={2}s, Think={3}..{4}ms)" -f ($Tiers -join ", "), $EffectiveDuration, $EffectiveRamp, $ThinkMinMs, ($ThinkMinMs + $ThinkRangeMs)) -ForegroundColor White
+    Write-Host ("  JMeter Tiers    : [{0}] x {1}s (Ramp={2}s, Think={3}..{4}ms)" -f ($Tiers -join ", "), $EffectiveDuration, $EffectiveRamp, $EffectiveThinkMinMs, ($EffectiveThinkMinMs + $EffectiveThinkRangeMs)) -ForegroundColor White
     Write-Host ("  Locust Personas : {0} VUs (spawn {1}/s) x {2}s" -f $EffectiveLocustUsers, $EffectiveLocustSpawn, $EffectiveLocustDuration) -ForegroundColor White
     Write-Host "=================================================================`n" -ForegroundColor Cyan
 
@@ -260,8 +295,8 @@ try {
         TargetUrl       = $TargetUrl
         DefaultPassword = $DefaultPassword
         SkipCoverage    = $true
-        ThinkMinMs      = $ThinkMinMs
-        ThinkRangeMs    = $ThinkRangeMs
+        ThinkMinMs      = $EffectiveThinkMinMs
+        ThinkRangeMs    = $EffectiveThinkRangeMs
         GranularityMs   = $GranularityMs
         HtmlReport      = $true
         BaselineOutPath = $LoadBaselinePath

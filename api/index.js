@@ -413,7 +413,7 @@ app.post('/api/auth/reset-password', authLimiter, async (req, res) => {
             return res.status(404).json({ error: 'User not found' });
         }
 
-        const passwordHash = bcrypt.hashSync(password, 10);
+        const passwordHash = await bcrypt.hash(password, 10);
 
         await prisma.userAuth.update({
             where: { email },
@@ -477,8 +477,8 @@ app.post('/api/auth/register', authLimiter, async (req, res) => {
             return res.status(500).json({ error: 'Internal configuration error (missing statuses)' });
         }
 
-        // Hash password
-        const passwordHash = bcrypt.hashSync(password, 10);
+        // Hash password before opening SQLite write transaction
+        const passwordHash = await bcrypt.hash(password, 10);
         const userId = uuidv4();
 
         // Gender
@@ -1688,241 +1688,269 @@ const handleAdminUpdateBulletin = async (req, res) => {
 app.patch('/api/admin/bulletins/:id', authenticateAdminToken, handleAdminUpdateBulletin);
 app.put('/api/admin/bulletins/:id', authenticateAdminToken, handleAdminUpdateBulletin);
 
-// Admin GET Dashboard Stats
-app.get('/api/admin/dashboard-stats', authenticateAdminToken, async (req, res) => {
+const ADMIN_DASHBOARD_CACHE_TTL_MS = 20 * 1000;
+let adminDashboardStatsCache = null;
+let adminDashboardStatsInFlight = null;
+
+async function computeAdminDashboardStats() {
     const RECENT_ACTIVITY_LENGTH = 24;
-    try {
-        const [
-            pendingUsersCount,
-            officialUsersCount,
-            regularUsersCount,
-            suspendedUsersCount,
-            bannedUsersCount,
-            totalUsersCount,
-            pendingBulletinsCount,
-            flaggedBulletinsCount,
-            approvedBulletinsCount,
-            pendingEventsCount,
-            approvedEventsCount,
-            completedDonations,
-            recentUsers,
-            recentBulletins,
-            recentEvents,
-            recentDonations,
-            allProfiles
-        ] = await Promise.all([
-            prisma.user.count({ where: { userStatus: { statusName: 'Pending' } } }),
-            prisma.user.count({ where: { userStatus: { statusName: 'Official' } } }),
-            prisma.user.count({ where: { userStatus: { statusName: 'Regular' } } }),
-            prisma.user.count({ where: { userStatus: { statusName: 'Suspended' } } }),
-            prisma.user.count({ where: { userStatus: { statusName: 'Banned' } } }),
-            prisma.user.count(),
-            prisma.bulletin.count({ where: { status: { statusName: 'Pending' } } }),
-            prisma.bulletin.count({ where: { status: { statusName: 'Flagged' } } }),
-            prisma.bulletin.count({
-                where: {
-                    status: { statusName: 'Approved' },
-                    author: { userStatus: { statusName: { not: 'Banned' } } }
+    const [
+        pendingUsersCount,
+        officialUsersCount,
+        regularUsersCount,
+        suspendedUsersCount,
+        bannedUsersCount,
+        totalUsersCount,
+        pendingBulletinsCount,
+        flaggedBulletinsCount,
+        approvedBulletinsCount,
+        pendingEventsCount,
+        approvedEventsCount,
+        completedDonations,
+        recentUsers,
+        recentBulletins,
+        recentEvents,
+        recentDonations,
+        allProfiles
+    ] = await Promise.all([
+        prisma.user.count({ where: { userStatus: { statusName: 'Pending' } } }),
+        prisma.user.count({ where: { userStatus: { statusName: 'Official' } } }),
+        prisma.user.count({ where: { userStatus: { statusName: 'Regular' } } }),
+        prisma.user.count({ where: { userStatus: { statusName: 'Suspended' } } }),
+        prisma.user.count({ where: { userStatus: { statusName: 'Banned' } } }),
+        prisma.user.count(),
+        prisma.bulletin.count({ where: { status: { statusName: 'Pending' } } }),
+        prisma.bulletin.count({ where: { status: { statusName: 'Flagged' } } }),
+        prisma.bulletin.count({
+            where: {
+                status: { statusName: 'Approved' },
+                author: { userStatus: { statusName: { not: 'Banned' } } }
+            }
+        }),
+        prisma.event.count({ where: { status: { statusName: 'Pending' } } }),
+        prisma.event.count({
+            where: {
+                status: { statusName: 'Approved' },
+                author: { userStatus: { statusName: { not: 'Banned' } } }
+            }
+        }),
+        prisma.donation.findMany({ where: { status: { statusName: 'Completed' } } }),
+        prisma.user.findMany({
+            take: RECENT_ACTIVITY_LENGTH,
+            orderBy: { statistics: { dateRegistered: 'desc' } },
+            include: { profile: true, userStatus: true, statistics: true }
+        }),
+        prisma.bulletin.findMany({
+            take: RECENT_ACTIVITY_LENGTH,
+            orderBy: { bulletinDate: 'desc' },
+            include: { author: { include: { profile: true } }, status: true }
+        }),
+        prisma.event.findMany({
+            take: RECENT_ACTIVITY_LENGTH,
+            orderBy: { eventDate: 'desc' },
+            include: { author: { include: { profile: true } }, status: true }
+        }),
+        prisma.donation.findMany({
+            take: RECENT_ACTIVITY_LENGTH,
+            orderBy: { donationDate: 'desc' },
+            include: { status: true, user: { include: { profile: true } } }
+        }),
+        prisma.user.findMany({
+            where: {
+                userStatus: {
+                    statusName: { notIn: ['Banned', 'Deactivated', 'Pending'] }
                 }
-            }),
-            prisma.event.count({ where: { status: { statusName: 'Pending' } } }),
-            prisma.event.count({
-                where: {
-                    status: { statusName: 'Approved' },
-                    author: { userStatus: { statusName: { not: 'Banned' } } }
-                }
-            }),
-            prisma.donation.findMany({ where: { status: { statusName: 'Completed' } } }),
-            prisma.user.findMany({
-                take: RECENT_ACTIVITY_LENGTH,
-                orderBy: { statistics: { dateRegistered: 'desc' } },
-                include: { profile: true, userStatus: true, statistics: true }
-            }),
-            prisma.bulletin.findMany({
-                take: RECENT_ACTIVITY_LENGTH,
-                orderBy: { bulletinDate: 'desc' },
-                include: { author: { include: { profile: true } }, status: true }
-            }),
-            prisma.event.findMany({
-                take: RECENT_ACTIVITY_LENGTH,
-                orderBy: { eventDate: 'desc' },
-                include: { author: { include: { profile: true } }, status: true }
-            }),
-            prisma.donation.findMany({
-                take: RECENT_ACTIVITY_LENGTH,
-                orderBy: { donationDate: 'desc' },
-                include: { status: true, user: { include: { profile: true } } }
-            }),
-            prisma.user.findMany({
-                where: {
-                    userStatus: {
-                        statusName: { notIn: ['Banned', 'Deactivated', 'Pending'] }
-                    }
-                },
-                select: {
-                    profile: {
-                        select: {
-                            birthday: true,
-                            degree: {
-                                select: {
-                                    degreeName: true,
-                                    degreeAbbr: true
-                                }
+            },
+            select: {
+                profile: {
+                    select: {
+                        birthday: true,
+                        degree: {
+                            select: {
+                                degreeName: true,
+                                degreeAbbr: true
                             }
                         }
-                    },
-                    profileStatus: { select: { statusName: true } },
-                    userStatus: { select: { statusName: true } }
-                }
-            })
-        ]);
-
-        let babyBoomers = 0;
-        let genX = 0;
-        let millennials = 0;
-        let genZ = 0;
-
-        let profilePublic = 0;
-        let profileConnections = 0;
-        let profilePrivate = 0;
-
-        const excludedStatuses = ['banned', 'deactivated', 'pending'];
-        const degreeCounts = {};
-
-        (allProfiles || []).forEach(u => {
-            const userStatusName = (u.userStatus?.statusName || '').toLowerCase().trim();
-            if (excludedStatuses.includes(userStatusName)) {
-                return;
-            }
-
-            // Demographics based only on non-blank birthdays for active users
-            if (u.profile && u.profile.birthday) {
-                const bDate = new Date(u.profile.birthday);
-                if (!isNaN(bDate.getTime())) {
-                    const birthYear = bDate.getFullYear();
-                    if (birthYear <= 1964) babyBoomers++;
-                    else if (birthYear >= 1965 && birthYear <= 1980) genX++;
-                    else if (birthYear >= 1981 && birthYear <= 1996) millennials++;
-                    else if (birthYear >= 1997) genZ++;
-                }
-            }
-
-            // Profile status counts for active users
-            const statusName = u.profileStatus?.statusName;
-            if (statusName === 'Public') profilePublic++;
-            else if (statusName === 'Connections Only') profileConnections++;
-            else if (statusName === 'Private') profilePrivate++;
-
-            // Degree program distribution for active users
-            if (u.profile?.degree) {
-                const deg = u.profile.degree;
-                const abbr = deg.degreeAbbr || deg.degreeName || 'Other';
-                const fullName = deg.degreeName || abbr;
-
-                if (!degreeCounts[abbr]) {
-                    degreeCounts[abbr] = { fullName, count: 0 };
-                }
-                degreeCounts[abbr].count += 1;
-            }
-        });
-
-        const degreeDistribution = Object.entries(degreeCounts)
-            .map(([name, info]) => ({
-                name,
-                fullName: info.fullName,
-                value: info.count
-            }))
-            .sort((a, b) => b.value - a.value);
-
-        const donationsTotal = (completedDonations || []).reduce((sum, d) => sum + (d.donationAmount || 0), 0);
-        // Only set name as Anonymous if donation is not tied to any account
-        const activeDonorsSet = new Set(
-            (completedDonations || []).map(d => d.userId || 'Anonymous')
-        );
-
-        const activities = [];
-
-        (recentUsers || []).forEach(u => {
-            const regDate = u.statistics?.dateRegistered ? new Date(u.statistics.dateRegistered) : new Date();
-            activities.push({
-                id: `user-${u.id}`,
-                action: 'Registered for an account',
-                user: u.profile?.userName || 'New User',
-                time: regDate.toLocaleDateString(),
-                timestamp: regDate.getTime(),
-                type: 'user'
-            });
-        });
-
-        (recentBulletins || []).forEach(b => {
-            const dateObj = new Date(b.bulletinDate);
-            activities.push({
-                id: `bulletin-${b.id}`,
-                action: `Submitted bulletin "${b.title}"`,
-                user: b.author?.profile?.userName || 'Alumni Member',
-                time: dateObj.toLocaleDateString(),
-                timestamp: dateObj.getTime(),
-                type: 'content'
-            });
-        });
-
-        (recentEvents || []).forEach(e => {
-            const dateObj = new Date(e.eventDate);
-            activities.push({
-                id: `event-${e.id}`,
-                action: `Proposed event "${e.title}"`,
-                user: e.author?.profile?.userName || 'Alumni Member',
-                time: dateObj.toLocaleDateString(),
-                timestamp: dateObj.getTime(),
-                type: 'event'
-            });
-        });
-
-        (recentDonations || []).forEach(d => {
-            const donorName = d.userId === 'Anonymous' || !d.userId ? 'Anonymous' : (d.user?.profile?.userName || 'Registered user');
-            const dateObj = new Date(d.donationDate);
-            const amountFormatted = new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(d.donationAmount || 0);
-            activities.push({
-                id: `donation-${d.id}`,
-                action: `Donated ${amountFormatted}`,
-                user: donorName,
-                time: dateObj.toLocaleDateString(),
-                timestamp: dateObj.getTime(),
-                type: 'donation'
-            });
-        });
-
-        activities.sort((a, b) => b.timestamp - a.timestamp);
-
-        res.json({
-            pendingUsers: pendingUsersCount,
-            officialUsers: officialUsersCount,
-            regularUsers: regularUsersCount,
-            suspendedUsers: suspendedUsersCount,
-            bannedUsers: bannedUsersCount,
-            totalUsers: totalUsersCount,
-            demographics: {
-                babyBoomers,
-                genX,
-                millennials,
-                genZ,
-                profileStatus: {
-                    public: profilePublic,
-                    connections: profileConnections,
-                    private: profilePrivate
+                    }
                 },
-                degreeDistribution
-            },
-            degreeDistribution,
-            pendingBulletins: pendingBulletinsCount,
-            flaggedBulletins: flaggedBulletinsCount,
-            approvedBulletins: approvedBulletinsCount,
-            pendingEvents: pendingEventsCount,
-            approvedEvents: approvedEventsCount,
-            donationsTotal,
-            activeDonorsCount: activeDonorsSet.size,
-            recentActivity: activities.slice(0, RECENT_ACTIVITY_LENGTH)
+                profileStatus: { select: { statusName: true } },
+                userStatus: { select: { statusName: true } }
+            }
+        })
+    ]);
+
+    let babyBoomers = 0;
+    let genX = 0;
+    let millennials = 0;
+    let genZ = 0;
+
+    let profilePublic = 0;
+    let profileConnections = 0;
+    let profilePrivate = 0;
+
+    const excludedStatuses = ['banned', 'deactivated', 'pending'];
+    const degreeCounts = {};
+
+    (allProfiles || []).forEach(u => {
+        const userStatusName = (u.userStatus?.statusName || '').toLowerCase().trim();
+        if (excludedStatuses.includes(userStatusName)) {
+            return;
+        }
+
+        // Demographics based only on non-blank birthdays for active users
+        if (u.profile && u.profile.birthday) {
+            const bDate = new Date(u.profile.birthday);
+            if (!isNaN(bDate.getTime())) {
+                const birthYear = bDate.getFullYear();
+                if (birthYear <= 1964) babyBoomers++;
+                else if (birthYear >= 1965 && birthYear <= 1980) genX++;
+                else if (birthYear >= 1981 && birthYear <= 1996) millennials++;
+                else if (birthYear >= 1997) genZ++;
+            }
+        }
+
+        // Profile status counts for active users
+        const statusName = u.profileStatus?.statusName;
+        if (statusName === 'Public') profilePublic++;
+        else if (statusName === 'Connections Only') profileConnections++;
+        else if (statusName === 'Private') profilePrivate++;
+
+        // Degree program distribution for active users
+        if (u.profile?.degree) {
+            const deg = u.profile.degree;
+            const abbr = deg.degreeAbbr || deg.degreeName || 'Other';
+            const fullName = deg.degreeName || abbr;
+
+            if (!degreeCounts[abbr]) {
+                degreeCounts[abbr] = { fullName, count: 0 };
+            }
+            degreeCounts[abbr].count += 1;
+        }
+    });
+
+    const degreeDistribution = Object.entries(degreeCounts)
+        .map(([name, info]) => ({
+            name,
+            fullName: info.fullName,
+            value: info.count
+        }))
+        .sort((a, b) => b.value - a.value);
+
+    const donationsTotal = (completedDonations || []).reduce((sum, d) => sum + (d.donationAmount || 0), 0);
+    // Only set name as Anonymous if donation is not tied to any account
+    const activeDonorsSet = new Set(
+        (completedDonations || []).map(d => d.userId || 'Anonymous')
+    );
+
+    const activities = [];
+
+    (recentUsers || []).forEach(u => {
+        const regDate = u.statistics?.dateRegistered ? new Date(u.statistics.dateRegistered) : new Date();
+        activities.push({
+            id: `user-${u.id}`,
+            action: 'Registered for an account',
+            user: u.profile?.userName || 'New User',
+            time: regDate.toLocaleDateString(),
+            timestamp: regDate.getTime(),
+            type: 'user'
         });
+    });
+
+    (recentBulletins || []).forEach(b => {
+        const dateObj = new Date(b.bulletinDate);
+        activities.push({
+            id: `bulletin-${b.id}`,
+            action: `Submitted bulletin "${b.title}"`,
+            user: b.author?.profile?.userName || 'Alumni Member',
+            time: dateObj.toLocaleDateString(),
+            timestamp: dateObj.getTime(),
+            type: 'content'
+        });
+    });
+
+    (recentEvents || []).forEach(e => {
+        const dateObj = new Date(e.eventDate);
+        activities.push({
+            id: `event-${e.id}`,
+            action: `Proposed event "${e.title}"`,
+            user: e.author?.profile?.userName || 'Alumni Member',
+            time: dateObj.toLocaleDateString(),
+            timestamp: dateObj.getTime(),
+            type: 'event'
+        });
+    });
+
+    (recentDonations || []).forEach(d => {
+        const donorName = d.userId === 'Anonymous' || !d.userId ? 'Anonymous' : (d.user?.profile?.userName || 'Registered user');
+        const dateObj = new Date(d.donationDate);
+        const amountFormatted = new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(d.donationAmount || 0);
+        activities.push({
+            id: `donation-${d.id}`,
+            action: `Donated ${amountFormatted}`,
+            user: donorName,
+            time: dateObj.toLocaleDateString(),
+            timestamp: dateObj.getTime(),
+            type: 'donation'
+        });
+    });
+
+    activities.sort((a, b) => b.timestamp - a.timestamp);
+
+    return {
+        pendingUsers: pendingUsersCount,
+        officialUsers: officialUsersCount,
+        regularUsers: regularUsersCount,
+        suspendedUsers: suspendedUsersCount,
+        bannedUsers: bannedUsersCount,
+        totalUsers: totalUsersCount,
+        demographics: {
+            babyBoomers,
+            genX,
+            millennials,
+            genZ,
+            profileStatus: {
+                public: profilePublic,
+                connections: profileConnections,
+                private: profilePrivate
+            },
+            degreeDistribution
+        },
+        degreeDistribution,
+        pendingBulletins: pendingBulletinsCount,
+        flaggedBulletins: flaggedBulletinsCount,
+        approvedBulletins: approvedBulletinsCount,
+        pendingEvents: pendingEventsCount,
+        approvedEvents: approvedEventsCount,
+        donationsTotal,
+        activeDonorsCount: activeDonorsSet.size,
+        recentActivity: activities.slice(0, RECENT_ACTIVITY_LENGTH)
+    };
+}
+
+// Admin GET Dashboard Stats (short 20s in-memory TTL + stampede deduplication)
+app.get('/api/admin/dashboard-stats', authenticateAdminToken, async (req, res) => {
+    try {
+        const now = Date.now();
+        if (adminDashboardStatsCache && (now - adminDashboardStatsCache.timestamp) < ADMIN_DASHBOARD_CACHE_TTL_MS) {
+            return sendCachedJsonPayload(req, res, adminDashboardStatsCache, 'private, max-age=20', 'HIT');
+        }
+
+        if (!adminDashboardStatsInFlight) {
+            adminDashboardStatsInFlight = computeAdminDashboardStats()
+                .then((payload) => {
+                    const body = JSON.stringify(payload);
+                    const hash = crypto.createHash('md5').update(body).digest('hex');
+                    const entry = { status: 200, body, etag: `W/"${hash}"`, hash, timestamp: Date.now() };
+                    adminDashboardStatsCache = entry;
+                    return entry;
+                })
+                .finally(() => {
+                    adminDashboardStatsInFlight = null;
+                });
+        }
+
+        const entry = await adminDashboardStatsInFlight;
+        return sendCachedJsonPayload(req, res, entry, 'private, max-age=20', 'MISS');
     } catch (error) {
         console.error('Failed to fetch dashboard stats:', error);
         res.status(500).json({ error: 'Failed to fetch dashboard stats' });
@@ -1954,7 +1982,7 @@ app.post('/api/admin/users', authenticateAdminToken, async (req, res) => {
             return res.status(500).json({ error: 'Missing configuration statuses' });
         }
 
-        const passwordHash = bcrypt.hashSync(password, 10);
+        const passwordHash = await bcrypt.hash(password, 10);
         const userId = uuidv4();
         const effectiveAdminId = getAdminId(req);
 
@@ -2218,9 +2246,10 @@ const defaultIncludes = {
 };
 
 // ==============================================================================
-// FEED HTTP & IN-MEMORY CACHE (/api/bulletins, /api/events)
-// Tuned for 30–60s TTL to prevent repetitive WAN bandwidth consumption
-// against the 70 Mbps link ceiling under high concurrency.
+// FEED & LOOKUP HTTP / IN-MEMORY CACHE
+// - Heavy feeds (/api/bulletins, /api/events): 30–60s TTL
+// - Immutable/reference lookup tables (/api/degrees, *Statuses, *Categories,
+//   /api/achievements): 300s TTL with immediate write invalidation
 // ==============================================================================
 export const FEED_CACHE_TTL_SECONDS = Math.max(
     30,
@@ -2229,10 +2258,51 @@ export const FEED_CACHE_TTL_SECONDS = Math.max(
 const FEED_CACHE_TTL_MS = FEED_CACHE_TTL_SECONDS * 1000;
 const MAX_FEED_CACHE_SIZE = 500;
 
+export const LOOKUP_CACHE_TTL_SECONDS = Math.max(
+    60,
+    parseInt(process.env.LOOKUP_CACHE_TTL_SECONDS || '300', 10) || 300
+);
+const LOOKUP_CACHE_TTL_MS = LOOKUP_CACHE_TTL_SECONDS * 1000;
+const MAX_LOOKUP_CACHE_SIZE = 200;
+
 export const feedCache = new Map();
+export const lookupCache = new Map();
+
+const LOOKUP_CACHE_MODELS = new Set([
+    'degree',
+    'connectionStatus',
+    'contentStatus',
+    'userStatus',
+    'donationStatus',
+    'eventStatus',
+    'eventCategory',
+    'bulletinCategory',
+    'profileStatus',
+    'achievement'
+]);
 
 function isHeavyFeedModel(modelName) {
     return modelName === 'bulletin' || modelName === 'event';
+}
+
+function getCachePolicy(modelName) {
+    if (isHeavyFeedModel(modelName)) {
+        return {
+            map: feedCache,
+            maxSize: MAX_FEED_CACHE_SIZE,
+            ttlSeconds: FEED_CACHE_TTL_SECONDS,
+            ttlMs: FEED_CACHE_TTL_MS
+        };
+    }
+    if (LOOKUP_CACHE_MODELS.has(modelName)) {
+        return {
+            map: lookupCache,
+            maxSize: MAX_LOOKUP_CACHE_SIZE,
+            ttlSeconds: LOOKUP_CACHE_TTL_SECONDS,
+            ttlMs: LOOKUP_CACHE_TTL_MS
+        };
+    }
+    return null;
 }
 
 function getFeedCacheKey(req) {
@@ -2242,54 +2312,70 @@ function getFeedCacheKey(req) {
 export function invalidateFeedCache(modelName) {
     if (!modelName) {
         feedCache.clear();
+        lookupCache.clear();
         return;
     }
-    for (const [key, entry] of feedCache.entries()) {
-        if (entry.modelName === modelName) {
-            feedCache.delete(key);
+    for (const cacheMap of [feedCache, lookupCache]) {
+        for (const [key, entry] of cacheMap.entries()) {
+            if (entry.modelName === modelName) {
+                cacheMap.delete(key);
+            }
         }
     }
 }
 
-function getCachedResponse(req, res, modelName) {
-    if (!isHeavyFeedModel(modelName)) return false;
-    if (req.method !== 'GET' && req.method !== 'HEAD') return false;
-
-    const cacheKey = getFeedCacheKey(req);
-    const cached = feedCache.get(cacheKey);
-    if (!cached) return false;
-
-    // Check expiration (30–60s TTL)
-    if (Date.now() - cached.timestamp >= FEED_CACHE_TTL_MS) {
-        feedCache.delete(cacheKey);
-        return false;
+function invalidateRelatedCaches(modelName) {
+    if (modelName === 'bulletin' || modelName === 'comment' || modelName === 'bulletinLike') {
+        invalidateFeedCache('bulletin');
+    } else if (modelName === 'event' || modelName === 'userRsvp') {
+        invalidateFeedCache('event');
+    } else if (LOOKUP_CACHE_MODELS.has(modelName)) {
+        invalidateFeedCache(modelName);
     }
+}
 
-    res.set('Cache-Control', `public, max-age=${FEED_CACHE_TTL_SECONDS}, s-maxage=${FEED_CACHE_TTL_SECONDS}`);
-    res.set('ETag', cached.etag);
-    res.set('X-Cache', 'HIT');
+function sendCachedJsonPayload(req, res, entry, cacheControl, cacheStatus) {
+    res.set('Cache-Control', cacheControl);
+    res.set('ETag', entry.etag);
+    res.set('X-Cache', cacheStatus);
 
     const ifNoneMatch = req.headers['if-none-match'];
     if (ifNoneMatch) {
         const cleanClient = ifNoneMatch.replace(/^W\//, '').replace(/^"|"$/g, '');
-        const cleanEtag = cached.etag.replace(/^W\//, '').replace(/^"|"$/g, '');
-        if (cleanClient === cleanEtag || ifNoneMatch === cached.etag) {
-            res.status(304).end();
-            return true;
+        if (cleanClient === entry.hash || ifNoneMatch === entry.etag) {
+            return res.status(304).end();
         }
     }
 
     if (req.method === 'HEAD') {
-        res.status(cached.status).type('application/json').end();
-        return true;
+        return res.status(entry.status || 200).type('application/json').end();
     }
 
-    res.status(cached.status).type('application/json').send(cached.body);
+    return res.status(entry.status || 200).type('application/json').send(entry.body);
+}
+
+function getCachedResponse(req, res, modelName) {
+    const policy = getCachePolicy(modelName);
+    if (!policy) return false;
+    if (req.method !== 'GET' && req.method !== 'HEAD') return false;
+
+    const cacheKey = getFeedCacheKey(req);
+    const cached = policy.map.get(cacheKey);
+    if (!cached) return false;
+
+    if (Date.now() - cached.timestamp >= policy.ttlMs) {
+        policy.map.delete(cacheKey);
+        return false;
+    }
+
+    const cacheControl = `public, max-age=${policy.ttlSeconds}, s-maxage=${policy.ttlSeconds}`;
+    sendCachedJsonPayload(req, res, cached, cacheControl, 'HIT');
     return true;
 }
 
 function sendAndCacheResponse(req, res, modelName, data, statusCode = 200) {
-    if (!isHeavyFeedModel(modelName) || (req.method !== 'GET' && req.method !== 'HEAD')) {
+    const policy = getCachePolicy(modelName);
+    if (!policy || (req.method !== 'GET' && req.method !== 'HEAD')) {
         return res.status(statusCode).json(data);
     }
 
@@ -2297,39 +2383,25 @@ function sendAndCacheResponse(req, res, modelName, data, statusCode = 200) {
     const body = JSON.stringify(data);
     const hash = crypto.createHash('md5').update(body).digest('hex');
     const etag = `W/"${hash}"`;
+    const entry = {
+        status: statusCode,
+        body,
+        etag,
+        hash,
+        timestamp: Date.now(),
+        modelName
+    };
 
     if (statusCode === 200) {
-        if (feedCache.size >= MAX_FEED_CACHE_SIZE) {
-            const oldestKey = feedCache.keys().next().value;
-            if (oldestKey) feedCache.delete(oldestKey);
+        if (policy.map.size >= policy.maxSize) {
+            const oldestKey = policy.map.keys().next().value;
+            if (oldestKey) policy.map.delete(oldestKey);
         }
-
-        feedCache.set(cacheKey, {
-            status: statusCode,
-            body,
-            etag,
-            timestamp: Date.now(),
-            modelName
-        });
+        policy.map.set(cacheKey, entry);
     }
 
-    res.set('Cache-Control', `public, max-age=${FEED_CACHE_TTL_SECONDS}, s-maxage=${FEED_CACHE_TTL_SECONDS}`);
-    res.set('ETag', etag);
-    res.set('X-Cache', 'MISS');
-
-    const ifNoneMatch = req.headers['if-none-match'];
-    if (ifNoneMatch) {
-        const cleanClient = ifNoneMatch.replace(/^W\//, '').replace(/^"|"$/g, '');
-        if (cleanClient === hash || ifNoneMatch === etag) {
-            return res.status(304).end();
-        }
-    }
-
-    if (req.method === 'HEAD') {
-        return res.status(statusCode).type('application/json').end();
-    }
-
-    return res.status(statusCode).type('application/json').send(body);
+    const cacheControl = `public, max-age=${policy.ttlSeconds}, s-maxage=${policy.ttlSeconds}`;
+    return sendCachedJsonPayload(req, res, entry, cacheControl, 'MISS');
 }
 
 // Map database entities/relations to json-server expected shapes
@@ -2885,11 +2957,7 @@ app.post('/api/:table', contentLimiter, async (req, res, next) => {
             await createNotification(prisma, item.authorId, `Your ${modelName} "${item.title || 'submission'}" has been submitted and is currently under review.`, link);
         }
 
-        if (modelName === 'bulletin' || modelName === 'comment' || modelName === 'bulletinLike') {
-            invalidateFeedCache('bulletin');
-        } else if (modelName === 'event' || modelName === 'userRsvp') {
-            invalidateFeedCache('event');
-        }
+        invalidateRelatedCaches(modelName);
 
         res.status(201).json(formatOutput(modelName, item));
     } catch (error) {
@@ -2934,11 +3002,7 @@ app.patch('/api/:table/:id', async (req, res, next) => {
             include: defaultIncludes[modelName] ? defaultIncludes[modelName] : undefined
         });
 
-        if (modelName === 'bulletin' || modelName === 'comment' || modelName === 'bulletinLike') {
-            invalidateFeedCache('bulletin');
-        } else if (modelName === 'event' || modelName === 'userRsvp') {
-            invalidateFeedCache('event');
-        }
+        invalidateRelatedCaches(modelName);
 
         res.json(formatOutput(modelName, item));
     } catch (error) {
@@ -2984,11 +3048,7 @@ app.put('/api/:table/:id', async (req, res, next) => {
             data
         });
 
-        if (modelName === 'bulletin' || modelName === 'comment' || modelName === 'bulletinLike') {
-            invalidateFeedCache('bulletin');
-        } else if (modelName === 'event' || modelName === 'userRsvp') {
-            invalidateFeedCache('event');
-        }
+        invalidateRelatedCaches(modelName);
 
         res.json(formatOutput(modelName, item));
     } catch (error) {
@@ -3065,11 +3125,7 @@ app.delete('/api/:table/:id', async (req, res, next) => {
             where: { [pkField]: id }
         });
 
-        if (modelName === 'bulletin' || modelName === 'comment' || modelName === 'bulletinLike') {
-            invalidateFeedCache('bulletin');
-        } else if (modelName === 'event' || modelName === 'userRsvp') {
-            invalidateFeedCache('event');
-        }
+        invalidateRelatedCaches(modelName);
 
         res.status(204).end();
     } catch (error) {
@@ -3286,9 +3342,12 @@ if (process.env.NODE_ENV === 'production') {
     });
 }
 
-app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
 });
+// Align Node HTTP keep-alive timeouts above Nginx upstream keepalive (60s)
+server.keepAliveTimeout = 65000;
+server.headersTimeout = 66000;
 
 // ==============================================================================
 // CONTENT CLASSIFIER & AUTO-REGISTRATION SYSTEM (MERGED)
