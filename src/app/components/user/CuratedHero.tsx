@@ -2,21 +2,6 @@ import React, { useEffect, useState } from "react";
 import { api } from "@/app/views/api";
 import { AnimatedMarqueeHero, type HeroImageItem, type AnimatedMarqueeHeroProps } from "@/components/hero-3";
 
-// const FALLBACK_HERO_IMAGES: HeroImageItem[] = [
-//   { url: "/images/main.jpg", title: "USJ-R Campus" },
-//   { url: "/images/donate-hero.avif", title: "Giving Back" },
-//   { url: "/images/events-reunion.jpg", title: "Grand Alumni Reunion" },
-//   { url: "/images/events-networking.jpg", title: "Professional Networking" },
-//   { url: "/images/events-conference.jpeg", title: "Engineering Conference" },
-//   { url: "/images/events-sports.jpg", title: "Sports Festival" },
-//   { url: "/images/events-workshop.jpg", title: "Technical Workshop" },
-//   { url: "/images/events-virtual.jpg", title: "Global Virtual Meetup" },
-//   { url: "/images/bulletin-success.jpg", title: "Alumni Milestone" },
-//   { url: "/images/bulletin-careers.jpg", title: "Industry Opportunities" },
-//   { url: "/images/bulletin-donations.jpg", title: "Scholarship Support" },
-//   { url: "/images/bulletin-image.jpg", title: "Community Showcase" },
-// ];
-
 const FALLBACK_HERO_IMAGES: HeroImageItem[] = [
   { url: "/images/albums/default/otog.jpg", title: "One Team One Goal!" },
   { url: "/images/albums/default/enrollment.jpg", title: "SEA Enrollment" },
@@ -31,6 +16,21 @@ const FALLBACK_HERO_IMAGES: HeroImageItem[] = [
   { url: "/images/albums/default/mayor.jpg", title: "icRS 2026" },
   { url: "/images/albums/default/homecoming.jpg", title: "SEA Alumni Homecoming" },
 ];
+
+// const FALLBACK_HERO_IMAGES: HeroImageItem[] = [
+//   { url: "/images/main.jpg", title: "USJ-R Campus" },
+//   { url: "/images/donate-hero.avif", title: "Giving Back" },
+//   { url: "/images/events-reunion.jpg", title: "Grand Alumni Reunion" },
+//   { url: "/images/events-networking.jpg", title: "Professional Networking" },
+//   { url: "/images/events-conference.jpeg", title: "Engineering Conference" },
+//   { url: "/images/events-sports.jpg", title: "Sports Festival" },
+//   { url: "/images/events-workshop.jpg", title: "Technical Workshop" },
+//   { url: "/images/events-virtual.jpg", title: "Global Virtual Meetup" },
+//   { url: "/images/bulletin-success.jpg", title: "Alumni Milestone" },
+//   { url: "/images/bulletin-careers.jpg", title: "Industry Opportunities" },
+//   { url: "/images/bulletin-donations.jpg", title: "Scholarship Support" },
+//   { url: "/images/bulletin-image.jpg", title: "Community Showcase" },
+// ];
 
 export type CuratedHeroProps = Partial<AnimatedMarqueeHeroProps>;
 
@@ -91,6 +91,7 @@ export const CuratedHero: React.FC<CuratedHeroProps> = ({
   const activeLoading = propIsLoading !== undefined ? propIsLoading : isFetching;
 
   // Custom images are disabled for being "too complicated"...fine.
+  // See also targetItemsCount in hero-3.tsx
   return (
     <AnimatedMarqueeHero
       className={className}

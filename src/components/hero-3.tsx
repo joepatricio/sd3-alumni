@@ -291,7 +291,8 @@ export const AnimatedMarqueeHero: React.FC<AnimatedMarqueeHeroProps> = ({
   // Target a consistent number of visible items per marquee row:
   // Mobile screens (<768px): 4 items is plenty (4 * 272px = 1088px > 430px viewport).
   // Desktop screens (>=768px): need 6-8 items to ensure the track (>= 2880px) spans beyond 1920px/2560px displays without empty gaps.
-  const targetItemsCount = isSmallScreen ? 4 : (singleRow ? 6 : 8);
+  // const targetItemsCount = isSmallScreen ? 4 : (singleRow ? 6 : 8);
+  const targetItemsCount = 6; // Fixed at 6 because custom images are disabled
 
   const ensureMinItems = (arr: HeroImageItem[], target = targetItemsCount): HeroImageItem[] => {
     if (arr.length === 0) return [];
