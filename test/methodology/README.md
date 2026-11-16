@@ -8,6 +8,7 @@ This directory contains analytical scripts, verification harnesses, and academic
 |---|---|---|
 | [`calc_apdex.mjs`](./calc_apdex.mjs) | Node CLI Tool | Parses raw JMeter `.jtl` streams (with full CSV quote escaping) and computes empirical APDEX scores across concurrency tiers ($100 \to 1{,}000$ VUs) and individual REST routes. |
 | [`validate_mermaid.mjs`](./validate_mermaid.mjs) | Node CLI Tool | Validates syntax and executes headless DOM SVG rendering of Mermaid diagrams inside markdown files using Chrome or Edge via `puppeteer-core`. |
+| [`split_pdf_to_letter.py`](./split_pdf_to_letter.py) | Python CLI Tool | Slices continuous or oversized PDF reports into printable US Letter ($8.5 \times 11\text{ in}$) pages without modifying the upstream generation system. |
 | [`load_testing_methodology_whitepaper.tex`](./load_testing_methodology_whitepaper.tex) | LaTeX Source | Complete academic/technical methodology paper detailing the two-phase orchestration architecture, deterministic SQL seeding, and 1,000-VU empirical results. |
 | [`load_testing_methodology_whitepaper.pdf`](./load_testing_methodology_whitepaper.pdf) | Compiled PDF | Formatted, multi-page whitepaper artifact. |
 
@@ -59,4 +60,21 @@ node test/methodology/validate_mermaid.mjs --file docs/data_type.consistency_pla
 # Validate and export the rendered SVG to disk
 node test/methodology/validate_mermaid.mjs --out-svg test/methodology/topology.svg
 ```
+
+---
+
+## 3. PDF Letter Pagination Formatter (`split_pdf_to_letter.py`)
+
+Splits continuous or oversized report outputs into standardized US Letter pages ($8.5 \times 11\text{ in}$) with margins for physical printing.
+
+### Quick Start
+
+```powershell
+# Run with uv (auto-resolves pypdf dependency)
+uv run --with pypdf python test/methodology/split_pdf_to_letter.py docs/90/jmeter_report.pdf docs/90/jmeter_report_letter.pdf
+
+# Or with pip-installed pypdf
+python test/methodology/split_pdf_to_letter.py docs/90/jmeter_report.pdf docs/90/jmeter_report_letter.pdf --margin 20
+```
+
 
