@@ -17,11 +17,12 @@
 
 Before executing any request, perform a **Domain Assessment**:
 1. Identify all applicable domains involved in the task:
-   - Python operations/scripts → `.agents/python.md`
-   - General REST API usage, conventions, verification protocol → `.agents/api.md`
-   - REST API table CRUD operations, query filters, and relations → `.agents/api-tables.md`
-   - Specialized endpoints (user auth, sessions, custom workflows) → Inspect `api/index.js`
-   - UI, styling, layout, or frontend components → `.agents/design.md`
+    - Client sourcing, alumni research, directory tracking →  `.agents/clients.md`
+    - Python operations/scripts → `.agents/python.md`
+    - General REST API usage, conventions, verification protocol → `.agents/api.md`
+    - REST API table CRUD operations, query filters, and relations → `.agents/api-tables.md`
+    - Specialized endpoints (user auth, sessions, custom workflows) → Inspect `api/index.js`
+    - UI, styling, layout, or frontend components → `.agents/design.md`
 2. **Cross-Domain Requirement**: If more than one domain is touched (e.g., frontend code that calls REST endpoints, or Python scripts consuming APIs), you **MUST** read and consult all corresponding references before writing code.
 3. Apply each document's rules strictly to its respective subsystem (do not bleed frontend rules into backend or vice versa).
 4. Specialized instructions supplement these general rules but do not automatically override them. If an actual conflict exists within the applicable scope, stop and report the conflict rather than arbitrarily choosing one.

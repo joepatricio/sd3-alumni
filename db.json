@@ -1,0 +1,334 @@
+{
+    "notificationType": [
+        {
+            "notificationTypeName": "System",
+            "id": "c73701e6-1a17-4d8d-814c-20182ff01639"
+        }
+    ],
+    "degrees": [
+        {
+            "degreeName": "Mechanical Engineering",
+            "degreeAbbr": "BSME",
+            "id": "GISquVZHHs"
+        },
+        {
+            "degreeName": "Civil Engineering",
+            "degreeAbbr": "BSCE",
+            "id": "N3MmjKro9B"
+        },
+        {
+            "degreeName": "Industrial Engineering",
+            "degreeAbbr": "BSIE",
+            "id": "hAoJF3hX0R"
+        },
+        {
+            "degreeName": "Electrical Engineering",
+            "degreeAbbr": "BSEE",
+            "id": "AUG-4vBe6k"
+        },
+        {
+            "degreeName": "Electronics and Communications Engineering",
+            "degreeAbbr": "BSECE",
+            "id": "YZcAIyFl6L"
+        },
+        {
+            "degreeName": "Computer Engineering",
+            "degreeAbbr": "BSCpE",
+            "id": "hd2F5ini8q"
+        }
+    ],
+    "connectionStatuses": [
+        {
+            "connectionName": "Requesting",
+            "id": "UwcFn3TCPH"
+        },
+        {
+            "connectionName": "Requested",
+            "id": "jSzRT1Avun"
+        },
+        {
+            "connectionName": "Accepted",
+            "id": "UxrjDqTt3B"
+        },
+        {
+            "connectionName": "Blocking",
+            "id": "96Aht7vvKP"
+        },
+        {
+            "connectionName": "Blocked",
+            "id": "gGbHNNNOy2"
+        }
+    ],
+    "contentStatuses": [
+        {
+            "statusName": "Pending",
+            "id": "a6ze5OaKs0"
+        },
+        {
+            "statusName": "Flagged",
+            "id": "caoz1VZCSH"
+        },
+        {
+            "statusName": "Approved",
+            "id": "m-_NAqREEk"
+        },
+        {
+            "statusName": "Rejected",
+            "id": "jmrJhbs0Tt"
+        },
+        {
+            "statusName": "Archived",
+            "id": "LM2q3LXRoA"
+        }
+    ],
+    "eventStatuses": [
+        {
+            "statusName": "Pending",
+            "id": "G0sRtXA38I"
+        },
+        {
+            "statusName": "Approved",
+            "id": "j3Ua4WQwdl"
+        },
+        {
+            "statusName": "Rejected",
+            "id": "i_nH41i0nE"
+        },
+        {
+            "statusName": "Concluded",
+            "id": "-ld2vFCPki"
+        },
+        {
+            "statusName": "Archived",
+            "id": "6FhSLnSAXN"
+        },
+        {
+            "statusName": "Cancelled",
+            "id": "VLMJbNdQPe"
+        }
+    ],
+    "userStatuses": [
+        {
+            "statusName": "Pending",
+            "id": "vHzoD5i9CD"
+        },
+        {
+            "statusName": "Regular",
+            "id": "2Ue2cfwVMa"
+        },
+        {
+            "statusName": "Official",
+            "id": "OWOyGJzHfV"
+        },
+        {
+            "statusName": "Suspended",
+            "id": "rc_N8oPtdV"
+        },
+        {
+            "statusName": "Banned",
+            "id": "_YPVz1vfa5"
+        },
+        {
+            "statusName": "Deactivated",
+            "id": "EF1O2nZJby"
+        }
+    ],
+    "donationStatuses": [
+        {
+            "statusName": "Processing",
+            "id": "qvvHRfnCzx"
+        },
+        {
+            "statusName": "Completed",
+            "id": "2X96GHzEVJ"
+        },
+        {
+            "statusName": "Failed",
+            "id": "36R6zgNpps"
+        }
+    ],
+    "eventCategories": [
+        {
+            "eventCategoryName": "Reunion",
+            "id": "lkIFfpktVL"
+        },
+        {
+            "eventCategoryName": "Workshop",
+            "id": "73JAuNaAoA"
+        },
+        {
+            "eventCategoryName": "Conference",
+            "id": "iH-gzGZDnh"
+        },
+        {
+            "eventCategoryName": "Networking",
+            "id": "d3Kg5La8vg"
+        },
+        {
+            "eventCategoryName": "Sports",
+            "id": "6nxXJmax9E"
+        },
+        {
+            "eventCategoryName": "Virtual",
+            "id": "YM-E5gHKjW"
+        }
+    ],
+    "bulletinCategories": [
+        {
+            "bulletinCategoryName": "Announcements",
+            "id": "ueMRjAn-P0"
+        },
+        {
+            "bulletinCategoryName": "Careers",
+            "id": "nEA2WEPc5f"
+        },
+        {
+            "bulletinCategoryName": "Success Stories",
+            "id": "bUrCvEmlu5"
+        },
+        {
+            "bulletinCategoryName": "Donations",
+            "id": "xd67TtDe0d"
+        },
+        {
+            "bulletinCategoryName": "Others",
+            "id": "V377yrrzBG"
+        }
+    ],
+    "profileStatuses": [
+        {
+            "statusName": "Private",
+            "id": "8hP7hid8_6"
+        },
+        {
+            "statusName": "Connections Only",
+            "id": "rMENIn-dWG"
+        },
+        {
+            "statusName": "Public",
+            "id": "kvf-XCOljU"
+        }
+    ],
+    "achievements": [
+        {
+            "achievementCategory": 1,
+            "achievementTier": 1,
+            "achievementTitle": "1-Year Club",
+            "achievementDescription": "Has been a member for 1 year.",
+            "achievementIcon": "Star",
+            "id": "CQG0tXGlRI"
+        },
+        {
+            "achievementCategory": 1,
+            "achievementTier": 2,
+            "achievementTitle": "3-Year Club",
+            "achievementDescription": "Has been a member for 3 years.",
+            "achievementIcon": "Sparkle",
+            "id": "Jcb1QpLpXX"
+        },
+        {
+            "achievementCategory": 1,
+            "achievementTier": 3,
+            "achievementTitle": "Prestige Alumni",
+            "achievementDescription": "Has been a member for 10+ years.",
+            "achievementIcon": "Sparkles",
+            "id": "ur_T72923B"
+        },
+        {
+            "achievementCategory": 2,
+            "achievementTier": 1,
+            "achievementTitle": "Philanthropist",
+            "achievementDescription": "Donated to the alumni association. Thank you!",
+            "achievementIcon": "Heart",
+            "id": "W76JeqatUg"
+        },
+        {
+            "achievementCategory": 3,
+            "achievementTier": 1,
+            "achievementTitle": "Event Enthusiast I",
+            "achievementDescription": "Attended 1 events.",
+            "achievementIcon": "Calendar1",
+            "id": "i2jLLJDQCq"
+        },
+        {
+            "achievementCategory": 3,
+            "achievementTier": 2,
+            "achievementTitle": "Event Enthusiast II",
+            "achievementDescription": "Attended 5 events.",
+            "achievementIcon": "Calendar",
+            "id": "M-em4afVuL"
+        },
+        {
+            "achievementCategory": 3,
+            "achievementTier": 3,
+            "achievementTitle": "Event Enthusiast III",
+            "achievementDescription": "Attended 15 events.",
+            "achievementIcon": "CalendarHeart",
+            "id": "y75Mwy9xw-"
+        },
+        {
+            "achievementCategory": 4,
+            "achievementTier": 1,
+            "achievementTitle": "Conversation Starter I",
+            "achievementDescription": "Created 1 bulletin.",
+            "achievementIcon": "Newspaper",
+            "id": "Uoppeah8Gv"
+        },
+        {
+            "achievementCategory": 4,
+            "achievementTier": 2,
+            "achievementTitle": "Conversation Starter II",
+            "achievementDescription": "Created 5 bulletins.",
+            "achievementIcon": "Newspaper",
+            "id": "Td2E-M9aiX"
+        },
+        {
+            "achievementCategory": 5,
+            "achievementTier": 1,
+            "achievementTitle": "Contributor I",
+            "achievementDescription": "Written 10 comments.",
+            "achievementIcon": "MessageSquare",
+            "id": "ilKdX_jrfT"
+        },
+        {
+            "achievementCategory": 5,
+            "achievementTier": 2,
+            "achievementTitle": "Contributor II",
+            "achievementDescription": "Written 50 comments.",
+            "achievementIcon": "MessageCircle",
+            "id": "jknuI0g9_Q"
+        },
+        {
+            "achievementCategory": 10000,
+            "achievementTier": 1,
+            "achievementTitle": "READS Alumni",
+            "achievementDescription": "Part of the Recoletos Educational Assistance for Deserving Students.",
+            "achievementIcon": "BookOpen",
+            "id": "4KmaAoCnzy"
+        },
+        {
+            "achievementCategory": 10001,
+            "achievementTier": 1,
+            "achievementTitle": "Verified",
+            "achievementDescription": "User has been verified.",
+            "achievementIcon": "Gear",
+            "id": "8Y9aHvzWQn"
+        }
+    ],
+    "users": [],
+    "userAuths": [],
+    "records": [],
+    "profiles": [],
+    "userStatistics": [],
+    "userConnections": [],
+    "userAchievements": [],
+    "admins": [],
+    "locations": [],
+    "bulletins": [],
+    "events": [],
+    "comments": [],
+    "donations": [],
+    "userRsvps": [],
+    "bulletinLikes": [],
+    "commentLikes": []
+}

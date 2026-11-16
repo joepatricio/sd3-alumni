@@ -1,7 +1,9 @@
 ## Nice to have (optional features)
 
-* Redo tests, remake whitepaper, include pre-sql preparation
-* Simplify hero
+* Installation Manual
+* User Manual
+* Endorsement Letter
+* Client feedback and UAT
 
 * Bulletin likes maybe? Schema is already in place. It just needs to be implemented in the views.
 * Maybe implement email stuff...
