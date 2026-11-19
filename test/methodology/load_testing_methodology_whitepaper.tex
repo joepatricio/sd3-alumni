@@ -131,10 +131,22 @@
 \end{tcolorbox}
 
 \vspace{6pt}
-\noindent\begin{tabularx}{\textwidth}{@{} >{\raggedright\arraybackslash}p{0.23\textwidth} >{\raggedright\arraybackslash}p{0.26\textwidth} >{\raggedright\arraybackslash}p{0.28\textwidth} >{\raggedright\arraybackslash}X @{}}
-  \textbf{Target Environment:} & \textbf{Database Engine:} & \textbf{Uplink Envelope:} & \textbf{Effective Date:} \\
-  \texttt{https://najealp.top} & SQLite (\texttt{DELETE} mode) & $70\text{ Mbps}$ ($\approx 8.75\text{ MB/s}$) & November 11, 2026 \\
+\begin{center}
+\renewcommand{\arraystretch}{1.3}
+\begin{tabularx}{0.9\textwidth}{
+    @{} >{\raggedright\arraybackslash}X
+        >{\raggedright\arraybackslash}X
+        >{\raggedright\arraybackslash}X @{}
+}
+    \textbf{Database Engine:} &
+    \textbf{Uplink Envelope:} &
+    \textbf{Effective Date:} \\
+
+    SQLite (\texttt{DELETE} mode) &
+    $70\text{ Mbps}$ ($\approx 8.75\text{ MB/s}$) &
+    November 11, 2026
 \end{tabularx}
+\end{center}
 \vspace{8pt}
 {\color{RuleGray}\hrule height 1pt}
 \vspace{10pt}
@@ -143,10 +155,9 @@
 \noindent Conventional API stress tests frequently mischaracterize production readiness because of three methodological failures: silent HTTP \texttt{401 Unauthorized} cascades that inflate synthetic throughput without exercising database paths, unpaced burst loops whose samples collapse to start/end boundaries of time-series charts, and homogeneous read-only requests that overlook connection queuing and database lock contention. This white paper formalizes the deterministic load and sustainability methodology implemented for the SD3 Alumni platform (\texttt{test/load/}). Beginning with a repeatable pre-test SQL provisioning script (\texttt{test/load/hell.sql}) that snapshots SQLite \texttt{dev.db}, seeds multi-role accounts alongside moderation/RSVP targets, and normalizes credentials, the pipeline executes a fail-fast \textbf{Phase~1} pre-flight credential check and 186-sampler CRUD coverage gate ($191$ total requests) in Apache JMeter (\texttt{benchmark.jmx}), followed by a \textbf{Phase~2} stepped capacity sweep ($100\to 1{,}000$ VUs, run standalone via \texttt{run\_jmeter.ps1} or concurrently with stateful Locust personas via \texttt{run\_parallel\_suite.ps1}), and concluding with \textbf{Phase~3} automated HTML, Excel, and PDF telemetry synthesis (\texttt{generate\_report.py} and \texttt{export\_reports\_pdf.mjs}). Full five-tier empirical verification against \texttt{https://najealp.top} (\texttt{test/load/results/jmeter\_report.pdf}, 17:41--17:44 local time) recorded \textbf{$0.00\%$ HTTP failure} and \textbf{$0$ HTTP \texttt{401}/\texttt{403}/\texttt{5xx} responses} across \textbf{$23{,}157$ total requests} ($191$ pre-flight/coverage + $22{,}966$ load samples, including $2$ HTTP~\texttt{304} cache hits), achieving an aggregate \textbf{$\text{APDEX} = 0.970$} ($95.06\%$ $\le 500\text{ ms}$), overall $p_{50} = 73.00\text{ ms}$, $p_{95} = 566.00\text{ ms}$, $p_{99} = 1577.93\text{ ms}$, and peak Tier~5 throughput of $192.90\text{ req/s}$ ($10.07\text{ Mbps}$ mean; $291\text{ req/s}$ 1-s HTML dashboard peak). Tier-by-tier telemetry confirms nearly flat response latency from $100$ through $750$ VUs ($p_{50} = 70\text{--}72\text{ ms}$, $p_{95} = 220\text{--}248\text{ ms}$, $\text{APDEX} \ge 0.998$) after Nginx HTTP/2 keep-alive, asynchronous \texttt{bcryptjs}, in-memory ETag/TTL caching, Prisma indexing, and payload slimming optimizations, while isolating a transient TLS/socket handshake queue during the $750\to 1{,}000$-VU ramp transition that recovers cleanly under full $1{,}000$-VU load.
 \end{abstract}
 
-\vspace{6pt}
+\clearpage
 \tableofcontents
-\vspace{8pt}
-{\color{RuleGray}\hrule height 0.6pt}
+\clearpage
 
 % ==============================================================================
 % SECTION 1

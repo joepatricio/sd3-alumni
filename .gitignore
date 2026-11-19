@@ -37,6 +37,12 @@ yarn-error.log*
 
 #  Project files
 /test/load/results/html_report
+/test/methodology/*.log
+/test/methodology/*.toc
+/test/methodology/*.synctex.gz
+/test/methodology/*.aux
+/test/methodology/*.out
+texput.log
 /docs
 /coreutils-docs
 /gallery
