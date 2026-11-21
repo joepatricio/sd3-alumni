@@ -22,6 +22,7 @@ pyvenv.cfg
 /prisma/generated/
 *.db-shm
 *.db-wal
+*.db.bak
 
 # misc
 .DS_Store
