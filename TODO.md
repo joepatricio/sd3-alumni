@@ -1,9 +1,5 @@
 ## Nice to have (optional features)
 
-[x] Installation Manual
-[] User Manual
-[x] Client Participation
-[x] Client Feedback
 [] Endorsement Letter
 [] Client feedback and UAT
 
