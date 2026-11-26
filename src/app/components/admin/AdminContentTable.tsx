@@ -72,57 +72,68 @@ const ContentTableRow = memo(({
     loadCreateBulletinModal
 }: ContentTableRowProps) => {
     return (
-        <tr className="border-t">
+        <tr className="border-t divide-x divide-gray-100">
             {visibleColumns.title && (
-                <td className="px-6 py-4 w-96 max-w-md">
-                    <div className="flex items-center justify-between gap-2 min-w-0">
-                        <Link
-                            to={`/${item.type === 'Bulletin' ? 'bulletin' : 'events'}/${item.id}`}
-                            className="text-gray-900 hover:text-brand-primary hover:underline font-semibold truncate flex-1 min-w-0"
-                            title={item.title}
-                        >
-                            {item.title}
-                        </Link>
+                <td className="px-6 py-0 w-96 max-w-sm h-px">
+                    <div className="flex items-stretch justify-between gap-2 min-w-0 h-full">
+                        <div className="flex-1 min-w-0 py-4 flex flex-col justify-center">
+                            <Link
+                                to={`/${item.type === 'Bulletin' ? 'bulletin' : 'events'}/${item.id}`}
+                                className="text-gray-900 hover:text-brand-primary hover:underline font-semibold truncate w-fit max-w-full"
+                                title={item.title}
+                            >
+                                {item.title}
+                            </Link>
+                            <div className="text-xs text-gray-500 truncate" title={item.description || ''}>{item.description}</div>
+                        </div>
                         <Link
                             to={`/admin/preview/${item.type === 'Bulletin' ? 'bulletin' : 'event'}/${item.id}`}
-                            className="text-gray-400 hover:text-brand-primary shrink-0"
+                            className="flex items-center justify-center self-stretch px-1 text-gray-400 hover:text-brand-primary transition-colors shrink-0"
                             title="Preview as Approved"
                         >
                             <Eye className="w-4 h-4" />
                         </Link>
                     </div>
-                    <div className="text-xs text-gray-500 truncate" title={item.description || ''}>{item.description}</div>
                 </td>
             )}
             {visibleColumns.category && (
                 <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold ${getCategoryClass(item.category)}`}>
-                        {item.category}
+                    <span
+                        title={item.category}
+                        className={`inline-flex rounded-full border w-30 px-2.5 py-1 text-xs font-semibold ${getCategoryClass(item.category)}`}
+                    >
+                        <span className="truncate">{item.category}</span>
                     </span>
                 </td>
             )}
             {visibleColumns.author && (
-                <td className="px-6 py-4 w-48 max-w-[200px]">
-                    <div className="flex items-center gap-2 min-w-0">
-                        {item.isOfficial && <HardHat className="w-4 h-4 text-brand-primary shrink-0" />}
-                        {item.isBanned && (
-                            <span title="Banned User" className="shrink-0">
-                                <Ban className="w-4 h-4 text-red-600" />
-                            </span>
-                        )}
-                        {item.isSuspended && (
-                            <span title="Suspended User" className="shrink-0">
-                                <Lock className="w-4 h-4 text-yellow-600" />
-                            </span>
-                        )}
-                        {item.isDeactivated && (
-                            <span title="Deactivated User" className="shrink-0">
-                                <UserX className="w-4 h-4 text-gray-500" />
-                            </span>
-                        )}
-                        <span className="truncate" title={item.author}>{item.author}</span>
+                <td className="px-6 py-0 w-48 max-w-[200px] h-px">
+                    <div className="flex items-stretch justify-between gap-2 min-w-0 h-full">
+                        <div className="flex items-center gap-2 flex-1 min-w-0 py-4">
+                            {item.isOfficial && <HardHat className="w-4 h-4 text-brand-primary shrink-0" />}
+                            {item.isBanned && (
+                                <span title="Banned User" className="shrink-0">
+                                    <Ban className="w-4 h-4 text-red-600" />
+                                </span>
+                            )}
+                            {item.isSuspended && (
+                                <span title="Suspended User" className="shrink-0">
+                                    <Lock className="w-4 h-4 text-yellow-600" />
+                                </span>
+                            )}
+                            {item.isDeactivated && (
+                                <span title="Deactivated User" className="shrink-0">
+                                    <UserX className="w-4 h-4 text-gray-500" />
+                                </span>
+                            )}
+                            <span className="truncate" title={item.author}>{item.author}</span>
+                        </div>
                         {item.authorId ? (
-                            <Link to={`/admin/preview/user/${item.authorId}`} className="text-gray-400 hover:text-brand-primary shrink-0" title="Preview Profile">
+                            <Link
+                                to={`/admin/preview/user/${item.authorId}`}
+                                className="flex items-center justify-center self-stretch px-1 text-gray-400 hover:text-brand-primary transition-colors shrink-0"
+                                title="Preview Profile"
+                            >
                                 <Eye className="w-4 h-4" />
                             </Link>
                         ) : null}
@@ -139,9 +150,9 @@ const ContentTableRow = memo(({
                         onClick={() => openStatusModal(item)}
                         title="Click to change status"
                         aria-label={`Change status for ${item.title} (currently ${item.status})`}
-                        className={`group inline-flex items-center justify-center gap-1.5 rounded-full border min-w-[6.25rem] px-2.5 py-1 text-xs font-semibold shadow-xs transition-all cursor-pointer hover:shadow hover:brightness-95 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary/50 focus-visible:ring-offset-1 ${getStatusClass(item.status)}`}
+                        className={`group inline-flex items-center justify-between gap-1.5 rounded-full border w-32 px-3 py-1 text-xs font-semibold shadow-xs transition-all cursor-pointer hover:shadow hover:brightness-95 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary/50 focus-visible:ring-offset-1 ${getStatusClass(item.status)}`}
                     >
-                        <span>{item.status}</span>
+                        <span className="truncate">{item.status}</span>
                         <Pencil className="w-3 h-3 opacity-60 group-hover:opacity-100 transition-opacity shrink-0" />
                     </button>
                 </td>
@@ -266,8 +277,8 @@ export function AdminContentTable({
     // Sorting
     const [sortConfig, setSortConfig] = useState<{ key: keyof ContentItem; direction: 'asc' | 'desc' } | null>(() => {
         const sort = searchParams.get('sort');
-        if (sort === 'asc') return { key: 'rawDate', direction: 'asc' };
-        return { key: 'rawDate', direction: 'desc' };
+        if (sort === 'asc') return { key: 'date', direction: 'asc' };
+        return { key: 'date', direction: 'desc' };
     });
 
     // Column Visibility (all columns shown by default)
@@ -316,9 +327,9 @@ export function AdminContentTable({
 
         const sort = searchParams.get('sort');
         if (sort === 'asc') {
-            setSortConfig({ key: 'rawDate', direction: 'asc' });
+            setSortConfig({ key: 'date', direction: 'asc' });
         } else if (sort === 'desc') {
-            setSortConfig({ key: 'rawDate', direction: 'desc' });
+            setSortConfig({ key: 'date', direction: 'desc' });
         }
     }, [searchParams]);
 
@@ -326,11 +337,11 @@ export function AdminContentTable({
     const [currentPage, setCurrentPage] = useState(1);
 
     const handleSort = (key: keyof ContentItem) => {
-        let direction: 'asc' | 'desc' = 'asc';
-        if (sortConfig && sortConfig.key === key && sortConfig.direction === 'asc') {
-            direction = 'desc';
-        }
-        setSortConfig({ key, direction });
+        setSortConfig((prev) => {
+            if (!prev || prev.key !== key) return { key, direction: 'desc' };
+            if (prev.direction === 'desc') return { key, direction: 'asc' };
+            return null;
+        });
     };
 
     const renderSortIcon = (key: keyof ContentItem) => {
@@ -552,7 +563,7 @@ export function AdminContentTable({
                 <div className="border rounded-md bg-white overflow-x-auto">
                     <table className="w-full text-sm text-left">
                         <thead className="bg-gray-50 text-gray-700">
-                            <tr>
+                            <tr className="divide-x divide-gray-200/70">
                                 {visibleColumns.title && (
                                     <th className="w-96 max-w-md px-6 py-3 cursor-pointer hover:bg-gray-100 transition-colors" onClick={() => handleSort('title')}>
                                         <div className="flex items-center gap-1">Title {renderSortIcon('title')}</div>

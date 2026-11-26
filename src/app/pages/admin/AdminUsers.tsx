@@ -55,6 +55,18 @@ const getUserStatusClass = (status: string) => {
     }
 };
 
+const getDegreeBadgeClass = (degree: string) => {
+    switch (degree.trim().toUpperCase()) {
+        case 'BSME': return 'bg-[#134f5c] text-white border-[#0c343d]';
+        case 'BSCE': return 'bg-[#1155cc] text-white border-[#0d42a0]';
+        case 'BSIE': return 'bg-[#7e22ce] text-white border-[#6b21a8]';
+        case 'BSEE': return 'bg-[#bf9000] text-white border-[#9e7700]';
+        case 'BSECE': return 'bg-[#4a86e8] text-white border-[#3c78d8]';
+        case 'BSCPE': return 'bg-[#38761d] text-white border-[#274e13]';
+        default: return 'bg-gray-100 text-gray-600 border-gray-200';
+    }
+};
+
 const UserTableRow = memo(({
     user,
     visibleColumns,
@@ -69,25 +81,35 @@ const UserTableRow = memo(({
         : user.degreeName;
 
     return (
-        <tr className="border-t">
+        <tr className="border-t divide-x divide-gray-100">
             {visibleColumns.name && (
-                <td className="px-6 py-4 font-medium max-w-xs">
-                    <div className="flex items-center gap-2 min-w-0">
-                        <Link to={`/profile/${user.id}`} className="text-gray-900 hover:text-brand-primary truncate" title={user.name}>
-                            <span className="truncate">{user.name}</span>
-                        </Link>
-                        <Link to={`/admin/preview/user/${user.id}`} className="text-gray-400 hover:text-brand-primary shrink-0" title="Preview Profile">
+                <td className="px-6 py-0 font-medium max-w-xs h-px">
+                    <div className="flex items-stretch justify-between gap-2 min-w-0 h-full">
+                        <div className="flex items-center flex-1 min-w-0 py-4">
+                            <Link
+                                to={`/profile/${user.id}`}
+                                className="text-gray-900 hover:text-brand-primary truncate max-w-full"
+                                title={user.name}
+                            >
+                                {user.name}
+                            </Link>
+                        </div>
+                        <Link
+                            to={`/admin/preview/user/${user.id}`}
+                            className="flex items-center justify-center self-stretch px-1 text-gray-400 hover:text-brand-primary transition-colors shrink-0"
+                            title="Preview Profile"
+                        >
                             <Eye className="w-4 h-4" />
                         </Link>
                     </div>
                 </td>
             )}
             {visibleColumns.degree && (
-                <td className="px-6 py-4 max-w-[220px]" title={degreeTooltip}>
-                    <div className="flex items-center gap-2 min-w-0">
-                        <span className="truncate text-gray-900">{user.degreeName}</span>
+                <td className="px-6 py-4 max-w-[240px]" title={degreeTooltip}>
+                    <div className="flex items-center justify-between gap-2 min-w-0">
+                        <span className="truncate flex-1 min-w-0 text-gray-900">{user.degreeName}</span>
                         {user.degree !== 'N/A' && user.degree !== user.degreeName && (
-                            <span className="inline-flex items-center rounded-md bg-gray-100 px-1.5 py-0.5 text-xs font-medium text-gray-600 shrink-0">
+                            <span className={`inline-flex items-center justify-center rounded-md border w-16 py-0.5 text-xs font-semibold shrink-0 ${getDegreeBadgeClass(user.degree)}`}>
                                 {user.degree}
                             </span>
                         )}
@@ -116,9 +138,9 @@ const UserTableRow = memo(({
                         onClick={() => openEditModal(user)}
                         title="Click to change status"
                         aria-label={`Change status for ${user.name} (currently ${user.status})`}
-                        className={`group inline-flex items-center justify-center gap-1.5 rounded-full border min-w-[6.75rem] px-2.5 py-1 text-xs font-semibold shadow-xs transition-all cursor-pointer hover:shadow hover:brightness-95 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary/50 focus-visible:ring-offset-1 ${getUserStatusClass(user.status)}`}
+                        className={`group inline-flex items-center justify-between gap-1.5 rounded-full border w-32 px-3 py-1 text-xs font-semibold shadow-xs transition-all cursor-pointer hover:shadow hover:brightness-95 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary/50 focus-visible:ring-offset-1 ${getUserStatusClass(user.status)}`}
                     >
-                        <span>{user.status}</span>
+                        <span className="truncate">{user.status}</span>
                         <Pencil className="w-3 h-3 opacity-60 group-hover:opacity-100 transition-opacity shrink-0" />
                     </button>
                 </td>
@@ -224,11 +246,11 @@ export function AdminUsers() {
     const statuses = ['All', ...dbStatuses.map(s => s.statusName)];
 
     const handleSort = (key: string) => {
-        let direction: 'asc' | 'desc' = 'asc';
-        if (sortConfig && sortConfig.key === key && sortConfig.direction === 'asc') {
-            direction = 'desc';
-        }
-        setSortConfig({ key, direction });
+        setSortConfig((prev) => {
+            if (!prev || prev.key !== key) return { key, direction: 'desc' };
+            if (prev.direction === 'desc') return { key, direction: 'asc' };
+            return null;
+        });
     };
 
     const renderSortIcon = (key: keyof AdminUserRow) => {
@@ -586,7 +608,7 @@ export function AdminUsers() {
                     <div className="border rounded-md bg-white overflow-x-auto">
                         <table className="w-full text-sm text-left">
                             <thead className="bg-gray-50 text-gray-700">
-                                <tr>
+                                <tr className="divide-x divide-gray-200/70">
                                     {visibleColumns.name && (
                                         <th className="px-6 py-3 cursor-pointer hover:bg-gray-100 transition-colors" onClick={() => handleSort('name')}>
                                             <div className="flex items-center gap-1">Name {renderSortIcon('name')}</div>

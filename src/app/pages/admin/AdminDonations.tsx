@@ -13,7 +13,7 @@ import {
     type ColumnOption,
 } from '@components/admin/ColumnVisibilityDropdown';
 import { formatCurrency, getBankColor, formatDate } from '@/app/views/formatters';
-import { Printer, Download, Search, ArrowUp, ArrowDown, ArrowUpDown, ChevronLeft, ChevronRight, Loader2, Info, Mail, MapPin, GraduationCap, Briefcase } from 'lucide-react';
+import { Printer, Download, Search, ArrowUp, ArrowDown, ArrowUpDown, ChevronLeft, ChevronRight, Loader2, Info, Mail, MapPin, GraduationCap, Briefcase, Eye } from 'lucide-react';
 import { api, unwrapListResponse, type Donation, type DonationData, type DonorLeaderboardEntry } from '@/app/views/api';
 import { PieChart, Pie, Cell, Tooltip as RechartsTooltip, ResponsiveContainer } from 'recharts';
 import { Link } from 'react-router-dom';
@@ -45,21 +45,48 @@ const DonationTableRow = memo(({
     donation: Donation;
     visibleColumns: Record<DonationColumnKey, boolean>;
 }) => (
-    <tr className="border-t hover:bg-gray-50/50 transition-colors">
+    <tr className="border-t divide-x divide-gray-100 hover:bg-gray-50/50 transition-colors">
         {visibleColumns.date && (
             <td className="px-6 py-4 whitespace-nowrap text-gray-600">{donation.date}</td>
         )}
         {visibleColumns.donor && (
-            <td className="px-6 py-4 font-medium text-gray-900">{donation.donor}</td>
+            <td className="px-6 py-0 font-medium text-gray-900 max-w-xs h-px">
+                <div className="flex items-stretch justify-between gap-2 min-w-0 h-full">
+                    <div className="flex items-center flex-1 min-w-0 py-4">
+                        {donation.userId ? (
+                            <Link
+                                to={`/profile/${donation.userId}`}
+                                className="text-gray-900 hover:text-brand-primary truncate max-w-full"
+                                title={donation.donor}
+                            >
+                                {donation.donor}
+                            </Link>
+                        ) : (
+                            <span className="truncate text-gray-500 italic" title={donation.donor}>
+                                {donation.donor}
+                            </span>
+                        )}
+                    </div>
+                    {donation.userId ? (
+                        <Link
+                            to={`/admin/preview/user/${donation.userId}`}
+                            className="flex items-center justify-center self-stretch px-1 text-gray-400 hover:text-brand-primary transition-colors shrink-0"
+                            title="Preview Profile"
+                        >
+                            <Eye className="w-4 h-4" />
+                        </Link>
+                    ) : null}
+                </div>
+            </td>
         )}
         {visibleColumns.amount && (
             <td className="px-6 py-4 font-medium text-gray-900">{donation.amount}</td>
         )}
         {visibleColumns.status && (
-            <td className="px-6 py-4">
-                <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold ${donation.status === 'Completed' ? 'bg-green-100 text-green-800 border-transparent hover:bg-green-200' :
-                    donation.status === 'Processing' ? 'bg-yellow-100 text-yellow-800 border-transparent hover:bg-yellow-200' :
-                        donation.status === 'Failed' ? 'bg-red-100 text-red-800 border-transparent hover:bg-red-200' : 'bg-gray-100 text-gray-800'
+            <td className="px-6 py-4 whitespace-nowrap">
+                <span className={`inline-flex items-center justify-center rounded-full border w-28 px-2.5 py-1 text-xs font-semibold ${donation.status === 'Completed' ? 'bg-green-100 text-green-800 border-green-300' :
+                    donation.status === 'Processing' ? 'bg-yellow-100 text-yellow-800 border-yellow-300' :
+                        donation.status === 'Failed' ? 'bg-red-100 text-red-800 border-red-300' : 'bg-gray-100 text-gray-800 border-gray-300'
                     }`}>
                     {donation.status}
                 </span>
@@ -188,7 +215,7 @@ export function AdminDonations() {
     const [appliedEndDate, setAppliedEndDate] = useState('');
     const [appliedSearchBankName, setAppliedSearchBankName] = useState('All');
 
-    const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>(null);
+    const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>({ key: 'date', direction: 'desc' });
     const [currentPage, setCurrentPage] = useState(1);
 
     // Column Visibility (all columns shown by default)
@@ -214,11 +241,11 @@ export function AdminDonations() {
     const visibleColumnCount = Math.max(1, Object.values(visibleColumns).filter(Boolean).length);
 
     const handleSort = (key: string) => {
-        let direction: 'asc' | 'desc' = 'asc';
-        if (sortConfig && sortConfig.key === key && sortConfig.direction === 'asc') {
-            direction = 'desc';
-        }
-        setSortConfig({ key, direction });
+        setSortConfig((prev) => {
+            if (!prev || prev.key !== key) return { key, direction: 'desc' };
+            if (prev.direction === 'desc') return { key, direction: 'asc' };
+            return null;
+        });
     };
 
     const applyQuickFilter = (filter: 'this_week' | 'this_month' | 'this_year' | 'all') => {
@@ -426,7 +453,7 @@ export function AdminDonations() {
                     }
                 }
 
-                let sortStr = "-donationDate";
+                let sortStr: string | undefined = undefined;
                 if (sortConfig) {
                     let sortKey: string = sortConfig.key;
                     if (sortKey === 'amount') sortKey = 'donationAmount';
@@ -1071,7 +1098,7 @@ export function AdminDonations() {
                     <div className="border rounded-md overflow-x-auto bg-white">
                         <table className="w-full text-sm text-left">
                             <thead className="bg-gray-50 text-gray-700 border-b">
-                                <tr>
+                                <tr className="divide-x divide-gray-200/70">
                                     {visibleColumns.date && (
                                         <th className="px-6 py-3 cursor-pointer hover:bg-gray-100 transition-colors" onClick={() => handleSort('date')}>
                                             <div className="flex items-center gap-1">Date {renderSortIcon('date')}</div>
@@ -1088,17 +1115,17 @@ export function AdminDonations() {
                                         </th>
                                     )}
                                     {visibleColumns.status && (
-                                        <th className="px-6 py-3 hover:bg-gray-100 transition-colors">
+                                        <th className="px-6 py-3">
                                             <div className="flex items-center gap-1">Status</div>
                                         </th>
                                     )}
                                     {visibleColumns.bankName && (
-                                        <th className="px-6 py-3 hover:bg-gray-100 transition-colors">
+                                        <th className="px-6 py-3">
                                             <div className="flex items-center gap-1">Bank Name</div>
                                         </th>
                                     )}
                                     {visibleColumns.donationReference && (
-                                        <th className="px-6 py-3 hover:bg-gray-100 transition-colors">
+                                        <th className="px-6 py-3">
                                             <div className="flex items-center gap-1">Donation Reference</div>
                                         </th>
                                     )}

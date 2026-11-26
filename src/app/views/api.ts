@@ -274,6 +274,7 @@ export interface Donation {
     rawDate: number;
     bankName: string;
     donationReference: string;
+    userId?: string | null;
 }
 
 export interface AchievementData {
