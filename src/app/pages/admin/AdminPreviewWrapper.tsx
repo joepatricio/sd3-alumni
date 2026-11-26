@@ -27,7 +27,7 @@ export function AdminPreviewWrapper() {
                             </span>
                         </div>
                         <p className="text-xs text-slate-300 mt-0.5">
-                            Rendering live {normalizedType === 'user' ? 'User Profile' : normalizedType === 'event' ? 'Event' : 'Bulletin'} page (ID: {id}) within Admin Layout.
+                            Rendering live {normalizedType === 'user' || normalizedType === 'profile' ? 'User Profile' : normalizedType === 'event' ? 'Event' : 'Bulletin'} page (ID: {id}) within Admin Layout.
                         </p>
                     </div>
                 </div>
@@ -47,7 +47,7 @@ export function AdminPreviewWrapper() {
             {/* Embedded Live Webpage Content */}
             <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden p-6">
                 {normalizedType === 'user' || normalizedType === 'profile' ? (
-                    <Profile />
+                    <Profile isAdminPreview />
                 ) : normalizedType === 'event' ? (
                     <EventDetail />
                 ) : normalizedType === 'bulletin' ? (

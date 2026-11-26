@@ -12,6 +12,7 @@ interface ProfileHeaderProps {
     profileImage: string;
     bio: string;
     isProfilePage?: boolean;
+    isAdminPreview?: boolean;
     showTab?: boolean;
     onEdit?: () => void;
     activeTab?: string;
@@ -34,6 +35,7 @@ export function ProfileHeader({
     profileImage,
     bio,
     isProfilePage,
+    isAdminPreview = false,
     showTab = false,
     onEdit,
     activeTab = 'overview',
@@ -100,7 +102,8 @@ export function ProfileHeader({
 
                     {/* Action Buttons - slightly more refined */}
                     {/* Kinda sh*t but it works */}
-                    <div className="flex items-center justify-center flex-wrap gap-3 md:pb-2 shrink-0">
+                    {!isAdminPreview && (
+                        <div className="flex items-center justify-center flex-wrap gap-3 md:pb-2 shrink-0">
                         {!isProfilePage ? (
                             <Link
                                 to={"/profile"}
@@ -188,7 +191,8 @@ export function ProfileHeader({
                                 ) : null}
                             </>
                         }
-                    </div>
+                        </div>
+                    )}
                 </div>
 
                 {/* Bio Section - centered on mobile, left on desktop */}
@@ -205,8 +209,8 @@ export function ProfileHeader({
                         { id: 'bulletins', label: 'Bulletins', count: 0 },
                         { id: 'comments', label: 'Comments', count: 0 },
                         { id: 'events', label: 'Events', count: 0 },
-                        ...(isOwner ? [{ id: 'donations', label: 'Donations', count: 0 }] : []),
-                        ...(isOwner && pendingRequestsCount > 0 ? [{ id: 'pending', label: 'Pending Requests', count: pendingRequestsCount, isLink: true, href: '/profile/connections' }] : []),
+                        ...(!isAdminPreview && isOwner ? [{ id: 'donations', label: 'Donations', count: 0 }] : []),
+                        ...(!isAdminPreview && isOwner && pendingRequestsCount > 0 ? [{ id: 'pending', label: 'Pending Requests', count: pendingRequestsCount, isLink: true, href: '/profile/connections' }] : []),
                     ].map((tab) => (
                         tab.isLink ? (
                             <Link

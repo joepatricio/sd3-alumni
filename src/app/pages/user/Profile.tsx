@@ -8,14 +8,21 @@ import { formatCurrency, formatDate } from '@/app/views/formatters';
 import { NotFound } from '@pages/NotFound';
 import { LazyImage } from '@components/user/LazyImage';
 import { UserDonations } from '@components/user/UserDonations';
-export const isAdminPreview = location.pathname.includes('/admin/preview/user');
 
-export function Profile() {
+interface ProfileProps {
+    isAdminPreview?: boolean;
+}
+
+export function Profile({ isAdminPreview: isAdminPreviewProp = false }: ProfileProps = {}) {
     const navigate = useNavigate();
     const location = useLocation();
     const { profileId, isOwner } = useProfileRoute();
     const { session } = useAuth();
     const currentUserId = session?.userId;
+    const isAdminPreview =
+        isAdminPreviewProp ||
+        /^\/admin\/preview\/(user|profile)(\/|$)/i.test(location.pathname);
+    const effectiveIsOwner = !isAdminPreview && isOwner;
 
     const [loading, setLoading] = useState(true);
     const [profile, setProfile] = useState<ProfileData | null>(null);
@@ -35,6 +42,12 @@ export function Profile() {
     const [tabLoadingMore, setTabLoadingMore] = useState(false);
 
     useEffect(() => {
+        if (!effectiveIsOwner && activeTab === 'donations') {
+            setActiveTab('overview');
+        }
+    }, [effectiveIsOwner, activeTab]);
+
+    useEffect(() => {
         setTabPage(1);
         setTabHasMore(true);
         if (activeTab === 'bulletins') setBulletins([]);
@@ -45,7 +58,7 @@ export function Profile() {
             setComments([]);
             setEvents([]);
         }
-    }, [activeTab]);
+    }, [activeTab, profileId]);
 
     useEffect(() => {
         const fetchProfileData = async () => {
@@ -54,20 +67,20 @@ export function Profile() {
                 const [profileRes, userRes, statsRes, connRes, achUserRes, relRes, pendingRes] = await Promise.all([
                     api.get('/profiles', { params: { 'userId': profileId, } }),
                     api.get('/users', { params: { 'userId': profileId } }),
-                    api.get('/userStatistics', { params: { 'userId': profileId } }),
+                    api.get('/userStatistics', { params: { 'userId': profileId } }).catch(() => ({ data: [] })),
                     api.get(`/userConnections`, { params: { 'userId': profileId, _page: 1, _per_page: 6, 'status.connectionName': 'Accepted' } }).catch(() => ({ data: { data: [] } })),
                     api.get(`/userAchievements`, { params: { 'userId': profileId, } }).catch(() => ({ data: [] })),
-                    !isOwner && currentUserId ? api.get(`/userConnections`, { params: { 'userId': currentUserId, 'friendId': profileId } }).catch(() => ({ data: [] })) : Promise.resolve({ data: [] }),
-                    isOwner ? api.get(`/userConnections`, { params: { 'userId': profileId, 'status.connectionName': 'Requested' } }).catch(() => ({ data: [] })) : Promise.resolve({ data: [] })
+                    !isAdminPreview && !effectiveIsOwner && currentUserId ? api.get(`/userConnections`, { params: { 'userId': currentUserId, 'friendId': profileId } }).catch(() => ({ data: [] })) : Promise.resolve({ data: [] }),
+                    effectiveIsOwner ? api.get(`/userConnections`, { params: { 'userId': profileId, 'status.connectionName': 'Requested' } }).catch(() => ({ data: [] })) : Promise.resolve({ data: [] })
                 ]);
 
                 const pData = Array.isArray(profileRes.data) ? profileRes.data : (profileRes.data?.data || []);
                 const uData = Array.isArray(userRes.data) ? userRes.data : (userRes.data?.data || []);
                 const sData = Array.isArray(statsRes.data) ? statsRes.data : (statsRes.data?.data || []);
 
-                setProfile(pData[0]);
-                setUserRecord(uData[0]);
-                setStatsData(sData[0]);
+                setProfile(pData[0] || null);
+                setUserRecord(uData[0] || null);
+                setStatsData(sData[0] || null);
 
                 const rData = Array.isArray(relRes.data) ? relRes.data : (relRes.data?.data || []);
                 if (rData && rData.length > 0) {
@@ -81,12 +94,14 @@ export function Profile() {
                     setPendingRequestsCount(pendData.length);
                 }
 
-                const conns = connRes.data?.data || [];
+                const conns = Array.isArray(connRes.data) ? connRes.data : (connRes.data?.data || []);
                 if (conns.length > 0) {
                     const friendIds = conns.map((c: { friendId: string }) => c.friendId).join(',');
                     const friendsRes = await api.get(`/profiles`, { params: { 'userId:in': friendIds } }).catch(() => ({ data: [] }));
                     const fData = Array.isArray(friendsRes.data) ? friendsRes.data : (friendsRes.data?.data || []);
                     setConnections(fData);
+                } else {
+                    setConnections([]);
                 }
 
                 const userAchs = Array.isArray(achUserRes.data) ? achUserRes.data : (achUserRes.data?.data || []);
@@ -105,13 +120,20 @@ export function Profile() {
 
             } catch (err) {
                 console.error("Failed to load profile", err);
+                setProfile(null);
+                setUserRecord(null);
+                setStatsData(null);
+                setConnection(null);
+                setConnections([]);
+                setAchievements([]);
+                setPendingRequestsCount(0);
             } finally {
                 setLoading(false);
             }
         };
 
         fetchProfileData();
-    }, [profileId, isOwner, currentUserId]);
+    }, [profileId, effectiveIsOwner, currentUserId, isAdminPreview]);
 
     useEffect(() => {
         const fetchTabContent = async () => {
@@ -220,13 +242,18 @@ export function Profile() {
         );
     }
 
-    if (!profile || !statsData || !userRecord) {
+    if (!profile || !userRecord) {
         return <NotFound />;
     }
 
     if ((userRecord.userStatus?.statusName === 'Banned' || userRecord.userStatus?.statusName === 'Deactivated') && !isAdminPreview) {
         return <NotFound />;
     }
+
+    const bulletinLink = (bulletinId: string) =>
+        isAdminPreview ? `/admin/preview/bulletin/${bulletinId}` : `/bulletin/${bulletinId}`;
+    const eventLink = (eventId: string) =>
+        isAdminPreview ? `/admin/preview/event/${eventId}` : `/events/${eventId}`;
 
     const overviewContent = [
         ...bulletins.map(b => ({ ...b, type: 'bulletin', sortDate: b.bulletinDate })),
@@ -236,7 +263,7 @@ export function Profile() {
 
     const renderBulletin = (b: BulletinData) => (
         <div key={`bulletin-${b.id}`} className="bg-white p-4 rounded-lg shadow-sm border border-gray-100 mb-4 last:mb-0 hover:shadow-md transition-shadow">
-            <Link to={`/bulletin/${b.id}`}>
+            <Link to={bulletinLink(b.id)}>
                 <div className="flex items-center gap-2 text-sm text-gray-500 mb-3">
                     <FileText className="w-4 h-4" />
                     <span>Posted a bulletin • {formatDate(b.bulletinDate, 'short')}</span>
@@ -259,7 +286,7 @@ export function Profile() {
 
     const renderEventOverview = (event: EventData) => (
         <div key={`event-ov-${event.id}`} className="bg-white p-4 rounded-lg shadow-sm border border-gray-100 mb-4 last:mb-0 hover:shadow-md transition-shadow">
-            <Link to={`/events/${event.id}`}>
+            <Link to={eventLink(event.id)}>
                 <div className="flex items-center gap-2 text-sm text-gray-500 mb-3">
                     <Calendar className="w-4 h-4" />
                     <span>Confirmed attendance to an event • {formatDate(event.eventDate, 'short')}</span>
@@ -286,7 +313,7 @@ export function Profile() {
 
     const renderComment = (c: BulletinCommentData & { bulletin?: { title?: string } }) => (
         <div key={`comment-${c.id}`} className="bg-white p-4 rounded-lg shadow-sm border border-gray-100 mb-4 last:mb-0 hover:shadow-md transition-shadow">
-            <Link to={`/bulletin/${c.bulletinId}`}>
+            <Link to={bulletinLink(c.bulletinId)}>
                 <div className="flex items-center gap-2 text-sm text-gray-500 mb-2">
                     <MessageSquare className="w-4 h-4" />
                     <span>Commented on {c.bulletin?.title ? `"${c.bulletin.title}"` : 'a bulletin'} • {formatDate(c.commentDate, 'short')}</span>
@@ -302,7 +329,7 @@ export function Profile() {
         return (
             <Link
                 key={event.id}
-                to={`/events/${event.id}`}
+                to={eventLink(event.id)}
                 className="group bg-white border rounded-xl overflow-hidden hover:shadow-lg transition-all duration-300 flex flex-col h-full"
             >
                 <div className="relative h-32 w-full overflow-hidden bg-gray-100">
@@ -390,10 +417,13 @@ export function Profile() {
     const profStatus = userRecord?.profileStatus?.statusName || 'hidden';
     const isConnected = connection?.status?.connectionName === 'Accepted';
 
-    if (connection?.status?.connectionName === 'Blocked') {
+    if (isAdminPreview) {
+        visibility = 'full';
+        tabVisibility = true;
+    } else if (connection?.status?.connectionName === 'Blocked') {
         visibility = 'hidden';
         tabVisibility = false;
-    } else if (isOwner || profStatus === 'Public' || isAdminPreview || (profStatus === 'Connections Only' && isConnected)) {
+    } else if (effectiveIsOwner || profStatus === 'Public' || (profStatus === 'Connections Only' && isConnected)) {
         visibility = 'full';
         tabVisibility = true;
     } else if (profStatus === 'Connections Only' && !isConnected) {
@@ -410,14 +440,15 @@ export function Profile() {
                     profileImage={profile.profileImage}
                     bio={profile.bio}
                     isProfilePage={true}
+                    isAdminPreview={isAdminPreview}
                     showTab={tabVisibility}
-                    onEdit={isOwner ? () => navigate('/profile/edit') : undefined}
+                    onEdit={effectiveIsOwner ? () => navigate('/profile/edit') : undefined}
                     activeTab={activeTab}
                     onTabChange={setActiveTab}
                     // statsData={statsData}
-                    isOwner={isOwner}
-                    connectionStatus={connection?.status?.connectionName}
-                    pendingRequestsCount={pendingRequestsCount}
+                    isOwner={effectiveIsOwner}
+                    connectionStatus={isAdminPreview ? null : connection?.status?.connectionName}
+                    pendingRequestsCount={effectiveIsOwner ? pendingRequestsCount : 0}
                     onConnectionUpdate={(newStatusName, newCount) => {
                         setConnection(newStatusName !== null ? { id: '', userId: '', friendId: '', connectionStatusId: '', dateUpdated: '', status: { id: '', connectionName: newStatusName } } : null);
                         if (newCount !== undefined) {
@@ -457,13 +488,15 @@ export function Profile() {
                                 <div className="flex justify-between items-end mb-4">
                                     <div>
                                         <h3 className="font-bold text-lg text-gray-900">Connections</h3>
-                                        <p className="text-xs text-gray-500">{statsData.userConnections} friends</p>
+                                        <p className="text-xs text-gray-500">{statsData?.userConnections ?? 0} friends</p>
                                     </div>
-                                    <Link to={`/profile/connections${isOwner ? '' : `/${profileId}`}`} className="text-sm text-brand-primary hover:underline">See all</Link>
+                                    {!isAdminPreview && (
+                                        <Link to={`/profile/connections${effectiveIsOwner ? '' : `/${profileId}`}`} className="text-sm text-brand-primary hover:underline">See all</Link>
+                                    )}
                                 </div>
                                 <div className="grid grid-cols-3 gap-2">
                                     {connections.map(c => (
-                                        <Link key={c.userId} to={`/profile/${c.userId}`} className="group relative aspect-square overflow-hidden rounded-md">
+                                        <Link key={c.userId} to={isAdminPreview ? `/admin/preview/user/${c.userId}` : `/profile/${c.userId}`} className="group relative aspect-square overflow-hidden rounded-md">
                                             <img src={c.profileImage} alt={c.userName} className="w-full h-full object-cover transition-transform group-hover:scale-110" />
                                             <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-1">
                                                 <span className="text-white text-[10px] font-medium truncate w-full leading-tight">{c.userName}</span>
@@ -477,7 +510,9 @@ export function Profile() {
                             <div className="bg-white rounded-lg shadow-sm p-5 border border-gray-100">
                                 <div className="flex justify-between items-end mb-4">
                                     <h3 className="font-bold text-lg text-gray-900">Achievements</h3>
-                                    <Link to={`/profile/achievements${isOwner ? '' : `/${profileId}`}`} className="text-sm text-brand-primary hover:underline">See all</Link>
+                                    {!isAdminPreview && (
+                                        <Link to={`/profile/achievements${effectiveIsOwner ? '' : `/${profileId}`}`} className="text-sm text-brand-primary hover:underline">See all</Link>
+                                    )}
                                 </div>
                                 <div className="grid grid-cols-4 gap-3">
                                     {achievements.map((ach, i) => {
@@ -495,7 +530,7 @@ export function Profile() {
                                 {achievements.length === 0 && <p className="text-sm text-gray-500">No achievements yet.</p>}
                             </div>
 
-                            {statsData.donatedAmount > 0 && (
+                            {(statsData?.donatedAmount ?? 0) > 0 && (
                                 <div className="relative overflow-hidden grid grid-cols-4 items-center gap-4 bg-gradient-to-br from-white to-gray-50/50 rounded-2xl p-6 shadow-sm border border-white transition-all hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)]">
                                     {/* Subtle decorative background element */}
                                     <div className="absolute -top-6 -right-6 w-16 h-16 bg-brand-primary/5 rounded-full blur-3xl" />
@@ -504,7 +539,7 @@ export function Profile() {
                                             Total Contribution
                                         </p>
                                         <h3 className="text-2xl font-semibold tracking-tight text-brand-accent">
-                                            {formatCurrency(statsData.donatedAmount)}
+                                            {formatCurrency(statsData?.donatedAmount ?? 0)}
                                         </h3>
                                     </div>
                                     <div className="col-span-1 flex items-center justify-center">
@@ -562,7 +597,7 @@ export function Profile() {
                                             {events.map(renderEvent)}
                                         </div>
                                     )}
-                                    {activeTab === 'donations' && isOwner && (
+                                    {activeTab === 'donations' && effectiveIsOwner && (
                                         <UserDonations
                                             userId={profileId}
                                             onStatsUpdate={(newAmount) => {
