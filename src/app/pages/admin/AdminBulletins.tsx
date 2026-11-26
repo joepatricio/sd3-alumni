@@ -49,6 +49,7 @@ export function AdminBulletins() {
             if (sortKey === 'author') sortKey = 'author.profile.userName';
             else if (sortKey === 'date' || sortKey === 'rawDate') sortKey = 'bulletinDate';
             else if (sortKey === 'status') sortKey = 'status.statusName';
+            else if (sortKey === 'category') sortKey = 'category.bulletinCategoryName';
 
             sortStr = params.sort.direction === 'desc' ? `-${sortKey}` : sortKey;
         }

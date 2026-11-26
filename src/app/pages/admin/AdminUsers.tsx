@@ -8,7 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Label } from '@components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@components/ui/select';
 import { Textarea } from '@components/ui/textarea';
-import { ArrowUp, ArrowDown, ArrowUpDown, ChevronLeft, ChevronRight, Search, Plus, FileText, Eye } from 'lucide-react';
+import { ArrowUp, ArrowDown, ArrowUpDown, ChevronLeft, ChevronRight, Search, Plus, FileText, Eye, Pencil } from 'lucide-react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { api, unwrapListResponse, type DegreeData, type UserStatusData, type ProfileData, type RecordData, type AdminUserRow } from '@/app/views/api';
 import { formatDate } from '@/app/views/formatters';
@@ -23,9 +23,11 @@ import { toast } from 'sonner';
 
 const USER_TABLE_COLUMNS = [
     { key: 'name', label: 'Name' },
+    { key: 'degree', label: 'Degree Program' },
     { key: 'email', label: 'Email' },
     { key: 'batch', label: 'Batch' },
     { key: 'grantedDate', label: 'Granted/Expiry Date' },
+    { key: 'status', label: 'Status' },
 ] as const satisfies readonly ColumnOption[];
 
 type UserColumnKey = (typeof USER_TABLE_COLUMNS)[number]['key'];
@@ -43,13 +45,13 @@ interface AdminUserApiItem {
 
 const getUserStatusClass = (status: string) => {
     switch (status) {
-        case 'Official': return 'bg-blue-100 text-blue-800';
-        case 'Regular': return 'bg-green-100 text-green-800';
-        case 'Pending': return 'bg-yellow-100 text-yellow-800';
-        case 'Suspended': return 'bg-orange-100 text-orange-800';
-        case 'Banned': return 'bg-red-100 text-red-800';
-        case 'Deactivated': return 'bg-gray-100 text-gray-800';
-        default: return 'bg-gray-100 text-gray-800';
+        case 'Official': return 'bg-blue-100 text-blue-800 border-blue-300';
+        case 'Regular': return 'bg-green-100 text-green-800 border-green-300';
+        case 'Pending': return 'bg-yellow-100 text-yellow-800 border-yellow-300';
+        case 'Suspended': return 'bg-orange-100 text-orange-800 border-orange-300';
+        case 'Banned': return 'bg-red-100 text-red-800 border-red-300';
+        case 'Deactivated': return 'bg-gray-100 text-gray-800 border-gray-300';
+        default: return 'bg-gray-100 text-gray-800 border-gray-300';
     }
 };
 
@@ -62,10 +64,9 @@ const UserTableRow = memo(({
     visibleColumns: Record<UserColumnKey, boolean>;
     openEditModal: (user: AdminUserRow, status?: string) => void;
 }) => {
-    const showRestoreUnbanActivate = ['Suspended', 'Banned', 'Deactivated'].includes(user.status);
-    const showSuspend = user.status === 'Official' || user.status === 'Regular';
-    const showBan = user.status === 'Official' || user.status === 'Regular' || user.status === 'Suspended';
-    const showDeactivate = user.status !== 'Deactivated';
+    const degreeTooltip = user.degreeName !== 'N/A' && user.degree !== 'N/A' && user.degree !== user.degreeName
+        ? `${user.degreeName} (${user.degree})`
+        : user.degreeName;
 
     return (
         <tr className="border-t">
@@ -81,7 +82,23 @@ const UserTableRow = memo(({
                     </div>
                 </td>
             )}
-            {visibleColumns.email && <td className="px-6 py-4">{user.email}</td>}
+            {visibleColumns.degree && (
+                <td className="px-6 py-4 max-w-[220px]" title={degreeTooltip}>
+                    <div className="flex items-center gap-2 min-w-0">
+                        <span className="truncate text-gray-900">{user.degreeName}</span>
+                        {user.degree !== 'N/A' && user.degree !== user.degreeName && (
+                            <span className="inline-flex items-center rounded-md bg-gray-100 px-1.5 py-0.5 text-xs font-medium text-gray-600 shrink-0">
+                                {user.degree}
+                            </span>
+                        )}
+                    </div>
+                </td>
+            )}
+            {visibleColumns.email && (
+                <td className="px-6 py-4 max-w-[200px] truncate" title={user.email}>
+                    {user.email}
+                </td>
+            )}
             {visibleColumns.batch && <td className="px-6 py-4">{user.batch}</td>}
             {visibleColumns.grantedDate && (
                 <td className="px-6 py-4 whitespace-nowrap">
@@ -92,45 +109,22 @@ const UserTableRow = memo(({
                     )}
                 </td>
             )}
+            {visibleColumns.status && (
+                <td className="px-6 py-4 whitespace-nowrap">
+                    <button
+                        type="button"
+                        onClick={() => openEditModal(user)}
+                        title="Click to change status"
+                        aria-label={`Change status for ${user.name} (currently ${user.status})`}
+                        className={`group inline-flex items-center justify-center gap-1.5 rounded-full border min-w-[6.75rem] px-2.5 py-1 text-xs font-semibold shadow-xs transition-all cursor-pointer hover:shadow hover:brightness-95 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary/50 focus-visible:ring-offset-1 ${getUserStatusClass(user.status)}`}
+                    >
+                        <span>{user.status}</span>
+                        <Pencil className="w-3 h-3 opacity-60 group-hover:opacity-100 transition-opacity shrink-0" />
+                    </button>
+                </td>
+            )}
             <td className="px-6 py-4 text-right">
                 <div className="flex items-center justify-end gap-1.5 whitespace-nowrap">
-                    <span className={`inline-flex items-center justify-center text-center rounded-full border w-[5.5rem] px-2 py-0.5 text-xs font-semibold mr-1 shrink-0 ${getUserStatusClass(user.status)}`}>
-                        {user.status}
-                    </span>
-
-                    {showRestoreUnbanActivate && (
-                        <button
-                            className="inline-flex items-center justify-center rounded-md text-xs font-medium transition-colors border h-8 px-2.5 shrink-0 text-blue-600 border-blue-200 hover:bg-blue-50"
-                            onClick={() => openEditModal(user, 'Regular')}
-                        >
-                            {user.status === 'Suspended' ? 'Restore' : user.status === 'Banned' ? 'Unban' : 'Activate'}
-                        </button>
-                    )}
-                    {showSuspend && (
-                        <button
-                            className="inline-flex items-center justify-center rounded-md text-xs font-medium transition-colors border h-8 px-2.5 shrink-0 text-orange-600 border-orange-200 hover:bg-orange-50"
-                            onClick={() => openEditModal(user, 'Suspended')}
-                        >
-                            Suspend
-                        </button>
-                    )}
-                    {showBan && (
-                        <button
-                            className="inline-flex items-center justify-center rounded-md text-xs font-medium transition-colors border h-8 px-2.5 shrink-0 text-red-600 border-red-200 hover:bg-red-50"
-                            onClick={() => openEditModal(user, 'Banned')}
-                        >
-                            Ban
-                        </button>
-                    )}
-                    {showDeactivate && (
-                        <button
-                            className="inline-flex items-center justify-center rounded-md text-xs font-medium transition-colors border h-8 px-2.5 shrink-0 text-gray-600 border-gray-200 hover:bg-gray-100"
-                            onClick={() => openEditModal(user, 'Deactivated')}
-                        >
-                            Deactivate
-                        </button>
-                    )}
-
                     <button
                         className="shrink-0 inline-flex items-center justify-center rounded-md text-xs font-medium transition-colors hover:bg-gray-200 h-8 px-2.5 border border-gray-200 text-gray-700"
                         onClick={() => openEditModal(user)}
@@ -159,6 +153,7 @@ export function AdminUsers() {
     const [searchTerm, setSearchTerm] = useState('');
     const [searchBatch, setSearchBatch] = useState('');
     const [searchReason, setSearchReason] = useState('');
+    const [selectedDegree, setSelectedDegree] = useState<string>('All');
     const [batchRange, setBatchRange] = useState<string>('All Batches');
     const [customMinBatch, setCustomMinBatch] = useState<string>('');
     const [customMaxBatch, setCustomMaxBatch] = useState<string>('');
@@ -167,6 +162,7 @@ export function AdminUsers() {
     const [appliedSearchTerm, setAppliedSearchTerm] = useState('');
     const [appliedSearchBatch, setAppliedSearchBatch] = useState('');
     const [appliedSearchReason, setAppliedSearchReason] = useState('');
+    const [appliedDegree, setAppliedDegree] = useState<string>('All');
     const [appliedBatchRange, setAppliedBatchRange] = useState<string>('All Batches');
     const [appliedCustomMinBatch, setAppliedCustomMinBatch] = useState<string>('');
     const [appliedCustomMaxBatch, setAppliedCustomMaxBatch] = useState<string>('');
@@ -244,6 +240,7 @@ export function AdminUsers() {
         setAppliedSearchTerm(searchTerm);
         setAppliedSearchBatch(searchBatch);
         setAppliedSearchReason(searchReason);
+        setAppliedDegree(selectedDegree);
         setAppliedBatchRange(batchRange);
         setAppliedCustomMinBatch(customMinBatch);
         setAppliedCustomMaxBatch(customMaxBatch);
@@ -254,62 +251,83 @@ export function AdminUsers() {
         setSearchTerm('');
         setSearchBatch('');
         setSearchReason('');
+        setSelectedDegree('All');
         setBatchRange('All Batches');
         setCustomMinBatch('');
         setCustomMaxBatch('');
         setAppliedSearchTerm('');
         setAppliedSearchBatch('');
         setAppliedSearchReason('');
+        setAppliedDegree('All');
         setAppliedBatchRange('All Batches');
         setAppliedCustomMinBatch('');
         setAppliedCustomMaxBatch('');
         setCurrentPage(1);
     };
 
+    const buildQueryFiltersAndSort = () => {
+        const whereClause: Record<string, unknown> = {};
+        if (activeTab !== 'All') {
+            whereClause.userStatus = { statusName: activeTab };
+        }
+
+        const profileFilter: Record<string, unknown> = {};
+        if (appliedSearchTerm) {
+            profileFilter.userName = { contains: appliedSearchTerm };
+        }
+        if (appliedDegree && appliedDegree !== 'All') {
+            profileFilter.degreeId = appliedDegree;
+        }
+
+        const currentYear = new Date().getFullYear();
+        let batchFilter: Record<string, unknown> | number | undefined = undefined;
+        if (appliedBatchRange === 'Past 3') { batchFilter = { gte: currentYear - 3 }; }
+        else if (appliedBatchRange === 'Past 5') { batchFilter = { gte: currentYear - 5 }; }
+        else if (appliedBatchRange === 'Past 10') { batchFilter = { gte: currentYear - 10 }; }
+        else if (appliedBatchRange === 'Past 30') { batchFilter = { gte: currentYear - 30 }; }
+        else if (appliedBatchRange === 'Custom' || appliedBatchRange === 'Custom Range') {
+            const min = appliedCustomMinBatch ? parseInt(appliedCustomMinBatch, 10) : undefined;
+            const max = appliedCustomMaxBatch ? parseInt(appliedCustomMaxBatch, 10) : undefined;
+            if (min !== undefined && max !== undefined) { batchFilter = { gte: min, lte: max }; }
+            else if (min !== undefined) { batchFilter = { gte: min }; }
+            else if (max !== undefined) { batchFilter = { lte: max }; }
+        } else if (appliedSearchBatch) {
+            const parsedBatch = parseInt(appliedSearchBatch, 10);
+            if (!isNaN(parsedBatch)) {
+                batchFilter = parsedBatch;
+            }
+        }
+
+        if (batchFilter !== undefined) {
+            profileFilter.batch = batchFilter;
+        }
+
+        if (Object.keys(profileFilter).length > 0) {
+            whereClause.profile = profileFilter;
+        }
+
+        if (appliedSearchReason) {
+            whereClause.records = { some: { description: { contains: appliedSearchReason } } };
+        }
+
+        let sortStr = undefined;
+        if (sortConfig) {
+            let sortKey: string = sortConfig.key;
+            if (sortKey === 'name') sortKey = 'profile.userName';
+            else if (sortKey === 'degree') sortKey = 'profile.degree.degreeName';
+            else if (sortKey === 'email') sortKey = 'profile.email';
+            else if (sortKey === 'batch') sortKey = 'profile.batch';
+            else if (sortKey === 'status') sortKey = 'userStatus.statusName';
+
+            sortStr = sortConfig.direction === 'desc' ? `-${sortKey}` : sortKey;
+        }
+
+        return { whereClause, sortStr };
+    };
+
     const handleExportCSV = async () => {
         try {
-            const whereClause: Record<string, unknown> = {};
-            if (activeTab !== 'All') {
-                whereClause.userStatus = { statusName: activeTab };
-            }
-            if (appliedSearchTerm) {
-                whereClause.profile = { ...(whereClause.profile || {}), userName: { contains: appliedSearchTerm } };
-            }
-
-            const currentYear = new Date().getFullYear();
-            let batchFilter: Record<string, unknown> | number | undefined = undefined;
-            if (appliedBatchRange === 'Past 3') { batchFilter = { gte: currentYear - 3 }; }
-            else if (appliedBatchRange === 'Past 5') { batchFilter = { gte: currentYear - 5 }; }
-            else if (appliedBatchRange === 'Past 10') { batchFilter = { gte: currentYear - 10 }; }
-            else if (appliedBatchRange === 'Past 30') { batchFilter = { gte: currentYear - 30 }; }
-            else if (appliedBatchRange === 'Custom') {
-                const min = appliedCustomMinBatch ? parseInt(appliedCustomMinBatch, 10) : undefined;
-                const max = appliedCustomMaxBatch ? parseInt(appliedCustomMaxBatch, 10) : undefined;
-                if (min !== undefined && max !== undefined) { batchFilter = { gte: min, lte: max }; }
-                else if (min !== undefined) { batchFilter = { gte: min }; }
-                else if (max !== undefined) { batchFilter = { lte: max }; }
-            } else if (appliedSearchBatch) {
-                batchFilter = parseInt(appliedSearchBatch, 10);
-            }
-
-            if (batchFilter !== undefined) {
-                whereClause.profile = { ...(whereClause.profile || {}), batch: batchFilter };
-            }
-
-            if (appliedSearchReason) {
-                whereClause.records = { some: { description: { contains: appliedSearchReason } } };
-            }
-
-            let sortStr = undefined;
-            if (sortConfig) {
-                let sortKey: string = sortConfig.key;
-                if (sortKey === 'name') sortKey = 'profile.userName';
-                else if (sortKey === 'email') sortKey = 'profile.email';
-                else if (sortKey === 'batch') sortKey = 'profile.batch';
-                else if (sortKey === 'status') sortKey = 'userStatus.statusName';
-
-                sortStr = sortConfig.direction === 'desc' ? `-${sortKey}` : sortKey;
-            }
+            const { whereClause, sortStr } = buildQueryFiltersAndSort();
 
             const res = await api.get('/users', {
                 params: {
@@ -337,8 +355,13 @@ export function AdminUsers() {
                     }
                 }
 
+                const degreeDisplay = u.profile?.degree
+                    ? `${u.profile.degree.degreeName} (${u.profile.degree.degreeAbbr})`
+                    : 'N/A';
+
                 return {
                     name: u.profile?.userName || 'Unknown',
+                    degree: degreeDisplay,
                     email: u.profile?.email || 'Unknown',
                     batch: u.profile?.batch || 'Unknown',
                     status: u.userStatus?.statusName || 'Unknown',
@@ -350,9 +373,10 @@ export function AdminUsers() {
 
             const csvColumns: Array<{ header: string; getValue: (u: (typeof mapped)[number]) => unknown }> = [];
             if (visibleColumns.name) csvColumns.push({ header: 'Name', getValue: (u) => u.name });
+            if (visibleColumns.degree) csvColumns.push({ header: 'Degree Program', getValue: (u) => u.degree });
             if (visibleColumns.email) csvColumns.push({ header: 'Email', getValue: (u) => u.email });
             if (visibleColumns.batch) csvColumns.push({ header: 'Batch', getValue: (u) => u.batch });
-            csvColumns.push({ header: 'Status', getValue: (u) => u.status });
+            if (visibleColumns.status) csvColumns.push({ header: 'Status', getValue: (u) => u.status });
             if (visibleColumns.grantedDate) {
                 csvColumns.push({ header: 'Granted Date', getValue: (u) => u.grantedDate || '' });
                 csvColumns.push({ header: 'Expiry Date', getValue: (u) => u.expiryDate || '' });
@@ -419,57 +443,7 @@ export function AdminUsers() {
 
     const fetchUsersList = async () => {
         try {
-            const whereClause: Record<string, unknown> = {};
-            if (activeTab !== 'All') {
-                whereClause.userStatus = { statusName: activeTab };
-            }
-            if (appliedSearchTerm) {
-                whereClause.profile = { ...(whereClause.profile || {}), userName: { contains: appliedSearchTerm } };
-            }
-
-            const currentYear = new Date().getFullYear();
-            let batchFilter: Record<string, unknown> | number | undefined = undefined;
-
-            if (appliedBatchRange === 'Past 3') {
-                batchFilter = { gte: currentYear - 3 };
-            } else if (appliedBatchRange === 'Past 5') {
-                batchFilter = { gte: currentYear - 5 };
-            } else if (appliedBatchRange === 'Past 10') {
-                batchFilter = { gte: currentYear - 10 };
-            } else if (appliedBatchRange === 'Past 30') {
-                batchFilter = { gte: currentYear - 30 };
-            } else if (appliedBatchRange === 'Custom') {
-                const min = appliedCustomMinBatch ? parseInt(appliedCustomMinBatch, 10) : undefined;
-                const max = appliedCustomMaxBatch ? parseInt(appliedCustomMaxBatch, 10) : undefined;
-                if (min !== undefined && max !== undefined) {
-                    batchFilter = { gte: min, lte: max };
-                } else if (min !== undefined) {
-                    batchFilter = { gte: min };
-                } else if (max !== undefined) {
-                    batchFilter = { lte: max };
-                }
-            } else if (appliedSearchBatch) {
-                batchFilter = parseInt(appliedSearchBatch, 10);
-            }
-
-            if (batchFilter !== undefined) {
-                whereClause.profile = { ...(whereClause.profile || {}), batch: batchFilter };
-            }
-
-            if (appliedSearchReason) {
-                whereClause.records = { some: { description: { contains: appliedSearchReason } } };
-            }
-
-            let sortStr = undefined;
-            if (sortConfig) {
-                let sortKey: string = sortConfig.key;
-                if (sortKey === 'name') sortKey = 'profile.userName';
-                else if (sortKey === 'email') sortKey = 'profile.email';
-                else if (sortKey === 'batch') sortKey = 'profile.batch';
-                else if (sortKey === 'status') sortKey = 'userStatus.statusName';
-
-                sortStr = sortConfig.direction === 'desc' ? `-${sortKey}` : sortKey;
-            }
+            const { whereClause, sortStr } = buildQueryFiltersAndSort();
 
             const res = await api.get('/users', {
                 params: {
@@ -510,6 +484,8 @@ export function AdminUsers() {
                     id: u.id,
                     name: u.profile?.userName || 'Unknown',
                     email: u.profile?.email || 'N/A',
+                    degree: u.profile?.degree?.degreeAbbr || u.profile?.degree?.degreeName || 'N/A',
+                    degreeName: u.profile?.degree?.degreeName || u.profile?.degree?.degreeAbbr || 'N/A',
                     batch: u.profile?.batch?.toString() || 'N/A',
                     status: u.userStatus?.statusName || 'Unknown',
                     reason: currentRecord?.description || undefined,
@@ -529,7 +505,7 @@ export function AdminUsers() {
 
     useEffect(() => {
         fetchUsersList();
-    }, [activeTab, appliedSearchTerm, appliedSearchBatch, appliedSearchReason, appliedBatchRange, appliedCustomMinBatch, appliedCustomMaxBatch, sortConfig, currentPage, itemsPerPage]);
+    }, [activeTab, appliedSearchTerm, appliedSearchBatch, appliedSearchReason, appliedDegree, appliedBatchRange, appliedCustomMinBatch, appliedCustomMaxBatch, sortConfig, currentPage, itemsPerPage]);
 
     const totalPages = Math.ceil(totalUsers / itemsPerPage);
     const paginatedUsers = users;
@@ -616,6 +592,11 @@ export function AdminUsers() {
                                             <div className="flex items-center gap-1">Name {renderSortIcon('name')}</div>
                                         </th>
                                     )}
+                                    {visibleColumns.degree && (
+                                        <th className="px-6 py-3 whitespace-nowrap cursor-pointer hover:bg-gray-100 transition-colors" onClick={() => handleSort('degree')}>
+                                            <div className="flex items-center gap-1">Degree Program {renderSortIcon('degree')}</div>
+                                        </th>
+                                    )}
                                     {visibleColumns.email && (
                                         <th className="px-6 py-3 cursor-pointer hover:bg-gray-100 transition-colors" onClick={() => handleSort('email')}>
                                             <div className="flex items-center gap-1">Email {renderSortIcon('email')}</div>
@@ -629,6 +610,11 @@ export function AdminUsers() {
                                     {visibleColumns.grantedDate && (
                                         <th className="px-6 py-3 whitespace-nowrap cursor-pointer hover:bg-gray-100 transition-colors" onClick={() => handleSort('grantedDate')}>
                                             <div className="flex items-center gap-1">Granted/Expiry Date {renderSortIcon('grantedDate')}</div>
+                                        </th>
+                                    )}
+                                    {visibleColumns.status && (
+                                        <th className="px-6 py-3 whitespace-nowrap cursor-pointer hover:bg-gray-100 transition-colors" onClick={() => handleSort('status')}>
+                                            <div className="flex items-center gap-1">Status {renderSortIcon('status')}</div>
                                         </th>
                                     )}
                                     <th className="px-6 py-3 text-right whitespace-nowrap">Actions</th>
@@ -668,9 +654,23 @@ export function AdminUsers() {
                         </TabsList>
                     </div>
                     <div className="p-4 bg-white border rounded-md shadow-sm mb-6 flex flex-col gap-4">
-                        <div className="text-sm font-medium text-gray-700">Filters</div>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-6 gap-4 items-center">
-                            <div className="col-span-2 relative">
+                        <div className="flex items-center justify-between gap-4">
+                            <div className="text-sm font-medium text-gray-700">Filters</div>
+                            <Button
+                                size="sm"
+                                className="bg-brand-secondary hover:bg-brand-secondary-hover text-white hover:text-white"
+                                onMouseEnter={loadCreateUserModal}
+                                onFocus={loadCreateUserModal}
+                                onClick={() => {
+                                    loadCreateUserModal();
+                                    setIsCreateOpen(true);
+                                }}
+                            >
+                                <Plus className="mr-1 h-4 w-4" /> Create User
+                            </Button>
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3 items-center">
+                            <div className="sm:col-span-2 lg:col-span-3 relative">
                                 <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
                                 <Input
                                     placeholder="Search user by name..."
@@ -680,7 +680,35 @@ export function AdminUsers() {
                                     onKeyDown={(e) => { if (e.key === 'Enter') handleApplyFilters(); }}
                                 />
                             </div>
-                            <div>
+                            <div className="lg:col-span-3">
+                                <Select
+                                    value={selectedDegree}
+                                    onValueChange={(val) => {
+                                        setSelectedDegree(val);
+                                        setAppliedSearchTerm(searchTerm);
+                                        setAppliedSearchBatch(searchBatch);
+                                        setAppliedSearchReason(searchReason);
+                                        setAppliedDegree(val);
+                                        setAppliedBatchRange(batchRange);
+                                        setAppliedCustomMinBatch(customMinBatch);
+                                        setAppliedCustomMaxBatch(customMaxBatch);
+                                        setCurrentPage(1);
+                                    }}
+                                >
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="All Degree Programs" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="All">All Degree Programs</SelectItem>
+                                        {degrees.map(d => (
+                                            <SelectItem key={d.id} value={d.id}>
+                                                {d.degreeAbbr} - {d.degreeName}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            <div className="lg:col-span-2">
                                 <Select value={batchRange} onValueChange={(val) => {
                                     setBatchRange(val);
                                     let min = '';
@@ -712,6 +740,7 @@ export function AdminUsers() {
                                         setAppliedSearchTerm(searchTerm);
                                         setAppliedSearchBatch(sBatch);
                                         setAppliedSearchReason(searchReason);
+                                        setAppliedDegree(selectedDegree);
                                         setAppliedBatchRange(val);
                                         setAppliedCustomMinBatch(min);
                                         setAppliedCustomMaxBatch(max);
@@ -732,7 +761,7 @@ export function AdminUsers() {
                                 </Select>
                             </div>
                             {batchRange === 'All Batches' ? (
-                                <div>
+                                <div className="lg:col-span-2">
                                     <Input
                                         placeholder="Batch year..."
                                         value={searchBatch}
@@ -743,7 +772,7 @@ export function AdminUsers() {
                             ) : (
                                 // The earliest possible batch for Engineering is 1966.
                                 // For simplicity sake, the range entered here will not be validated.
-                                <div className="flex gap-2 items-center">
+                                <div className="lg:col-span-2 flex gap-2 items-center">
                                     <Input
                                         placeholder="Min"
                                         type="number"
@@ -763,20 +792,9 @@ export function AdminUsers() {
                                     />
                                 </div>
                             )}
-                            <div className="col-span-2 flex justify-end gap-2">
+                            <div className="sm:col-span-2 lg:col-span-2 flex justify-end gap-2">
                                 <Button variant="outline" onClick={handleClearFilters}>Clear</Button>
-                                <Button className="bg-brand-primary hover:bg-brand-primary-hover" onClick={handleApplyFilters}>Submit</Button>
-                                <Button
-                                    className="ml-auto bg-brand-secondary hover:bg-brand-secondary-hover hover:text-white"
-                                    onMouseEnter={loadCreateUserModal}
-                                    onFocus={loadCreateUserModal}
-                                    onClick={() => {
-                                        loadCreateUserModal();
-                                        setIsCreateOpen(true);
-                                    }}
-                                >
-                                    <Plus className="mr-1 h-4 w-4" /> Create User
-                                </Button>
+                                <Button className="bg-brand-primary hover:bg-brand-primary-hover text-white" onClick={handleApplyFilters}>Submit</Button>
                             </div>
                         </div>
                     </div>

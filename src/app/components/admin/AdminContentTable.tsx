@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@comp
 import { Button } from '@components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@components/ui/tabs';
 import { Input } from '@components/ui/input';
-import { ArrowUp, ArrowDown, ArrowUpDown, Ban, ChevronLeft, ChevronRight, Search, Eye, FileText, HardHat, Lock, UserX } from 'lucide-react';
+import { ArrowUp, ArrowDown, ArrowUpDown, Ban, ChevronLeft, ChevronRight, Search, Eye, FileText, HardHat, Lock, Pencil, UserX } from 'lucide-react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@components/ui/dialog';
@@ -19,7 +19,7 @@ import {
 } from '@components/admin/ColumnVisibilityDropdown';
 import { startOfWeek, endOfWeek, startOfMonth, endOfMonth, startOfYear, endOfYear, format } from 'date-fns';
 
-type ContentColumnKey = 'title' | 'author' | 'date';
+type ContentColumnKey = 'title' | 'category' | 'author' | 'date' | 'status';
 
 import type { EventModalInitialData } from '@components/user/CreateEventModal';
 import type { BulletinModalInitialData } from '@components/user/CreateBulletinModal';
@@ -50,71 +50,12 @@ export interface ContentItem {
     adminNotes?: string | null;
 }
 
-interface ContentAction {
-    label: string;
-    targetStatus: string;
-    colorClass: string;
-}
-
-export function getContentActions(status: string, type: 'Event' | 'Bulletin'): ContentAction[] {
-    if (type === 'Event') {
-        switch (status) {
-            case 'Pending':
-                return [
-                    { label: 'Approve', targetStatus: 'Approved', colorClass: 'text-green-700 border-green-300 hover:bg-green-50' },
-                    { label: 'Reject', targetStatus: 'Rejected', colorClass: 'text-red-600 border-red-200 hover:bg-red-50' },
-                    { label: 'Archive', targetStatus: 'Archived', colorClass: 'text-gray-600 border-gray-200 hover:bg-gray-100' },
-                ];
-            case 'Approved':
-                return [
-                    { label: 'Reset', targetStatus: 'Pending', colorClass: 'text-blue-600 border-blue-200 hover:bg-blue-50' },
-                    { label: 'Conclude', targetStatus: 'Concluded', colorClass: 'text-indigo-600 border-indigo-200 hover:bg-indigo-50' },
-                    { label: 'Archive', targetStatus: 'Archived', colorClass: 'text-gray-600 border-gray-200 hover:bg-gray-100' },
-                ];
-            case 'Rejected':
-            case 'Cancelled':
-            case 'Concluded':
-                return [
-                    { label: 'Reset', targetStatus: 'Pending', colorClass: 'text-blue-600 border-blue-200 hover:bg-blue-50' },
-                    { label: 'Archive', targetStatus: 'Archived', colorClass: 'text-gray-600 border-gray-200 hover:bg-gray-100' },
-                ];
-            case 'Archived':
-            default:
-                return [
-                    { label: 'Reset', targetStatus: 'Pending', colorClass: 'text-blue-600 border-blue-200 hover:bg-blue-50' },
-                ];
-        }
-    } else {
-        // Bulletin
-        switch (status) {
-            case 'Pending':
-            case 'Flagged':
-                return [
-                    { label: 'Approve', targetStatus: 'Approved', colorClass: 'text-green-700 border-green-300 hover:bg-green-50' },
-                    { label: 'Reject', targetStatus: 'Rejected', colorClass: 'text-red-600 border-red-200 hover:bg-red-50' },
-                    { label: 'Archive', targetStatus: 'Archived', colorClass: 'text-gray-600 border-gray-200 hover:bg-gray-100' },
-                ];
-            case 'Approved':
-            case 'Rejected':
-                return [
-                    { label: 'Reset', targetStatus: 'Pending', colorClass: 'text-blue-600 border-blue-200 hover:bg-blue-50' },
-                    { label: 'Archive', targetStatus: 'Archived', colorClass: 'text-gray-600 border-gray-200 hover:bg-gray-100' },
-                ];
-            case 'Archived':
-            default:
-                return [
-                    { label: 'Reset', targetStatus: 'Pending', colorClass: 'text-blue-600 border-blue-200 hover:bg-blue-50' },
-                ];
-        }
-    }
-}
-
 interface ContentTableRowProps {
     item: ContentItem;
     visibleColumns: Record<ContentColumnKey, boolean>;
     getCategoryClass: (category: string) => string;
     getStatusClass: (status: string) => string;
-    openStatusModal: (item: ContentItem, targetStatus: string) => void;
+    openStatusModal: (item: ContentItem, targetStatus?: string) => void;
     setEditingItem: (item: ContentItem) => void;
     loadCreateEventModal: () => Promise<unknown>;
     loadCreateBulletinModal: () => Promise<unknown>;
@@ -130,8 +71,6 @@ const ContentTableRow = memo(({
     loadCreateEventModal,
     loadCreateBulletinModal
 }: ContentTableRowProps) => {
-    const actions = getContentActions(item.status, item.type);
-
     return (
         <tr className="border-t">
             {visibleColumns.title && (
@@ -144,20 +83,22 @@ const ContentTableRow = memo(({
                         >
                             {item.title}
                         </Link>
-                        <div className="flex items-center gap-2 shrink-0 ml-auto">
-                            <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold shrink-0 ${getCategoryClass(item.category)}`}>
-                                {item.category}
-                            </span>
-                            <Link
-                                to={`/admin/preview/${item.type === 'Bulletin' ? 'bulletin' : 'event'}/${item.id}`}
-                                className="text-gray-400 hover:text-brand-primary shrink-0"
-                                title="Preview as Approved"
-                            >
-                                <Eye className="w-4 h-4" />
-                            </Link>
-                        </div>
+                        <Link
+                            to={`/admin/preview/${item.type === 'Bulletin' ? 'bulletin' : 'event'}/${item.id}`}
+                            className="text-gray-400 hover:text-brand-primary shrink-0"
+                            title="Preview as Approved"
+                        >
+                            <Eye className="w-4 h-4" />
+                        </Link>
                     </div>
                     <div className="text-xs text-gray-500 truncate" title={item.description || ''}>{item.description}</div>
+                </td>
+            )}
+            {visibleColumns.category && (
+                <td className="px-6 py-4 whitespace-nowrap">
+                    <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold ${getCategoryClass(item.category)}`}>
+                        {item.category}
+                    </span>
                 </td>
             )}
             {visibleColumns.author && (
@@ -191,22 +132,22 @@ const ContentTableRow = memo(({
             {visibleColumns.date && (
                 <td className="px-6 py-4 whitespace-nowrap">{formatDate(item.date, 'long')}</td>
             )}
+            {visibleColumns.status && (
+                <td className="px-6 py-4 whitespace-nowrap">
+                    <button
+                        type="button"
+                        onClick={() => openStatusModal(item)}
+                        title="Click to change status"
+                        aria-label={`Change status for ${item.title} (currently ${item.status})`}
+                        className={`group inline-flex items-center justify-center gap-1.5 rounded-full border min-w-[6.25rem] px-2.5 py-1 text-xs font-semibold shadow-xs transition-all cursor-pointer hover:shadow hover:brightness-95 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary/50 focus-visible:ring-offset-1 ${getStatusClass(item.status)}`}
+                    >
+                        <span>{item.status}</span>
+                        <Pencil className="w-3 h-3 opacity-60 group-hover:opacity-100 transition-opacity shrink-0" />
+                    </button>
+                </td>
+            )}
             <td className="px-6 py-4 text-right">
                 <div className="flex items-center justify-end gap-1.5 whitespace-nowrap">
-                    <span className={`inline-flex items-center justify-center text-center rounded-full border w-[4.5rem] px-2 py-0.5 text-xs font-semibold mr-1 shrink-0 ${getStatusClass(item.status)}`}>
-                        {item.status}
-                    </span>
-
-                    {actions.map((act) => (
-                        <button
-                            key={act.label}
-                            className={`inline-flex items-center justify-center rounded-md text-xs font-medium transition-colors border h-8 px-2.5 shrink-0 ${act.colorClass}`}
-                            onClick={() => openStatusModal(item, act.targetStatus)}
-                        >
-                            {act.label}
-                        </button>
-                    ))}
-
                     <button
                         className="shrink-0 inline-flex items-center justify-center rounded-md text-xs font-medium transition-colors hover:bg-gray-200 h-8 px-2.5 border border-gray-200 text-gray-700"
                         onMouseEnter={() => {
@@ -277,9 +218,9 @@ export function AdminContentTable({
     const [statusModalTarget, setStatusModalTarget] = useState<string>('');
     const [statusModalNote, setStatusModalNote] = useState<string>('');
 
-    const openStatusModal = useCallback((item: ContentItem, targetStatus: string) => {
+    const openStatusModal = useCallback((item: ContentItem, targetStatus?: string) => {
         setStatusModalItem(item);
-        setStatusModalTarget(targetStatus);
+        setStatusModalTarget(targetStatus ?? item.status);
         setStatusModalNote(item.adminNotes || '');
     }, []);
 
@@ -332,8 +273,10 @@ export function AdminContentTable({
     // Column Visibility (all columns shown by default)
     const tableColumns = useMemo<readonly ColumnOption<ContentColumnKey>[]>(() => [
         { key: 'title', label: 'Title' },
+        { key: 'category', label: 'Category' },
         { key: 'author', label: 'Author' },
         { key: 'date', label: contentType === 'Event' ? 'Event Date' : 'Date Submitted' },
+        { key: 'status', label: 'Status' },
     ], [contentType]);
 
     const [visibleColumns, setVisibleColumns] = useState<Record<ContentColumnKey, boolean>>(() =>
@@ -346,7 +289,7 @@ export function AdminContentTable({
         if (currentlyVisible && visibleCount <= 1) return;
         const nextVisible = !currentlyVisible;
         setVisibleColumns((prev) => ({ ...prev, [key]: nextVisible }));
-        if (!nextVisible && sortConfig?.key === key) {
+        if (!nextVisible && (sortConfig?.key === key || (key === 'date' && sortConfig?.key === 'rawDate'))) {
             setSortConfig(null);
         }
     }, [visibleColumns, sortConfig]);
@@ -459,10 +402,11 @@ export function AdminContentTable({
     const handleExportCSV = () => {
         const csvColumns: Array<{ header: string; getValue: (c: ContentItem) => unknown }> = [];
         if (visibleColumns.title) csvColumns.push({ header: 'Title', getValue: (c) => c.title });
+        if (visibleColumns.category) csvColumns.push({ header: 'Category', getValue: (c) => c.category });
         if (visibleColumns.author) csvColumns.push({ header: 'Author', getValue: (c) => c.author });
         if (visibleColumns.date) csvColumns.push({ header: 'Date', getValue: (c) => formatDate(c.date, 'long') });
         csvColumns.push({ header: 'Type', getValue: (c) => c.type });
-        csvColumns.push({ header: 'Status', getValue: (c) => c.status });
+        if (visibleColumns.status) csvColumns.push({ header: 'Status', getValue: (c) => c.status });
 
         const headers = csvColumns.map((col) => col.header);
         const csvContent = data.map((c) =>
@@ -532,16 +476,16 @@ export function AdminContentTable({
 
     const getStatusClass = (category: string) => {
         switch (category) {
-            case "All": return 'bg-gray-100 text-gray-800';
-            case "For Review": return 'bg-amber-100 text-amber-800';
-            case "Pending": return 'bg-yellow-100 text-yellow-800';
-            case "Approved": return 'bg-green-100 text-green-800';
-            case "Rejected": return 'bg-red-100 text-red-800';
-            case "Cancelled": return 'bg-gray-100 text-gray-800';
-            case "Archived": return 'bg-slate-200 text-slate-800';
-            case "Concluded": return 'bg-blue-100 text-blue-800';
-            case "Flagged": return 'bg-orange-100 text-orange-800';
-            default: return 'bg-gray-100 text-gray-800';
+            case "All": return 'bg-gray-100 text-gray-800 border-gray-300';
+            case "For Review": return 'bg-amber-100 text-amber-800 border-amber-300';
+            case "Pending": return 'bg-yellow-100 text-yellow-800 border-yellow-300';
+            case "Approved": return 'bg-green-100 text-green-800 border-green-300';
+            case "Rejected": return 'bg-red-100 text-red-800 border-red-300';
+            case "Cancelled": return 'bg-gray-100 text-gray-800 border-gray-300';
+            case "Archived": return 'bg-slate-200 text-slate-800 border-slate-300';
+            case "Concluded": return 'bg-blue-100 text-blue-800 border-blue-300';
+            case "Flagged": return 'bg-orange-100 text-orange-800 border-orange-300';
+            default: return 'bg-gray-100 text-gray-800 border-gray-300';
         }
     }
 
@@ -614,6 +558,11 @@ export function AdminContentTable({
                                         <div className="flex items-center gap-1">Title {renderSortIcon('title')}</div>
                                     </th>
                                 )}
+                                {visibleColumns.category && (
+                                    <th className="px-6 py-3 whitespace-nowrap cursor-pointer hover:bg-gray-100 transition-colors" onClick={() => handleSort('category')}>
+                                        <div className="flex items-center gap-1">Category {renderSortIcon('category')}</div>
+                                    </th>
+                                )}
                                 {visibleColumns.author && (
                                     <th className="w-48 max-w-[200px] px-6 py-3 cursor-pointer hover:bg-gray-100 transition-colors" onClick={() => handleSort('author')}>
                                         <div className="flex items-center gap-1">Author {renderSortIcon('author')}</div>
@@ -624,6 +573,11 @@ export function AdminContentTable({
                                         <div className="flex items-center gap-1">
                                             {contentType === 'Event' ? 'Event Date' : 'Date Submitted'}{renderSortIcon('date')}
                                         </div>
+                                    </th>
+                                )}
+                                {visibleColumns.status && (
+                                    <th className="px-6 py-3 whitespace-nowrap cursor-pointer hover:bg-gray-100 transition-colors" onClick={() => handleSort('status')}>
+                                        <div className="flex items-center gap-1">Status {renderSortIcon('status')}</div>
                                     </th>
                                 )}
                                 <th className="px-6 py-3 text-right whitespace-nowrap">Actions</th>

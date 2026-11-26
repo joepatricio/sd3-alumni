@@ -336,6 +336,8 @@ export interface AdminUserRow {
     id: string;
     name: string;
     email: string;
+    degree: string;
+    degreeName: string;
     batch: string;
     status: string;
     reason?: string;

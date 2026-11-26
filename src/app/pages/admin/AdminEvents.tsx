@@ -49,6 +49,7 @@ export function AdminEvents() {
             if (sortKey === 'author') sortKey = 'author.profile.userName';
             else if (sortKey === 'date' || sortKey === 'rawDate') sortKey = 'eventDate';
             else if (sortKey === 'status') sortKey = 'status.statusName';
+            else if (sortKey === 'category') sortKey = 'category.eventCategoryName';
 
             sortStr = params.sort.direction === 'desc' ? `-${sortKey}` : sortKey;
         }
