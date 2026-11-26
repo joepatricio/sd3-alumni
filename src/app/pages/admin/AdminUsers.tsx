@@ -7,8 +7,9 @@ import { Input } from '@components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@components/ui/dialog';
 import { Label } from '@components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@components/ui/select';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@components/ui/dropdown-menu';
 import { Textarea } from '@components/ui/textarea';
-import { ArrowUp, ArrowDown, ArrowUpDown, ChevronLeft, ChevronRight, Search, Plus, FileText, Eye } from 'lucide-react';
+import { ArrowUp, ArrowDown, ArrowUpDown, ChevronLeft, ChevronRight, Search, Plus, FileText, Eye, Mail, MoreHorizontal } from 'lucide-react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { api, unwrapListResponse, type DegreeData, type UserStatusData, type ProfileData, type RecordData, type AdminUserRow } from '@/app/views/api';
 import { formatDate } from '@/app/views/formatters';
@@ -38,11 +39,16 @@ const getUserStatusClass = (status: string) => {
     }
 };
 
-const UserTableRow = memo(({ user, openEditModal }: { user: AdminUserRow, openEditModal: (user: AdminUserRow, status?: string) => void }) => {
+const UserTableRow = memo(({ user, showEmail, openEditModal }: { user: AdminUserRow, showEmail: boolean, openEditModal: (user: AdminUserRow, status?: string) => void }) => {
     const showRestoreUnbanActivate = ['Suspended', 'Banned', 'Deactivated'].includes(user.status);
     const showSuspend = user.status === 'Official' || user.status === 'Regular';
     const showBan = user.status === 'Official' || user.status === 'Regular' || user.status === 'Suspended';
     const showDeactivate = user.status !== 'Deactivated';
+    const hasQuickActions = showRestoreUnbanActivate || showSuspend || showBan || showDeactivate;
+
+    const degreeTooltip = user.degreeName !== 'N/A' && user.degree !== 'N/A' && user.degree !== user.degreeName
+        ? `${user.degreeName} (${user.degree})`
+        : user.degreeName;
 
     return (
         <tr className="border-t">
@@ -56,7 +62,21 @@ const UserTableRow = memo(({ user, openEditModal }: { user: AdminUserRow, openEd
                     </Link>
                 </div>
             </td>
-            <td className="px-6 py-4">{user.email}</td>
+            <td className={`px-6 py-4 ${showEmail ? 'max-w-[190px]' : 'max-w-[240px]'}`} title={degreeTooltip}>
+                <div className="flex items-center gap-2 min-w-0">
+                    <span className="truncate text-gray-900">{user.degreeName}</span>
+                    {user.degree !== 'N/A' && user.degree !== user.degreeName && (
+                        <span className="inline-flex items-center rounded-md bg-gray-100 px-1.5 py-0.5 text-xs font-medium text-gray-600 shrink-0">
+                            {user.degree}
+                        </span>
+                    )}
+                </div>
+            </td>
+            {showEmail && (
+                <td className="px-6 py-4 max-w-[200px] truncate" title={user.email}>
+                    {user.email}
+                </td>
+            )}
             <td className="px-6 py-4">{user.batch}</td>
             <td className="px-6 py-4 whitespace-nowrap">
                 {user.status === 'Suspended' ? (
@@ -71,37 +91,90 @@ const UserTableRow = memo(({ user, openEditModal }: { user: AdminUserRow, openEd
                         {user.status}
                     </span>
 
-                    {showRestoreUnbanActivate && (
-                        <button
-                            className="inline-flex items-center justify-center rounded-md text-xs font-medium transition-colors border h-8 px-2.5 shrink-0 text-blue-600 border-blue-200 hover:bg-blue-50"
-                            onClick={() => openEditModal(user, 'Regular')}
-                        >
-                            {user.status === 'Suspended' ? 'Restore' : user.status === 'Banned' ? 'Unban' : 'Activate'}
-                        </button>
-                    )}
-                    {showSuspend && (
-                        <button
-                            className="inline-flex items-center justify-center rounded-md text-xs font-medium transition-colors border h-8 px-2.5 shrink-0 text-orange-600 border-orange-200 hover:bg-orange-50"
-                            onClick={() => openEditModal(user, 'Suspended')}
-                        >
-                            Suspend
-                        </button>
-                    )}
-                    {showBan && (
-                        <button
-                            className="inline-flex items-center justify-center rounded-md text-xs font-medium transition-colors border h-8 px-2.5 shrink-0 text-red-600 border-red-200 hover:bg-red-50"
-                            onClick={() => openEditModal(user, 'Banned')}
-                        >
-                            Ban
-                        </button>
-                    )}
-                    {showDeactivate && (
-                        <button
-                            className="inline-flex items-center justify-center rounded-md text-xs font-medium transition-colors border h-8 px-2.5 shrink-0 text-gray-600 border-gray-200 hover:bg-gray-100"
-                            onClick={() => openEditModal(user, 'Deactivated')}
-                        >
-                            Deactivate
-                        </button>
+                    {showEmail ? (
+                        hasQuickActions && (
+                            <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                    <button
+                                        type="button"
+                                        className="inline-flex items-center justify-center rounded-md text-xs font-medium transition-colors border h-8 w-8 shrink-0 border-gray-200 text-gray-600 hover:bg-gray-100"
+                                        title="Quick Actions"
+                                        aria-label="Quick Actions"
+                                    >
+                                        <MoreHorizontal className="w-4 h-4" />
+                                    </button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end" className="bg-white text-gray-900">
+                                    {showRestoreUnbanActivate && (
+                                        <DropdownMenuItem
+                                            className="cursor-pointer text-blue-600 focus:text-blue-700 focus:bg-blue-50"
+                                            onClick={() => openEditModal(user, 'Regular')}
+                                        >
+                                            {user.status === 'Suspended' ? 'Restore' : user.status === 'Banned' ? 'Unban' : 'Activate'}
+                                        </DropdownMenuItem>
+                                    )}
+                                    {showSuspend && (
+                                        <DropdownMenuItem
+                                            className="cursor-pointer text-orange-600 focus:text-orange-700 focus:bg-orange-50"
+                                            onClick={() => openEditModal(user, 'Suspended')}
+                                        >
+                                            Suspend
+                                        </DropdownMenuItem>
+                                    )}
+                                    {showBan && (
+                                        <DropdownMenuItem
+                                            className="cursor-pointer text-red-600 focus:text-red-700 focus:bg-red-50"
+                                            onClick={() => openEditModal(user, 'Banned')}
+                                        >
+                                            Ban
+                                        </DropdownMenuItem>
+                                    )}
+                                    {showDeactivate && (
+                                        <DropdownMenuItem
+                                            className="cursor-pointer text-gray-700 focus:text-gray-900 focus:bg-gray-100"
+                                            onClick={() => openEditModal(user, 'Deactivated')}
+                                        >
+                                            Deactivate
+                                        </DropdownMenuItem>
+                                    )}
+                                </DropdownMenuContent>
+                            </DropdownMenu>
+                        )
+                    ) : (
+                        <>
+                            {showRestoreUnbanActivate && (
+                                <button
+                                    className="inline-flex items-center justify-center rounded-md text-xs font-medium transition-colors border h-8 px-2.5 shrink-0 text-blue-600 border-blue-200 hover:bg-blue-50"
+                                    onClick={() => openEditModal(user, 'Regular')}
+                                >
+                                    {user.status === 'Suspended' ? 'Restore' : user.status === 'Banned' ? 'Unban' : 'Activate'}
+                                </button>
+                            )}
+                            {showSuspend && (
+                                <button
+                                    className="inline-flex items-center justify-center rounded-md text-xs font-medium transition-colors border h-8 px-2.5 shrink-0 text-orange-600 border-orange-200 hover:bg-orange-50"
+                                    onClick={() => openEditModal(user, 'Suspended')}
+                                >
+                                    Suspend
+                                </button>
+                            )}
+                            {showBan && (
+                                <button
+                                    className="inline-flex items-center justify-center rounded-md text-xs font-medium transition-colors border h-8 px-2.5 shrink-0 text-red-600 border-red-200 hover:bg-red-50"
+                                    onClick={() => openEditModal(user, 'Banned')}
+                                >
+                                    Ban
+                                </button>
+                            )}
+                            {showDeactivate && (
+                                <button
+                                    className="inline-flex items-center justify-center rounded-md text-xs font-medium transition-colors border h-8 px-2.5 shrink-0 text-gray-600 border-gray-200 hover:bg-gray-100"
+                                    onClick={() => openEditModal(user, 'Deactivated')}
+                                >
+                                    Deactivate
+                                </button>
+                            )}
+                        </>
                     )}
 
                     <button
@@ -132,6 +205,7 @@ export function AdminUsers() {
     const [searchTerm, setSearchTerm] = useState('');
     const [searchBatch, setSearchBatch] = useState('');
     const [searchReason, setSearchReason] = useState('');
+    const [selectedDegree, setSelectedDegree] = useState<string>('All');
     const [batchRange, setBatchRange] = useState<string>('All Batches');
     const [customMinBatch, setCustomMinBatch] = useState<string>('');
     const [customMaxBatch, setCustomMaxBatch] = useState<string>('');
@@ -140,9 +214,13 @@ export function AdminUsers() {
     const [appliedSearchTerm, setAppliedSearchTerm] = useState('');
     const [appliedSearchBatch, setAppliedSearchBatch] = useState('');
     const [appliedSearchReason, setAppliedSearchReason] = useState('');
+    const [appliedDegree, setAppliedDegree] = useState<string>('All');
     const [appliedBatchRange, setAppliedBatchRange] = useState<string>('All Batches');
     const [appliedCustomMinBatch, setAppliedCustomMinBatch] = useState<string>('');
     const [appliedCustomMaxBatch, setAppliedCustomMaxBatch] = useState<string>('');
+
+    // Column visibility (Email hidden by default in favor of Degree Program; showing both collapses Quick Actions)
+    const [showEmail, setShowEmail] = useState(false);
 
     // Sorting
     const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>(null);
@@ -197,6 +275,7 @@ export function AdminUsers() {
         setAppliedSearchTerm(searchTerm);
         setAppliedSearchBatch(searchBatch);
         setAppliedSearchReason(searchReason);
+        setAppliedDegree(selectedDegree);
         setAppliedBatchRange(batchRange);
         setAppliedCustomMinBatch(customMinBatch);
         setAppliedCustomMaxBatch(customMaxBatch);
@@ -207,62 +286,83 @@ export function AdminUsers() {
         setSearchTerm('');
         setSearchBatch('');
         setSearchReason('');
+        setSelectedDegree('All');
         setBatchRange('All Batches');
         setCustomMinBatch('');
         setCustomMaxBatch('');
         setAppliedSearchTerm('');
         setAppliedSearchBatch('');
         setAppliedSearchReason('');
+        setAppliedDegree('All');
         setAppliedBatchRange('All Batches');
         setAppliedCustomMinBatch('');
         setAppliedCustomMaxBatch('');
         setCurrentPage(1);
     };
 
+    const buildQueryFiltersAndSort = () => {
+        const whereClause: Record<string, unknown> = {};
+        if (activeTab !== 'All') {
+            whereClause.userStatus = { statusName: activeTab };
+        }
+
+        const profileFilter: Record<string, unknown> = {};
+        if (appliedSearchTerm) {
+            profileFilter.userName = { contains: appliedSearchTerm };
+        }
+        if (appliedDegree && appliedDegree !== 'All') {
+            profileFilter.degreeId = appliedDegree;
+        }
+
+        const currentYear = new Date().getFullYear();
+        let batchFilter: Record<string, unknown> | number | undefined = undefined;
+        if (appliedBatchRange === 'Past 3') { batchFilter = { gte: currentYear - 3 }; }
+        else if (appliedBatchRange === 'Past 5') { batchFilter = { gte: currentYear - 5 }; }
+        else if (appliedBatchRange === 'Past 10') { batchFilter = { gte: currentYear - 10 }; }
+        else if (appliedBatchRange === 'Past 30') { batchFilter = { gte: currentYear - 30 }; }
+        else if (appliedBatchRange === 'Custom' || appliedBatchRange === 'Custom Range') {
+            const min = appliedCustomMinBatch ? parseInt(appliedCustomMinBatch, 10) : undefined;
+            const max = appliedCustomMaxBatch ? parseInt(appliedCustomMaxBatch, 10) : undefined;
+            if (min !== undefined && max !== undefined) { batchFilter = { gte: min, lte: max }; }
+            else if (min !== undefined) { batchFilter = { gte: min }; }
+            else if (max !== undefined) { batchFilter = { lte: max }; }
+        } else if (appliedSearchBatch) {
+            const parsedBatch = parseInt(appliedSearchBatch, 10);
+            if (!isNaN(parsedBatch)) {
+                batchFilter = parsedBatch;
+            }
+        }
+
+        if (batchFilter !== undefined) {
+            profileFilter.batch = batchFilter;
+        }
+
+        if (Object.keys(profileFilter).length > 0) {
+            whereClause.profile = profileFilter;
+        }
+
+        if (appliedSearchReason) {
+            whereClause.records = { some: { description: { contains: appliedSearchReason } } };
+        }
+
+        let sortStr = undefined;
+        if (sortConfig) {
+            let sortKey: string = sortConfig.key;
+            if (sortKey === 'name') sortKey = 'profile.userName';
+            else if (sortKey === 'degree') sortKey = 'profile.degree.degreeName';
+            else if (sortKey === 'email') sortKey = 'profile.email';
+            else if (sortKey === 'batch') sortKey = 'profile.batch';
+            else if (sortKey === 'status') sortKey = 'userStatus.statusName';
+
+            sortStr = sortConfig.direction === 'desc' ? `-${sortKey}` : sortKey;
+        }
+
+        return { whereClause, sortStr };
+    };
+
     const handleExportCSV = async () => {
         try {
-            const whereClause: Record<string, unknown> = {};
-            if (activeTab !== 'All') {
-                whereClause.userStatus = { statusName: activeTab };
-            }
-            if (appliedSearchTerm) {
-                whereClause.profile = { ...(whereClause.profile || {}), userName: { contains: appliedSearchTerm } };
-            }
-
-            const currentYear = new Date().getFullYear();
-            let batchFilter: Record<string, unknown> | number | undefined = undefined;
-            if (appliedBatchRange === 'Past 3') { batchFilter = { gte: currentYear - 3 }; }
-            else if (appliedBatchRange === 'Past 5') { batchFilter = { gte: currentYear - 5 }; }
-            else if (appliedBatchRange === 'Past 10') { batchFilter = { gte: currentYear - 10 }; }
-            else if (appliedBatchRange === 'Past 30') { batchFilter = { gte: currentYear - 30 }; }
-            else if (appliedBatchRange === 'Custom') {
-                const min = appliedCustomMinBatch ? parseInt(appliedCustomMinBatch, 10) : undefined;
-                const max = appliedCustomMaxBatch ? parseInt(appliedCustomMaxBatch, 10) : undefined;
-                if (min !== undefined && max !== undefined) { batchFilter = { gte: min, lte: max }; }
-                else if (min !== undefined) { batchFilter = { gte: min }; }
-                else if (max !== undefined) { batchFilter = { lte: max }; }
-            } else if (appliedSearchBatch) {
-                batchFilter = parseInt(appliedSearchBatch, 10);
-            }
-
-            if (batchFilter !== undefined) {
-                whereClause.profile = { ...(whereClause.profile || {}), batch: batchFilter };
-            }
-
-            if (appliedSearchReason) {
-                whereClause.records = { some: { description: { contains: appliedSearchReason } } };
-            }
-
-            let sortStr = undefined;
-            if (sortConfig) {
-                let sortKey: string = sortConfig.key;
-                if (sortKey === 'name') sortKey = 'profile.userName';
-                else if (sortKey === 'email') sortKey = 'profile.email';
-                else if (sortKey === 'batch') sortKey = 'profile.batch';
-                else if (sortKey === 'status') sortKey = 'userStatus.statusName';
-
-                sortStr = sortConfig.direction === 'desc' ? `-${sortKey}` : sortKey;
-            }
+            const { whereClause, sortStr } = buildQueryFiltersAndSort();
 
             const res = await api.get('/users', {
                 params: {
@@ -290,8 +390,13 @@ export function AdminUsers() {
                     }
                 }
 
+                const degreeDisplay = u.profile?.degree
+                    ? `${u.profile.degree.degreeName} (${u.profile.degree.degreeAbbr})`
+                    : 'N/A';
+
                 return {
                     name: u.profile?.userName || 'Unknown',
+                    degree: degreeDisplay,
                     email: u.profile?.email || 'Unknown',
                     batch: u.profile?.batch || 'Unknown',
                     status: u.userStatus?.statusName || 'Unknown',
@@ -301,9 +406,10 @@ export function AdminUsers() {
                 };
             });
 
-            const headers = ['Name', 'Email', 'Batch', 'Status', 'Granted Date', 'Expiry Date', 'Reason'];
-            const csvContent = mapped.map((u: Record<string, unknown>) =>
-                `"${u.name}","${u.email}","${u.batch}","${u.status}","${u.grantedDate || ''}","${u.expiryDate || ''}","${u.reason || ''}"`
+            const escapeCsv = (val: unknown) => `"${String(val ?? '').replace(/"/g, '""')}"`;
+            const headers = ['Name', 'Degree Program', 'Email', 'Batch', 'Status', 'Granted Date', 'Expiry Date', 'Reason'];
+            const csvContent = mapped.map((u) =>
+                [u.name, u.degree, u.email, u.batch, u.status, u.grantedDate || '', u.expiryDate || '', u.reason || ''].map(escapeCsv).join(',')
             );
 
             const csvString = [headers.join(','), ...csvContent].join('\n');
@@ -361,57 +467,7 @@ export function AdminUsers() {
 
     const fetchUsersList = async () => {
         try {
-            const whereClause: Record<string, unknown> = {};
-            if (activeTab !== 'All') {
-                whereClause.userStatus = { statusName: activeTab };
-            }
-            if (appliedSearchTerm) {
-                whereClause.profile = { ...(whereClause.profile || {}), userName: { contains: appliedSearchTerm } };
-            }
-
-            const currentYear = new Date().getFullYear();
-            let batchFilter: Record<string, unknown> | number | undefined = undefined;
-
-            if (appliedBatchRange === 'Past 3') {
-                batchFilter = { gte: currentYear - 3 };
-            } else if (appliedBatchRange === 'Past 5') {
-                batchFilter = { gte: currentYear - 5 };
-            } else if (appliedBatchRange === 'Past 10') {
-                batchFilter = { gte: currentYear - 10 };
-            } else if (appliedBatchRange === 'Past 30') {
-                batchFilter = { gte: currentYear - 30 };
-            } else if (appliedBatchRange === 'Custom') {
-                const min = appliedCustomMinBatch ? parseInt(appliedCustomMinBatch, 10) : undefined;
-                const max = appliedCustomMaxBatch ? parseInt(appliedCustomMaxBatch, 10) : undefined;
-                if (min !== undefined && max !== undefined) {
-                    batchFilter = { gte: min, lte: max };
-                } else if (min !== undefined) {
-                    batchFilter = { gte: min };
-                } else if (max !== undefined) {
-                    batchFilter = { lte: max };
-                }
-            } else if (appliedSearchBatch) {
-                batchFilter = parseInt(appliedSearchBatch, 10);
-            }
-
-            if (batchFilter !== undefined) {
-                whereClause.profile = { ...(whereClause.profile || {}), batch: batchFilter };
-            }
-
-            if (appliedSearchReason) {
-                whereClause.records = { some: { description: { contains: appliedSearchReason } } };
-            }
-
-            let sortStr = undefined;
-            if (sortConfig) {
-                let sortKey: string = sortConfig.key;
-                if (sortKey === 'name') sortKey = 'profile.userName';
-                else if (sortKey === 'email') sortKey = 'profile.email';
-                else if (sortKey === 'batch') sortKey = 'profile.batch';
-                else if (sortKey === 'status') sortKey = 'userStatus.statusName';
-
-                sortStr = sortConfig.direction === 'desc' ? `-${sortKey}` : sortKey;
-            }
+            const { whereClause, sortStr } = buildQueryFiltersAndSort();
 
             const res = await api.get('/users', {
                 params: {
@@ -452,6 +508,8 @@ export function AdminUsers() {
                     id: u.id,
                     name: u.profile?.userName || 'Unknown',
                     email: u.profile?.email || 'N/A',
+                    degree: u.profile?.degree?.degreeAbbr || u.profile?.degree?.degreeName || 'N/A',
+                    degreeName: u.profile?.degree?.degreeName || u.profile?.degree?.degreeAbbr || 'N/A',
                     batch: u.profile?.batch?.toString() || 'N/A',
                     status: u.userStatus?.statusName || 'Unknown',
                     reason: currentRecord?.description || undefined,
@@ -471,7 +529,7 @@ export function AdminUsers() {
 
     useEffect(() => {
         fetchUsersList();
-    }, [activeTab, appliedSearchTerm, appliedSearchBatch, appliedSearchReason, appliedBatchRange, appliedCustomMinBatch, appliedCustomMaxBatch, sortConfig, currentPage, itemsPerPage]);
+    }, [activeTab, appliedSearchTerm, appliedSearchBatch, appliedSearchReason, appliedDegree, appliedBatchRange, appliedCustomMinBatch, appliedCustomMaxBatch, sortConfig, currentPage, itemsPerPage]);
 
     const totalPages = Math.ceil(totalUsers / itemsPerPage);
     const paginatedUsers = users;
@@ -556,9 +614,14 @@ export function AdminUsers() {
                                     <th className="px-6 py-3 cursor-pointer hover:bg-gray-100 transition-colors" onClick={() => handleSort('name')}>
                                         <div className="flex items-center gap-1">Name {renderSortIcon('name')}</div>
                                     </th>
-                                    <th className="px-6 py-3 cursor-pointer hover:bg-gray-100 transition-colors" onClick={() => handleSort('email')}>
-                                        <div className="flex items-center gap-1">Email {renderSortIcon('email')}</div>
+                                    <th className="px-6 py-3 whitespace-nowrap cursor-pointer hover:bg-gray-100 transition-colors" onClick={() => handleSort('degree')}>
+                                        <div className="flex items-center gap-1">Degree Program {renderSortIcon('degree')}</div>
                                     </th>
+                                    {showEmail && (
+                                        <th className="px-6 py-3 cursor-pointer hover:bg-gray-100 transition-colors" onClick={() => handleSort('email')}>
+                                            <div className="flex items-center gap-1">Email {renderSortIcon('email')}</div>
+                                        </th>
+                                    )}
                                     <th className="px-6 py-3 cursor-pointer hover:bg-gray-100 transition-colors" onClick={() => handleSort('batch')}>
                                         <div className="flex items-center gap-1">Batch {renderSortIcon('batch')}</div>
                                     </th>
@@ -570,7 +633,7 @@ export function AdminUsers() {
                             </thead>
                             <tbody>
                                 {paginatedUsers.map((user) => (
-                                    <UserTableRow key={user.id} user={user} openEditModal={openEditModal} />
+                                    <UserTableRow key={user.id} user={user} showEmail={showEmail} openEditModal={openEditModal} />
                                 ))}
                             </tbody>
                         </table>
@@ -597,9 +660,23 @@ export function AdminUsers() {
                         </TabsList>
                     </div>
                     <div className="p-4 bg-white border rounded-md shadow-sm mb-6 flex flex-col gap-4">
-                        <div className="text-sm font-medium text-gray-700">Filters</div>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-6 gap-4 items-center">
-                            <div className="col-span-2 relative">
+                        <div className="flex items-center justify-between gap-4">
+                            <div className="text-sm font-medium text-gray-700">Filters</div>
+                            <Button
+                                size="sm"
+                                className="bg-brand-secondary hover:bg-brand-secondary-hover text-white hover:text-white"
+                                onMouseEnter={loadCreateUserModal}
+                                onFocus={loadCreateUserModal}
+                                onClick={() => {
+                                    loadCreateUserModal();
+                                    setIsCreateOpen(true);
+                                }}
+                            >
+                                <Plus className="mr-1 h-4 w-4" /> Create User
+                            </Button>
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3 items-center">
+                            <div className="sm:col-span-2 lg:col-span-3 relative">
                                 <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
                                 <Input
                                     placeholder="Search user by name..."
@@ -609,7 +686,35 @@ export function AdminUsers() {
                                     onKeyDown={(e) => { if (e.key === 'Enter') handleApplyFilters(); }}
                                 />
                             </div>
-                            <div>
+                            <div className="lg:col-span-3">
+                                <Select
+                                    value={selectedDegree}
+                                    onValueChange={(val) => {
+                                        setSelectedDegree(val);
+                                        setAppliedSearchTerm(searchTerm);
+                                        setAppliedSearchBatch(searchBatch);
+                                        setAppliedSearchReason(searchReason);
+                                        setAppliedDegree(val);
+                                        setAppliedBatchRange(batchRange);
+                                        setAppliedCustomMinBatch(customMinBatch);
+                                        setAppliedCustomMaxBatch(customMaxBatch);
+                                        setCurrentPage(1);
+                                    }}
+                                >
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="All Degree Programs" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="All">All Degree Programs</SelectItem>
+                                        {degrees.map(d => (
+                                            <SelectItem key={d.id} value={d.id}>
+                                                {d.degreeAbbr} - {d.degreeName}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            <div className="lg:col-span-2">
                                 <Select value={batchRange} onValueChange={(val) => {
                                     setBatchRange(val);
                                     let min = '';
@@ -641,6 +746,7 @@ export function AdminUsers() {
                                         setAppliedSearchTerm(searchTerm);
                                         setAppliedSearchBatch(sBatch);
                                         setAppliedSearchReason(searchReason);
+                                        setAppliedDegree(selectedDegree);
                                         setAppliedBatchRange(val);
                                         setAppliedCustomMinBatch(min);
                                         setAppliedCustomMaxBatch(max);
@@ -661,7 +767,7 @@ export function AdminUsers() {
                                 </Select>
                             </div>
                             {batchRange === 'All Batches' ? (
-                                <div>
+                                <div className="lg:col-span-2">
                                     <Input
                                         placeholder="Batch year..."
                                         value={searchBatch}
@@ -672,7 +778,7 @@ export function AdminUsers() {
                             ) : (
                                 // The earliest possible batch for Engineering is 1966.
                                 // For simplicity sake, the range entered here will not be validated.
-                                <div className="flex gap-2 items-center">
+                                <div className="lg:col-span-2 flex gap-2 items-center">
                                     <Input
                                         placeholder="Min"
                                         type="number"
@@ -692,20 +798,9 @@ export function AdminUsers() {
                                     />
                                 </div>
                             )}
-                            <div className="col-span-2 flex justify-end gap-2">
+                            <div className="sm:col-span-2 lg:col-span-2 flex justify-end gap-2">
                                 <Button variant="outline" onClick={handleClearFilters}>Clear</Button>
-                                <Button className="bg-brand-primary hover:bg-brand-primary-hover" onClick={handleApplyFilters}>Submit</Button>
-                                <Button
-                                    className="ml-auto bg-brand-secondary hover:bg-brand-secondary-hover hover:text-white"
-                                    onMouseEnter={loadCreateUserModal}
-                                    onFocus={loadCreateUserModal}
-                                    onClick={() => {
-                                        loadCreateUserModal();
-                                        setIsCreateOpen(true);
-                                    }}
-                                >
-                                    <Plus className="mr-1 h-4 w-4" /> Create User
-                                </Button>
+                                <Button className="bg-brand-primary hover:bg-brand-primary-hover text-white" onClick={handleApplyFilters}>Submit</Button>
                             </div>
                         </div>
                     </div>
@@ -713,14 +808,29 @@ export function AdminUsers() {
                     {statuses.map(status => (
                         <TabsContent key={status} value={status}>
                             <Card className="border-none shadow-md">
-                                <CardHeader className="flex flex-row items-center justify-between">
+                                <CardHeader className="flex flex-row items-center justify-between gap-4">
                                     <div>
                                         <CardTitle>{status === 'All' ? 'All Users' : `${status} Users`}</CardTitle>
                                         <CardDescription>
                                             {status === 'All' ? 'Manage all accounts across the platform' : `Manage ${status.toLowerCase()} accounts`}
                                         </CardDescription>
                                     </div>
-                                    <Button variant="outline" onClick={handleExportCSV}>Export CSV</Button>
+                                    <div className="flex items-center gap-2 shrink-0">
+                                        <Button
+                                            variant="outline"
+                                            onClick={() => {
+                                                const next = !showEmail;
+                                                setShowEmail(next);
+                                                if (!next && sortConfig?.key === 'email') {
+                                                    setSortConfig(null);
+                                                }
+                                            }}
+                                        >
+                                            <Mail className="mr-1.5 h-4 w-4" />
+                                            {showEmail ? 'Hide Email' : 'Show Email'}
+                                        </Button>
+                                        <Button variant="outline" onClick={handleExportCSV}>Export CSV</Button>
+                                    </div>
                                 </CardHeader>
                                 <CardContent>
                                     {renderTable()}
