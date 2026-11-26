@@ -13,7 +13,22 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { api, unwrapListResponse, type DegreeData, type UserStatusData, type ProfileData, type RecordData, type AdminUserRow } from '@/app/views/api';
 import { formatDate } from '@/app/views/formatters';
 import { Badge } from '@/app/components/ui/badge';
+import {
+    ColumnVisibilityDropdown,
+    createDefaultColumnVisibility,
+    escapeCsvCell,
+    type ColumnOption,
+} from '@components/admin/ColumnVisibilityDropdown';
 import { toast } from 'sonner';
+
+const USER_TABLE_COLUMNS = [
+    { key: 'name', label: 'Name' },
+    { key: 'email', label: 'Email' },
+    { key: 'batch', label: 'Batch' },
+    { key: 'grantedDate', label: 'Granted/Expiry Date' },
+] as const satisfies readonly ColumnOption[];
+
+type UserColumnKey = (typeof USER_TABLE_COLUMNS)[number]['key'];
 
 const loadCreateUserModal = () => import('@components/admin/CreateUserModal').then(m => ({ default: m.CreateUserModal }));
 const CreateUserModal = lazy(loadCreateUserModal);
@@ -38,7 +53,15 @@ const getUserStatusClass = (status: string) => {
     }
 };
 
-const UserTableRow = memo(({ user, openEditModal }: { user: AdminUserRow, openEditModal: (user: AdminUserRow, status?: string) => void }) => {
+const UserTableRow = memo(({
+    user,
+    visibleColumns,
+    openEditModal,
+}: {
+    user: AdminUserRow;
+    visibleColumns: Record<UserColumnKey, boolean>;
+    openEditModal: (user: AdminUserRow, status?: string) => void;
+}) => {
     const showRestoreUnbanActivate = ['Suspended', 'Banned', 'Deactivated'].includes(user.status);
     const showSuspend = user.status === 'Official' || user.status === 'Regular';
     const showBan = user.status === 'Official' || user.status === 'Regular' || user.status === 'Suspended';
@@ -46,27 +69,31 @@ const UserTableRow = memo(({ user, openEditModal }: { user: AdminUserRow, openEd
 
     return (
         <tr className="border-t">
-            <td className="px-6 py-4 font-medium max-w-xs">
-                <div className="flex items-center gap-2 min-w-0">
-                    <Link to={`/profile/${user.id}`} className="text-gray-900 hover:text-brand-primary truncate" title={user.name}>
-                        <span className="truncate">{user.name}</span>
-                    </Link>
-                    <Link to={`/admin/preview/user/${user.id}`} className="text-gray-400 hover:text-brand-primary shrink-0" title="Preview Profile">
-                        <Eye className="w-4 h-4" />
-                    </Link>
-                </div>
-            </td>
-            <td className="px-6 py-4">{user.email}</td>
-            <td className="px-6 py-4">{user.batch}</td>
-            <td className="px-6 py-4 whitespace-nowrap">
-                {user.status === 'Suspended' ? (
-                    <div className="text-orange-700">Expires: {user.expiryDate || 'N/A'}</div>
-                ) : (
-                    user.grantedDate ? formatDate(user.grantedDate, "long") : 'N/A'
-                )}
-            </td>
-            <td className="px-6 py-4">
-                <div className="flex items-center gap-1.5 whitespace-nowrap">
+            {visibleColumns.name && (
+                <td className="px-6 py-4 font-medium max-w-xs">
+                    <div className="flex items-center gap-2 min-w-0">
+                        <Link to={`/profile/${user.id}`} className="text-gray-900 hover:text-brand-primary truncate" title={user.name}>
+                            <span className="truncate">{user.name}</span>
+                        </Link>
+                        <Link to={`/admin/preview/user/${user.id}`} className="text-gray-400 hover:text-brand-primary shrink-0" title="Preview Profile">
+                            <Eye className="w-4 h-4" />
+                        </Link>
+                    </div>
+                </td>
+            )}
+            {visibleColumns.email && <td className="px-6 py-4">{user.email}</td>}
+            {visibleColumns.batch && <td className="px-6 py-4">{user.batch}</td>}
+            {visibleColumns.grantedDate && (
+                <td className="px-6 py-4 whitespace-nowrap">
+                    {user.status === 'Suspended' ? (
+                        <div className="text-orange-700">Expires: {user.expiryDate || 'N/A'}</div>
+                    ) : (
+                        user.grantedDate ? formatDate(user.grantedDate, "long") : 'N/A'
+                    )}
+                </td>
+            )}
+            <td className="px-6 py-4 text-right">
+                <div className="flex items-center justify-end gap-1.5 whitespace-nowrap">
                     <span className={`inline-flex items-center justify-center text-center rounded-full border w-[5.5rem] px-2 py-0.5 text-xs font-semibold mr-1 shrink-0 ${getUserStatusClass(user.status)}`}>
                         {user.status}
                     </span>
@@ -105,7 +132,7 @@ const UserTableRow = memo(({ user, openEditModal }: { user: AdminUserRow, openEd
                     )}
 
                     <button
-                        className="ml-auto shrink-0 inline-flex items-center justify-center rounded-md text-xs font-medium transition-colors hover:bg-gray-200 h-8 px-2.5 border border-gray-200 text-gray-700"
+                        className="shrink-0 inline-flex items-center justify-center rounded-md text-xs font-medium transition-colors hover:bg-gray-200 h-8 px-2.5 border border-gray-200 text-gray-700"
                         onClick={() => openEditModal(user)}
                     >
                         <FileText className="w-3.5 h-3.5 mr-1" />
@@ -146,6 +173,26 @@ export function AdminUsers() {
 
     // Sorting
     const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>(null);
+
+    // Column Visibility (all columns shown by default)
+    const [visibleColumns, setVisibleColumns] = useState<Record<UserColumnKey, boolean>>(() =>
+        createDefaultColumnVisibility(USER_TABLE_COLUMNS)
+    );
+
+    const handleToggleColumn = useCallback((key: UserColumnKey) => {
+        const currentlyVisible = visibleColumns[key];
+        const visibleCount = Object.values(visibleColumns).filter(Boolean).length;
+        if (currentlyVisible && visibleCount <= 1) return;
+        const nextVisible = !currentlyVisible;
+        setVisibleColumns((prev) => ({ ...prev, [key]: nextVisible }));
+        if (!nextVisible && sortConfig?.key === key) {
+            setSortConfig(null);
+        }
+    }, [visibleColumns, sortConfig]);
+
+    const handleShowAllColumns = useCallback(() => {
+        setVisibleColumns(createDefaultColumnVisibility(USER_TABLE_COLUMNS));
+    }, []);
 
     // Pagination
     const [currentPage, setCurrentPage] = useState(1);
@@ -301,9 +348,20 @@ export function AdminUsers() {
                 };
             });
 
-            const headers = ['Name', 'Email', 'Batch', 'Status', 'Granted Date', 'Expiry Date', 'Reason'];
-            const csvContent = mapped.map((u: Record<string, unknown>) =>
-                `"${u.name}","${u.email}","${u.batch}","${u.status}","${u.grantedDate || ''}","${u.expiryDate || ''}","${u.reason || ''}"`
+            const csvColumns: Array<{ header: string; getValue: (u: (typeof mapped)[number]) => unknown }> = [];
+            if (visibleColumns.name) csvColumns.push({ header: 'Name', getValue: (u) => u.name });
+            if (visibleColumns.email) csvColumns.push({ header: 'Email', getValue: (u) => u.email });
+            if (visibleColumns.batch) csvColumns.push({ header: 'Batch', getValue: (u) => u.batch });
+            csvColumns.push({ header: 'Status', getValue: (u) => u.status });
+            if (visibleColumns.grantedDate) {
+                csvColumns.push({ header: 'Granted Date', getValue: (u) => u.grantedDate || '' });
+                csvColumns.push({ header: 'Expiry Date', getValue: (u) => u.expiryDate || '' });
+            }
+            csvColumns.push({ header: 'Reason', getValue: (u) => u.reason || '' });
+
+            const headers = csvColumns.map((col) => col.header);
+            const csvContent = mapped.map((u) =>
+                csvColumns.map((col) => escapeCsvCell(col.getValue(u))).join(',')
             );
 
             const csvString = [headers.join(','), ...csvContent].join('\n');
@@ -553,24 +611,37 @@ export function AdminUsers() {
                         <table className="w-full text-sm text-left">
                             <thead className="bg-gray-50 text-gray-700">
                                 <tr>
-                                    <th className="px-6 py-3 cursor-pointer hover:bg-gray-100 transition-colors" onClick={() => handleSort('name')}>
-                                        <div className="flex items-center gap-1">Name {renderSortIcon('name')}</div>
-                                    </th>
-                                    <th className="px-6 py-3 cursor-pointer hover:bg-gray-100 transition-colors" onClick={() => handleSort('email')}>
-                                        <div className="flex items-center gap-1">Email {renderSortIcon('email')}</div>
-                                    </th>
-                                    <th className="px-6 py-3 cursor-pointer hover:bg-gray-100 transition-colors" onClick={() => handleSort('batch')}>
-                                        <div className="flex items-center gap-1">Batch {renderSortIcon('batch')}</div>
-                                    </th>
-                                    <th className="px-6 py-3 whitespace-nowrap cursor-pointer hover:bg-gray-100 transition-colors" onClick={() => handleSort('grantedDate')}>
-                                        <div className="flex items-center gap-1">Granted/Expiry Date {renderSortIcon('grantedDate')}</div>
-                                    </th>
-                                    <th className="px-6 py-3">Actions</th>
+                                    {visibleColumns.name && (
+                                        <th className="px-6 py-3 cursor-pointer hover:bg-gray-100 transition-colors" onClick={() => handleSort('name')}>
+                                            <div className="flex items-center gap-1">Name {renderSortIcon('name')}</div>
+                                        </th>
+                                    )}
+                                    {visibleColumns.email && (
+                                        <th className="px-6 py-3 cursor-pointer hover:bg-gray-100 transition-colors" onClick={() => handleSort('email')}>
+                                            <div className="flex items-center gap-1">Email {renderSortIcon('email')}</div>
+                                        </th>
+                                    )}
+                                    {visibleColumns.batch && (
+                                        <th className="px-6 py-3 cursor-pointer hover:bg-gray-100 transition-colors" onClick={() => handleSort('batch')}>
+                                            <div className="flex items-center gap-1">Batch {renderSortIcon('batch')}</div>
+                                        </th>
+                                    )}
+                                    {visibleColumns.grantedDate && (
+                                        <th className="px-6 py-3 whitespace-nowrap cursor-pointer hover:bg-gray-100 transition-colors" onClick={() => handleSort('grantedDate')}>
+                                            <div className="flex items-center gap-1">Granted/Expiry Date {renderSortIcon('grantedDate')}</div>
+                                        </th>
+                                    )}
+                                    <th className="px-6 py-3 text-right whitespace-nowrap">Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {paginatedUsers.map((user) => (
-                                    <UserTableRow key={user.id} user={user} openEditModal={openEditModal} />
+                                    <UserTableRow
+                                        key={user.id}
+                                        user={user}
+                                        visibleColumns={visibleColumns}
+                                        openEditModal={openEditModal}
+                                    />
                                 ))}
                             </tbody>
                         </table>
@@ -713,14 +784,22 @@ export function AdminUsers() {
                     {statuses.map(status => (
                         <TabsContent key={status} value={status}>
                             <Card className="border-none shadow-md">
-                                <CardHeader className="flex flex-row items-center justify-between">
+                                <CardHeader className="flex flex-row items-center justify-between gap-4">
                                     <div>
                                         <CardTitle>{status === 'All' ? 'All Users' : `${status} Users`}</CardTitle>
                                         <CardDescription>
                                             {status === 'All' ? 'Manage all accounts across the platform' : `Manage ${status.toLowerCase()} accounts`}
                                         </CardDescription>
                                     </div>
-                                    <Button variant="outline" onClick={handleExportCSV}>Export CSV</Button>
+                                    <div className="flex items-center gap-2 shrink-0">
+                                        <ColumnVisibilityDropdown
+                                            columns={USER_TABLE_COLUMNS}
+                                            visibleColumns={visibleColumns}
+                                            onToggleColumn={handleToggleColumn}
+                                            onShowAll={handleShowAllColumns}
+                                        />
+                                        <Button variant="outline" onClick={handleExportCSV} className="border border-gray-300">Export CSV</Button>
+                                    </div>
                                 </CardHeader>
                                 <CardContent>
                                     {renderTable()}

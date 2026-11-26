@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, memo } from 'react';
+import { useState, useEffect, useRef, useCallback, memo } from 'react';
 import { startOfWeek, endOfWeek, startOfMonth, endOfMonth, startOfYear, endOfYear, format } from 'date-fns';
 
 import { Button } from '@components/ui/button';
@@ -6,6 +6,12 @@ import { Badge } from '@components/ui/badge';
 import { Tabs, TabsList, TabsTrigger } from '@components/ui/tabs';
 import { Input } from '@components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@components/ui/select';
+import {
+    ColumnVisibilityDropdown,
+    createDefaultColumnVisibility,
+    escapeCsvCell,
+    type ColumnOption,
+} from '@components/admin/ColumnVisibilityDropdown';
 import { formatCurrency, getBankColor, formatDate } from '@/app/views/formatters';
 import { Printer, Download, Search, ArrowUp, ArrowDown, ArrowUpDown, ChevronLeft, ChevronRight, Loader2, Info, Mail, MapPin, GraduationCap, Briefcase } from 'lucide-react';
 import { api, unwrapListResponse, type Donation, type DonationData, type DonorLeaderboardEntry } from '@/app/views/api';
@@ -21,23 +27,52 @@ const STATUS_COLORS: Record<string, string> = {
     Other: '#9ca3af' // Gray
 };
 
-const DonationTableRow = memo(({ donation }: { donation: Donation }) => (
+const DONATION_TABLE_COLUMNS = [
+    { key: 'date', label: 'Date' },
+    { key: 'donor', label: 'Donor' },
+    { key: 'amount', label: 'Amount' },
+    { key: 'status', label: 'Status' },
+    { key: 'bankName', label: 'Bank Name' },
+    { key: 'donationReference', label: 'Donation Reference' },
+] as const satisfies readonly ColumnOption[];
+
+type DonationColumnKey = (typeof DONATION_TABLE_COLUMNS)[number]['key'];
+
+const DonationTableRow = memo(({
+    donation,
+    visibleColumns,
+}: {
+    donation: Donation;
+    visibleColumns: Record<DonationColumnKey, boolean>;
+}) => (
     <tr className="border-t hover:bg-gray-50/50 transition-colors">
-        <td className="px-6 py-4 whitespace-nowrap text-gray-600">{donation.date}</td>
-        <td className="px-6 py-4 font-medium text-gray-900">{donation.donor}</td>
-        <td className="px-6 py-4 font-medium text-gray-900">{donation.amount}</td>
-        <td className="px-6 py-4">
-            <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold ${donation.status === 'Completed' ? 'bg-green-100 text-green-800 border-transparent hover:bg-green-200' :
-                donation.status === 'Processing' ? 'bg-yellow-100 text-yellow-800 border-transparent hover:bg-yellow-200' :
-                    donation.status === 'Failed' ? 'bg-red-100 text-red-800 border-transparent hover:bg-red-200' : 'bg-gray-100 text-gray-800'
-                }`}>
-                {donation.status}
-            </span>
-        </td>
-        <td className="px-6 py-4 text-gray-600">
-            {donation.bankName?.includes('cs_') ? 'N/A' : donation.bankName || 'N/A'}
-        </td>
-        <td className="px-6 py-4 text-gray-500 font-mono text-xs">{donation.donationReference}</td>
+        {visibleColumns.date && (
+            <td className="px-6 py-4 whitespace-nowrap text-gray-600">{donation.date}</td>
+        )}
+        {visibleColumns.donor && (
+            <td className="px-6 py-4 font-medium text-gray-900">{donation.donor}</td>
+        )}
+        {visibleColumns.amount && (
+            <td className="px-6 py-4 font-medium text-gray-900">{donation.amount}</td>
+        )}
+        {visibleColumns.status && (
+            <td className="px-6 py-4">
+                <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold ${donation.status === 'Completed' ? 'bg-green-100 text-green-800 border-transparent hover:bg-green-200' :
+                    donation.status === 'Processing' ? 'bg-yellow-100 text-yellow-800 border-transparent hover:bg-yellow-200' :
+                        donation.status === 'Failed' ? 'bg-red-100 text-red-800 border-transparent hover:bg-red-200' : 'bg-gray-100 text-gray-800'
+                    }`}>
+                    {donation.status}
+                </span>
+            </td>
+        )}
+        {visibleColumns.bankName && (
+            <td className="px-6 py-4 text-gray-600">
+                {donation.bankName?.includes('cs_') ? 'N/A' : donation.bankName || 'N/A'}
+            </td>
+        )}
+        {visibleColumns.donationReference && (
+            <td className="px-6 py-4 text-gray-500 font-mono text-xs">{donation.donationReference}</td>
+        )}
     </tr>
 ));
 DonationTableRow.displayName = 'DonationTableRow';
@@ -155,6 +190,28 @@ export function AdminDonations() {
 
     const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>(null);
     const [currentPage, setCurrentPage] = useState(1);
+
+    // Column Visibility (all columns shown by default)
+    const [visibleColumns, setVisibleColumns] = useState<Record<DonationColumnKey, boolean>>(() =>
+        createDefaultColumnVisibility(DONATION_TABLE_COLUMNS)
+    );
+
+    const handleToggleColumn = useCallback((key: DonationColumnKey) => {
+        const currentlyVisible = visibleColumns[key];
+        const visibleCount = Object.values(visibleColumns).filter(Boolean).length;
+        if (currentlyVisible && visibleCount <= 1) return;
+        const nextVisible = !currentlyVisible;
+        setVisibleColumns((prev) => ({ ...prev, [key]: nextVisible }));
+        if (!nextVisible && sortConfig?.key === key) {
+            setSortConfig(null);
+        }
+    }, [visibleColumns, sortConfig]);
+
+    const handleShowAllColumns = useCallback(() => {
+        setVisibleColumns(createDefaultColumnVisibility(DONATION_TABLE_COLUMNS));
+    }, []);
+
+    const visibleColumnCount = Math.max(1, Object.values(visibleColumns).filter(Boolean).length);
 
     const handleSort = (key: string) => {
         let direction: 'asc' | 'desc' = 'asc';
@@ -285,13 +342,33 @@ export function AdminDonations() {
 
             const { items: data } = unwrapListResponse<DonationData>(res);
 
-            const headers = ['Date', 'Donor', 'Amount', 'Status', 'Bank Name', 'Reference'];
-            const csvContent = data.map((d: DonationData) => {
-                const date = formatDate(d.donationDate, 'short');
-                const donor = !d.user?.profile?.userName ? 'Anonymous' : d.user.profile.userName;
-                const status = d.donationStatus?.statusName || 'Unknown';
-                return `"${date}","${donor}","${d.donationAmount}","${status}","${d.bankName || 'N/A'}","${d.donationReference || ''}"`;
-            });
+            const csvColumns: Array<{ header: string; getValue: (d: DonationData) => unknown }> = [];
+            if (visibleColumns.date) {
+                csvColumns.push({ header: 'Date', getValue: (d) => formatDate(d.donationDate, 'short') });
+            }
+            if (visibleColumns.donor) {
+                csvColumns.push({
+                    header: 'Donor',
+                    getValue: (d) => (!d.user?.profile?.userName ? 'Anonymous' : d.user.profile.userName),
+                });
+            }
+            if (visibleColumns.amount) {
+                csvColumns.push({ header: 'Amount', getValue: (d) => d.donationAmount });
+            }
+            if (visibleColumns.status) {
+                csvColumns.push({ header: 'Status', getValue: (d) => d.donationStatus?.statusName || 'Unknown' });
+            }
+            if (visibleColumns.bankName) {
+                csvColumns.push({ header: 'Bank Name', getValue: (d) => d.bankName || 'N/A' });
+            }
+            if (visibleColumns.donationReference) {
+                csvColumns.push({ header: 'Reference', getValue: (d) => d.donationReference || '' });
+            }
+
+            const headers = csvColumns.map((col) => col.header);
+            const csvContent = data.map((d: DonationData) =>
+                csvColumns.map((col) => escapeCsvCell(col.getValue(d))).join(',')
+            );
 
             const csvString = [headers.join(','), ...csvContent].join('\n');
             const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
@@ -813,7 +890,13 @@ export function AdminDonations() {
                         <h4 className="font-semibold leading-none tracking-tight text-lg" >All Donations</h4>
                         <p className="text-sm text-gray-500" >Detailed log of all monetary contributions from alumni</p>
                     </div>
-                    <div>
+                    <div className="flex items-center gap-2 shrink-0">
+                        <ColumnVisibilityDropdown
+                            columns={DONATION_TABLE_COLUMNS}
+                            visibleColumns={visibleColumns}
+                            onToggleColumn={handleToggleColumn}
+                            onShowAll={handleShowAllColumns}
+                        />
                         <Button variant="default" className="gap-2 shrink-0 bg-brand-primary text-white hover:bg-brand-primary-hover" onClick={handleExportCSV}>
                             <Download size={16} /> Export CSV
                         </Button>
@@ -989,43 +1072,59 @@ export function AdminDonations() {
                         <table className="w-full text-sm text-left">
                             <thead className="bg-gray-50 text-gray-700 border-b">
                                 <tr>
-                                    <th className="px-6 py-3 cursor-pointer hover:bg-gray-100 transition-colors" onClick={() => handleSort('date')}>
-                                        <div className="flex items-center gap-1">Date {renderSortIcon('date')}</div>
-                                    </th>
-                                    <th className="px-6 py-3 cursor-pointer hover:bg-gray-100 transition-colors" onClick={() => handleSort('donor')}>
-                                        <div className="flex items-center gap-1">Donor {renderSortIcon('donor')}</div>
-                                    </th>
-                                    <th className="px-6 py-3 cursor-pointer hover:bg-gray-100 transition-colors" onClick={() => handleSort('amount')}>
-                                        <div className="flex items-center gap-1">Amount {renderSortIcon('amount')}</div>
-                                    </th>
-                                    <th className="px-6 py-3 hover:bg-gray-100 transition-colors">
-                                        <div className="flex items-center gap-1">Status</div>
-                                    </th>
-                                    <th className="px-6 py-3 hover:bg-gray-100 transition-colors">
-                                        <div className="flex items-center gap-1">Bank Name</div>
-                                    </th>
-                                    <th className="px-6 py-3 hover:bg-gray-100 transition-colors">
-                                        <div className="flex items-center gap-1">Donation Reference</div>
-                                    </th>
+                                    {visibleColumns.date && (
+                                        <th className="px-6 py-3 cursor-pointer hover:bg-gray-100 transition-colors" onClick={() => handleSort('date')}>
+                                            <div className="flex items-center gap-1">Date {renderSortIcon('date')}</div>
+                                        </th>
+                                    )}
+                                    {visibleColumns.donor && (
+                                        <th className="px-6 py-3 cursor-pointer hover:bg-gray-100 transition-colors" onClick={() => handleSort('donor')}>
+                                            <div className="flex items-center gap-1">Donor {renderSortIcon('donor')}</div>
+                                        </th>
+                                    )}
+                                    {visibleColumns.amount && (
+                                        <th className="px-6 py-3 cursor-pointer hover:bg-gray-100 transition-colors" onClick={() => handleSort('amount')}>
+                                            <div className="flex items-center gap-1">Amount {renderSortIcon('amount')}</div>
+                                        </th>
+                                    )}
+                                    {visibleColumns.status && (
+                                        <th className="px-6 py-3 hover:bg-gray-100 transition-colors">
+                                            <div className="flex items-center gap-1">Status</div>
+                                        </th>
+                                    )}
+                                    {visibleColumns.bankName && (
+                                        <th className="px-6 py-3 hover:bg-gray-100 transition-colors">
+                                            <div className="flex items-center gap-1">Bank Name</div>
+                                        </th>
+                                    )}
+                                    {visibleColumns.donationReference && (
+                                        <th className="px-6 py-3 hover:bg-gray-100 transition-colors">
+                                            <div className="flex items-center gap-1">Donation Reference</div>
+                                        </th>
+                                    )}
                                 </tr>
                             </thead>
                             <tbody>
                                 {isTableLoading ? (
                                     <tr>
-                                        <td colSpan={7} className="px-6 py-12 text-center border-t bg-gray-50/50">
+                                        <td colSpan={visibleColumnCount} className="px-6 py-12 text-center border-t bg-gray-50/50">
                                             <Loader2 className="w-6 h-6 animate-spin text-gray-400 mx-auto" />
                                             <p className="mt-2 text-gray-500">Loading transactions...</p>
                                         </td>
                                     </tr>
                                 ) : paginatedDonations.length === 0 ? (
                                     <tr>
-                                        <td colSpan={7} className="px-6 py-8 text-center text-sm text-gray-500 border-t bg-gray-50">
+                                        <td colSpan={visibleColumnCount} className="px-6 py-8 text-center text-sm text-gray-500 border-t bg-gray-50">
                                             No transactions found matching your criteria.
                                         </td>
                                     </tr>
                                 ) : (
                                     paginatedDonations.map((donation) => (
-                                        <DonationTableRow key={donation.id} donation={donation} />
+                                        <DonationTableRow
+                                            key={donation.id}
+                                            donation={donation}
+                                            visibleColumns={visibleColumns}
+                                        />
                                     ))
                                 )}
                             </tbody>

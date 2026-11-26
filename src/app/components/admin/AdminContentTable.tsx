@@ -11,7 +11,15 @@ import { Label } from '@components/ui/label';
 import { Textarea } from '@components/ui/textarea';
 import { toast } from 'sonner';
 import { getCategoryColor, formatDate } from '@/app/views/formatters';
+import {
+    ColumnVisibilityDropdown,
+    createDefaultColumnVisibility,
+    escapeCsvCell,
+    type ColumnOption,
+} from '@components/admin/ColumnVisibilityDropdown';
 import { startOfWeek, endOfWeek, startOfMonth, endOfMonth, startOfYear, endOfYear, format } from 'date-fns';
+
+type ContentColumnKey = 'title' | 'author' | 'date';
 
 import type { EventModalInitialData } from '@components/user/CreateEventModal';
 import type { BulletinModalInitialData } from '@components/user/CreateBulletinModal';
@@ -103,6 +111,7 @@ export function getContentActions(status: string, type: 'Event' | 'Bulletin'): C
 
 interface ContentTableRowProps {
     item: ContentItem;
+    visibleColumns: Record<ContentColumnKey, boolean>;
     getCategoryClass: (category: string) => string;
     getStatusClass: (status: string) => string;
     openStatusModal: (item: ContentItem, targetStatus: string) => void;
@@ -113,6 +122,7 @@ interface ContentTableRowProps {
 
 const ContentTableRow = memo(({
     item,
+    visibleColumns,
     getCategoryClass,
     getStatusClass,
     openStatusModal,
@@ -124,59 +134,65 @@ const ContentTableRow = memo(({
 
     return (
         <tr className="border-t">
-            <td className="px-6 py-4 w-96 max-w-md">
-                <div className="flex items-center justify-between gap-2 min-w-0">
-                    <Link
-                        to={`/${item.type === 'Bulletin' ? 'bulletin' : 'events'}/${item.id}`}
-                        className="text-gray-900 hover:text-brand-primary hover:underline font-semibold truncate flex-1 min-w-0"
-                        title={item.title}
-                    >
-                        {item.title}
-                    </Link>
-                    <div className="flex items-center gap-2 shrink-0 ml-auto">
-                        <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold shrink-0 ${getCategoryClass(item.category)}`}>
-                            {item.category}
-                        </span>
+            {visibleColumns.title && (
+                <td className="px-6 py-4 w-96 max-w-md">
+                    <div className="flex items-center justify-between gap-2 min-w-0">
                         <Link
-                            to={`/admin/preview/${item.type === 'Bulletin' ? 'bulletin' : 'event'}/${item.id}`}
-                            className="text-gray-400 hover:text-brand-primary shrink-0"
-                            title="Preview as Approved"
+                            to={`/${item.type === 'Bulletin' ? 'bulletin' : 'events'}/${item.id}`}
+                            className="text-gray-900 hover:text-brand-primary hover:underline font-semibold truncate flex-1 min-w-0"
+                            title={item.title}
                         >
-                            <Eye className="w-4 h-4" />
+                            {item.title}
                         </Link>
+                        <div className="flex items-center gap-2 shrink-0 ml-auto">
+                            <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold shrink-0 ${getCategoryClass(item.category)}`}>
+                                {item.category}
+                            </span>
+                            <Link
+                                to={`/admin/preview/${item.type === 'Bulletin' ? 'bulletin' : 'event'}/${item.id}`}
+                                className="text-gray-400 hover:text-brand-primary shrink-0"
+                                title="Preview as Approved"
+                            >
+                                <Eye className="w-4 h-4" />
+                            </Link>
+                        </div>
                     </div>
-                </div>
-                <div className="text-xs text-gray-500 truncate" title={item.description || ''}>{item.description}</div>
-            </td>
-            <td className="px-6 py-4 w-48 max-w-[200px]">
-                <div className="flex items-center gap-2 min-w-0">
-                    {item.isOfficial && <HardHat className="w-4 h-4 text-brand-primary shrink-0" />}
-                    {item.isBanned && (
-                        <span title="Banned User" className="shrink-0">
-                            <Ban className="w-4 h-4 text-red-600" />
-                        </span>
-                    )}
-                    {item.isSuspended && (
-                        <span title="Suspended User" className="shrink-0">
-                            <Lock className="w-4 h-4 text-yellow-600" />
-                        </span>
-                    )}
-                    {item.isDeactivated && (
-                        <span title="Deactivated User" className="shrink-0">
-                            <UserX className="w-4 h-4 text-gray-500" />
-                        </span>
-                    )}
-                    <span className="truncate" title={item.author}>{item.author}</span>
-                    {item.authorId ? (
-                        <Link to={`/admin/preview/user/${item.authorId}`} className="text-gray-400 hover:text-brand-primary shrink-0" title="Preview Profile">
-                            <Eye className="w-4 h-4" />
-                        </Link>
-                    ) : null}
-                </div>
-            </td>
-            <td className="px-6 py-4 whitespace-nowrap">{formatDate(item.date, 'long')}</td>
-            <td className="px-6 py-4">
-                <div className="flex items-center gap-1.5 whitespace-nowrap">
+                    <div className="text-xs text-gray-500 truncate" title={item.description || ''}>{item.description}</div>
+                </td>
+            )}
+            {visibleColumns.author && (
+                <td className="px-6 py-4 w-48 max-w-[200px]">
+                    <div className="flex items-center gap-2 min-w-0">
+                        {item.isOfficial && <HardHat className="w-4 h-4 text-brand-primary shrink-0" />}
+                        {item.isBanned && (
+                            <span title="Banned User" className="shrink-0">
+                                <Ban className="w-4 h-4 text-red-600" />
+                            </span>
+                        )}
+                        {item.isSuspended && (
+                            <span title="Suspended User" className="shrink-0">
+                                <Lock className="w-4 h-4 text-yellow-600" />
+                            </span>
+                        )}
+                        {item.isDeactivated && (
+                            <span title="Deactivated User" className="shrink-0">
+                                <UserX className="w-4 h-4 text-gray-500" />
+                            </span>
+                        )}
+                        <span className="truncate" title={item.author}>{item.author}</span>
+                        {item.authorId ? (
+                            <Link to={`/admin/preview/user/${item.authorId}`} className="text-gray-400 hover:text-brand-primary shrink-0" title="Preview Profile">
+                                <Eye className="w-4 h-4" />
+                            </Link>
+                        ) : null}
+                    </div>
+                </td>
+            )}
+            {visibleColumns.date && (
+                <td className="px-6 py-4 whitespace-nowrap">{formatDate(item.date, 'long')}</td>
+            )}
+            <td className="px-6 py-4 text-right">
+                <div className="flex items-center justify-end gap-1.5 whitespace-nowrap">
                     <span className={`inline-flex items-center justify-center text-center rounded-full border w-[4.5rem] px-2 py-0.5 text-xs font-semibold mr-1 shrink-0 ${getStatusClass(item.status)}`}>
                         {item.status}
                     </span>
@@ -192,7 +208,7 @@ const ContentTableRow = memo(({
                     ))}
 
                     <button
-                        className="ml-auto shrink-0 inline-flex items-center justify-center rounded-md text-xs font-medium transition-colors hover:bg-gray-200 h-8 px-2.5 border border-gray-200 text-gray-700"
+                        className="shrink-0 inline-flex items-center justify-center rounded-md text-xs font-medium transition-colors hover:bg-gray-200 h-8 px-2.5 border border-gray-200 text-gray-700"
                         onMouseEnter={() => {
                             if (item.type === 'Event') loadCreateEventModal();
                             else if (item.type === 'Bulletin') loadCreateBulletinModal();
@@ -313,6 +329,32 @@ export function AdminContentTable({
         return { key: 'rawDate', direction: 'desc' };
     });
 
+    // Column Visibility (all columns shown by default)
+    const tableColumns = useMemo<readonly ColumnOption<ContentColumnKey>[]>(() => [
+        { key: 'title', label: 'Title' },
+        { key: 'author', label: 'Author' },
+        { key: 'date', label: contentType === 'Event' ? 'Event Date' : 'Date Submitted' },
+    ], [contentType]);
+
+    const [visibleColumns, setVisibleColumns] = useState<Record<ContentColumnKey, boolean>>(() =>
+        createDefaultColumnVisibility(tableColumns)
+    );
+
+    const handleToggleColumn = useCallback((key: ContentColumnKey) => {
+        const currentlyVisible = visibleColumns[key];
+        const visibleCount = Object.values(visibleColumns).filter(Boolean).length;
+        if (currentlyVisible && visibleCount <= 1) return;
+        const nextVisible = !currentlyVisible;
+        setVisibleColumns((prev) => ({ ...prev, [key]: nextVisible }));
+        if (!nextVisible && sortConfig?.key === key) {
+            setSortConfig(null);
+        }
+    }, [visibleColumns, sortConfig]);
+
+    const handleShowAllColumns = useCallback(() => {
+        setVisibleColumns(createDefaultColumnVisibility(tableColumns));
+    }, [tableColumns]);
+
     useEffect(() => {
         const tab = searchParams.get('tab');
         if (tab) setActiveTab(tab);
@@ -415,9 +457,16 @@ export function AdminContentTable({
     };
 
     const handleExportCSV = () => {
-        const headers = ['Title', 'Author', 'Date', 'Type', 'Status'];
-        const csvContent = data.map(c =>
-            `"${c.title.replace(/"/g, '""')}","${c.author}","${formatDate(c.date, 'long')}","${c.type}","${c.status}"`
+        const csvColumns: Array<{ header: string; getValue: (c: ContentItem) => unknown }> = [];
+        if (visibleColumns.title) csvColumns.push({ header: 'Title', getValue: (c) => c.title });
+        if (visibleColumns.author) csvColumns.push({ header: 'Author', getValue: (c) => c.author });
+        if (visibleColumns.date) csvColumns.push({ header: 'Date', getValue: (c) => formatDate(c.date, 'long') });
+        csvColumns.push({ header: 'Type', getValue: (c) => c.type });
+        csvColumns.push({ header: 'Status', getValue: (c) => c.status });
+
+        const headers = csvColumns.map((col) => col.header);
+        const csvContent = data.map((c) =>
+            csvColumns.map((col) => escapeCsvCell(col.getValue(c))).join(',')
         );
 
         const csvString = [headers.join(','), ...csvContent].join('\n');
@@ -560,18 +609,24 @@ export function AdminContentTable({
                     <table className="w-full text-sm text-left">
                         <thead className="bg-gray-50 text-gray-700">
                             <tr>
-                                <th className="w-96 max-w-md px-6 py-3 cursor-pointer hover:bg-gray-100 transition-colors" onClick={() => handleSort('title')}>
-                                    <div className="flex items-center gap-1">Title {renderSortIcon('title')}</div>
-                                </th>
-                                <th className="w-48 max-w-[200px] px-6 py-3 cursor-pointer hover:bg-gray-100 transition-colors" onClick={() => handleSort('author')}>
-                                    <div className="flex items-center gap-1">Author {renderSortIcon('author')}</div>
-                                </th>
-                                <th className="w-44 px-6 py-3 whitespace-nowrap cursor-pointer hover:bg-gray-100 transition-colors" onClick={() => handleSort('date')}>
-                                    <div className="flex items-center gap-1">
-                                        {contentType === 'Event' ? 'Event Date' : 'Date Submitted'}{renderSortIcon('date')}
-                                    </div>
-                                </th>
-                                <th className="px-6 py-3">Actions</th>
+                                {visibleColumns.title && (
+                                    <th className="w-96 max-w-md px-6 py-3 cursor-pointer hover:bg-gray-100 transition-colors" onClick={() => handleSort('title')}>
+                                        <div className="flex items-center gap-1">Title {renderSortIcon('title')}</div>
+                                    </th>
+                                )}
+                                {visibleColumns.author && (
+                                    <th className="w-48 max-w-[200px] px-6 py-3 cursor-pointer hover:bg-gray-100 transition-colors" onClick={() => handleSort('author')}>
+                                        <div className="flex items-center gap-1">Author {renderSortIcon('author')}</div>
+                                    </th>
+                                )}
+                                {visibleColumns.date && (
+                                    <th className="w-44 px-6 py-3 whitespace-nowrap cursor-pointer hover:bg-gray-100 transition-colors" onClick={() => handleSort('date')}>
+                                        <div className="flex items-center gap-1">
+                                            {contentType === 'Event' ? 'Event Date' : 'Date Submitted'}{renderSortIcon('date')}
+                                        </div>
+                                    </th>
+                                )}
+                                <th className="px-6 py-3 text-right whitespace-nowrap">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -579,6 +634,7 @@ export function AdminContentTable({
                                 <ContentTableRow
                                     key={item.id}
                                     item={item}
+                                    visibleColumns={visibleColumns}
                                     getCategoryClass={getCategoryClass}
                                     getStatusClass={getStatusClass}
                                     openStatusModal={openStatusModal}
@@ -809,14 +865,22 @@ export function AdminContentTable({
                     statuses.map(status => (
                         <TabsContent key={status} value={status}>
                             <Card className="border-none shadow-md">
-                                <CardHeader className="flex flex-row items-center justify-between">
+                                <CardHeader className="flex flex-row items-center justify-between gap-4">
                                     <div>
                                         <CardTitle>{getStatusConfig(status).title}</CardTitle>
                                         <CardDescription>
                                             {getStatusConfig(status).description}
                                         </CardDescription>
                                     </div>
-                                    <Button variant="outline" onClick={handleExportCSV} className="border border-gray-300">Export CSV</Button>
+                                    <div className="flex items-center gap-2 shrink-0">
+                                        <ColumnVisibilityDropdown
+                                            columns={tableColumns}
+                                            visibleColumns={visibleColumns}
+                                            onToggleColumn={handleToggleColumn}
+                                            onShowAll={handleShowAllColumns}
+                                        />
+                                        <Button variant="outline" onClick={handleExportCSV} className="border border-gray-300">Export CSV</Button>
+                                    </div>
                                 </CardHeader>
                                 <CardContent>
                                     {renderTable()}
