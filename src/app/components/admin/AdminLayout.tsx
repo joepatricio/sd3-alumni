@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Outlet, Link, useLocation, Navigate } from 'react-router-dom';
-import { LogOut, LayoutDashboard, Users, FileText, ChevronLeft, CreditCard, Calendar, Clock, Loader2 } from 'lucide-react';
+import { LogOut, LayoutDashboard, Users, FileText, ChevronLeft, CreditCard, Calendar, Clock, Loader2, Menu, X } from 'lucide-react';
 import ScrollToTop from '../ScrollToTop';
 import { api } from '@/app/views/api';
 import { adminLoaders, prefetchAdminRoutes } from '@/app/AppRoutes';
@@ -62,10 +62,10 @@ function AdminClock() {
     };
 
     return (
-        <div className="flex items-center gap-2 text-sm text-gray-700 font-medium bg-gray-50 px-3 py-1.5 rounded-lg border border-gray-100 shadow-xs tabular-nums min-w-[280px]">
-            <Clock size={16} />
-            <span>Time: {formatTime(currentTime)}</span>
-            <span className="text-xs text-brand-primary/80 bg-brand-primary/10 px-2 py-0.5 rounded-md ml-1 font-semibold">{timeSource}</span>
+        <div className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm text-gray-700 font-medium bg-gray-50 px-2.5 sm:px-3 py-1.5 rounded-lg border border-gray-100 shadow-xs tabular-nums min-w-0">
+            <Clock size={16} className="shrink-0" />
+            <span className="truncate"><span className="hidden sm:inline">Time: </span>{formatTime(currentTime)}</span>
+            <span className="hidden md:inline-flex shrink-0 text-xs text-brand-primary/80 bg-brand-primary/10 px-2 py-0.5 rounded-md ml-1 font-semibold">{timeSource}</span>
         </div>
     );
 }
@@ -76,6 +76,24 @@ export function AdminLayout() {
 
     const [username, setUsername] = useState<string>('Administrator');
     const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+    const [isDrawerMode, setIsDrawerMode] = useState<boolean>(() =>
+        typeof window !== 'undefined' ? window.matchMedia('(max-width: 1279px), (orientation: portrait)').matches : false
+    );
+    const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(false);
+
+    useEffect(() => {
+        if (typeof window === 'undefined') return;
+        const mediaQuery = window.matchMedia('(max-width: 1279px), (orientation: portrait)');
+        const updateMode = () => {
+            setIsDrawerMode(mediaQuery.matches);
+            if (!mediaQuery.matches) {
+                setIsSidebarOpen(false);
+            }
+        };
+        updateMode();
+        mediaQuery.addEventListener('change', updateMode);
+        return () => mediaQuery.removeEventListener('change', updateMode);
+    }, []);
 
     useEffect(() => {
         let isMounted = true;
@@ -111,7 +129,19 @@ export function AdminLayout() {
 
     useEffect(() => {
         scrollToTop();
+        setIsSidebarOpen(false);
     }, [location.pathname]);
+
+    useEffect(() => {
+        if (!isDrawerMode || !isSidebarOpen) return;
+        const handleKeyDown = (event: KeyboardEvent) => {
+            if (event.key === 'Escape') {
+                setIsSidebarOpen(false);
+            }
+        };
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [isDrawerMode, isSidebarOpen]);
 
     // Idle-prefetch all admin page chunks after layout mounts to eliminate transition delays
     useEffect(() => {
@@ -152,15 +182,43 @@ export function AdminLayout() {
 
     return (
         <div className="flex h-screen bg-gray-100 overflow-hidden font-sans">
+            {isDrawerMode && isSidebarOpen && (
+                <div
+                    data-testid="admin-sidebar-backdrop"
+                    className="fixed inset-0 bg-black/50 z-30 transition-opacity"
+                    onClick={() => setIsSidebarOpen(false)}
+                    aria-hidden="true"
+                />
+            )}
+
             {/* Sidebar */}
-            <aside className="w-64 bg-brand-primary text-white flex flex-col shadow-xl z-10 transition-all duration-300">
-                <div className="h-16 flex items-center flex justify-left gap-2 px-6 border-b border-white/20">
-                    <img
-                        src="/images/alumni-logo.jpg"
-                        alt="Alumni"
-                        className="h-8 w-8 object-contain rounded"
-                    />
-                    <span className="text-xl font-bold tracking-tight">Alumni Admin</span>
+            <aside
+                id="admin-sidebar"
+                aria-hidden={isDrawerMode && !isSidebarOpen ? true : undefined}
+                className={isDrawerMode
+                    ? `fixed inset-y-0 left-0 w-64 max-w-[85vw] bg-brand-primary text-white flex flex-col shadow-xl z-40 transition-transform duration-300 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full pointer-events-none invisible'}`
+                    : 'relative w-64 bg-brand-primary text-white flex flex-col shadow-xl z-10 shrink-0 transition-all duration-300'
+                }
+            >
+                <div className="h-16 flex items-center justify-between gap-2 px-6 border-b border-white/20">
+                    <div className="flex items-center gap-2 min-w-0">
+                        <img
+                            src="/images/alumni-logo.jpg"
+                            alt="Alumni"
+                            className="h-8 w-8 object-contain rounded shrink-0"
+                        />
+                        <span className="text-xl font-bold tracking-tight truncate">Alumni Admin</span>
+                    </div>
+                    {isDrawerMode && (
+                        <button
+                            type="button"
+                            onClick={() => setIsSidebarOpen(false)}
+                            aria-label="Close navigation menu"
+                            className="p-1.5 rounded-lg text-white/80 hover:bg-white/10 hover:text-white transition-colors shrink-0"
+                        >
+                            <X size={20} />
+                        </button>
+                    )}
                 </div>
 
                 <nav className="flex-1 py-6 px-3 space-y-2 overflow-y-auto">
@@ -172,6 +230,7 @@ export function AdminLayout() {
                             <Link
                                 key={item.path}
                                 to={item.path}
+                                onClick={() => isDrawerMode && setIsSidebarOpen(false)}
                                 className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${isActive
                                     ? 'bg-white/20 font-medium'
                                     : 'text-white/80 hover:bg-white/10 hover:text-white'
@@ -197,6 +256,7 @@ export function AdminLayout() {
                 <div className="p-4 border-t border-white/20 space-y-2">
                     <Link
                         to="/"
+                        onClick={() => isDrawerMode && setIsSidebarOpen(false)}
                         className="flex items-center gap-3 px-4 py-3 rounded-lg text-white/80 hover:bg-white/10 hover:text-white transition-colors"
                     >
                         <ChevronLeft size={20} />
@@ -215,14 +275,29 @@ export function AdminLayout() {
             {/* Main Content Area */}
             <main className="flex-1 flex flex-col min-w-0 overflow-hidden">
                 {/* Topbar */}
-                <header className="h-16 bg-white shadow-sm flex items-center justify-between px-8 z-0">
-                    <AdminClock />
-                    <div className="flex items-center gap-4">
+                <header className="min-h-16 bg-white shadow-sm flex items-center justify-between gap-3 px-4 lg:px-6 xl:px-8 py-2 z-10 shrink-0">
+                    <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+                        {isDrawerMode && (
+                            <button
+                                type="button"
+                                data-testid="admin-sidebar-toggle"
+                                onClick={() => setIsSidebarOpen(prev => !prev)}
+                                aria-label={isSidebarOpen ? 'Close navigation menu' : 'Open navigation menu'}
+                                aria-expanded={isSidebarOpen}
+                                aria-controls="admin-sidebar"
+                                className="p-2 -ml-1 rounded-lg text-gray-700 hover:bg-gray-100 hover:text-brand-primary transition-colors shrink-0"
+                            >
+                                <Menu size={20} />
+                            </button>
+                        )}
+                        <AdminClock />
+                    </div>
+                    <div className="flex items-center gap-4 shrink-0">
                         <div className="flex items-center gap-3">
-                            <div className="w-9 h-9 rounded-full bg-gray-200 flex items-center justify-center text-brand-primary font-bold">
+                            <div className="w-9 h-9 rounded-full bg-gray-200 flex items-center justify-center text-brand-primary font-bold shrink-0">
                                 {avatarLetter}
                             </div>
-                            <span className="text-sm font-medium text-gray-700">{username}</span>
+                            <span className="hidden sm:inline max-w-[160px] truncate text-sm font-medium text-gray-700">{username}</span>
                         </div>
                     </div>
                 </header>
@@ -230,9 +305,9 @@ export function AdminLayout() {
                 {/* Scrollable Content */}
                 <div
                     ref={scrollRef}
-                    className="flex-1 overflow-auto bg-gray-50/50 p-8 relative scroll-smooth"
+                    className="flex-1 overflow-auto bg-gray-50/50 p-4 lg:p-6 xl:p-8 relative scroll-smooth"
                 >
-                    <div className="mx-auto max-w-7xl">
+                    <div className="@container mx-auto max-w-7xl">
                         <Outlet />
                     </div>
 

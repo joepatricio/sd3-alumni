@@ -13,13 +13,13 @@ export function Navbar() {
       <div className="max-w-5xl mx-auto px-4 md:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Desktop Navigation */}
-          <div className="hidden lg:flex items-center gap-8">
+          <div className="hidden md:flex items-center gap-6 lg:gap-8">
             {navLinks.map((link) => (
               <Link
                 key={link.label}
                 to={link.href}
                 target={link.href.startsWith('http') ? '_blank' : '_self'}
-                className="text-gray-700 hover:text-brand-primary transition-colors font-medium"
+                className="text-gray-700 hover:text-brand-primary transition-colors font-medium whitespace-nowrap"
               >
                 {link.label}
               </Link>
@@ -27,17 +27,17 @@ export function Navbar() {
           </div>
 
           {/* Donate Button */}
-          <div className="hidden lg:block ml-auto">
+          <div className="hidden md:block ml-auto">
             <Link
               to="/donate"
-              className="bg-brand-accent text-white px-6 py-2 rounded-full hover:bg-brand-accent-hover transition-colors font-semibold"
+              className="bg-brand-accent text-white px-6 py-2 rounded-full hover:bg-brand-accent-hover transition-colors font-semibold whitespace-nowrap"
             >
               Donate
             </Link>
           </div>
 
           {/* Mobile view - centered text */}
-          <div className="lg:hidden w-full text-center text-gray-600 text-sm">
+          <div className="md:hidden w-full text-center text-gray-600 text-sm">
             Open menu to navigate
           </div>
         </div>

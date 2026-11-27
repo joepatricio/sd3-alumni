@@ -15,7 +15,7 @@ export function Footer() {
   return (
     <footer className="bg-brand-footer">
       <div className="max-w-6xl mx-auto px-4 md:px-8 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-4 gap-8 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-8">
           {/* About Section */}
           <div>
             <div className="flex items-center gap-2 mb-4">

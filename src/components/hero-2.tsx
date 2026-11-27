@@ -38,7 +38,7 @@ export const AuroraHero = ({ children, className }: AuroraHeroProps) => {
       <AuroraAnimation />
       <div
         className={cn(
-          "relative flex h-screen w-full flex-col items-center justify-center overflow-hidden rounded-md bg-background antialiased",
+          "relative flex h-[clamp(600px,100dvh,960px)] w-full flex-col items-center justify-center overflow-hidden rounded-md bg-background antialiased",
           className
         )}
       >

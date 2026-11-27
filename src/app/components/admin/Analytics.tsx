@@ -197,9 +197,9 @@ export function Analytics({
     }, [guestList, filteredGuestItems, propProfileStatusData]);
 
     return (
-        <div className={`bg-white rounded-xl border border-gray-200 w-full shadow-md flex flex-col justify-between ${className}`}>
+        <div className={`@container bg-white rounded-xl border border-gray-200 w-full shadow-md flex flex-col justify-between ${className}`}>
             {/* Header */}
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between px-6 pt-6 pb-4 border-b border-gray-100 gap-4">
+            <div className="flex flex-col @xl:flex-row @xl:items-center @xl:justify-between px-4 @sm:px-6 pt-6 pb-4 border-b border-gray-100 gap-4">
                 <div className="space-y-1">
                     <h4 className="font-semibold leading-none tracking-tight flex items-center gap-2 text-gray-900 text-lg">
                         <PieChartIcon className="w-5 h-5 text-brand-primary shrink-0" />
@@ -216,7 +216,7 @@ export function Analytics({
 
             {/* RSVP Response Filter & Summary Bar (when guestList is provided) */}
             {rsvpStats && (
-                <div className="px-6 py-3.5 bg-gray-50/70 border-b border-gray-100 flex flex-wrap items-center justify-between gap-3">
+                <div className="px-4 @sm:px-6 py-3.5 bg-gray-50/70 border-b border-gray-100 flex flex-wrap items-center justify-between gap-3">
                     <div className="flex items-center gap-2">
                         <span className="text-xs font-bold text-gray-600 uppercase tracking-wider">Responses:</span>
                         <div className="inline-flex rounded-lg border border-gray-200 bg-white p-0.5 shadow-2xs">
@@ -268,10 +268,10 @@ export function Analytics({
             )}
 
             {/* Charts Body */}
-            <div className="px-6 pb-6 pt-4 flex-1 flex flex-col justify-center">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 divide-y md:divide-y-0 md:divide-x divide-gray-100">
+            <div className="px-4 @sm:px-6 pb-6 pt-4 flex-1 flex flex-col justify-center">
+                <div className="grid grid-cols-1 @4xl:grid-cols-3 gap-6 divide-y @4xl:divide-y-0 @4xl:divide-x divide-gray-100">
                     {/* Degree Program Pie Chart */}
-                    <div className="flex flex-col items-center">
+                    <div className="flex flex-col items-center min-w-0 pb-4 @4xl:pb-0">
                         <div className="flex items-center gap-2 mb-2">
                             <span className="w-2.5 h-2.5 rounded-full bg-brand-primary" />
                             <h4 className="text-xs font-bold text-gray-800 uppercase tracking-wider">
@@ -280,8 +280,8 @@ export function Analytics({
                         </div>
                         {degreeProgramChartData.length > 0 ? (
                             <div className="flex flex-col items-center w-full">
-                                <div className="h-56 w-full relative">
-                                    <ResponsiveContainer width="100%" height="100%">
+                                <div className="h-56 w-full min-w-0 relative">
+                                    <ResponsiveContainer width="100%" height="100%" minWidth={0}>
                                         <PieChart>
                                             <Pie
                                                 data={degreeProgramChartData}
@@ -318,7 +318,7 @@ export function Analytics({
                                         </PieChart>
                                     </ResponsiveContainer>
                                 </div>
-                                <div className="flex flex-wrap items-center justify-center gap-1.5 mt-2 max-h-24 overflow-y-auto pr-1">
+                                <div className="flex flex-wrap items-center justify-center gap-1.5 mt-2 max-h-none @4xl:max-h-24 @4xl:overflow-y-auto pr-1">
                                     {degreeProgramChartData.map((entry, index) => (
                                         <button
                                             key={`deg-leg-${entry.name}`}
@@ -354,7 +354,7 @@ export function Analytics({
                     </div>
 
                     {/* Generational Demographics Pie Chart */}
-                    <div className="flex flex-col items-center pt-4 md:pt-0 md:pl-6">
+                    <div className="flex flex-col items-center min-w-0 pt-4 @4xl:pt-0 pb-4 @4xl:pb-0 @4xl:pl-6">
                         <div className="flex items-center gap-2 mb-2">
                             <span className="w-2.5 h-2.5 rounded-full bg-purple-600" />
                             <h4 className="text-xs font-bold text-gray-800 uppercase tracking-wider">
@@ -363,8 +363,8 @@ export function Analytics({
                         </div>
                         {demographicsChartData.length > 0 ? (
                             <div className="flex flex-col items-center w-full">
-                                <div className="h-56 w-full relative">
-                                    <ResponsiveContainer width="100%" height="100%">
+                                <div className="h-56 w-full min-w-0 relative">
+                                    <ResponsiveContainer width="100%" height="100%" minWidth={0}>
                                         <PieChart>
                                             <Pie
                                                 data={demographicsChartData}
@@ -398,7 +398,7 @@ export function Analytics({
                                         </PieChart>
                                     </ResponsiveContainer>
                                 </div>
-                                <div className="flex flex-wrap items-center justify-center gap-1.5 mt-2 max-h-24 overflow-y-auto pr-1">
+                                <div className="flex flex-wrap items-center justify-center gap-1.5 mt-2 max-h-none @4xl:max-h-24 @4xl:overflow-y-auto pr-1">
                                     {demographicsChartData.map((entry, index) => {
                                         const match = entry.name.match(/^(.*?)\s*(\(.*?\))$/);
                                         const mainLabel = match ? match[1] : entry.name;
@@ -431,7 +431,7 @@ export function Analytics({
                     </div>
 
                     {/* Profile Status Pie Chart */}
-                    <div className="flex flex-col items-center pt-4 md:pt-0 md:pl-6">
+                    <div className="flex flex-col items-center min-w-0 pt-4 @4xl:pt-0 @4xl:pl-6">
                         <div className="flex items-center gap-2 mb-2">
                             <span className="w-2.5 h-2.5 rounded-full bg-blue-600" />
                             <h4 className="text-xs font-bold text-gray-800 uppercase tracking-wider">
@@ -440,8 +440,8 @@ export function Analytics({
                         </div>
                         {profileStatusChartData.length > 0 ? (
                             <div className="flex flex-col items-center w-full">
-                                <div className="h-56 w-full relative">
-                                    <ResponsiveContainer width="100%" height="100%">
+                                <div className="h-56 w-full min-w-0 relative">
+                                    <ResponsiveContainer width="100%" height="100%" minWidth={0}>
                                         <PieChart>
                                             <Pie
                                                 data={profileStatusChartData}
@@ -475,7 +475,7 @@ export function Analytics({
                                         </PieChart>
                                     </ResponsiveContainer>
                                 </div>
-                                <div className="flex flex-wrap items-center justify-center gap-1.5 mt-2 max-h-24 overflow-y-auto pr-1">
+                                <div className="flex flex-wrap items-center justify-center gap-1.5 mt-2 max-h-none @4xl:max-h-24 @4xl:overflow-y-auto pr-1">
                                     {profileStatusChartData.map((entry, index) => (
                                         <button
                                             key={`ps-leg-${entry.name}`}
