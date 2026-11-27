@@ -2,7 +2,7 @@ import { useState, useEffect, lazy, Suspense } from 'react';
 import { Calendar, MapPin, Clock, Video, Loader2 } from 'lucide-react';
 import { Plus } from 'lucide-react';
 import { Button } from '@components/ui/button';
-import { MultiOptionDropdown } from '@/app/components/user/multi-option-dropdown';
+import { MultiOptionDropdown } from '@/app/components/multi-option-dropdown';
 import { Link } from 'react-router-dom';
 import { getCategoryColor, formatDate } from '@/app/views/formatters';
 
