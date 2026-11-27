@@ -3,34 +3,19 @@ import { api } from "@/app/views/api";
 import { AnimatedMarqueeHero, type HeroImageItem, type AnimatedMarqueeHeroProps } from "@/components/hero-3";
 
 const FALLBACK_HERO_IMAGES: HeroImageItem[] = [
-  { url: "/images/albums/default/otog.jpg", title: "One Team One Goal!" },
-  { url: "/images/albums/default/enrollment.jpg", title: "SEA Enrollment" },
-  { url: "/images/albums/default/masters.jpg", title: "SEA Graduate School" },
-  { url: "/images/albums/default/specialcourse.jpg", title: "SEA Diploma Program" },
-  { url: "/images/albums/default/research.jpg", title: "Featured Research" },
-  { url: "/images/albums/default/research2.jpg", title: "Featured Research" },
-  { url: "/images/albums/default/deans.jpg", title: "SEA Deans" },
-  { url: "/images/albums/default/civil.jpg", title: "Civil Engineering" },
-  { url: "/images/albums/default/ece.jpg", title: "Electronics Engineering" },
-  { url: "/images/albums/default/electrical.jpg", title: "Electrical Engineering" },
-  { url: "/images/albums/default/mayor.jpg", title: "icRS 2026" },
-  { url: "/images/albums/default/homecoming.jpg", title: "SEA Alumni Homecoming" },
+  { url: "/images/albums/default/otog.jpg", title: "One Team One Goal!" },            // url: https://www.facebook.com/usjrsea/posts/pfbid0xaZPKpWK2eiqw3pXhwCQ6fmEG3zPcdkX4VXji9hyCmRsb2AqyCuYMrZt1sUBW1mil
+  { url: "/images/albums/default/enrollment.jpg", title: "SEA Enrollment" },          // url: https://www.facebook.com/photo.php?fbid=1458623676287498
+  { url: "/images/albums/default/masters.jpg", title: "SEA Graduate School" },        // url: https://www.facebook.com/photo.php?fbid=1351069143709619
+  { url: "/images/albums/default/specialcourse.jpg", title: "SEA Diploma Program" },  // url: https://www.facebook.com/photo.php?fbid=1445758110907388
+  { url: "/images/albums/default/research.jpg", title: "Featured Research" },         // url: https://www.facebook.com/usjrsea/posts/pfbid02PFRtqB3UXd7iYuyPWSfomj5urnGJKfDQoxeFi29xGBgQoDfuBsaP5cePKkqPDmCcl
+  { url: "/images/albums/default/research2.jpg", title: "Featured Research" },        // url: https://www.facebook.com/usjrsea/posts/pfbid02PFRtqB3UXd7iYuyPWSfomj5urnGJKfDQoxeFi29xGBgQoDfuBsaP5cePKkqPDmCcl
+  { url: "/images/albums/default/deans.jpg", title: "SEA Deans" },                    // url: https://www.facebook.com/usjrsea/posts/pfbid02Mg2CrmyDKecUX41NCnZCamum2gLZjpGdbSrn92NhVvTvNaV7PWKZPvD99twcBsBUl
+  { url: "/images/albums/default/civil.jpg", title: "Civil Engineering" },            // url: https://www.facebook.com/photo.php?fbid=1515931363890062
+  { url: "/images/albums/default/ece.jpg", title: "Electronics Engineering" },        // url: https://www.facebook.com/usjrsea/posts/pfbid02SVbhQNTA7M78gZXCNWLx3zAB8sfLXWEgm3Ag4RuCG8GMsRA4QgkTZHhV2iVhGfL2l
+  { url: "/images/albums/default/electrical.jpg", title: "Electrical Engineering" },  // url: https://www.facebook.com/photo.php?fbid=1526920069457858
+  { url: "/images/albums/default/mayor.jpg", title: "icRS 2026" },                    // url: https://www.facebook.com/usjrsea/posts/pfbid026i24tjhNoTDaQK136oRFASrv1CUSHqA98rVAzg71m1wtBZDDAyB9fVQGJ41No8gtl
+  { url: "/images/albums/default/homecoming.jpg", title: "SEA Alumni Homecoming" },   // url: https://www.facebook.com/photo.php?fbid=1288661879950346
 ];
-
-// const FALLBACK_HERO_IMAGES: HeroImageItem[] = [
-//   { url: "/images/main.jpg", title: "USJ-R Campus" },
-//   { url: "/images/donate-hero.avif", title: "Giving Back" },
-//   { url: "/images/events-reunion.jpg", title: "Grand Alumni Reunion" },
-//   { url: "/images/events-networking.jpg", title: "Professional Networking" },
-//   { url: "/images/events-conference.jpeg", title: "Engineering Conference" },
-//   { url: "/images/events-sports.jpg", title: "Sports Festival" },
-//   { url: "/images/events-workshop.jpg", title: "Technical Workshop" },
-//   { url: "/images/events-virtual.jpg", title: "Global Virtual Meetup" },
-//   { url: "/images/bulletin-success.jpg", title: "Alumni Milestone" },
-//   { url: "/images/bulletin-careers.jpg", title: "Industry Opportunities" },
-//   { url: "/images/bulletin-donations.jpg", title: "Scholarship Support" },
-//   { url: "/images/bulletin-image.jpg", title: "Community Showcase" },
-// ];
 
 export type CuratedHeroProps = Partial<AnimatedMarqueeHeroProps>;
 
