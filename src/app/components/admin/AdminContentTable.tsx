@@ -1,4 +1,5 @@
-import { useState, useEffect, lazy, Suspense, useCallback, useMemo, memo } from 'react';
+import { useState, useEffect, lazy, Suspense, useCallback, useMemo, useRef, memo } from 'react';
+import axios from 'axios';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@components/ui/card';
 import { Button } from '@components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@components/ui/tabs';
@@ -50,26 +51,42 @@ export interface ContentItem {
     adminNotes?: string | null;
 }
 
+const getStatusClass = (category: string) => {
+    switch (category) {
+        case "All": return 'bg-gray-100 text-gray-800 border-gray-300';
+        case "For Review": return 'bg-amber-100 text-amber-800 border-amber-300';
+        case "Pending": return 'bg-yellow-100 text-yellow-800 border-yellow-300';
+        case "Approved": return 'bg-green-100 text-green-800 border-green-300';
+        case "Rejected": return 'bg-red-100 text-red-800 border-red-300';
+        case "Cancelled": return 'bg-gray-100 text-gray-800 border-gray-300';
+        case "Archived": return 'bg-slate-200 text-slate-800 border-slate-300';
+        case "Concluded": return 'bg-blue-100 text-blue-800 border-blue-300';
+        case "Flagged": return 'bg-orange-100 text-orange-800 border-orange-300';
+        default: return 'bg-gray-100 text-gray-800 border-gray-300';
+    }
+};
+
+const getCategoryClass = (category: string) => {
+    if (category === "All" || category === "For Review" || category === "Pending" || category === "Approved" || category === "Rejected" || category === "Cancelled" || category === "Archived" || category === "Concluded") {
+        return getStatusClass(category);
+    }
+    if (category === "Official") return 'bg-brand-primary text-white';
+    if (category === "Regular") return 'bg-brand-accent text-white';
+    return getCategoryColor(category);
+};
+
 interface ContentTableRowProps {
     item: ContentItem;
     visibleColumns: Record<ContentColumnKey, boolean>;
-    getCategoryClass: (category: string) => string;
-    getStatusClass: (status: string) => string;
     openStatusModal: (item: ContentItem, targetStatus?: string) => void;
     setEditingItem: (item: ContentItem) => void;
-    loadCreateEventModal: () => Promise<unknown>;
-    loadCreateBulletinModal: () => Promise<unknown>;
 }
 
 const ContentTableRow = memo(({
     item,
     visibleColumns,
-    getCategoryClass,
-    getStatusClass,
     openStatusModal,
     setEditingItem,
-    loadCreateEventModal,
-    loadCreateBulletinModal
 }: ContentTableRowProps) => {
     return (
         <tr className="border-t divide-x divide-gray-100">
@@ -150,7 +167,7 @@ const ContentTableRow = memo(({
                         onClick={() => openStatusModal(item)}
                         title="Click to change status"
                         aria-label={`Change status for ${item.title} (currently ${item.status})`}
-                        className={`group inline-flex items-center justify-between gap-1.5 rounded-full border w-32 px-3 py-1 text-xs font-semibold shadow-xs transition-all cursor-pointer hover:shadow hover:brightness-95 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary/50 focus-visible:ring-offset-1 ${getStatusClass(item.status)}`}
+                        className={`group inline-flex items-center justify-between gap-1.5 rounded-full border w-32 px-3 py-1 text-xs font-semibold shadow-xs transition-[box-shadow,filter,transform] cursor-pointer hover:shadow hover:brightness-95 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary/50 focus-visible:ring-offset-1 ${getStatusClass(item.status)}`}
                     >
                         <span className="truncate">{item.status}</span>
                         <Pencil className="w-3 h-3 opacity-60 group-hover:opacity-100 transition-opacity shrink-0" />
@@ -197,7 +214,8 @@ interface AdminContentTableProps {
         status: string,
         categories?: string[],
         accountScope?: AccountScope[],
-        sort: { key: string, direction: 'asc' | 'desc' } | null
+        sort: { key: string, direction: 'asc' | 'desc' } | null,
+        signal?: AbortSignal
     }) => Promise<{ data: ContentItem[], total: number }>;
     primaryColorClass: string;
     outlineColorClass: string;
@@ -294,19 +312,36 @@ export function AdminContentTable({
         createDefaultColumnVisibility(tableColumns)
     );
 
+    const visibleColumnsRef = useRef(visibleColumns);
+    useEffect(() => {
+        visibleColumnsRef.current = visibleColumns;
+    }, [visibleColumns]);
+
+    const sortConfigRef = useRef(sortConfig);
+    useEffect(() => {
+        sortConfigRef.current = sortConfig;
+    }, [sortConfig]);
+
     const handleToggleColumn = useCallback((key: ContentColumnKey) => {
-        const currentlyVisible = visibleColumns[key];
-        const visibleCount = Object.values(visibleColumns).filter(Boolean).length;
+        const current = visibleColumnsRef.current;
+        const currentlyVisible = current[key];
+        const visibleCount = Object.values(current).filter(Boolean).length;
         if (currentlyVisible && visibleCount <= 1) return;
         const nextVisible = !currentlyVisible;
-        setVisibleColumns((prev) => ({ ...prev, [key]: nextVisible }));
-        if (!nextVisible && (sortConfig?.key === key || (key === 'date' && sortConfig?.key === 'rawDate'))) {
+        const nextColumns = { ...current, [key]: nextVisible };
+        visibleColumnsRef.current = nextColumns;
+        setVisibleColumns(nextColumns);
+        const currentSort = sortConfigRef.current;
+        if (!nextVisible && (currentSort?.key === key || (key === 'date' && currentSort?.key === 'rawDate'))) {
+            sortConfigRef.current = null;
             setSortConfig(null);
         }
-    }, [visibleColumns, sortConfig]);
+    }, []);
 
     const handleShowAllColumns = useCallback(() => {
-        setVisibleColumns(createDefaultColumnVisibility(tableColumns));
+        const allVisible = createDefaultColumnVisibility(tableColumns);
+        visibleColumnsRef.current = allVisible;
+        setVisibleColumns(allVisible);
     }, [tableColumns]);
 
     useEffect(() => {
@@ -427,14 +462,20 @@ export function AdminContentTable({
         const csvString = [headers.join(','), ...csvContent].join('\n');
         const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
         const link = document.createElement('a');
-        link.href = URL.createObjectURL(blob);
+        const url = URL.createObjectURL(blob);
+        link.href = url;
         link.download = `${contentType.toLowerCase()}s_export_${new Date().toISOString().split('T')[0]}.csv`;
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
         link.click();
+        document.body.removeChild(link);
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
     };
 
     const [refreshKey, setRefreshKey] = useState(0);
 
     useEffect(() => {
+        const controller = new AbortController();
         const load = async () => {
             setIsLoading(true);
             try {
@@ -448,18 +489,27 @@ export function AdminContentTable({
                     status: activeTab,
                     categories: appliedSearchCategories,
                     accountScope: appliedAccountScope,
-                    sort: sortConfig
+                    sort: sortConfig,
+                    signal: controller.signal
                 });
-                setData(result.data);
-                setTotalItems(result.total);
+                if (!controller.signal.aborted) {
+                    setData(result.data);
+                    setTotalItems(result.total);
+                }
             } catch (err) {
+                if (axios.isCancel(err) || (err as { code?: string })?.code === 'ERR_CANCELED' || controller.signal.aborted) {
+                    return;
+                }
                 console.error(err);
             } finally {
-                setIsLoading(false);
+                if (!controller.signal.aborted) {
+                    setIsLoading(false);
+                }
             }
         };
         load();
-    }, [currentPage, appliedSearchName, appliedSearchAuthor, appliedSearchStartDate, appliedSearchEndDate, appliedSearchCategories, appliedAccountScope, activeTab, sortConfig, fetchData, refreshKey]);
+        return () => controller.abort();
+    }, [currentPage, itemsPerPage, appliedSearchName, appliedSearchAuthor, appliedSearchStartDate, appliedSearchEndDate, appliedSearchCategories, appliedAccountScope, activeTab, sortConfig, fetchData, refreshKey]);
 
     const totalPages = Math.ceil(totalItems / itemsPerPage);
     const paginatedContent = data;
@@ -484,30 +534,6 @@ export function AdminContentTable({
             default: return { title: `${status} ${contentType}s`, description: `Viewing ${status.toLowerCase()} items` };
         }
     };
-
-    const getStatusClass = (category: string) => {
-        switch (category) {
-            case "All": return 'bg-gray-100 text-gray-800 border-gray-300';
-            case "For Review": return 'bg-amber-100 text-amber-800 border-amber-300';
-            case "Pending": return 'bg-yellow-100 text-yellow-800 border-yellow-300';
-            case "Approved": return 'bg-green-100 text-green-800 border-green-300';
-            case "Rejected": return 'bg-red-100 text-red-800 border-red-300';
-            case "Cancelled": return 'bg-gray-100 text-gray-800 border-gray-300';
-            case "Archived": return 'bg-slate-200 text-slate-800 border-slate-300';
-            case "Concluded": return 'bg-blue-100 text-blue-800 border-blue-300';
-            case "Flagged": return 'bg-orange-100 text-orange-800 border-orange-300';
-            default: return 'bg-gray-100 text-gray-800 border-gray-300';
-        }
-    }
-
-    const getCategoryClass = useCallback((category: string) => {
-        if (category === "All" || category === "For Review" || category === "Pending" || category === "Approved" || category === "Rejected" || category === "Cancelled" || category === "Archived" || category === "Concluded") {
-            return getStatusClass(category);
-        }
-        if (category === "Official") return 'bg-brand-primary text-white';
-        if (category === "Regular") return 'bg-brand-accent text-white';
-        return getCategoryColor(category);
-    }, []);
 
     const modalStatusOptions = useMemo(() => {
         const list = assignableStatuses || statuses;
@@ -600,12 +626,8 @@ export function AdminContentTable({
                                     key={item.id}
                                     item={item}
                                     visibleColumns={visibleColumns}
-                                    getCategoryClass={getCategoryClass}
-                                    getStatusClass={getStatusClass}
                                     openStatusModal={openStatusModal}
                                     setEditingItem={setEditingItem}
-                                    loadCreateEventModal={loadCreateEventModal}
-                                    loadCreateBulletinModal={loadCreateBulletinModal}
                                 />
                             ))}
                         </tbody>
@@ -826,34 +848,30 @@ export function AdminContentTable({
                     </div>
                 </div>
 
-                {
-                    statuses.map(status => (
-                        <TabsContent key={status} value={status}>
-                            <Card className="border-none shadow-md">
-                                <CardHeader className="flex flex-row items-center justify-between gap-4">
-                                    <div>
-                                        <CardTitle>{getStatusConfig(status).title}</CardTitle>
-                                        <CardDescription>
-                                            {getStatusConfig(status).description}
-                                        </CardDescription>
-                                    </div>
-                                    <div className="flex items-center gap-2 shrink-0">
-                                        <ColumnVisibilityDropdown
-                                            columns={tableColumns}
-                                            visibleColumns={visibleColumns}
-                                            onToggleColumn={handleToggleColumn}
-                                            onShowAll={handleShowAllColumns}
-                                        />
-                                        <Button variant="outline" onClick={handleExportCSV} className="border border-gray-300">Export CSV</Button>
-                                    </div>
-                                </CardHeader>
-                                <CardContent>
-                                    {renderTable()}
-                                </CardContent>
-                            </Card>
-                        </TabsContent>
-                    ))
-                }
+                <TabsContent value={activeTab}>
+                    <Card className="border-none shadow-md">
+                        <CardHeader className="flex flex-row items-center justify-between gap-4">
+                            <div>
+                                <CardTitle>{getStatusConfig(activeTab).title}</CardTitle>
+                                <CardDescription>
+                                    {getStatusConfig(activeTab).description}
+                                </CardDescription>
+                            </div>
+                            <div className="flex items-center gap-2 shrink-0">
+                                <ColumnVisibilityDropdown
+                                    columns={tableColumns}
+                                    visibleColumns={visibleColumns}
+                                    onToggleColumn={handleToggleColumn}
+                                    onShowAll={handleShowAllColumns}
+                                />
+                                <Button variant="outline" onClick={handleExportCSV} className="border border-gray-300">Export CSV</Button>
+                            </div>
+                        </CardHeader>
+                        <CardContent>
+                            {renderTable()}
+                        </CardContent>
+                    </Card>
+                </TabsContent>
             </Tabs >
 
             {/* Status Change / Decision Modal */}

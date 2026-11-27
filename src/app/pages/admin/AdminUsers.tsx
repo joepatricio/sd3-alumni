@@ -1,4 +1,5 @@
-import { useState, useEffect, lazy, Suspense, useCallback, memo } from 'react';
+import { useState, useEffect, lazy, Suspense, useCallback, useRef, memo } from 'react';
+import axios from 'axios';
 import { subYears, format } from 'date-fns';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@components/ui/card';
 import { Button } from '@components/ui/button';
@@ -138,7 +139,7 @@ const UserTableRow = memo(({
                         onClick={() => openEditModal(user)}
                         title="Click to change status"
                         aria-label={`Change status for ${user.name} (currently ${user.status})`}
-                        className={`group inline-flex items-center justify-between gap-1.5 rounded-full border w-32 px-3 py-1 text-xs font-semibold shadow-xs transition-all cursor-pointer hover:shadow hover:brightness-95 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary/50 focus-visible:ring-offset-1 ${getUserStatusClass(user.status)}`}
+                        className={`group inline-flex items-center justify-between gap-1.5 rounded-full border w-32 px-3 py-1 text-xs font-semibold shadow-xs transition-[box-shadow,filter,transform] cursor-pointer hover:shadow hover:brightness-95 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary/50 focus-visible:ring-offset-1 ${getUserStatusClass(user.status)}`}
                     >
                         <span className="truncate">{user.status}</span>
                         <Pencil className="w-3 h-3 opacity-60 group-hover:opacity-100 transition-opacity shrink-0" />
@@ -169,6 +170,8 @@ export function AdminUsers() {
     const [degrees, setDegrees] = useState<DegreeData[]>([]);
     const [users, setUsers] = useState<AdminUserRow[]>([]);
     const [totalUsers, setTotalUsers] = useState(0);
+    const [isExportingCsv, setIsExportingCsv] = useState(false);
+    const isExportingCsvRef = useRef(false);
     const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'All');
 
     // Search & Filter
@@ -197,19 +200,36 @@ export function AdminUsers() {
         createDefaultColumnVisibility(USER_TABLE_COLUMNS)
     );
 
+    const visibleColumnsRef = useRef(visibleColumns);
+    useEffect(() => {
+        visibleColumnsRef.current = visibleColumns;
+    }, [visibleColumns]);
+
+    const sortConfigRef = useRef(sortConfig);
+    useEffect(() => {
+        sortConfigRef.current = sortConfig;
+    }, [sortConfig]);
+
     const handleToggleColumn = useCallback((key: UserColumnKey) => {
-        const currentlyVisible = visibleColumns[key];
-        const visibleCount = Object.values(visibleColumns).filter(Boolean).length;
+        const current = visibleColumnsRef.current;
+        const currentlyVisible = current[key];
+        const visibleCount = Object.values(current).filter(Boolean).length;
         if (currentlyVisible && visibleCount <= 1) return;
         const nextVisible = !currentlyVisible;
-        setVisibleColumns((prev) => ({ ...prev, [key]: nextVisible }));
-        if (!nextVisible && sortConfig?.key === key) {
+        const nextColumns = { ...current, [key]: nextVisible };
+        visibleColumnsRef.current = nextColumns;
+        setVisibleColumns(nextColumns);
+        const currentSort = sortConfigRef.current;
+        if (!nextVisible && currentSort?.key === key) {
+            sortConfigRef.current = null;
             setSortConfig(null);
         }
-    }, [visibleColumns, sortConfig]);
+    }, []);
 
     const handleShowAllColumns = useCallback(() => {
-        setVisibleColumns(createDefaultColumnVisibility(USER_TABLE_COLUMNS));
+        const allVisible = createDefaultColumnVisibility(USER_TABLE_COLUMNS);
+        visibleColumnsRef.current = allVisible;
+        setVisibleColumns(allVisible);
     }, []);
 
     // Pagination
@@ -226,21 +246,27 @@ export function AdminUsers() {
 
     // Load initial lookup data (statuses & degrees)
     useEffect(() => {
+        const controller = new AbortController();
         const fetchLookups = async () => {
             try {
                 const [statusRes, degreeRes] = await Promise.all([
-                    api.get('/userStatuses'),
-                    api.get('/degrees')
+                    api.get('/userStatuses', { signal: controller.signal }),
+                    api.get('/degrees', { signal: controller.signal })
                 ]);
+                if (controller.signal.aborted) return;
                 const statusData = unwrapListResponse<UserStatusData>(statusRes).items;
                 const degreeData = unwrapListResponse<DegreeData>(degreeRes).items;
                 setDbStatuses(statusData);
                 setDegrees(degreeData);
             } catch (err) {
+                if (axios.isCancel(err) || (err as { code?: string })?.code === 'ERR_CANCELED' || controller.signal.aborted) {
+                    return;
+                }
                 console.error("Failed to fetch lookups:", err);
             }
         };
         fetchLookups();
+        return () => controller.abort();
     }, []);
 
     const statuses = ['All', ...dbStatuses.map(s => s.statusName)];
@@ -348,13 +374,15 @@ export function AdminUsers() {
     };
 
     const handleExportCSV = async () => {
+        if (isExportingCsvRef.current) return;
+        isExportingCsvRef.current = true;
+        setIsExportingCsv(true);
         try {
             const { whereClause, sortStr } = buildQueryFiltersAndSort();
 
-            const res = await api.get('/users', {
+            const res = await api.get('/admin/users', {
                 params: {
                     _sort: sortStr,
-                    _include: 'profile,userStatus,profileStatus,records',
                     _where: Object.keys(whereClause).length > 0 ? JSON.stringify(whereClause) : undefined
                 }
             });
@@ -421,9 +449,13 @@ export function AdminUsers() {
                 document.body.appendChild(link);
                 link.click();
                 document.body.removeChild(link);
+                setTimeout(() => URL.revokeObjectURL(url), 1000);
             }
         } catch (error) {
             console.error("Failed to export CSV", error);
+        } finally {
+            isExportingCsvRef.current = false;
+            setIsExportingCsv(false);
         }
     };
 
@@ -463,18 +495,18 @@ export function AdminUsers() {
         setEditExpiryDate(d.toISOString().split('T')[0]);
     };
 
-    const fetchUsersList = async () => {
+    const fetchUsersList = async (signal?: AbortSignal) => {
         try {
             const { whereClause, sortStr } = buildQueryFiltersAndSort();
 
-            const res = await api.get('/users', {
+            const res = await api.get('/admin/users', {
                 params: {
                     _page: currentPage,
                     _per_page: itemsPerPage,
                     _sort: sortStr,
-                    _include: 'profile,userStatus,profileStatus,records',
                     _where: Object.keys(whereClause).length > 0 ? JSON.stringify(whereClause) : undefined
-                }
+                },
+                signal
             });
 
             const { items: data, total } = unwrapListResponse<AdminUserApiItem>(res);
@@ -518,15 +550,22 @@ export function AdminUsers() {
                 };
             });
 
-            setUsers(mapped);
-            setTotalUsers(total);
+            if (!signal?.aborted) {
+                setUsers(mapped);
+                setTotalUsers(total);
+            }
         } catch (err) {
+            if (axios.isCancel(err) || (err as { code?: string })?.code === 'ERR_CANCELED' || signal?.aborted) {
+                return;
+            }
             console.error(err);
         }
     };
 
     useEffect(() => {
-        fetchUsersList();
+        const controller = new AbortController();
+        fetchUsersList(controller.signal);
+        return () => controller.abort();
     }, [activeTab, appliedSearchTerm, appliedSearchBatch, appliedSearchReason, appliedDegree, appliedBatchRange, appliedCustomMinBatch, appliedCustomMaxBatch, sortConfig, currentPage, itemsPerPage]);
 
     const totalPages = Math.ceil(totalUsers / itemsPerPage);
@@ -821,32 +860,32 @@ export function AdminUsers() {
                         </div>
                     </div>
 
-                    {statuses.map(status => (
-                        <TabsContent key={status} value={status}>
-                            <Card className="border-none shadow-md">
-                                <CardHeader className="flex flex-row items-center justify-between gap-4">
-                                    <div>
-                                        <CardTitle>{status === 'All' ? 'All Users' : `${status} Users`}</CardTitle>
-                                        <CardDescription>
-                                            {status === 'All' ? 'Manage all accounts across the platform' : `Manage ${status.toLowerCase()} accounts`}
-                                        </CardDescription>
-                                    </div>
-                                    <div className="flex items-center gap-2 shrink-0">
-                                        <ColumnVisibilityDropdown
-                                            columns={USER_TABLE_COLUMNS}
-                                            visibleColumns={visibleColumns}
-                                            onToggleColumn={handleToggleColumn}
-                                            onShowAll={handleShowAllColumns}
-                                        />
-                                        <Button variant="outline" onClick={handleExportCSV} className="border border-gray-300">Export CSV</Button>
-                                    </div>
-                                </CardHeader>
-                                <CardContent>
-                                    {renderTable()}
-                                </CardContent>
-                            </Card>
-                        </TabsContent>
-                    ))}
+                    <TabsContent value={activeTab}>
+                        <Card className="border-none shadow-md">
+                            <CardHeader className="flex flex-row items-center justify-between gap-4">
+                                <div>
+                                    <CardTitle>{activeTab === 'All' ? 'All Users' : `${activeTab} Users`}</CardTitle>
+                                    <CardDescription>
+                                        {activeTab === 'All' ? 'Manage all accounts across the platform' : `Manage ${activeTab.toLowerCase()} accounts`}
+                                    </CardDescription>
+                                </div>
+                                <div className="flex items-center gap-2 shrink-0">
+                                    <ColumnVisibilityDropdown
+                                        columns={USER_TABLE_COLUMNS}
+                                        visibleColumns={visibleColumns}
+                                        onToggleColumn={handleToggleColumn}
+                                        onShowAll={handleShowAllColumns}
+                                    />
+                                    <Button variant="outline" onClick={handleExportCSV} disabled={isExportingCsv} className="border border-gray-300">
+                                        {isExportingCsv ? 'Exporting...' : 'Export CSV'}
+                                    </Button>
+                                </div>
+                            </CardHeader>
+                            <CardContent>
+                                {renderTable()}
+                            </CardContent>
+                        </Card>
+                    </TabsContent>
                 </Tabs>
 
                 {/* Edit / Status Change Modal */}

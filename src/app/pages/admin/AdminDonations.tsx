@@ -1,4 +1,5 @@
-import { useState, useEffect, useRef, useCallback, memo } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo, memo } from 'react';
+import axios from 'axios';
 import { startOfWeek, endOfWeek, startOfMonth, endOfMonth, startOfYear, endOfYear, format } from 'date-fns';
 
 import { Button } from '@components/ui/button';
@@ -104,98 +105,454 @@ const DonationTableRow = memo(({
 ));
 DonationTableRow.displayName = 'DonationTableRow';
 
-export function AdminDonations() {
-    const [itemsPerPage, setItemsPerPage] = useState(20);
-    const printRef = useRef<HTMLDivElement>(null);
+const RECHARTS_TOOLTIP_CONTENT_STYLE = {
+    backgroundColor: 'white',
+    color: 'black',
+    borderRadius: '8px',
+    borderColor: '#e2e8f0',
+    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+} as const;
 
-    const [donations, setDonations] = useState<Donation[]>([]);
-    const [totalDonations, setTotalDonations] = useState(0);
-    const [isTableLoading, setIsTableLoading] = useState(true);
-    const [isStatsLoading, setIsStatsLoading] = useState(true);
-    const [summaryTimeDate, setSummaryTimeDate] = useState<Date | null>(null);
-    const [isExporting, setIsExporting] = useState(false);
+const CHART_PAINT_STYLE = { contain: 'paint' } as const;
+const BANK_LEGEND_LIST_STYLE = { maxHeight: '180px' } as const;
+const RECHARTS_TOOLTIP_FORMATTER = (val: unknown): [string, string] => [`${val} transactions`, 'Count'];
 
-    const [stats, setStats] = useState({
-        totalRaised: 0,
-        pendingClearances: 0,
-        pendingCount: 0,
-        uniqueDonors: 0,
-        averageLifetimeValue: 0,
-        averageDonationValue: 0,
-        donationFrequency: 0,
-        repeatDonationRate: 0,
-        yoyRetention: 0,
-        engagementRate: 0
-    });
+interface DonationStats {
+    totalRaised: number;
+    pendingClearances: number;
+    pendingCount: number;
+    uniqueDonors: number;
+    averageLifetimeValue: number;
+    averageDonationValue: number;
+    donationFrequency: number;
+    repeatDonationRate: number;
+    yoyRetention: number;
+    engagementRate: number;
+}
 
-    // Chart Data
-    const [statusData, setStatusData] = useState<{ name: string; value: number }[]>([]);
-    const [bankData, setBankData] = useState<{ name: string; value: number }[]>([]);
-
-    // Enhanced Top Donors Data
-    const [leaderboards, setLeaderboards] = useState<{
+interface DonationsOverviewProps {
+    isStatsLoading: boolean;
+    summaryTimeDate: Date | null;
+    stats: DonationStats;
+    statusData: { name: string; value: number }[];
+    bankData: { name: string; value: number }[];
+    leaderboards: {
         topLTV: DonorLeaderboardEntry[];
         topAvgDonation: DonorLeaderboardEntry[];
         topFrequency: DonorLeaderboardEntry[];
-    }>({ topLTV: [], topAvgDonation: [], topFrequency: [] });
+    };
+    onRefreshStats: () => void;
+}
+
+const DonationsOverview = memo(function DonationsOverview({
+    isStatsLoading,
+    summaryTimeDate,
+    stats,
+    statusData,
+    bankData,
+    leaderboards,
+    onRefreshStats,
+}: DonationsOverviewProps) {
+    const printRef = useRef<HTMLDivElement>(null);
+    const [isPrintingReport, setIsPrintingReport] = useState(false);
     const [activeLeaderboardTab, setActiveLeaderboardTab] = useState('Top LTV');
-
-    const [uniqueBanks, setUniqueBanks] = useState<string[]>([]);
-
-    const [dbStatuses, setDbStatuses] = useState<string[]>(['Completed', 'Processing', 'Failed']);
-
-    // Interactive Legend states
     const [activeStatus, setActiveStatus] = useState<string | null>(null);
     const [activeBank, setActiveBank] = useState<string | null>(null);
 
-    const fetchStats = async () => {
-        setIsStatsLoading(true);
+    const handleStatusLegendClick = useCallback((e: { value: string }) => {
+        setActiveStatus(prev => prev === e.value ? null : e.value);
+    }, []);
+
+    const handleBankLegendClick = useCallback((e: { value: string }) => {
+        setActiveBank(prev => prev === e.value ? null : e.value);
+    }, []);
+
+    const handlePrintReport = async () => {
+        if (!printRef.current || isPrintingReport) return;
+        setIsPrintingReport(true);
         try {
-            const res = await api.get('/donations/summary');
-            setSummaryTimeDate(new Date(res.data.stats.updatedAt));
-            const data = res.data;
-
-            setStats({
-                totalRaised: data.stats.totalRaised,
-                pendingClearances: data.stats.pendingClearances,
-                pendingCount: data.stats.pendingCount,
-                uniqueDonors: data.stats.uniqueDonors,
-                averageLifetimeValue: data.stats.averageLifetimeValue,
-                averageDonationValue: data.stats.averageDonationValue,
-                donationFrequency: data.stats.donationFrequency,
-                repeatDonationRate: data.stats.repeatDonationRate,
-                yoyRetention: data.stats.yoyRetention,
-                engagementRate: data.stats.engagementRate
+            const dataUrl = await toPng(printRef.current, {
+                cacheBust: true,
+                pixelRatio: 2,
+                backgroundColor: '#f9fafb'
             });
-
-            setStatusData(data.charts.statusData);
-            setBankData(data.charts.bankData);
-            setUniqueBanks(data.uniqueBanks || []);
-            setLeaderboards(data.leaderboards);
-
-            try {
-                const statusesRes = await api.get('/donationStatuses');
-                if (statusesRes.data && Array.isArray(statusesRes.data)) {
-                    setDbStatuses(statusesRes.data.map((s: { statusName: string }) => s.statusName));
-                }
-            } catch (err) {
-                console.error("Failed to fetch donation statuses", err);
-            }
-        } catch (err) {
-            console.error(err);
+            const link = document.createElement('a');
+            link.download = `Donations_Report_${formatDate(new Date(), 'iso')}.png`;
+            link.href = dataUrl;
+            link.click();
+        } catch (error) {
+            console.error("Failed to generate report image", error);
         } finally {
-            setIsStatsLoading(false);
+            setIsPrintingReport(false);
         }
     };
 
-    useEffect(() => {
-        fetchStats();
-    }, []);
+    const statusTotal = useMemo(
+        () => statusData.reduce((acc, curr) => acc + curr.value, 0),
+        [statusData]
+    );
+    const bankTotal = useMemo(
+        () => bankData.reduce((acc, curr) => acc + curr.value, 0),
+        [bankData]
+    );
+    const activeLeaderboardEntries = useMemo(
+        () =>
+            activeLeaderboardTab === 'Top LTV'
+                ? leaderboards.topLTV
+                : activeLeaderboardTab === 'Top Avg Donation'
+                    ? leaderboards.topAvgDonation
+                    : leaderboards.topFrequency,
+        [activeLeaderboardTab, leaderboards]
+    );
+
+    if (isStatsLoading) {
+        return (
+            <div className="flex justify-center py-10 w-full">
+                <Loader2 className="w-8 h-8 animate-spin text-brand-primary" />
+            </div>
+        );
+    }
+
+    return (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6" ref={printRef}>
+            {/* LEFT COLUMN: Summary & Charts */}
+            <div className="lg:col-span-1 flex flex-col gap-6">
+                {/* Summary Card Row */}
+                <div className="bg-white border border-gray-100 p-3 rounded-md text-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3 border border-brand-gold shadow-sm">
+                    <div className="flex items-start gap-2">
+                        <Info className="w-5 h-5 shrink-0 mt-0.5" />
+                        <div>
+                            <p className="font-medium">Summary generated</p>
+                            <p className="text-xs text-gray-600">
+                                {summaryTimeDate
+                                    ? `Last updated: ${summaryTimeDate.toLocaleString()}`
+                                    : "Summary has not been generated yet."}
+                            </p>
+                        </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <Button variant="outline" size="sm" className="gap-2 shrink-0" onClick={onRefreshStats}>
+                            Generate Summary
+                        </Button>
+                        <Button variant="outline" className="gap-2 shrink-0" onClick={handlePrintReport} disabled={isPrintingReport}>
+                            {isPrintingReport ? <Loader2 className="w-4 h-4 animate-spin" /> : <Printer size={16} />}
+                            {isPrintingReport ? 'Exporting...' : 'Print Report'}
+                        </Button>
+                    </div>
+                </div>
+                <div className="bg-white rounded-xl border border-gray-200 border-none shadow-md overflow-hidden" >
+                    <div className="px-6 pb-6 p-0 grid grid-cols-2 sm:grid-cols-3 divide-y sm:divide-x divide-gray-100" >
+                        <div className="p-4 bg-green-50/50 flex flex-col justify-center col-span-2 sm:col-span-1 border-b sm:border-b-0">
+                            <div className="text-xs font-medium text-green-800">Total Raised (YTD)</div>
+                            <div className="text-xl font-bold text-green-900 leading-tight mt-1">{formatCurrency(stats.totalRaised)}</div>
+                        </div>
+                        <div className="p-4 flex flex-col justify-center">
+                            <div className="text-xs font-medium text-gray-500">Pending Clearances</div>
+                            <div className="text-xl font-bold text-gray-900 leading-tight mt-1">{formatCurrency(stats.pendingClearances)}</div>
+                        </div>
+                        <div className="p-4 flex flex-col justify-center">
+                            <div className="text-xs font-medium text-gray-500">Unique Donors (YTD)</div>
+                            <div className="text-xl font-bold text-gray-900 leading-tight mt-1">{stats.uniqueDonors}</div>
+                        </div>
+                        <div className="p-4 flex flex-col justify-center border-t sm:border-t-0">
+                            <div className="text-xs font-medium text-gray-500">Avg. Lifetime Value</div>
+                            <div className="text-xl font-bold text-gray-900 leading-tight mt-1">{formatCurrency(stats.averageLifetimeValue)}</div>
+                        </div>
+                        <div className="p-4 flex flex-col justify-center border-t sm:border-t-0">
+                            <div className="text-xs font-medium text-gray-500">Avg. Donation Value</div>
+                            <div className="text-xl font-bold text-gray-900 leading-tight mt-1">{formatCurrency(stats.averageDonationValue)}</div>
+                        </div>
+                        <div className="p-4 flex flex-col justify-center border-t sm:border-t-0">
+                            <div className="text-xs font-medium text-gray-500">Avg. Donation Frequency</div>
+                            <div className="text-xl font-bold text-gray-900 leading-tight mt-1">{stats.donationFrequency.toFixed(2)}x</div>
+                        </div>
+                        <div className="p-4 flex flex-col justify-center border-t sm:border-t-0">
+                            <div className="text-xs font-medium text-gray-500 flex items-center gap-1">
+                                YoY Retention
+                                <div
+                                    className="w-4 h-4 rounded-full border border-gray-400 text-gray-500 flex items-center justify-center text-[10px] font-bold cursor-help"
+                                    title="Formula: (Donors this Year who also donated Last Year) / (Total Unique Donors this Year) * 100"
+                                >
+                                    ?
+                                </div>
+                            </div>
+                            <div className="text-xl font-bold text-gray-900 leading-tight mt-1">{(stats.yoyRetention * 100).toFixed(1)}%</div>
+                        </div>
+                        <div className="p-4 flex flex-col justify-center border-t sm:border-t-0">
+                            <div className="text-xs font-medium text-gray-500 flex items-center gap-1">
+                                Repeat Donation Rate
+                                <div
+                                    className="w-4 h-4 rounded-full border border-gray-400 text-gray-500 flex items-center justify-center text-[10px] font-bold cursor-help"
+                                    title="Formula: (Donors with > 1 Donation) / (Total Unique Donors) * 100"
+                                >
+                                    ?
+                                </div>
+                            </div>
+                            <div className="text-xl font-bold text-gray-900 leading-tight mt-1">{(stats.repeatDonationRate * 100).toFixed(1)}%</div>
+                        </div>
+                        <div className="p-4 flex flex-col justify-center border-t sm:border-t-0">
+                            <div className="text-xs font-medium text-gray-500 flex items-center gap-1">
+                                Engagement Rate
+                                <div
+                                    className="w-4 h-4 rounded-full border border-gray-400 text-gray-500 flex items-center justify-center text-[10px] font-bold cursor-help"
+                                    title="Formula: (Total Unique Donors) / (Total Registered Users) * 100"
+                                >
+                                    ?
+                                </div>
+                            </div>
+                            <div className="text-xl font-bold text-gray-900 leading-tight mt-1">{(stats.engagementRate * 100).toFixed(1)}%</div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Charts */}
+                <div className="grid grid-cols-1 gap-6">
+                    <div className="bg-white rounded-xl border border-gray-200 border-none shadow-md overflow-hidden" >
+                        <div className="px-6 pb-6 p-0 flex flex-col sm:flex-row h-72" >
+                            <div className="w-full sm:w-1/3 p-6 flex flex-col justify-center border-b sm:border-b-0 sm:border-r border-gray-100 bg-gray-50/50">
+                                <h3 className="text-base font-semibold text-gray-900">Status Share</h3>
+                                <p className="text-xs text-gray-500 mt-1 mb-4">Click legend items to isolate</p>
+                                <div className="flex flex-col gap-2 overflow-y-auto pr-2">
+                                    {statusData.map((entry, index) => (
+                                        <div
+                                            key={index}
+                                            className={`flex items-center gap-2 text-xs cursor-pointer select-none transition-opacity ${activeStatus && activeStatus !== entry.name ? 'opacity-40' : 'opacity-100'}`}
+                                            onClick={() => handleStatusLegendClick({ value: entry.name })}
+                                        >
+                                            <div className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: STATUS_COLORS[entry.name] || STATUS_COLORS.Other }} />
+                                            <span className="text-gray-700 truncate">{entry.name}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                            <div className="w-full sm:w-2/3 h-full p-4 relative transform-gpu will-change-transform" style={CHART_PAINT_STYLE}>
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <PieChart>
+                                        <Pie isAnimationActive={false} data={statusData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={115} startAngle={90} endAngle={-270}>
+                                            {statusData.map((entry, index) => (
+                                                <Cell
+                                                    key={`cell-${index}`}
+                                                    fill={STATUS_COLORS[entry.name] || STATUS_COLORS.Other}
+                                                    opacity={activeStatus && activeStatus !== entry.name ? 0.3 : 1}
+                                                    stroke="#ffffff"
+                                                    strokeWidth={1.5}
+                                                />
+                                            ))}
+                                        </Pie>
+                                        <RechartsTooltip formatter={RECHARTS_TOOLTIP_FORMATTER} contentStyle={RECHARTS_TOOLTIP_CONTENT_STYLE} />
+                                    </PieChart>
+                                </ResponsiveContainer>
+                                {activeStatus && (
+                                    (() => {
+                                        const entry = statusData.find(d => d.name === activeStatus);
+                                        if (!entry) return null;
+                                        const percent = statusTotal > 0 ? ((entry.value / statusTotal) * 100).toFixed(1) : '0.0';
+                                        return (
+                                            <div className="absolute top-4 right-4 bg-white/95 backdrop-blur-sm border border-gray-200 shadow-md rounded-md p-2.5 text-xs pointer-events-none z-10 animate-in fade-in duration-200">
+                                                <div className="font-semibold flex items-center gap-1.5">
+                                                    <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: STATUS_COLORS[entry.name] || STATUS_COLORS.Other }} />
+                                                    {entry.name}
+                                                </div>
+                                                <div className="mt-1 text-gray-600">
+                                                    Transactions: <span className="font-medium text-gray-900">{entry.value}</span>
+                                                </div>
+                                                <div className="text-gray-600">
+                                                    Percentage: <span className="font-medium text-gray-900">{percent}%</span>
+                                                </div>
+                                            </div>
+                                        );
+                                    })()
+                                )}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="bg-white rounded-xl border border-gray-200 border-none shadow-md overflow-hidden" >
+                        <div className="px-6 pb-6 p-0 flex flex-col sm:flex-row h-90" >
+                            <div className="w-full sm:w-1/3 p-6 flex flex-col justify-center border-b sm:border-b-0 sm:border-r border-gray-100 bg-gray-50/50">
+                                <h3 className="text-base font-semibold text-gray-900">Bank Share</h3>
+                                <p className="text-xs text-gray-500 mt-1 mb-4">Click legend items to isolate</p>
+                                <div className="flex flex-col gap-2 overflow-y-auto pr-2" style={BANK_LEGEND_LIST_STYLE}>
+                                    {bankData.map((entry, index) => (
+                                        <div
+                                            key={index}
+                                            className={`flex items-center gap-2 text-xs cursor-pointer select-none transition-opacity ${activeBank && activeBank !== entry.name ? 'opacity-40' : 'opacity-100'}`}
+                                            onClick={() => handleBankLegendClick({ value: entry.name })}
+                                        >
+                                            <div className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: getBankColor(entry.name) }} />
+                                            <span className="text-gray-700 truncate" title={entry.name}>{entry.name}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                            <div className="w-full sm:w-2/3 h-full p-4 relative transform-gpu will-change-transform" style={CHART_PAINT_STYLE}>
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <PieChart>
+                                        <Pie isAnimationActive={false} data={bankData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={115} startAngle={90} endAngle={-270}>
+                                            {bankData.map((entry, index) => (
+                                                <Cell
+                                                    key={`cell-${index}`}
+                                                    fill={getBankColor(entry.name)}
+                                                    opacity={activeBank && activeBank !== entry.name ? 0.3 : 1}
+                                                    stroke="#ffffff"
+                                                    strokeWidth={1.5}
+                                                />
+                                            ))}
+                                        </Pie>
+                                        <RechartsTooltip formatter={RECHARTS_TOOLTIP_FORMATTER} contentStyle={RECHARTS_TOOLTIP_CONTENT_STYLE} />
+                                    </PieChart>
+                                </ResponsiveContainer>
+                                {activeBank && (
+                                    (() => {
+                                        const entry = bankData.find(d => d.name === activeBank);
+                                        if (!entry) return null;
+                                        const percent = bankTotal > 0 ? ((entry.value / bankTotal) * 100).toFixed(1) : '0.0';
+                                        return (
+                                            <div className="absolute top-4 right-4 bg-white/95 backdrop-blur-sm border border-gray-200 shadow-md rounded-md p-2.5 text-xs pointer-events-none z-10 animate-in fade-in duration-200">
+                                                <div className="font-semibold flex items-center gap-1.5">
+                                                    <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: getBankColor(entry.name) }} />
+                                                    {entry.name}
+                                                </div>
+                                                <div className="mt-1 text-gray-600">
+                                                    Transactions: <span className="font-medium text-gray-900">{entry.value}</span>
+                                                </div>
+                                                <div className="text-gray-600">
+                                                    Percentage: <span className="font-medium text-gray-900">{percent}%</span>
+                                                </div>
+                                            </div>
+                                        );
+                                    })()
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* RIGHT COLUMN: Top Donors */}
+            <div className="lg:col-span-1 flex flex-col h-full">
+                <div className="bg-white rounded-xl border border-gray-200 border-none shadow-md h-full flex flex-col gap-0" >
+                    <div className="flex flex-col space-y-1.5 px-6 pt-6 bg-gray-50/50 border-b border-gray-100 py-4" >
+                        <div className="flex flex-col gap-2">
+                            <h4 className="font-semibold leading-none tracking-tight text-sm font-semibold text-gray-900" >Top Donors</h4>
+                            <Tabs value={activeLeaderboardTab} onValueChange={setActiveLeaderboardTab} className="w-full mt-2">
+                                <TabsList className="grid w-full grid-cols-3 h-8">
+                                    <TabsTrigger value="Top LTV" className="text-xs">Top LTV</TabsTrigger>
+                                    <TabsTrigger value="Top Avg Donation" className="text-xs">Top Avg</TabsTrigger>
+                                    <TabsTrigger value="Top Frequency" className="text-xs">Top Freq</TabsTrigger>
+                                </TabsList>
+                            </Tabs>
+                        </div>
+                    </div>
+                    <div className="px-6 pb-6 flex-1 p-0" >
+                        <div className="flex flex-col divide-y divide-gray-100">
+                            {activeLeaderboardEntries.map((d: DonorLeaderboardEntry, idx: number) => (
+                                <div
+                                    key={idx}
+                                    className="flex items-center justify-between gap-4 p-4 hover:bg-gray-50/30 transition-colors"
+                                >
+                                    <Link
+                                        to={`/profile/${d.userId}`}
+                                        className="relative shrink-0 group flex items-center"
+                                    >
+                                        <div className="w-26 h-26 rounded-md overflow-hidden border border-gray-200 shadow-sm transition group-hover:ring-2 group-hover:ring-brand-primary/30">
+                                            {d.profileImage ? (
+                                                <LazyImage
+                                                    src={d.profileImage}
+                                                    alt={d.donor}
+                                                    className="w-full h-full object-cover"
+                                                />
+                                            ) : (
+                                                <div className="w-full h-full flex items-center justify-center bg-brand-primary/10 text-brand-primary font-bold text-lg">
+                                                    {d.donor.charAt(0).toUpperCase()}
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        {/* This badge remains locked to the top-left corner of the link container */}
+                                        <div className="absolute -top-1 -left-1 w-6 h-6 rounded-full bg-brand-primary text-white flex items-center justify-center text-[11px] font-bold border-2 border-white">
+                                            {idx + 1}
+                                        </div>
+                                    </Link>
+
+                                    <div className="flex-1 min-w-0">
+                                        <div className="flex items-start justify-between gap-3 text-lg mb-1">
+                                            <h4 className="font-semibold text-gray-900 truncate">
+                                                {d.donor}
+                                            </h4>
+                                        </div>
+
+                                        <div className="mt-2 space-y-1.5">
+                                            {d.career !== 'N/A' && (
+                                                <div className="flex items-center gap-2 text-xs text-gray-600">
+                                                    <Briefcase className="w-3.5 h-3.5 text-gray-400 shrink-0" />
+                                                    <span className="truncate">{d.career}</span>
+                                                </div>
+                                            )}
+
+                                            {d.location !== 'N/A' && (
+                                                <div className="flex items-center gap-2 text-xs text-gray-600">
+                                                    <MapPin className="w-3.5 h-3.5 text-gray-400 shrink-0" />
+                                                    <span className="truncate">{d.location}</span>
+                                                </div>
+                                            )}
+
+                                            {d.batch !== 'N/A' && (
+                                                <div className="flex items-center gap-2 text-xs text-gray-600">
+                                                    <GraduationCap className="w-3.5 h-3.5 text-gray-400 shrink-0" />
+                                                    <span>Batch {d.batch}</span>
+                                                </div>
+                                            )}
+
+                                            {d.email !== 'N/A' && (
+                                                <div className="flex items-center gap-2 text-xs text-gray-600">
+                                                    <Mail className="w-3.5 h-3.5 text-gray-400 shrink-0" />
+                                                    <span className="truncate">{d.email}</span>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    <div className="flex items-start gap-4 text-sm mb-2">
+                                        <div className={`flex flex-col ${activeLeaderboardTab === 'Top LTV' ? 'text-brand-primary font-bold' : 'text-gray-400 font-medium opacity-50'}`}>
+                                            <span className="text-[10px] uppercase tracking-wider">LTV</span>
+                                            <span>{formatCurrency(d.amount)}</span>
+                                        </div>
+                                        <div className={`flex flex-col ${activeLeaderboardTab === 'Top Avg Donation' ? 'text-brand-primary font-bold' : 'text-gray-400 font-medium opacity-50'}`}>
+                                            <span className="text-[10px] uppercase tracking-wider">Avg</span>
+                                            <span>{formatCurrency(d.avgDonation)}</span>
+                                        </div>
+                                        <div className={`flex flex-col ${activeLeaderboardTab === 'Top Frequency' ? 'text-brand-primary font-bold' : 'text-gray-400 font-medium opacity-50'}`}>
+                                            <span className="text-[10px] uppercase tracking-wider">Freq</span>
+                                            <span>{d.frequency}x</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+});
+DonationsOverview.displayName = 'DonationsOverview';
+
+interface DonationsTableProps {
+    dbStatuses: string[];
+    uniqueBanks: string[];
+}
+
+const DonationsTable = memo(function DonationsTable({ dbStatuses, uniqueBanks }: DonationsTableProps) {
+    const [itemsPerPage, setItemsPerPage] = useState(20);
+    const [donations, setDonations] = useState<Donation[]>([]);
+    const [totalDonations, setTotalDonations] = useState(0);
+    const [isTableLoading, setIsTableLoading] = useState(true);
+    const [isExportingCsv, setIsExportingCsv] = useState(false);
+    const isExportingCsvRef = useRef(false);
 
     // Filter State
     const [activeTab, setActiveTab] = useState('All');
-
-    // Filter State
     const [searchDonor, setSearchDonor] = useState('');
     const [searchRef, setSearchRef] = useState('');
     const [minAmount, setMinAmount] = useState('');
@@ -223,19 +580,36 @@ export function AdminDonations() {
         createDefaultColumnVisibility(DONATION_TABLE_COLUMNS)
     );
 
+    const visibleColumnsRef = useRef(visibleColumns);
+    useEffect(() => {
+        visibleColumnsRef.current = visibleColumns;
+    }, [visibleColumns]);
+
+    const sortConfigRef = useRef(sortConfig);
+    useEffect(() => {
+        sortConfigRef.current = sortConfig;
+    }, [sortConfig]);
+
     const handleToggleColumn = useCallback((key: DonationColumnKey) => {
-        const currentlyVisible = visibleColumns[key];
-        const visibleCount = Object.values(visibleColumns).filter(Boolean).length;
+        const current = visibleColumnsRef.current;
+        const currentlyVisible = current[key];
+        const visibleCount = Object.values(current).filter(Boolean).length;
         if (currentlyVisible && visibleCount <= 1) return;
         const nextVisible = !currentlyVisible;
-        setVisibleColumns((prev) => ({ ...prev, [key]: nextVisible }));
-        if (!nextVisible && sortConfig?.key === key) {
+        const nextColumns = { ...current, [key]: nextVisible };
+        visibleColumnsRef.current = nextColumns;
+        setVisibleColumns(nextColumns);
+        const currentSort = sortConfigRef.current;
+        if (!nextVisible && currentSort?.key === key) {
+            sortConfigRef.current = null;
             setSortConfig(null);
         }
-    }, [visibleColumns, sortConfig]);
+    }, []);
 
     const handleShowAllColumns = useCallback(() => {
-        setVisibleColumns(createDefaultColumnVisibility(DONATION_TABLE_COLUMNS));
+        const allVisible = createDefaultColumnVisibility(DONATION_TABLE_COLUMNS);
+        visibleColumnsRef.current = allVisible;
+        setVisibleColumns(allVisible);
     }, []);
 
     const visibleColumnCount = Math.max(1, Object.values(visibleColumns).filter(Boolean).length);
@@ -314,6 +688,9 @@ export function AdminDonations() {
     };
 
     const handleExportCSV = async () => {
+        if (isExportingCsvRef.current) return;
+        isExportingCsvRef.current = true;
+        setIsExportingCsv(true);
         try {
             const whereClause: Record<string, unknown> = {};
             if (activeTab !== 'All') {
@@ -408,13 +785,18 @@ export function AdminDonations() {
                 document.body.appendChild(link);
                 link.click();
                 document.body.removeChild(link);
+                setTimeout(() => URL.revokeObjectURL(url), 1000);
             }
         } catch (error) {
             console.error("Failed to export CSV", error);
+        } finally {
+            isExportingCsvRef.current = false;
+            setIsExportingCsv(false);
         }
     };
 
     useEffect(() => {
+        const controller = new AbortController();
         const fetchDonations = async () => {
             setIsTableLoading(true);
             try {
@@ -470,7 +852,8 @@ export function AdminDonations() {
                         _limit: itemsPerPage,
                         _sort: sortStr,
                         _where: Object.keys(whereClause).length > 0 ? JSON.stringify(whereClause) : undefined
-                    }
+                    },
+                    signal: controller.signal
                 });
 
                 const { items: data, total } = unwrapListResponse<DonationData>(res);
@@ -487,15 +870,23 @@ export function AdminDonations() {
                     rawDate: new Date(d.donationDate).getTime(),
                     userId: d.userId
                 }));
-                setDonations(mapped);
-                setTotalDonations(total);
+                if (!controller.signal.aborted) {
+                    setDonations(mapped);
+                    setTotalDonations(total);
+                }
             } catch (error) {
+                if (axios.isCancel(error) || (error as { code?: string })?.code === 'ERR_CANCELED' || controller.signal.aborted) {
+                    return;
+                }
                 console.error("Failed to fetch donations", error);
             } finally {
-                setIsTableLoading(false);
+                if (!controller.signal.aborted) {
+                    setIsTableLoading(false);
+                }
             }
         };
         fetchDonations();
+        return () => controller.abort();
     }, [activeTab, appliedSearchDonor, appliedSearchRef, appliedMinAmount, appliedMaxAmount, appliedStartDate, appliedEndDate, appliedSearchBankName, sortConfig, currentPage, itemsPerPage]);
 
     const handleApplyFilters = () => {
@@ -537,34 +928,375 @@ export function AdminDonations() {
         handleApplyFilters();
     };
 
-    const handleStatusLegendClick = (e: { value: string }) => {
-        setActiveStatus(prev => prev === e.value ? null : e.value);
-    };
+    return (
+        <div className="bg-white rounded-xl border border-gray-200 border-none shadow-md print:hidden" >
+            <div className="flex flex-col space-y-1.5 px-6 pt-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4" >
+                <div>
+                    <h4 className="font-semibold leading-none tracking-tight text-lg" >All Donations</h4>
+                    <p className="text-sm text-gray-500" >Detailed log of all monetary contributions from alumni</p>
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
+                    <ColumnVisibilityDropdown
+                        columns={DONATION_TABLE_COLUMNS}
+                        visibleColumns={visibleColumns}
+                        onToggleColumn={handleToggleColumn}
+                        onShowAll={handleShowAllColumns}
+                    />
+                    <Button variant="default" className="gap-2 shrink-0 bg-brand-primary text-white hover:bg-brand-primary-hover" onClick={handleExportCSV} disabled={isExportingCsv}>
+                        <Download size={16} /> {isExportingCsv ? 'Exporting...' : 'Export CSV'}
+                    </Button>
+                </div>
+            </div>
+            <div className="px-6 pb-6 space-y-4" >
+                <Tabs value={activeTab} onValueChange={onTabChange} className="w-full">
+                    <TabsList className="mb-2">
+                        <TabsTrigger value="All" className="min-w-[100px]">All</TabsTrigger>
+                        {dbStatuses.map((statusName) => (
+                            <TabsTrigger key={statusName} value={statusName} className="min-w-[100px]">{statusName}</TabsTrigger>
+                        ))}
+                    </TabsList>
+                </Tabs>
 
-    const handleBankLegendClick = (e: { value: string }) => {
-        setActiveBank(prev => prev === e.value ? null : e.value);
-    };
+                <div className="p-4 bg-gray-50/50 border border-gray-100 rounded-lg flex flex-col gap-4">
+                    <div className="flex justify-between items-center">
+                        <div className="text-sm font-medium text-gray-700 flex flex-row gap-2">
+                            <span>Filters</span>
+                            <Badge variant="secondary" className="bg-brand-primary/10 text-brand-primary hover:bg-brand-primary/20 cursor-default">
+                                {totalDonations} matching transactions
+                            </Badge>
+                        </div>
+                        {!isTableLoading && (
+                            <div className="flex items-center gap-4">
+                                <div className="flex items-center gap-2">
+                                    <span className="text-sm text-gray-500">Rows per page:</span>
+                                    <Select value={itemsPerPage.toString()} onValueChange={(val) => { setItemsPerPage(Number(val)); setCurrentPage(1); }}>
+                                        <SelectTrigger className="w-[80px] h-8">
+                                            <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {[10, 20, 50, 100].map(v => <SelectItem key={v} value={v.toString()}>{v}</SelectItem>)}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                                <div className="flex items-center space-x-2">
+                                    <Button variant="outline" size="sm" onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1}>
+                                        <ChevronLeft className="h-4 w-4" />
+                                    </Button>
+                                    <div className="text-sm font-medium px-2">
+                                        Page {currentPage} of {totalPages}
+                                    </div>
+                                    <Button variant="outline" size="sm" onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages}>
+                                        <ChevronRight className="h-4 w-4" />
+                                    </Button>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <div className="flex items-center justify-between lg:col-span-2 gap-2">
+                            <span className="text-sm text-gray-500 shrink-0">Date:</span>
+                            <Select value={datePreset} onValueChange={(val: string) => {
+                                setDatePreset(val);
+                                if (val !== 'custom') applyQuickFilter(val as 'all' | 'this_week' | 'this_month' | 'this_year');
+                            }}>
+                                <SelectTrigger className="w-[140px] h-10 bg-white text-gray-700 border border-gray-300 shrink-0">
+                                    <SelectValue placeholder="Preset Dates" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="all">All Time</SelectItem>
+                                    <SelectItem value="this_week">This Week</SelectItem>
+                                    <SelectItem value="this_month">This Month</SelectItem>
+                                    <SelectItem value="this_year">This Year</SelectItem>
+                                    <SelectItem value="custom">Custom</SelectItem>
+                                </SelectContent>
+                            </Select>
+                            <div className="flex items-center gap-2 flex-1">
+                                <span className={`text-xs shrink-0 ${datePreset === 'custom' ? 'text-gray-500' : 'text-gray-300'}`}>From</span>
+                                <Input
+                                    type="date"
+                                    className="h-10 w-full bg-white px-2 text-sm text-gray-700 border border-gray-300 disabled:bg-gray-100 disabled:text-gray-400"
+                                    value={startDate}
+                                    disabled={datePreset !== 'custom'}
+                                    onChange={(e) => setStartDate(e.target.value)}
+                                    onKeyDown={(e) => { if (e.key === 'Enter') handleApplyFilters(); }}
+                                />
+                                <span className={`text-xs shrink-0 ${datePreset === 'custom' ? 'text-gray-500' : 'text-gray-300'}`}>To</span>
+                                <Input
+                                    type="date"
+                                    className="h-10 w-full bg-white px-2 text-sm text-gray-700 border border-gray-300 disabled:bg-gray-100 disabled:text-gray-400"
+                                    value={endDate}
+                                    disabled={datePreset !== 'custom'}
+                                    onChange={(e) => setEndDate(e.target.value)}
+                                    onKeyDown={(e) => { if (e.key === 'Enter') handleApplyFilters(); }}
+                                />
+                            </div>
+                        </div>
 
+                        <div className="flex items-center justify-between lg:col-span-2 gap-2">
+                            <span className="text-sm text-gray-500 shrink-0">Amount:</span>
+                            <Select value={amountPreset} onValueChange={(val: string) => {
+                                setAmountPreset(val);
+                                if (val !== 'custom') applyAmountQuickFilter(val);
+                            }}>
+                                <SelectTrigger className="w-[140px] h-10 bg-white text-gray-700 border border-gray-300 shrink-0">
+                                    <SelectValue placeholder="Preset Amount" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="all">All</SelectItem>
+                                    <SelectItem value="below_1000">Below 1000</SelectItem>
+                                    <SelectItem value="1000_5000">1000 - 5000</SelectItem>
+                                    <SelectItem value="above_5000">Above 5000</SelectItem>
+                                    <SelectItem value="custom">Custom</SelectItem>
+                                </SelectContent>
+                            </Select>
+                            <div className="flex items-center gap-2 flex-1">
+                                <Input
+                                    type="number"
+                                    placeholder="Min ₱"
+                                    className="h-10 w-full bg-white px-2 text-sm border border-gray-300 disabled:bg-gray-100 disabled:text-gray-400"
+                                    value={minAmount}
+                                    disabled={amountPreset !== 'custom'}
+                                    onChange={(e) => setMinAmount(e.target.value)}
+                                    onKeyDown={(e) => { if (e.key === 'Enter') handleApplyFilters(); }}
+                                />
+                                <span className={`text-sm shrink-0 ${amountPreset === 'custom' ? 'text-gray-500' : 'text-gray-300'}`}>-</span>
+                                <Input
+                                    type="number"
+                                    placeholder="Max ₱"
+                                    className="h-10 w-full bg-white px-2 text-sm border border-gray-300 disabled:bg-gray-100 disabled:text-gray-400"
+                                    value={maxAmount}
+                                    disabled={amountPreset !== 'custom'}
+                                    onChange={(e) => setMaxAmount(e.target.value)}
+                                    onKeyDown={(e) => { if (e.key === 'Enter') handleApplyFilters(); }}
+                                />
+                            </div>
+                        </div>
 
-    const handlePrintReport = async () => {
-        if (!printRef.current || isExporting) return;
-        setIsExporting(true);
+                        <div className="relative flex items-center">
+                            <Search className="absolute left-2.5 h-4 w-4 text-gray-500" />
+                            <Input
+                                placeholder="Search by Donor..."
+                                className="pl-9 h-10 w-full bg-white border border-gray-300"
+                                value={searchDonor}
+                                onChange={(e) => setSearchDonor(e.target.value)}
+                                onKeyDown={(e) => { if (e.key === 'Enter') handleApplyFilters(); }}
+                            />
+                        </div>
+
+                        <div className="relative flex items-center">
+                            <Search className="absolute left-2.5 h-4 w-4 text-gray-500" />
+                            <Input
+                                placeholder="Search Reference..."
+                                className="pl-9 h-10 w-full bg-white border border-gray-300"
+                                value={searchRef}
+                                onChange={(e) => setSearchRef(e.target.value)}
+                                onKeyDown={(e) => { if (e.key === 'Enter') handleApplyFilters(); }}
+                            />
+                        </div>
+
+                        <Select value={searchBankName} onValueChange={setSearchBankName}>
+                            <SelectTrigger className="h-10 bg-white text-gray-700 border border-gray-300">
+                                <SelectValue placeholder="Bank Name" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="All">All Banks</SelectItem>
+                                {uniqueBanks.map(b => (
+                                    <SelectItem key={b} value={b}>{b}</SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+
+                        <div className="flex items-center gap-2 justify-end">
+                            <Button variant="outline" onClick={handleClearFilters} className="w-24 border border-gray-300">Clear</Button>
+                            <Button className="w-24 bg-brand-primary hover:bg-brand-primary-hover text-white" onClick={handleApplyFilters}>Submit</Button>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="border rounded-md overflow-x-auto bg-white">
+                    <table className="w-full text-sm text-left">
+                        <thead className="bg-gray-50 text-gray-700 border-b">
+                            <tr className="divide-x divide-gray-200/70">
+                                {visibleColumns.date && (
+                                    <th className="px-6 py-3 cursor-pointer hover:bg-gray-100 transition-colors" onClick={() => handleSort('date')}>
+                                        <div className="flex items-center gap-1">Date {renderSortIcon('date')}</div>
+                                    </th>
+                                )}
+                                {visibleColumns.donor && (
+                                    <th className="px-6 py-3 cursor-pointer hover:bg-gray-100 transition-colors" onClick={() => handleSort('donor')}>
+                                        <div className="flex items-center gap-1">Donor {renderSortIcon('donor')}</div>
+                                    </th>
+                                )}
+                                {visibleColumns.amount && (
+                                    <th className="px-6 py-3 cursor-pointer hover:bg-gray-100 transition-colors" onClick={() => handleSort('amount')}>
+                                        <div className="flex items-center gap-1">Amount {renderSortIcon('amount')}</div>
+                                    </th>
+                                )}
+                                {visibleColumns.status && (
+                                    <th className="px-6 py-3">
+                                        <div className="flex items-center gap-1">Status</div>
+                                    </th>
+                                )}
+                                {visibleColumns.bankName && (
+                                    <th className="px-6 py-3">
+                                        <div className="flex items-center gap-1">Bank Name</div>
+                                    </th>
+                                )}
+                                {visibleColumns.donationReference && (
+                                    <th className="px-6 py-3">
+                                        <div className="flex items-center gap-1">Donation Reference</div>
+                                    </th>
+                                )}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {isTableLoading ? (
+                                <tr>
+                                    <td colSpan={visibleColumnCount} className="px-6 py-12 text-center border-t bg-gray-50/50">
+                                        <Loader2 className="w-6 h-6 animate-spin text-gray-400 mx-auto" />
+                                        <p className="mt-2 text-gray-500">Loading transactions...</p>
+                                    </td>
+                                </tr>
+                            ) : paginatedDonations.length === 0 ? (
+                                <tr>
+                                    <td colSpan={visibleColumnCount} className="px-6 py-8 text-center text-sm text-gray-500 border-t bg-gray-50">
+                                        No transactions found matching your criteria.
+                                    </td>
+                                </tr>
+                            ) : (
+                                paginatedDonations.map((donation) => (
+                                    <DonationTableRow
+                                        key={donation.id}
+                                        donation={donation}
+                                        visibleColumns={visibleColumns}
+                                    />
+                                ))
+                            )}
+                        </tbody>
+                    </table>
+                </div>
+
+                {totalPages > 1 && !isTableLoading && (
+                    <div className="flex flex-col sm:flex-row items-center justify-between pt-2 gap-4">
+                        <div className="text-sm text-gray-500">
+                            Showing {(currentPage - 1) * itemsPerPage + 1} to {Math.min(currentPage * itemsPerPage, totalDonations)} of {totalDonations} transactions
+                        </div>
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+});
+DonationsTable.displayName = 'DonationsTable';
+
+export function AdminDonations() {
+    const [isStatsLoading, setIsStatsLoading] = useState(true);
+    const [summaryTimeDate, setSummaryTimeDate] = useState<Date | null>(null);
+
+    const [stats, setStats] = useState<DonationStats>({
+        totalRaised: 0,
+        pendingClearances: 0,
+        pendingCount: 0,
+        uniqueDonors: 0,
+        averageLifetimeValue: 0,
+        averageDonationValue: 0,
+        donationFrequency: 0,
+        repeatDonationRate: 0,
+        yoyRetention: 0,
+        engagementRate: 0
+    });
+
+    // Chart Data
+    const [statusData, setStatusData] = useState<{ name: string; value: number }[]>([]);
+    const [bankData, setBankData] = useState<{ name: string; value: number }[]>([]);
+
+    // Enhanced Top Donors Data
+    const [leaderboards, setLeaderboards] = useState<{
+        topLTV: DonorLeaderboardEntry[];
+        topAvgDonation: DonorLeaderboardEntry[];
+        topFrequency: DonorLeaderboardEntry[];
+    }>({ topLTV: [], topAvgDonation: [], topFrequency: [] });
+
+    const [uniqueBanks, setUniqueBanks] = useState<string[]>([]);
+    const [dbStatuses, setDbStatuses] = useState<string[]>(['Completed', 'Processing', 'Failed']);
+
+    const fetchStats = useCallback(async (signal?: AbortSignal) => {
+        setIsStatsLoading(true);
         try {
-            const dataUrl = await toPng(printRef.current, {
-                cacheBust: true,
-                pixelRatio: 2,
-                backgroundColor: '#f9fafb'
+            const res = await api.get('/donations/summary', { signal });
+            if (signal?.aborted) return;
+            setSummaryTimeDate(new Date(res.data.stats.updatedAt));
+            const data = res.data;
+
+            setStats({
+                totalRaised: data.stats.totalRaised,
+                pendingClearances: data.stats.pendingClearances,
+                pendingCount: data.stats.pendingCount,
+                uniqueDonors: data.stats.uniqueDonors,
+                averageLifetimeValue: data.stats.averageLifetimeValue,
+                averageDonationValue: data.stats.averageDonationValue,
+                donationFrequency: data.stats.donationFrequency,
+                repeatDonationRate: data.stats.repeatDonationRate,
+                yoyRetention: data.stats.yoyRetention,
+                engagementRate: data.stats.engagementRate
             });
-            const link = document.createElement('a');
-            link.download = `Donations_Report_${formatDate(new Date(), 'iso')}.png`;
-            link.href = dataUrl;
-            link.click();
-        } catch (error) {
-            console.error("Failed to generate report image", error);
+
+            setStatusData(data.charts.statusData);
+            setBankData(data.charts.bankData);
+            const nextBanks: string[] = data.uniqueBanks || [];
+            setUniqueBanks(prev =>
+                prev.length === nextBanks.length && prev.every((b, i) => b === nextBanks[i])
+                    ? prev
+                    : nextBanks
+            );
+            setLeaderboards(data.leaderboards);
+        } catch (err) {
+            if (axios.isCancel(err) || (err as { code?: string })?.code === 'ERR_CANCELED' || signal?.aborted) {
+                return;
+            }
+            console.error(err);
         } finally {
-            setIsExporting(false);
+            if (!signal?.aborted) {
+                setIsStatsLoading(false);
+            }
         }
-    };
+    }, []);
+
+    const refreshStatsControllerRef = useRef<AbortController | null>(null);
+
+    useEffect(() => {
+        const controller = new AbortController();
+        const fetchStatuses = async () => {
+            try {
+                const statusesRes = await api.get('/donationStatuses', { signal: controller.signal });
+                if (!controller.signal.aborted && statusesRes.data && Array.isArray(statusesRes.data)) {
+                    setDbStatuses(statusesRes.data.map((s: { statusName: string }) => s.statusName));
+                }
+            } catch (err) {
+                if (axios.isCancel(err) || (err as { code?: string })?.code === 'ERR_CANCELED' || controller.signal.aborted) {
+                    return;
+                }
+                console.error("Failed to fetch donation statuses", err);
+            }
+        };
+        Promise.all([fetchStats(controller.signal), fetchStatuses()]);
+        return () => {
+            controller.abort();
+            refreshStatsControllerRef.current?.abort();
+            refreshStatsControllerRef.current = null;
+        };
+    }, [fetchStats]);
+
+    const handleRefreshStats = useCallback(() => {
+        refreshStatsControllerRef.current?.abort();
+        const controller = new AbortController();
+        refreshStatsControllerRef.current = controller;
+        fetchStats(controller.signal).finally(() => {
+            if (refreshStatsControllerRef.current === controller) {
+                refreshStatsControllerRef.current = null;
+            }
+        });
+    }, [fetchStats]);
 
     return (
         <div className="space-y-6 animate-in fade-in duration-500">
@@ -582,591 +1314,17 @@ export function AdminDonations() {
                 <p className="text-gray-500">View recent contributions and generate financial reports.</p>
             </div>
 
-            {isStatsLoading ? (
-                <div className="flex justify-center py-10 w-full">
-                    <Loader2 className="w-8 h-8 animate-spin text-brand-primary" />
-                </div>
-            ) : (
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6" ref={printRef}>
-                    {/* LEFT COLUMN: Summary & Charts */}
-                    <div className="lg:col-span-1 flex flex-col gap-6">
-                        {/* Summary Card Row */}
-                        <div className="bg-white border border-gray-100 p-3 rounded-md text-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3 border border-brand-gold shadow-sm">
-                            <div className="flex items-start gap-2">
-                                <Info className="w-5 h-5 shrink-0 mt-0.5" />
-                                <div>
-                                    <p className="font-medium">Summary generated</p>
-                                    <p className="text-xs text-gray-600">
-                                        {summaryTimeDate
-                                            ? `Last updated: ${summaryTimeDate.toLocaleString()}`
-                                            : "Summary has not been generated yet."}
-                                    </p>
-                                </div>
-                            </div>
-                            <div className="flex items-center gap-2">
-                                <Button variant="outline" size="sm" className="gap-2 shrink-0" onClick={fetchStats}>
-                                    Generate Summary
-                                </Button>
-                                <Button variant="outline" className="gap-2 shrink-0" onClick={handlePrintReport} disabled={isExporting}>
-                                    {isExporting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Printer size={16} />}
-                                    {isExporting ? 'Exporting...' : 'Print Report'}
-                                </Button>
-                            </div>
-                        </div>
-                        <div className="bg-white rounded-xl border border-gray-200 border-none shadow-md overflow-hidden" >
-                            <div className="px-6 pb-6 p-0 grid grid-cols-2 sm:grid-cols-3 divide-y sm:divide-x divide-gray-100" >
-                                <div className="p-4 bg-green-50/50 flex flex-col justify-center col-span-2 sm:col-span-1 border-b sm:border-b-0">
-                                    <div className="text-xs font-medium text-green-800">Total Raised (YTD)</div>
-                                    <div className="text-xl font-bold text-green-900 leading-tight mt-1">{formatCurrency(stats.totalRaised)}</div>
-                                </div>
-                                <div className="p-4 flex flex-col justify-center">
-                                    <div className="text-xs font-medium text-gray-500">Pending Clearances</div>
-                                    <div className="text-xl font-bold text-gray-900 leading-tight mt-1">{formatCurrency(stats.pendingClearances)}</div>
-                                </div>
-                                <div className="p-4 flex flex-col justify-center">
-                                    <div className="text-xs font-medium text-gray-500">Unique Donors (YTD)</div>
-                                    <div className="text-xl font-bold text-gray-900 leading-tight mt-1">{stats.uniqueDonors}</div>
-                                </div>
-                                <div className="p-4 flex flex-col justify-center border-t sm:border-t-0">
-                                    <div className="text-xs font-medium text-gray-500">Avg. Lifetime Value</div>
-                                    <div className="text-xl font-bold text-gray-900 leading-tight mt-1">{formatCurrency(stats.averageLifetimeValue)}</div>
-                                </div>
-                                <div className="p-4 flex flex-col justify-center border-t sm:border-t-0">
-                                    <div className="text-xs font-medium text-gray-500">Avg. Donation Value</div>
-                                    <div className="text-xl font-bold text-gray-900 leading-tight mt-1">{formatCurrency(stats.averageDonationValue)}</div>
-                                </div>
-                                <div className="p-4 flex flex-col justify-center border-t sm:border-t-0">
-                                    <div className="text-xs font-medium text-gray-500">Avg. Donation Frequency</div>
-                                    <div className="text-xl font-bold text-gray-900 leading-tight mt-1">{stats.donationFrequency.toFixed(2)}x</div>
-                                </div>
-                                <div className="p-4 flex flex-col justify-center border-t sm:border-t-0">
-                                    <div className="text-xs font-medium text-gray-500 flex items-center gap-1">
-                                        YoY Retention
-                                        <div
-                                            className="w-4 h-4 rounded-full border border-gray-400 text-gray-500 flex items-center justify-center text-[10px] font-bold cursor-help"
-                                            title="Formula: (Donors this Year who also donated Last Year) / (Total Unique Donors this Year) * 100"
-                                        >
-                                            ?
-                                        </div>
-                                    </div>
-                                    <div className="text-xl font-bold text-gray-900 leading-tight mt-1">{(stats.yoyRetention * 100).toFixed(1)}%</div>
-                                </div>
-                                <div className="p-4 flex flex-col justify-center border-t sm:border-t-0">
-                                    <div className="text-xs font-medium text-gray-500 flex items-center gap-1">
-                                        Repeat Donation Rate
-                                        <div
-                                            className="w-4 h-4 rounded-full border border-gray-400 text-gray-500 flex items-center justify-center text-[10px] font-bold cursor-help"
-                                            title="Formula: (Donors with > 1 Donation) / (Total Unique Donors) * 100"
-                                        >
-                                            ?
-                                        </div>
-                                    </div>
-                                    <div className="text-xl font-bold text-gray-900 leading-tight mt-1">{(stats.repeatDonationRate * 100).toFixed(1)}%</div>
-                                </div>
-                                <div className="p-4 flex flex-col justify-center border-t sm:border-t-0">
-                                    <div className="text-xs font-medium text-gray-500 flex items-center gap-1">
-                                        Engagement Rate
-                                        <div
-                                            className="w-4 h-4 rounded-full border border-gray-400 text-gray-500 flex items-center justify-center text-[10px] font-bold cursor-help"
-                                            title="Formula: (Total Unique Donors) / (Total Registered Users) * 100"
-                                        >
-                                            ?
-                                        </div>
-                                    </div>
-                                    <div className="text-xl font-bold text-gray-900 leading-tight mt-1">{(stats.engagementRate * 100).toFixed(1)}%</div>
-                                </div>
-                            </div>
-                        </div>
+            <DonationsOverview
+                isStatsLoading={isStatsLoading}
+                summaryTimeDate={summaryTimeDate}
+                stats={stats}
+                statusData={statusData}
+                bankData={bankData}
+                leaderboards={leaderboards}
+                onRefreshStats={handleRefreshStats}
+            />
 
-                        {/* Charts */}
-                        <div className="grid grid-cols-1 gap-6">
-                            <div className="bg-white rounded-xl border border-gray-200 border-none shadow-md overflow-hidden" >
-                                <div className="px-6 pb-6 p-0 flex flex-col sm:flex-row h-72" >
-                                    <div className="w-full sm:w-1/3 p-6 flex flex-col justify-center border-b sm:border-b-0 sm:border-r border-gray-100 bg-gray-50/50">
-                                        <h3 className="text-base font-semibold text-gray-900">Status Share</h3>
-                                        <p className="text-xs text-gray-500 mt-1 mb-4">Click legend items to isolate</p>
-                                        <div className="flex flex-col gap-2 overflow-y-auto pr-2">
-                                            {statusData.map((entry, index) => (
-                                                <div
-                                                    key={index}
-                                                    className={`flex items-center gap-2 text-xs cursor-pointer select-none transition-opacity ${activeStatus && activeStatus !== entry.name ? 'opacity-40' : 'opacity-100'}`}
-                                                    onClick={() => handleStatusLegendClick({ value: entry.name })}
-                                                >
-                                                    <div className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: STATUS_COLORS[entry.name] || STATUS_COLORS.Other }} />
-                                                    <span className="text-gray-700 truncate">{entry.name}</span>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </div>
-                                    <div className="w-full sm:w-2/3 h-full p-4 relative transform-gpu will-change-transform" style={{ contain: 'paint' }}>
-                                        <ResponsiveContainer width="100%" height="100%">
-                                            <PieChart>
-                                                <Pie isAnimationActive={false} data={statusData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={115} startAngle={90} endAngle={-270}>
-                                                    {statusData.map((entry, index) => (
-                                                        <Cell
-                                                            key={`cell-${index}`}
-                                                            fill={STATUS_COLORS[entry.name] || STATUS_COLORS.Other}
-                                                            opacity={activeStatus && activeStatus !== entry.name ? 0.3 : 1}
-                                                            stroke="#ffffff"
-                                                            strokeWidth={1.5}
-                                                        />
-                                                    ))}
-                                                </Pie>
-                                                <RechartsTooltip formatter={(val: unknown) => [`${val} transactions`, 'Count']} contentStyle={{ backgroundColor: 'white', color: 'black', borderRadius: '8px', borderColor: '#e2e8f0', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }} />
-                                            </PieChart>
-                                        </ResponsiveContainer>
-                                        {activeStatus && (
-                                            (() => {
-                                                const entry = statusData.find(d => d.name === activeStatus);
-                                                if (!entry) return null;
-                                                const sum = statusData.reduce((acc, curr) => acc + curr.value, 0);
-                                                const percent = sum > 0 ? ((entry.value / sum) * 100).toFixed(1) : '0.0';
-                                                return (
-                                                    <div className="absolute top-4 right-4 bg-white/95 backdrop-blur-sm border border-gray-200 shadow-md rounded-md p-2.5 text-xs pointer-events-none z-10 animate-in fade-in duration-200">
-                                                        <div className="font-semibold flex items-center gap-1.5">
-                                                            <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: STATUS_COLORS[entry.name] || STATUS_COLORS.Other }} />
-                                                            {entry.name}
-                                                        </div>
-                                                        <div className="mt-1 text-gray-600">
-                                                            Transactions: <span className="font-medium text-gray-900">{entry.value}</span>
-                                                        </div>
-                                                        <div className="text-gray-600">
-                                                            Percentage: <span className="font-medium text-gray-900">{percent}%</span>
-                                                        </div>
-                                                    </div>
-                                                );
-                                            })()
-                                        )}
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="bg-white rounded-xl border border-gray-200 border-none shadow-md overflow-hidden" >
-                                <div className="px-6 pb-6 p-0 flex flex-col sm:flex-row h-90" >
-                                    <div className="w-full sm:w-1/3 p-6 flex flex-col justify-center border-b sm:border-b-0 sm:border-r border-gray-100 bg-gray-50/50">
-                                        <h3 className="text-base font-semibold text-gray-900">Bank Share</h3>
-                                        <p className="text-xs text-gray-500 mt-1 mb-4">Click legend items to isolate</p>
-                                        <div className="flex flex-col gap-2 overflow-y-auto pr-2" style={{ maxHeight: '180px' }}>
-                                            {bankData.map((entry, index) => (
-                                                <div
-                                                    key={index}
-                                                    className={`flex items-center gap-2 text-xs cursor-pointer select-none transition-opacity ${activeBank && activeBank !== entry.name ? 'opacity-40' : 'opacity-100'}`}
-                                                    onClick={() => handleBankLegendClick({ value: entry.name })}
-                                                >
-                                                    <div className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: getBankColor(entry.name) }} />
-                                                    <span className="text-gray-700 truncate" title={entry.name}>{entry.name}</span>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </div>
-                                    <div className="w-full sm:w-2/3 h-full p-4 relative transform-gpu will-change-transform" style={{ contain: 'paint' }}>
-                                        <ResponsiveContainer width="100%" height="100%">
-                                            <PieChart>
-                                                <Pie isAnimationActive={false} data={bankData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={115} startAngle={90} endAngle={-270}>
-                                                    {bankData.map((entry, index) => (
-                                                        <Cell
-                                                            key={`cell-${index}`}
-                                                            fill={getBankColor(entry.name)}
-                                                            opacity={activeBank && activeBank !== entry.name ? 0.3 : 1}
-                                                            stroke="#ffffff"
-                                                            strokeWidth={1.5}
-                                                        />
-                                                    ))}
-                                                </Pie>
-                                                <RechartsTooltip formatter={(val: unknown) => [`${val} transactions`, 'Count']} contentStyle={{ backgroundColor: 'white', color: 'black', borderRadius: '8px', borderColor: '#e2e8f0', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }} />
-                                            </PieChart>
-                                        </ResponsiveContainer>
-                                        {activeBank && (
-                                            (() => {
-                                                const entry = bankData.find(d => d.name === activeBank);
-                                                if (!entry) return null;
-                                                const sum = bankData.reduce((acc, curr) => acc + curr.value, 0);
-                                                const percent = sum > 0 ? ((entry.value / sum) * 100).toFixed(1) : '0.0';
-                                                return (
-                                                    <div className="absolute top-4 right-4 bg-white/95 backdrop-blur-sm border border-gray-200 shadow-md rounded-md p-2.5 text-xs pointer-events-none z-10 animate-in fade-in duration-200">
-                                                        <div className="font-semibold flex items-center gap-1.5">
-                                                            <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: getBankColor(entry.name) }} />
-                                                            {entry.name}
-                                                        </div>
-                                                        <div className="mt-1 text-gray-600">
-                                                            Transactions: <span className="font-medium text-gray-900">{entry.value}</span>
-                                                        </div>
-                                                        <div className="text-gray-600">
-                                                            Percentage: <span className="font-medium text-gray-900">{percent}%</span>
-                                                        </div>
-                                                    </div>
-                                                );
-                                            })()
-                                        )}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* RIGHT COLUMN: Top Donors */}
-                    <div className="lg:col-span-1 flex flex-col h-full">
-                        <div className="bg-white rounded-xl border border-gray-200 border-none shadow-md h-full flex flex-col gap-0" >
-                            <div className="flex flex-col space-y-1.5 px-6 pt-6 bg-gray-50/50 border-b border-gray-100 py-4" >
-                                <div className="flex flex-col gap-2">
-                                    <h4 className="font-semibold leading-none tracking-tight text-sm font-semibold text-gray-900" >Top Donors</h4>
-                                    <Tabs value={activeLeaderboardTab} onValueChange={setActiveLeaderboardTab} className="w-full mt-2">
-                                        <TabsList className="grid w-full grid-cols-3 h-8">
-                                            <TabsTrigger value="Top LTV" className="text-xs">Top LTV</TabsTrigger>
-                                            <TabsTrigger value="Top Avg Donation" className="text-xs">Top Avg</TabsTrigger>
-                                            <TabsTrigger value="Top Frequency" className="text-xs">Top Freq</TabsTrigger>
-                                        </TabsList>
-                                    </Tabs>
-                                </div>
-                            </div>
-                            <div className="px-6 pb-6 flex-1 p-0" >
-                                <div className="flex flex-col divide-y divide-gray-100">
-                                    {(activeLeaderboardTab === 'Top LTV' ? leaderboards.topLTV : activeLeaderboardTab === 'Top Avg Donation' ? leaderboards.topAvgDonation : leaderboards.topFrequency).map((d: DonorLeaderboardEntry, idx: number) => (
-                                        <div
-                                            key={idx}
-                                            className="flex items-center justify-between gap-4 p-4 hover:bg-gray-50/30 transition-colors"
-                                        >
-                                            <Link
-                                                to={`/profile/${d.userId}`}
-                                                className="relative shrink-0 group flex items-center" // Added 'flex items-center'
-                                            >
-                                                <div className="w-26 h-26 rounded-md overflow-hidden border border-gray-200 shadow-sm transition group-hover:ring-2 group-hover:ring-brand-primary/30">
-                                                    {d.profileImage ? (
-                                                        <LazyImage
-                                                            src={d.profileImage}
-                                                            alt={d.donor}
-                                                            className="w-full h-full object-cover"
-                                                        />
-                                                    ) : (
-                                                        <div className="w-full h-full flex items-center justify-center bg-brand-primary/10 text-brand-primary font-bold text-lg">
-                                                            {d.donor.charAt(0).toUpperCase()}
-                                                        </div>
-                                                    )}
-                                                </div>
-
-                                                {/* This badge remains locked to the top-left corner of the link container */}
-                                                <div className="absolute -top-1 -left-1 w-6 h-6 rounded-full bg-brand-primary text-white flex items-center justify-center text-[11px] font-bold border-2 border-white">
-                                                    {idx + 1}
-                                                </div>
-                                            </Link>
-
-                                            <div className="flex-1 min-w-0">
-                                                <div className="flex items-start justify-between gap-3 text-lg mb-1">
-                                                    <h4 className="font-semibold text-gray-900 truncate">
-                                                        {d.donor}
-                                                    </h4>
-                                                </div>
-
-                                                <div className="mt-2 space-y-1.5">
-                                                    {d.career !== 'N/A' && (
-                                                        <div className="flex items-center gap-2 text-xs text-gray-600">
-                                                            <Briefcase className="w-3.5 h-3.5 text-gray-400 shrink-0" />
-                                                            <span className="truncate">{d.career}</span>
-                                                        </div>
-                                                    )}
-
-                                                    {d.location !== 'N/A' && (
-                                                        <div className="flex items-center gap-2 text-xs text-gray-600">
-                                                            <MapPin className="w-3.5 h-3.5 text-gray-400 shrink-0" />
-                                                            <span className="truncate">{d.location}</span>
-                                                        </div>
-                                                    )}
-
-                                                    {d.batch !== 'N/A' && (
-                                                        <div className="flex items-center gap-2 text-xs text-gray-600">
-                                                            <GraduationCap className="w-3.5 h-3.5 text-gray-400 shrink-0" />
-                                                            <span>Batch {d.batch}</span>
-                                                        </div>
-                                                    )}
-
-                                                    {d.email !== 'N/A' && (
-                                                        <div className="flex items-center gap-2 text-xs text-gray-600">
-                                                            <Mail className="w-3.5 h-3.5 text-gray-400 shrink-0" />
-                                                            <span className="truncate">{d.email}</span>
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            </div>
-
-                                            <div className="flex items-start gap-4 text-sm mb-2">
-                                                <div className={`flex flex-col ${activeLeaderboardTab === 'Top LTV' ? 'text-brand-primary font-bold' : 'text-gray-400 font-medium opacity-50'}`}>
-                                                    <span className="text-[10px] uppercase tracking-wider">LTV</span>
-                                                    <span>{formatCurrency(d.amount)}</span>
-                                                </div>
-                                                <div className={`flex flex-col ${activeLeaderboardTab === 'Top Avg Donation' ? 'text-brand-primary font-bold' : 'text-gray-400 font-medium opacity-50'}`}>
-                                                    <span className="text-[10px] uppercase tracking-wider">Avg</span>
-                                                    <span>{formatCurrency(d.avgDonation)}</span>
-                                                </div>
-                                                <div className={`flex flex-col ${activeLeaderboardTab === 'Top Frequency' ? 'text-brand-primary font-bold' : 'text-gray-400 font-medium opacity-50'}`}>
-                                                    <span className="text-[10px] uppercase tracking-wider">Freq</span>
-                                                    <span>{d.frequency}x</span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            <div className="bg-white rounded-xl border border-gray-200 border-none shadow-md print:hidden" >
-                <div className="flex flex-col space-y-1.5 px-6 pt-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4" >
-                    <div>
-                        <h4 className="font-semibold leading-none tracking-tight text-lg" >All Donations</h4>
-                        <p className="text-sm text-gray-500" >Detailed log of all monetary contributions from alumni</p>
-                    </div>
-                    <div className="flex items-center gap-2 shrink-0">
-                        <ColumnVisibilityDropdown
-                            columns={DONATION_TABLE_COLUMNS}
-                            visibleColumns={visibleColumns}
-                            onToggleColumn={handleToggleColumn}
-                            onShowAll={handleShowAllColumns}
-                        />
-                        <Button variant="default" className="gap-2 shrink-0 bg-brand-primary text-white hover:bg-brand-primary-hover" onClick={handleExportCSV}>
-                            <Download size={16} /> Export CSV
-                        </Button>
-                    </div>
-                </div>
-                <div className="px-6 pb-6 space-y-4" >
-                    <Tabs value={activeTab} onValueChange={onTabChange} className="w-full">
-                        <TabsList className="mb-2">
-                            <TabsTrigger value="All" className="min-w-[100px]">All</TabsTrigger>
-                            {dbStatuses.map((statusName) => (
-                                <TabsTrigger key={statusName} value={statusName} className="min-w-[100px]">{statusName}</TabsTrigger>
-                            ))}
-                        </TabsList>
-                    </Tabs>
-
-                    <div className="p-4 bg-gray-50/50 border border-gray-100 rounded-lg flex flex-col gap-4">
-                        <div className="flex justify-between items-center">
-                            <div className="text-sm font-medium text-gray-700 flex flex-row gap-2">
-                                <span>Filters</span>
-                                <Badge variant="secondary" className="bg-brand-primary/10 text-brand-primary hover:bg-brand-primary/20 cursor-default">
-                                    {totalDonations} matching transactions
-                                </Badge>
-                            </div>
-                            {!isTableLoading && (
-                                <div className="flex items-center gap-4">
-                                    <div className="flex items-center gap-2">
-                                        <span className="text-sm text-gray-500">Rows per page:</span>
-                                        <Select value={itemsPerPage.toString()} onValueChange={(val) => { setItemsPerPage(Number(val)); setCurrentPage(1); }}>
-                                            <SelectTrigger className="w-[80px] h-8">
-                                                <SelectValue />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                {[10, 20, 50, 100].map(v => <SelectItem key={v} value={v.toString()}>{v}</SelectItem>)}
-                                            </SelectContent>
-                                        </Select>
-                                    </div>
-                                    <div className="flex items-center space-x-2">
-                                        <Button variant="outline" size="sm" onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1}>
-                                            <ChevronLeft className="h-4 w-4" />
-                                        </Button>
-                                        <div className="text-sm font-medium px-2">
-                                            Page {currentPage} of {totalPages}
-                                        </div>
-                                        <Button variant="outline" size="sm" onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages}>
-                                            <ChevronRight className="h-4 w-4" />
-                                        </Button>
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                            <div className="flex items-center justify-between lg:col-span-2 gap-2">
-                                <span className="text-sm text-gray-500 shrink-0">Date:</span>
-                                <Select value={datePreset} onValueChange={(val: string) => {
-                                    setDatePreset(val);
-                                    if (val !== 'custom') applyQuickFilter(val as 'all' | 'this_week' | 'this_month' | 'this_year');
-                                }}>
-                                    <SelectTrigger className="w-[140px] h-10 bg-white text-gray-700 border border-gray-300 shrink-0">
-                                        <SelectValue placeholder="Preset Dates" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="all">All Time</SelectItem>
-                                        <SelectItem value="this_week">This Week</SelectItem>
-                                        <SelectItem value="this_month">This Month</SelectItem>
-                                        <SelectItem value="this_year">This Year</SelectItem>
-                                        <SelectItem value="custom">Custom</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                                <div className="flex items-center gap-2 flex-1">
-                                    <span className={`text-xs shrink-0 ${datePreset === 'custom' ? 'text-gray-500' : 'text-gray-300'}`}>From</span>
-                                    <Input
-                                        type="date"
-                                        className="h-10 w-full bg-white px-2 text-sm text-gray-700 border border-gray-300 disabled:bg-gray-100 disabled:text-gray-400"
-                                        value={startDate}
-                                        disabled={datePreset !== 'custom'}
-                                        onChange={(e) => setStartDate(e.target.value)}
-                                        onKeyDown={(e) => { if (e.key === 'Enter') handleApplyFilters(); }}
-                                    />
-                                    <span className={`text-xs shrink-0 ${datePreset === 'custom' ? 'text-gray-500' : 'text-gray-300'}`}>To</span>
-                                    <Input
-                                        type="date"
-                                        className="h-10 w-full bg-white px-2 text-sm text-gray-700 border border-gray-300 disabled:bg-gray-100 disabled:text-gray-400"
-                                        value={endDate}
-                                        disabled={datePreset !== 'custom'}
-                                        onChange={(e) => setEndDate(e.target.value)}
-                                        onKeyDown={(e) => { if (e.key === 'Enter') handleApplyFilters(); }}
-                                    />
-                                </div>
-                            </div>
-
-                            <div className="flex items-center justify-between lg:col-span-2 gap-2">
-                                <span className="text-sm text-gray-500 shrink-0">Amount:</span>
-                                <Select value={amountPreset} onValueChange={(val: string) => {
-                                    setAmountPreset(val);
-                                    if (val !== 'custom') applyAmountQuickFilter(val);
-                                }}>
-                                    <SelectTrigger className="w-[140px] h-10 bg-white text-gray-700 border border-gray-300 shrink-0">
-                                        <SelectValue placeholder="Preset Amount" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="all">All</SelectItem>
-                                        <SelectItem value="below_1000">Below 1000</SelectItem>
-                                        <SelectItem value="1000_5000">1000 - 5000</SelectItem>
-                                        <SelectItem value="above_5000">Above 5000</SelectItem>
-                                        <SelectItem value="custom">Custom</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                                <div className="flex items-center gap-2 flex-1">
-                                    <Input
-                                        type="number"
-                                        placeholder="Min ₱"
-                                        className="h-10 w-full bg-white px-2 text-sm border border-gray-300 disabled:bg-gray-100 disabled:text-gray-400"
-                                        value={minAmount}
-                                        disabled={amountPreset !== 'custom'}
-                                        onChange={(e) => setMinAmount(e.target.value)}
-                                        onKeyDown={(e) => { if (e.key === 'Enter') handleApplyFilters(); }}
-                                    />
-                                    <span className={`text-sm shrink-0 ${amountPreset === 'custom' ? 'text-gray-500' : 'text-gray-300'}`}>-</span>
-                                    <Input
-                                        type="number"
-                                        placeholder="Max ₱"
-                                        className="h-10 w-full bg-white px-2 text-sm border border-gray-300 disabled:bg-gray-100 disabled:text-gray-400"
-                                        value={maxAmount}
-                                        disabled={amountPreset !== 'custom'}
-                                        onChange={(e) => setMaxAmount(e.target.value)}
-                                        onKeyDown={(e) => { if (e.key === 'Enter') handleApplyFilters(); }}
-                                    />
-                                </div>
-                            </div>
-
-                            <div className="relative flex items-center">
-                                <Search className="absolute left-2.5 h-4 w-4 text-gray-500" />
-                                <Input
-                                    placeholder="Search by Donor..."
-                                    className="pl-9 h-10 w-full bg-white border border-gray-300"
-                                    value={searchDonor}
-                                    onChange={(e) => setSearchDonor(e.target.value)}
-                                    onKeyDown={(e) => { if (e.key === 'Enter') handleApplyFilters(); }}
-                                />
-                            </div>
-
-                            <div className="relative flex items-center">
-                                <Search className="absolute left-2.5 h-4 w-4 text-gray-500" />
-                                <Input
-                                    placeholder="Search Reference..."
-                                    className="pl-9 h-10 w-full bg-white border border-gray-300"
-                                    value={searchRef}
-                                    onChange={(e) => setSearchRef(e.target.value)}
-                                    onKeyDown={(e) => { if (e.key === 'Enter') handleApplyFilters(); }}
-                                />
-                            </div>
-
-                            <Select value={searchBankName} onValueChange={setSearchBankName}>
-                                <SelectTrigger className="h-10 bg-white text-gray-700 border border-gray-300">
-                                    <SelectValue placeholder="Bank Name" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="All">All Banks</SelectItem>
-                                    {uniqueBanks.map(b => (
-                                        <SelectItem key={b} value={b}>{b}</SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-
-                            <div className="flex items-center gap-2 justify-end">
-                                <Button variant="outline" onClick={handleClearFilters} className="w-24 border border-gray-300">Clear</Button>
-                                <Button className="w-24 bg-brand-primary hover:bg-brand-primary-hover text-white" onClick={handleApplyFilters}>Submit</Button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="border rounded-md overflow-x-auto bg-white">
-                        <table className="w-full text-sm text-left">
-                            <thead className="bg-gray-50 text-gray-700 border-b">
-                                <tr className="divide-x divide-gray-200/70">
-                                    {visibleColumns.date && (
-                                        <th className="px-6 py-3 cursor-pointer hover:bg-gray-100 transition-colors" onClick={() => handleSort('date')}>
-                                            <div className="flex items-center gap-1">Date {renderSortIcon('date')}</div>
-                                        </th>
-                                    )}
-                                    {visibleColumns.donor && (
-                                        <th className="px-6 py-3 cursor-pointer hover:bg-gray-100 transition-colors" onClick={() => handleSort('donor')}>
-                                            <div className="flex items-center gap-1">Donor {renderSortIcon('donor')}</div>
-                                        </th>
-                                    )}
-                                    {visibleColumns.amount && (
-                                        <th className="px-6 py-3 cursor-pointer hover:bg-gray-100 transition-colors" onClick={() => handleSort('amount')}>
-                                            <div className="flex items-center gap-1">Amount {renderSortIcon('amount')}</div>
-                                        </th>
-                                    )}
-                                    {visibleColumns.status && (
-                                        <th className="px-6 py-3">
-                                            <div className="flex items-center gap-1">Status</div>
-                                        </th>
-                                    )}
-                                    {visibleColumns.bankName && (
-                                        <th className="px-6 py-3">
-                                            <div className="flex items-center gap-1">Bank Name</div>
-                                        </th>
-                                    )}
-                                    {visibleColumns.donationReference && (
-                                        <th className="px-6 py-3">
-                                            <div className="flex items-center gap-1">Donation Reference</div>
-                                        </th>
-                                    )}
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {isTableLoading ? (
-                                    <tr>
-                                        <td colSpan={visibleColumnCount} className="px-6 py-12 text-center border-t bg-gray-50/50">
-                                            <Loader2 className="w-6 h-6 animate-spin text-gray-400 mx-auto" />
-                                            <p className="mt-2 text-gray-500">Loading transactions...</p>
-                                        </td>
-                                    </tr>
-                                ) : paginatedDonations.length === 0 ? (
-                                    <tr>
-                                        <td colSpan={visibleColumnCount} className="px-6 py-8 text-center text-sm text-gray-500 border-t bg-gray-50">
-                                            No transactions found matching your criteria.
-                                        </td>
-                                    </tr>
-                                ) : (
-                                    paginatedDonations.map((donation) => (
-                                        <DonationTableRow
-                                            key={donation.id}
-                                            donation={donation}
-                                            visibleColumns={visibleColumns}
-                                        />
-                                    ))
-                                )}
-                            </tbody>
-                        </table>
-                    </div>
-
-                    {totalPages > 1 && !isTableLoading && (
-                        <div className="flex flex-col sm:flex-row items-center justify-between pt-2 gap-4">
-                            <div className="text-sm text-gray-500">
-                                Showing {(currentPage - 1) * itemsPerPage + 1} to {Math.min(currentPage * itemsPerPage, totalDonations)} of {totalDonations} transactions
-                            </div>
-                        </div>
-                    )}
-                </div>
-            </div>
+            <DonationsTable dbStatuses={dbStatuses} uniqueBanks={uniqueBanks} />
         </div>
     );
 }

@@ -60,7 +60,8 @@ export function AdminEvents() {
                 _per_page: params.perPage,
                 _sort: sortStr,
                 _where: Object.keys(whereClause).length > 0 ? JSON.stringify(whereClause) : undefined
-            }
+            },
+            signal: params.signal
         });
 
         const { items: data, total } = unwrapListResponse<EventData>(response);
@@ -90,9 +91,6 @@ export function AdminEvents() {
 
     const handleStatusChange = async (id: string, newStatus: string, adminNotes?: string | null) => {
         try {
-            // Get the old event to check previous status and author
-            await api.get(`/events/${id}`);
-
             // Patch status
             await api.patch(`/admin/events/${id}/status`, { status: newStatus, adminNotes });
 
