@@ -158,8 +158,8 @@ const CalendarWidget = ({ events }: { events: EventItem[] }) => {
     };
 
     return (
-        <div className="bg-white rounded-xl border border-gray-200 shadow-md border-none flex flex-col" >
-            <div className="flex flex-col space-y-1.5 px-6 pt-6 flex flex-row items-center justify-between pb-2" >
+        <div className="@container bg-white rounded-xl border border-gray-200 shadow-md border-none flex flex-col min-w-0" >
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-6 pt-6 pb-2" >
                 <div>
                     <h4 className="font-semibold leading-none tracking-tight flex items-center gap-2 text-gray-900" >
                         <CalendarIcon className="w-5 h-5 text-brand-primary" />
@@ -500,14 +500,14 @@ export function AdminDashboard() {
             }
 
             return (
-                <div ref={dashboardRef} className="space-y-8 p-1 [transform:translateZ(0)]">
+                <div ref={dashboardRef} data-testid="admin-dashboard-root" className="@container space-y-6 @3xl:space-y-8 p-1 [transform:translateZ(0)]">
                     {/* Header */}
-                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div className="flex flex-col @3xl:flex-row @3xl:items-center justify-between gap-4">
                         <div>
-                            <h1 className="text-3xl font-extrabold tracking-tight text-gray-900">USJ-R SEA Alumni Association Admin Dashboard</h1>
+                            <h1 className="text-2xl @3xl:text-3xl font-extrabold tracking-tight text-gray-900">USJ-R SEA Alumni Association Admin Dashboard</h1>
                             <p className="text-sm text-gray-500 mt-1">Real-time system telemetry, moderation queues, and operational metrics.</p>
                         </div>
-                        <div className="flex gap-2.5">
+                        <div className="flex flex-wrap gap-2.5 shrink-0">
                             <button
                                 onClick={fetchStats}
                                 disabled={loading}
@@ -528,7 +528,7 @@ export function AdminDashboard() {
 
                     {/* Action-Required Moderation Alert Banner */}
                     {totalPendingActions > 0 ? (
-                        <div className="bg-gradient-to-r from-amber-500 to-orange-600 rounded-xl p-5 text-white shadow-md flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                        <div className="bg-gradient-to-r from-amber-500 to-orange-600 rounded-xl p-5 text-white shadow-md flex flex-col @3xl:flex-row items-start @3xl:items-center justify-between gap-4">
                             <div className="flex items-center gap-3">
                                 <div className="p-3 bg-white/20 rounded-lg shrink-0">
                                     <ShieldAlert className="w-6 h-6 text-white" />
@@ -578,7 +578,7 @@ export function AdminDashboard() {
                             <p className="text-sm font-medium">No pending bulletins, or events to review.</p>
                         </div>
                     )}
-                    <div className="p-6 bg-gradient-to-br from-[#1b4332] via-[#0f2e22] to-[#081c15] rounded-xl border border-emerald-800/40 flex flex-col md:flex-row md:items-center justify-between gap-6 relative overflow-hidden group shadow-lg text-white mb-8 mt-4">
+                    <div className="p-6 bg-gradient-to-br from-[#1b4332] via-[#0f2e22] to-[#081c15] rounded-xl border border-emerald-800/40 flex flex-col @3xl:flex-row @3xl:items-center justify-between gap-6 relative overflow-hidden group shadow-lg text-white mb-8 mt-4">
                         <div className="absolute -top-24 -right-12 w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none group-hover:bg-emerald-500/20 transition-all duration-700 [will-change:transform] [transform:translateZ(0)]" />
                         <div className="absolute -bottom-16 -left-16 w-48 h-48 bg-emerald-600/10 rounded-full blur-2xl pointer-events-none [will-change:transform] [transform:translateZ(0)]" />
 
@@ -587,7 +587,7 @@ export function AdminDashboard() {
                                 <CreditCard className="w-3.5 h-3.5" />
                                 Total Platform Contributions
                             </div>
-                            <div className="text-4xl md:text-5xl font-black text-white tracking-tight drop-shadow-sm">
+                            <div className="text-3xl @xl:text-4xl @3xl:text-5xl font-black text-white tracking-tight drop-shadow-sm">
                                 {formatCurrency(stats.donationsTotal)}
                             </div>
                             <div className="text-sm text-emerald-100/80 font-medium mt-3 flex items-center gap-2">
@@ -619,9 +619,9 @@ export function AdminDashboard() {
                     />
 
                             {/* Platform Health Metrics & Category Share Breakdown */}
-                            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                            <div className="grid grid-cols-1 @5xl:grid-cols-3 gap-6 @3xl:gap-8">
                                 {/* Platform Health Metrics Card */}
-                                <div className="bg-white rounded-xl border border-gray-200 col-span-1 shadow-md border-none" >
+                                <div className="bg-white rounded-xl border border-gray-200 col-span-1 min-w-0 shadow-md border-none" >
                                     <div className="flex flex-col space-y-1.5 px-6 pt-6" >
                                         <h4 className="font-semibold leading-none tracking-tight flex items-center gap-2 text-gray-900" >
                                             <Activity className="w-5 h-5 text-brand-primary" />
@@ -681,7 +681,7 @@ export function AdminDashboard() {
                                 </div>
 
                                 {/* Content & Event Category Share Breakdown Chart Card */}
-                                <div className="bg-white rounded-xl border border-gray-200 col-span-1 lg:col-span-2 shadow-md border-none flex flex-col justify-between" >
+                                <div className="@container bg-white rounded-xl border border-gray-200 col-span-1 @5xl:col-span-2 min-w-0 shadow-md border-none flex flex-col justify-between" >
                                     <div className="flex flex-col space-y-1.5 px-6 pt-6 pb-3 border-b border-gray-100" >
                                         <h4 className="font-semibold leading-none tracking-tight flex items-center gap-2 text-gray-900 text-lg" >
                                             <PieChartIcon className="w-5 h-5 text-brand-primary" />
@@ -690,9 +690,9 @@ export function AdminDashboard() {
                                         <p className="text-sm text-gray-500" >Proportional breakdown of published bulletins and event proposals by category</p>
                                     </div>
                                     <div className="px-6 pb-6 pt-4 flex-1 flex flex-col justify-center" >
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 divide-y md:divide-y-0 md:divide-x divide-gray-100">
+                                        <div className="grid grid-cols-1 @xl:grid-cols-2 gap-6 divide-y @xl:divide-y-0 @xl:divide-x divide-gray-100">
                                             {/* Bulletin Category Donut Chart */}
-                                            <div className="flex flex-col items-center">
+                                            <div className="flex flex-col items-center min-w-0 pb-4 @xl:pb-0">
                                                 <div className="flex items-center gap-2 mb-2">
                                                     <span className="w-2.5 h-2.5 rounded-full bg-brand-primary" />
                                                     <h4 className="text-xs font-bold text-gray-800 uppercase tracking-wider">
@@ -701,8 +701,8 @@ export function AdminDashboard() {
                                                 </div>
                                                 {sortedBulletinCategoryData.length > 0 ? (
                                                     <div className="flex flex-col items-center w-full">
-                                                        <div className="h-56 w-full relative">
-                                                            <ResponsiveContainer width="100%" height="100%">
+                                                        <div className="h-56 w-full min-w-0 relative">
+                                                            <ResponsiveContainer width="100%" height="100%" minWidth={0}>
                                                                 <PieChart>
                                                                     <Pie
                                                                         data={sortedBulletinCategoryData}
@@ -762,7 +762,7 @@ export function AdminDashboard() {
                                             </div>
 
                                             {/* Event Category Donut Chart */}
-                                            <div className="flex flex-col items-center pt-4 md:pt-0 md:pl-6">
+                                            <div className="flex flex-col items-center min-w-0 pt-4 @xl:pt-0 @xl:pl-6">
                                                 <div className="flex items-center gap-2 mb-2">
                                                     <span className="w-2.5 h-2.5 rounded-full bg-purple-600" />
                                                     <h4 className="text-xs font-bold text-gray-800 uppercase tracking-wider">
@@ -771,8 +771,8 @@ export function AdminDashboard() {
                                                 </div>
                                                 {sortedEventCategoryData.length > 0 ? (
                                                     <div className="flex flex-col items-center w-full">
-                                                        <div className="h-56 w-full relative">
-                                                            <ResponsiveContainer width="100%" height="100%">
+                                                        <div className="h-56 w-full min-w-0 relative">
+                                                            <ResponsiveContainer width="100%" height="100%" minWidth={0}>
                                                                 <PieChart>
                                                                     <Pie
                                                                         data={sortedEventCategoryData}
@@ -836,10 +836,10 @@ export function AdminDashboard() {
                             </div>
 
                             {/* Spatial & Temporal Interactive Widgets (Map & Calendar) */}
-                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                            <div className="grid grid-cols-1 @5xl:grid-cols-2 gap-6 @3xl:gap-8">
                                 {/* Switchable Upcoming Events List Widget */}
-                                <div className="bg-white rounded-xl border border-gray-200 shadow-md border-none flex flex-col" >
-                                    <div className="flex flex-col space-y-1.5 px-6 pt-6 flex flex-row items-center justify-between pb-3 border-b border-gray-100" >
+                                <div className="@container bg-white rounded-xl border border-gray-200 shadow-md border-none flex flex-col min-w-0" >
+                                    <div className="flex flex-col @lg:flex-row @lg:items-center justify-between gap-3 px-6 pt-6 pb-3 border-b border-gray-100" >
                                         <div>
                                             <h4 className="font-semibold leading-none tracking-tight flex items-center gap-2 text-gray-900 text-lg pb-0" >
                                                 <CalendarIcon className="w-5 h-5 text-brand-primary" />
@@ -847,7 +847,7 @@ export function AdminDashboard() {
                                             </h4>
                                             <p className="text-sm text-gray-500" >Filter scheduled events by time window</p>
                                         </div>
-                                        <div className="flex items-center gap-1 bg-gray-100 p-1 rounded-lg">
+                                        <div className="flex items-center gap-1 bg-gray-100 p-1 rounded-lg shrink-0 self-start @lg:self-auto">
                                             {(['Upcoming', '7 days', '30 days'] as const).map((range) => (
                                                 <button
                                                     key={range}
@@ -862,7 +862,7 @@ export function AdminDashboard() {
                                             ))}
                                         </div>
                                     </div>
-                                    <div className="px-6 pb-6 flex-1 px-4 pb-4 pt-0 overflow-y-auto max-h-[420px]" >
+                                    <div className="px-4 sm:px-6 pb-4 pt-3 flex-1 overflow-y-auto max-h-[420px]" >
                                         {filteredUpcomingEvents.length > 0 ? (
                                             <div className="space-y-3">
                                                 {filteredUpcomingEvents.map((evt) => {

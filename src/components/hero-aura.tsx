@@ -103,7 +103,7 @@ export const AuroraHero = ({ children, className, blobContainerClassName }: Auro
         <div className="h-full w-full overflow-x-clip">
             <div
                 className={cn(
-                    "relative flex h-screen w-full flex-col items-center justify-center overflow-hidden rounded-md bg-background antialiased",
+                    "relative flex h-[clamp(600px,100dvh,960px)] w-full flex-col items-center justify-center overflow-hidden rounded-md bg-background antialiased",
                     className
                 )}
             >
