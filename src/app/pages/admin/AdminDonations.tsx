@@ -3,6 +3,7 @@ import axios from 'axios';
 import { startOfWeek, endOfWeek, startOfMonth, endOfMonth, startOfYear, endOfYear, format } from 'date-fns';
 
 import { Button } from '@components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@components/ui/card';
 import { Badge } from '@components/ui/badge';
 import { Tabs, TabsList, TabsTrigger } from '@components/ui/tabs';
 import { Input } from '@components/ui/input';
@@ -929,11 +930,11 @@ const DonationsTable = memo(function DonationsTable({ dbStatuses, uniqueBanks }:
     };
 
     return (
-        <div className="bg-white rounded-xl border border-gray-200 border-none shadow-md print:hidden" >
-            <div className="flex flex-col space-y-1.5 px-6 pt-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4" >
+        <Card className="border-none shadow-md print:hidden">
+            <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
-                    <h4 className="font-semibold leading-none tracking-tight text-lg" >All Donations</h4>
-                    <p className="text-sm text-gray-500" >Detailed log of all monetary contributions from alumni</p>
+                    <CardTitle className="text-lg">All Donations</CardTitle>
+                    <CardDescription>Detailed log of all monetary contributions from alumni</CardDescription>
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
                     <ColumnVisibilityDropdown
@@ -942,24 +943,31 @@ const DonationsTable = memo(function DonationsTable({ dbStatuses, uniqueBanks }:
                         onToggleColumn={handleToggleColumn}
                         onShowAll={handleShowAllColumns}
                     />
-                    <Button variant="default" className="gap-2 shrink-0 bg-brand-primary text-white hover:bg-brand-primary-hover" onClick={handleExportCSV} disabled={isExportingCsv}>
-                        <Download size={16} /> {isExportingCsv ? 'Exporting...' : 'Export CSV'}
+                    <Button
+                        variant="outline"
+                        className="gap-2 border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 shrink-0"
+                        onClick={handleExportCSV}
+                        disabled={isExportingCsv}
+                    >
+                        <Download className="h-4 w-4" /> {isExportingCsv ? 'Exporting...' : 'Export CSV'}
                     </Button>
                 </div>
-            </div>
-            <div className="px-6 pb-6 space-y-4" >
+            </CardHeader>
+            <CardContent className="space-y-4">
                 <Tabs value={activeTab} onValueChange={onTabChange} className="w-full">
-                    <TabsList className="mb-2">
-                        <TabsTrigger value="All" className="min-w-[100px]">All</TabsTrigger>
-                        {dbStatuses.map((statusName) => (
-                            <TabsTrigger key={statusName} value={statusName} className="min-w-[100px]">{statusName}</TabsTrigger>
-                        ))}
-                    </TabsList>
+                    <div className="overflow-x-auto pb-2">
+                        <TabsList className="inline-flex min-w-full sm:min-w-0">
+                            <TabsTrigger value="All" className="min-w-[100px]">All</TabsTrigger>
+                            {dbStatuses.map((statusName) => (
+                                <TabsTrigger key={statusName} value={statusName} className="min-w-[100px]">{statusName}</TabsTrigger>
+                            ))}
+                        </TabsList>
+                    </div>
                 </Tabs>
 
                 <div className="p-4 bg-gray-50/50 border border-gray-100 rounded-lg flex flex-col gap-4">
-                    <div className="flex justify-between items-center">
-                        <div className="text-sm font-medium text-gray-700 flex flex-row gap-2">
+                    <div className="flex flex-wrap justify-between items-center gap-3">
+                        <div className="text-sm font-medium text-gray-700 flex flex-row items-center gap-2">
                             <span>Filters</span>
                             <Badge variant="secondary" className="bg-brand-primary/10 text-brand-primary hover:bg-brand-primary/20 cursor-default">
                                 {totalDonations} matching transactions
@@ -983,17 +991,53 @@ const DonationsTable = memo(function DonationsTable({ dbStatuses, uniqueBanks }:
                                         <ChevronLeft className="h-4 w-4" />
                                     </Button>
                                     <div className="text-sm font-medium px-2">
-                                        Page {currentPage} of {totalPages}
+                                        Page {currentPage} of {Math.max(1, totalPages)}
                                     </div>
-                                    <Button variant="outline" size="sm" onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages}>
+                                    <Button variant="outline" size="sm" onClick={() => setCurrentPage(p => Math.min(Math.max(1, totalPages), p + 1))} disabled={currentPage >= totalPages}>
                                         <ChevronRight className="h-4 w-4" />
                                     </Button>
                                 </div>
                             </div>
                         )}
                     </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                        <div className="flex items-center justify-between lg:col-span-2 gap-2">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-4">
+                        <div className="md:col-span-1 lg:col-span-4 relative flex items-center">
+                            <Search className="absolute left-2.5 h-4 w-4 text-gray-500" />
+                            <Input
+                                placeholder="Search by Donor..."
+                                className="pl-9 h-10 w-full bg-white border border-gray-300"
+                                value={searchDonor}
+                                onChange={(e) => setSearchDonor(e.target.value)}
+                                onKeyDown={(e) => { if (e.key === 'Enter') handleApplyFilters(); }}
+                            />
+                        </div>
+
+                        <div className="md:col-span-1 lg:col-span-4 relative flex items-center">
+                            <Search className="absolute left-2.5 h-4 w-4 text-gray-500" />
+                            <Input
+                                placeholder="Search Reference..."
+                                className="pl-9 h-10 w-full bg-white border border-gray-300"
+                                value={searchRef}
+                                onChange={(e) => setSearchRef(e.target.value)}
+                                onKeyDown={(e) => { if (e.key === 'Enter') handleApplyFilters(); }}
+                            />
+                        </div>
+
+                        <div className="md:col-span-2 lg:col-span-4">
+                            <Select value={searchBankName} onValueChange={setSearchBankName}>
+                                <SelectTrigger className="h-10 bg-white text-gray-700 border border-gray-300">
+                                    <SelectValue placeholder="Bank Name" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="All">All Banks</SelectItem>
+                                    {uniqueBanks.map(b => (
+                                        <SelectItem key={b} value={b}>{b}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+
+                        <div className="flex flex-wrap lg:flex-nowrap items-center md:col-span-2 lg:col-span-12 gap-2 min-w-0">
                             <span className="text-sm text-gray-500 shrink-0">Date:</span>
                             <Select value={datePreset} onValueChange={(val: string) => {
                                 setDatePreset(val);
@@ -1010,11 +1054,11 @@ const DonationsTable = memo(function DonationsTable({ dbStatuses, uniqueBanks }:
                                     <SelectItem value="custom">Custom</SelectItem>
                                 </SelectContent>
                             </Select>
-                            <div className="flex items-center gap-2 flex-1">
+                            <div className="flex flex-wrap sm:flex-nowrap items-center gap-2 flex-1 min-w-[260px]">
                                 <span className={`text-xs shrink-0 ${datePreset === 'custom' ? 'text-gray-500' : 'text-gray-300'}`}>From</span>
                                 <Input
                                     type="date"
-                                    className="h-10 w-full bg-white px-2 text-sm text-gray-700 border border-gray-300 disabled:bg-gray-100 disabled:text-gray-400"
+                                    className="h-10 flex-1 min-w-0 bg-white px-2 text-sm text-gray-700 border border-gray-300 disabled:bg-gray-100 disabled:text-gray-400"
                                     value={startDate}
                                     disabled={datePreset !== 'custom'}
                                     onChange={(e) => setStartDate(e.target.value)}
@@ -1023,7 +1067,7 @@ const DonationsTable = memo(function DonationsTable({ dbStatuses, uniqueBanks }:
                                 <span className={`text-xs shrink-0 ${datePreset === 'custom' ? 'text-gray-500' : 'text-gray-300'}`}>To</span>
                                 <Input
                                     type="date"
-                                    className="h-10 w-full bg-white px-2 text-sm text-gray-700 border border-gray-300 disabled:bg-gray-100 disabled:text-gray-400"
+                                    className="h-10 flex-1 min-w-0 bg-white px-2 text-sm text-gray-700 border border-gray-300 disabled:bg-gray-100 disabled:text-gray-400"
                                     value={endDate}
                                     disabled={datePreset !== 'custom'}
                                     onChange={(e) => setEndDate(e.target.value)}
@@ -1032,7 +1076,7 @@ const DonationsTable = memo(function DonationsTable({ dbStatuses, uniqueBanks }:
                             </div>
                         </div>
 
-                        <div className="flex items-center justify-between lg:col-span-2 gap-2">
+                        <div className="flex flex-wrap sm:flex-nowrap items-center md:col-span-2 lg:col-span-8 gap-2 min-w-0">
                             <span className="text-sm text-gray-500 shrink-0">Amount:</span>
                             <Select value={amountPreset} onValueChange={(val: string) => {
                                 setAmountPreset(val);
@@ -1049,11 +1093,11 @@ const DonationsTable = memo(function DonationsTable({ dbStatuses, uniqueBanks }:
                                     <SelectItem value="custom">Custom</SelectItem>
                                 </SelectContent>
                             </Select>
-                            <div className="flex items-center gap-2 flex-1">
+                            <div className="flex items-center gap-2 flex-1 min-w-0">
                                 <Input
                                     type="number"
                                     placeholder="Min ₱"
-                                    className="h-10 w-full bg-white px-2 text-sm border border-gray-300 disabled:bg-gray-100 disabled:text-gray-400"
+                                    className="h-10 w-full min-w-0 bg-white px-2 text-sm border border-gray-300 disabled:bg-gray-100 disabled:text-gray-400"
                                     value={minAmount}
                                     disabled={amountPreset !== 'custom'}
                                     onChange={(e) => setMinAmount(e.target.value)}
@@ -1063,7 +1107,7 @@ const DonationsTable = memo(function DonationsTable({ dbStatuses, uniqueBanks }:
                                 <Input
                                     type="number"
                                     placeholder="Max ₱"
-                                    className="h-10 w-full bg-white px-2 text-sm border border-gray-300 disabled:bg-gray-100 disabled:text-gray-400"
+                                    className="h-10 w-full min-w-0 bg-white px-2 text-sm border border-gray-300 disabled:bg-gray-100 disabled:text-gray-400"
                                     value={maxAmount}
                                     disabled={amountPreset !== 'custom'}
                                     onChange={(e) => setMaxAmount(e.target.value)}
@@ -1072,41 +1116,7 @@ const DonationsTable = memo(function DonationsTable({ dbStatuses, uniqueBanks }:
                             </div>
                         </div>
 
-                        <div className="relative flex items-center">
-                            <Search className="absolute left-2.5 h-4 w-4 text-gray-500" />
-                            <Input
-                                placeholder="Search by Donor..."
-                                className="pl-9 h-10 w-full bg-white border border-gray-300"
-                                value={searchDonor}
-                                onChange={(e) => setSearchDonor(e.target.value)}
-                                onKeyDown={(e) => { if (e.key === 'Enter') handleApplyFilters(); }}
-                            />
-                        </div>
-
-                        <div className="relative flex items-center">
-                            <Search className="absolute left-2.5 h-4 w-4 text-gray-500" />
-                            <Input
-                                placeholder="Search Reference..."
-                                className="pl-9 h-10 w-full bg-white border border-gray-300"
-                                value={searchRef}
-                                onChange={(e) => setSearchRef(e.target.value)}
-                                onKeyDown={(e) => { if (e.key === 'Enter') handleApplyFilters(); }}
-                            />
-                        </div>
-
-                        <Select value={searchBankName} onValueChange={setSearchBankName}>
-                            <SelectTrigger className="h-10 bg-white text-gray-700 border border-gray-300">
-                                <SelectValue placeholder="Bank Name" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="All">All Banks</SelectItem>
-                                {uniqueBanks.map(b => (
-                                    <SelectItem key={b} value={b}>{b}</SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-
-                        <div className="flex items-center gap-2 justify-end">
+                        <div className="flex items-center gap-2 justify-end md:col-span-2 lg:col-span-4">
                             <Button variant="outline" onClick={handleClearFilters} className="w-24 border border-gray-300">Clear</Button>
                             <Button className="w-24 bg-brand-primary hover:bg-brand-primary-hover text-white" onClick={handleApplyFilters}>Submit</Button>
                         </div>
@@ -1183,8 +1193,8 @@ const DonationsTable = memo(function DonationsTable({ dbStatuses, uniqueBanks }:
                         </div>
                     </div>
                 )}
-            </div>
-        </div>
+            </CardContent>
+        </Card>
     );
 });
 DonationsTable.displayName = 'DonationsTable';

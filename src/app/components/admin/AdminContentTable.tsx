@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@comp
 import { Button } from '@components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@components/ui/tabs';
 import { Input } from '@components/ui/input';
-import { ArrowUp, ArrowDown, ArrowUpDown, Ban, ChevronLeft, ChevronRight, Search, Eye, FileText, HardHat, Lock, Pencil, UserX } from 'lucide-react';
+import { ArrowUp, ArrowDown, ArrowUpDown, Ban, ChevronLeft, ChevronRight, Download, Search, Eye, FileText, HardHat, Lock, Pencil, UserX } from 'lucide-react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@components/ui/dialog';
@@ -70,9 +70,10 @@ const getCategoryClass = (category: string) => {
     if (category === "All" || category === "For Review" || category === "Pending" || category === "Approved" || category === "Rejected" || category === "Cancelled" || category === "Archived" || category === "Concluded") {
         return getStatusClass(category);
     }
-    if (category === "Official") return 'bg-brand-primary text-white';
-    if (category === "Regular") return 'bg-brand-accent text-white';
-    return getCategoryColor(category);
+    if (category === "Official") return 'bg-brand-primary text-white border-transparent';
+    if (category === "Regular") return 'bg-brand-accent text-white border-transparent';
+    const staticCategoryColor = getCategoryColor(category).replace(/\bhover:\S+/g, '').trim();
+    return `${staticCategoryColor} border-transparent`;
 };
 
 interface ContentTableRowProps {
@@ -117,7 +118,7 @@ const ContentTableRow = memo(({
                 <td className="px-6 py-4 whitespace-nowrap">
                     <span
                         title={item.category}
-                        className={`inline-flex rounded-full border w-30 px-2.5 py-1 text-xs font-semibold ${getCategoryClass(item.category)}`}
+                        className={`inline-flex items-center justify-center rounded-full border w-30 px-2.5 py-1 text-xs font-semibold ${getCategoryClass(item.category)}`}
                     >
                         <span className="truncate">{item.category}</span>
                     </span>
@@ -380,8 +381,10 @@ export function AdminContentTable({
     };
 
     const renderSortIcon = (key: keyof ContentItem) => {
-        if (!sortConfig || sortConfig.key !== key) return <ArrowUpDown className="ml-1 w-4 h-4 text-gray-400" />;
-        return sortConfig.direction === 'asc' ? <ArrowUp className="ml-1 w-4 h-4 text-gray-700" /> : <ArrowDown className="ml-1 w-4 h-4 text-gray-700" />;
+        if (!sortConfig || sortConfig.key !== key) return <ArrowUpDown size={14} className="text-gray-400 shrink-0" />;
+        return sortConfig.direction === 'asc'
+            ? <ArrowUp size={14} className="text-gray-700 shrink-0" />
+            : <ArrowDown size={14} className="text-gray-700 shrink-0" />;
     };
 
     const applyQuickFilter = (filter: 'this_week' | 'this_month' | 'this_year' | 'all') => {
@@ -591,7 +594,7 @@ export function AdminContentTable({
                         <thead className="bg-gray-50 text-gray-700">
                             <tr className="divide-x divide-gray-200/70">
                                 {visibleColumns.title && (
-                                    <th className="w-96 max-w-md px-6 py-3 cursor-pointer hover:bg-gray-100 transition-colors" onClick={() => handleSort('title')}>
+                                    <th className="w-96 max-w-sm px-6 py-3 cursor-pointer hover:bg-gray-100 transition-colors" onClick={() => handleSort('title')}>
                                         <div className="flex items-center gap-1">Title {renderSortIcon('title')}</div>
                                     </th>
                                 )}
@@ -646,7 +649,7 @@ export function AdminContentTable({
 
             <Tabs value={activeTab} onValueChange={onTabChange} className="w-full">
                 <div className="overflow-x-auto pb-2 flex justify-between items-center gap-4">
-                    <TabsList className="mb-4 inline-flex min-w-full sm:min-w-0 flex-1">
+                    <TabsList className="inline-flex min-w-full sm:min-w-0 flex-1">
                         {statuses.map(status => (
                             <TabsTrigger key={status} value={status}>{status}</TabsTrigger>
                         ))}
@@ -657,9 +660,9 @@ export function AdminContentTable({
                     <div className="flex justify-between items-center">
                         <div className="text-sm font-medium text-gray-700">Filters</div>
                     </div>
-                    <div className="grid grid-cols-8 gap-4">
-                        <div className='col-span-3 flex flex-row gap-2'>
-                            <div className="relative flex items-center flex-1">
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+                        <div className="lg:col-span-8 flex flex-col sm:flex-row gap-2 min-w-0">
+                            <div className="relative flex items-center flex-1 min-w-0">
                                 <Search className="absolute left-3 text-gray-400 w-4 h-4 pointer-events-none" />
                                 <Input
                                     placeholder="Search by Title..."
@@ -674,7 +677,7 @@ export function AdminContentTable({
                                     }}
                                 />
                             </div>
-                            <div className="relative flex items-center flex-1">
+                            <div className="relative flex items-center flex-1 min-w-0">
                                 <Input
                                     placeholder="Search by Author..."
                                     className="h-10 w-full bg-white border border-gray-300"
@@ -690,7 +693,12 @@ export function AdminContentTable({
                             </div>
                         </div>
 
-                        <div className="flex items-center gap-2 flex-1 col-span-3">
+                        <div className="flex items-center justify-end gap-2 shrink-0 lg:col-span-4">
+                            <Button variant="outline" onClick={handleClearFilters} className="border border-gray-300 w-24">Clear</Button>
+                            <Button className="bg-brand-primary hover:bg-brand-primary-hover text-white w-24" onClick={handleApplyFilters}>Submit</Button>
+                        </div>
+
+                        <div className="col-span-full flex flex-wrap lg:flex-nowrap items-center gap-2 min-w-0">
                             <span className="text-sm text-gray-500 shrink-0">Date:</span>
                             <Select value={datePreset} onValueChange={(val: string) => {
                                 setDatePreset(val);
@@ -710,11 +718,11 @@ export function AdminContentTable({
                                 </SelectContent>
                             </Select>
 
-                            <div className="flex items-center gap-2 flex-1">
+                            <div className="flex flex-wrap sm:flex-nowrap items-center gap-2 flex-1 min-w-[260px]">
                                 <span className={`text-xs shrink-0 ${datePreset === 'custom' ? 'text-gray-500' : 'text-gray-300'}`}>From</span>
                                 <Input
                                     type="date"
-                                    className="h-10 w-full bg-white px-2 text-sm text-gray-700 border border-gray-300 disabled:bg-gray-100 disabled:text-gray-400"
+                                    className="h-10 flex-1 min-w-0 bg-white px-2 text-sm text-gray-700 border border-gray-300 disabled:bg-gray-100 disabled:text-gray-400"
                                     value={searchStartDate}
                                     disabled={datePreset !== 'custom'}
                                     onChange={(e) => setSearchStartDate(e.target.value)}
@@ -728,7 +736,7 @@ export function AdminContentTable({
                                 <span className={`text-xs shrink-0 ${datePreset === 'custom' ? 'text-gray-500' : 'text-gray-300'}`}>To</span>
                                 <Input
                                     type="date"
-                                    className="h-10 w-full bg-white px-2 text-sm text-gray-700 border border-gray-300 disabled:bg-gray-100 disabled:text-gray-400"
+                                    className="h-10 flex-1 min-w-0 bg-white px-2 text-sm text-gray-700 border border-gray-300 disabled:bg-gray-100 disabled:text-gray-400"
                                     value={searchEndDate}
                                     disabled={datePreset !== 'custom'}
                                     onChange={(e) => setSearchEndDate(e.target.value)}
@@ -742,14 +750,8 @@ export function AdminContentTable({
                             </div>
                         </div>
 
-                        <div className="flex items-center justify-end gap-2 ml-auto shrink-0 col-span-2">
-                            <Button variant="outline" onClick={handleClearFilters} className="border border-gray-300 w-24">Clear</Button>
-                            <Button className="bg-brand-primary hover:bg-brand-primary-hover text-white w-24" onClick={handleApplyFilters}>Submit</Button>
-                        </div>
-
-
-                        <div className="flex lg:col-span-8 items-center gap-2 overflow-x-auto hide-scrollbar pb-1">
-                            <span className="text-sm font-medium text-gray-700 mr-2 flex items-center gap-1.5">
+                        <div className="flex col-span-full items-center gap-2 overflow-x-auto hide-scrollbar pb-1">
+                            <span className="text-sm font-medium text-gray-700 w-28 shrink-0 flex items-center gap-1.5">
                                 Account Scope
                             </span>
                             {ACCOUNT_SCOPES
@@ -760,7 +762,7 @@ export function AdminContentTable({
                                             key={scope}
                                             variant={isSelected ? "default" : "outline"}
                                             size="sm"
-                                            className={isSelected ? "bg-brand-secondary hover:bg-brand-secondary-hover text-white" : "border border-gray-300"}
+                                            className={isSelected ? "border border-transparent bg-brand-secondary hover:bg-brand-secondary-hover text-white" : "border border-gray-300"}
                                             onClick={() => {
                                                 let newScope = [...accountScope];
                                                 if (scope === 'All') {
@@ -791,11 +793,11 @@ export function AdminContentTable({
 
 
                         {categories && categories.length > 0 && (
-                            <div className="flex lg:col-span-8 items-center gap-2 overflow-x-auto hide-scrollbar pb-1">
-                                <span className="text-sm font-medium text-gray-700 mr-5">Categories</span>
+                            <div className="flex col-span-full items-center gap-2 overflow-x-auto hide-scrollbar pb-1">
+                                <span className="text-sm font-medium text-gray-700 w-28 shrink-0">Categories</span>
                                 <Button
                                     variant={searchCategories.includes('All') ? "default" : "outline"}
-                                    className={searchCategories.includes('All') ? "bg-brand-secondary hover:bg-brand-secondary-hover text-white" : ""}
+                                    className={searchCategories.includes('All') ? "border border-transparent bg-brand-secondary hover:bg-brand-secondary-hover text-white" : "border border-gray-300"}
                                     onClick={() => {
                                         setSearchCategories(['All']);
                                         setAppliedSearchCategories(['All']);
@@ -809,7 +811,7 @@ export function AdminContentTable({
                                     <Button
                                         key={cat}
                                         variant={searchCategories.includes(cat) ? "default" : "outline"}
-                                        className={searchCategories.includes(cat) ? getCategoryColor(cat) : ""}
+                                        className={searchCategories.includes(cat) ? `border border-transparent ${getCategoryColor(cat)}` : "border border-gray-300"}
                                         onClick={() => {
                                             let next: string[];
                                             if (searchCategories.includes(cat)) {
@@ -864,7 +866,14 @@ export function AdminContentTable({
                                     onToggleColumn={handleToggleColumn}
                                     onShowAll={handleShowAllColumns}
                                 />
-                                <Button variant="outline" onClick={handleExportCSV} className="border border-gray-300">Export CSV</Button>
+                                <Button
+                                    variant="outline"
+                                    onClick={handleExportCSV}
+                                    className="gap-2 border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 shrink-0"
+                                >
+                                    <Download className="h-4 w-4" />
+                                    Export CSV
+                                </Button>
                             </div>
                         </CardHeader>
                         <CardContent>

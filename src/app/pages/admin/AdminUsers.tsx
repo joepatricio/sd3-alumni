@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Label } from '@components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@components/ui/select';
 import { Textarea } from '@components/ui/textarea';
-import { ArrowUp, ArrowDown, ArrowUpDown, ChevronLeft, ChevronRight, Search, Plus, FileText, Eye, Pencil } from 'lucide-react';
+import { ArrowUp, ArrowDown, ArrowUpDown, ChevronLeft, ChevronRight, Download, Search, Plus, FileText, Eye, Pencil } from 'lucide-react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { api, unwrapListResponse, type DegreeData, type UserStatusData, type ProfileData, type RecordData, type AdminUserRow } from '@/app/views/api';
 import { formatDate } from '@/app/views/formatters';
@@ -128,7 +128,7 @@ const UserTableRow = memo(({
                     {user.status === 'Suspended' ? (
                         <div className="text-orange-700">Expires: {user.expiryDate || 'N/A'}</div>
                     ) : (
-                        user.grantedDate ? formatDate(user.grantedDate, "long") : 'N/A'
+                        user.grantedDate || 'N/A'
                     )}
                 </td>
             )}
@@ -519,7 +519,7 @@ export function AdminUsers() {
                 if (currentRecord?.dateCreated) {
                     const d = new Date(currentRecord.dateCreated);
                     if (!isNaN(d.getTime())) {
-                        formattedGranted = formatDate(d, 'short');
+                        formattedGranted = formatDate(d, 'long');
                         rawGranted = d.getTime();
                     }
                 }
@@ -637,9 +637,9 @@ export function AdminUsers() {
                                 <ChevronLeft className="h-4 w-4" />
                             </Button>
                             <div className="text-sm font-medium px-2">
-                                Page {currentPage} of {totalPages}
+                                Page {currentPage} of {Math.max(1, totalPages)}
                             </div>
-                            <Button variant="outline" size="sm" onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages}>
+                            <Button variant="outline" size="sm" onClick={() => setCurrentPage(p => Math.min(Math.max(1, totalPages), p + 1))} disabled={currentPage >= totalPages}>
                                 <ChevronRight className="h-4 w-4" />
                             </Button>
                         </div>
@@ -649,17 +649,17 @@ export function AdminUsers() {
                             <thead className="bg-gray-50 text-gray-700">
                                 <tr className="divide-x divide-gray-200/70">
                                     {visibleColumns.name && (
-                                        <th className="px-6 py-3 cursor-pointer hover:bg-gray-100 transition-colors" onClick={() => handleSort('name')}>
+                                        <th className="px-6 py-3 max-w-xs cursor-pointer hover:bg-gray-100 transition-colors" onClick={() => handleSort('name')}>
                                             <div className="flex items-center gap-1">Name {renderSortIcon('name')}</div>
                                         </th>
                                     )}
                                     {visibleColumns.degree && (
-                                        <th className="px-6 py-3 whitespace-nowrap cursor-pointer hover:bg-gray-100 transition-colors" onClick={() => handleSort('degree')}>
+                                        <th className="px-6 py-3 max-w-[240px] whitespace-nowrap cursor-pointer hover:bg-gray-100 transition-colors" onClick={() => handleSort('degree')}>
                                             <div className="flex items-center gap-1">Degree Program {renderSortIcon('degree')}</div>
                                         </th>
                                     )}
                                     {visibleColumns.email && (
-                                        <th className="px-6 py-3 cursor-pointer hover:bg-gray-100 transition-colors" onClick={() => handleSort('email')}>
+                                        <th className="px-6 py-3 max-w-[200px] cursor-pointer hover:bg-gray-100 transition-colors" onClick={() => handleSort('email')}>
                                             <div className="flex items-center gap-1">Email {renderSortIcon('email')}</div>
                                         </th>
                                     )}
@@ -706,7 +706,7 @@ export function AdminUsers() {
 
                 <Tabs value={activeTab} onValueChange={onTabChange} className="w-full">
                     <div className="overflow-x-auto pb-2 flex justify-between items-center gap-4">
-                        <TabsList className="mb-4 inline-flex min-w-full sm:min-w-0 flex-1">
+                        <TabsList className="inline-flex min-w-full sm:min-w-0 flex-1">
                             {statuses.map(status => (
                                 <TabsTrigger key={status} value={status}>
                                     {status === 'All' ? 'All Users' : status}
@@ -731,7 +731,7 @@ export function AdminUsers() {
                             </Button>
                         </div>
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3 items-center">
-                            <div className="sm:col-span-2 lg:col-span-3 relative">
+                            <div className="sm:col-span-2 lg:col-span-6 relative">
                                 <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
                                 <Input
                                     placeholder="Search user by name..."
@@ -741,7 +741,7 @@ export function AdminUsers() {
                                     onKeyDown={(e) => { if (e.key === 'Enter') handleApplyFilters(); }}
                                 />
                             </div>
-                            <div className="lg:col-span-3">
+                            <div className="sm:col-span-2 lg:col-span-6">
                                 <Select
                                     value={selectedDegree}
                                     onValueChange={(val) => {
@@ -769,7 +769,7 @@ export function AdminUsers() {
                                     </SelectContent>
                                 </Select>
                             </div>
-                            <div className="lg:col-span-2">
+                            <div className="sm:col-span-1 lg:col-span-3">
                                 <Select value={batchRange} onValueChange={(val) => {
                                     setBatchRange(val);
                                     let min = '';
@@ -822,7 +822,7 @@ export function AdminUsers() {
                                 </Select>
                             </div>
                             {batchRange === 'All Batches' ? (
-                                <div className="lg:col-span-2">
+                                <div className="sm:col-span-1 lg:col-span-5">
                                     <Input
                                         placeholder="Batch year..."
                                         value={searchBatch}
@@ -833,29 +833,29 @@ export function AdminUsers() {
                             ) : (
                                 // The earliest possible batch for Engineering is 1966.
                                 // For simplicity sake, the range entered here will not be validated.
-                                <div className="lg:col-span-2 flex gap-2 items-center">
+                                <div className="sm:col-span-1 lg:col-span-5 flex gap-2 items-center min-w-0">
                                     <Input
                                         placeholder="Min"
                                         type="number"
                                         value={customMinBatch}
                                         onChange={(e) => setCustomMinBatch(e.target.value)}
                                         disabled={batchRange !== 'Custom Range'}
-                                        className="w-full"
+                                        className="w-full min-w-0"
                                     />
-                                    <span className="text-gray-400">-</span>
+                                    <span className="text-gray-400 shrink-0">-</span>
                                     <Input
                                         placeholder="Max"
                                         type="number"
                                         value={customMaxBatch}
                                         onChange={(e) => setCustomMaxBatch(e.target.value)}
                                         disabled={batchRange !== 'Custom Range'}
-                                        className="w-full"
+                                        className="w-full min-w-0"
                                     />
                                 </div>
                             )}
-                            <div className="sm:col-span-2 lg:col-span-2 flex justify-end gap-2">
-                                <Button variant="outline" onClick={handleClearFilters}>Clear</Button>
-                                <Button className="bg-brand-primary hover:bg-brand-primary-hover text-white" onClick={handleApplyFilters}>Submit</Button>
+                            <div className="sm:col-span-2 lg:col-span-4 flex justify-end gap-2">
+                                <Button variant="outline" onClick={handleClearFilters} className="w-24 border border-gray-300">Clear</Button>
+                                <Button className="w-24 bg-brand-primary hover:bg-brand-primary-hover text-white" onClick={handleApplyFilters}>Submit</Button>
                             </div>
                         </div>
                     </div>
@@ -876,7 +876,13 @@ export function AdminUsers() {
                                         onToggleColumn={handleToggleColumn}
                                         onShowAll={handleShowAllColumns}
                                     />
-                                    <Button variant="outline" onClick={handleExportCSV} disabled={isExportingCsv} className="border border-gray-300">
+                                    <Button
+                                        variant="outline"
+                                        onClick={handleExportCSV}
+                                        disabled={isExportingCsv}
+                                        className="gap-2 border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 shrink-0"
+                                    >
+                                        <Download className="h-4 w-4" />
                                         {isExportingCsv ? 'Exporting...' : 'Export CSV'}
                                     </Button>
                                 </div>
