@@ -20,6 +20,10 @@ import {
     escapeCsvCell,
     type ColumnOption,
 } from '@components/admin/ColumnVisibilityDropdown';
+import {
+    readAdminUsersFilters,
+    writeAdminUsersFilters,
+} from '@components/admin/adminFilterStorage';
 import { toast } from 'sonner';
 import { EditProfileForm } from '@components/user/EditProfileForm';
 
@@ -166,37 +170,39 @@ const UserTableRow = memo(({
 UserTableRow.displayName = 'UserTableRow';
 
 export function AdminUsers() {
-    const [itemsPerPage, setItemsPerPage] = useState(20);
-
     const [searchParams, setSearchParams] = useSearchParams();
+    const [initialFilters] = useState(() => readAdminUsersFilters());
+    const urlTab = searchParams.get('tab');
+    const [itemsPerPage, setItemsPerPage] = useState(initialFilters.itemsPerPage);
+
     const [dbStatuses, setDbStatuses] = useState<UserStatusData[]>([]);
     const [degrees, setDegrees] = useState<DegreeData[]>([]);
     const [users, setUsers] = useState<AdminUserRow[]>([]);
     const [totalUsers, setTotalUsers] = useState(0);
     const [isExportingCsv, setIsExportingCsv] = useState(false);
     const isExportingCsvRef = useRef(false);
-    const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'All');
+    const [activeTab, setActiveTab] = useState(() => urlTab || initialFilters.activeTab);
 
     // Search & Filter
-    const [searchTerm, setSearchTerm] = useState('');
-    const [searchBatch, setSearchBatch] = useState('');
-    const [searchReason, setSearchReason] = useState('');
-    const [selectedDegree, setSelectedDegree] = useState<string>('All');
-    const [batchRange, setBatchRange] = useState<string>('All Batches');
-    const [customMinBatch, setCustomMinBatch] = useState<string>('');
-    const [customMaxBatch, setCustomMaxBatch] = useState<string>('');
+    const [searchTerm, setSearchTerm] = useState(initialFilters.searchTerm);
+    const [searchBatch, setSearchBatch] = useState(initialFilters.searchBatch);
+    const [searchReason, setSearchReason] = useState(initialFilters.searchReason);
+    const [selectedDegree, setSelectedDegree] = useState<string>(initialFilters.degree);
+    const [batchRange, setBatchRange] = useState<string>(initialFilters.batchRange);
+    const [customMinBatch, setCustomMinBatch] = useState<string>(initialFilters.customMinBatch);
+    const [customMaxBatch, setCustomMaxBatch] = useState<string>(initialFilters.customMaxBatch);
 
     // Explicit filter state
-    const [appliedSearchTerm, setAppliedSearchTerm] = useState('');
-    const [appliedSearchBatch, setAppliedSearchBatch] = useState('');
-    const [appliedSearchReason, setAppliedSearchReason] = useState('');
-    const [appliedDegree, setAppliedDegree] = useState<string>('All');
-    const [appliedBatchRange, setAppliedBatchRange] = useState<string>('All Batches');
-    const [appliedCustomMinBatch, setAppliedCustomMinBatch] = useState<string>('');
-    const [appliedCustomMaxBatch, setAppliedCustomMaxBatch] = useState<string>('');
+    const [appliedSearchTerm, setAppliedSearchTerm] = useState(initialFilters.searchTerm);
+    const [appliedSearchBatch, setAppliedSearchBatch] = useState(initialFilters.searchBatch);
+    const [appliedSearchReason, setAppliedSearchReason] = useState(initialFilters.searchReason);
+    const [appliedDegree, setAppliedDegree] = useState<string>(initialFilters.degree);
+    const [appliedBatchRange, setAppliedBatchRange] = useState<string>(initialFilters.batchRange);
+    const [appliedCustomMinBatch, setAppliedCustomMinBatch] = useState<string>(initialFilters.customMinBatch);
+    const [appliedCustomMaxBatch, setAppliedCustomMaxBatch] = useState<string>(initialFilters.customMaxBatch);
 
     // Sorting
-    const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>(null);
+    const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>(initialFilters.sortConfig);
 
     // Column Visibility (all columns shown by default)
     const [visibleColumns, setVisibleColumns] = useState<Record<UserColumnKey, boolean>>(() =>
@@ -236,7 +242,44 @@ export function AdminUsers() {
     }, []);
 
     // Pagination
-    const [currentPage, setCurrentPage] = useState(1);
+    const [currentPage, setCurrentPage] = useState(() =>
+        urlTab && urlTab !== initialFilters.activeTab ? 1 : initialFilters.currentPage
+    );
+
+    useEffect(() => {
+        const tab = searchParams.get('tab');
+        if (tab) {
+            setActiveTab(tab);
+        }
+    }, [searchParams]);
+
+    useEffect(() => {
+        writeAdminUsersFilters({
+            activeTab,
+            searchTerm: appliedSearchTerm,
+            searchBatch: appliedSearchBatch,
+            searchReason: appliedSearchReason,
+            degree: appliedDegree,
+            batchRange: appliedBatchRange,
+            customMinBatch: appliedCustomMinBatch,
+            customMaxBatch: appliedCustomMaxBatch,
+            sortConfig,
+            itemsPerPage,
+            currentPage,
+        });
+    }, [
+        activeTab,
+        appliedSearchTerm,
+        appliedSearchBatch,
+        appliedSearchReason,
+        appliedDegree,
+        appliedBatchRange,
+        appliedCustomMinBatch,
+        appliedCustomMaxBatch,
+        sortConfig,
+        itemsPerPage,
+        currentPage,
+    ]);
 
     // Editing (Profile & Status)
     const [editingUser, setEditingUser] = useState<AdminUserRow | null>(null);
@@ -262,6 +305,15 @@ export function AdminUsers() {
                 const degreeData = unwrapListResponse<DegreeData>(degreeRes).items;
                 setDbStatuses(statusData);
                 setDegrees(degreeData);
+                if (statusData.length > 0) {
+                    const validStatusNames = new Set(['All', ...statusData.map(s => s.statusName)]);
+                    setActiveTab(prev => (validStatusNames.has(prev) ? prev : 'All'));
+                }
+                if (degreeData.length > 0) {
+                    const validDegreeIds = new Set(['All', ...degreeData.map(d => d.id)]);
+                    setSelectedDegree(prev => (validDegreeIds.has(prev) ? prev : 'All'));
+                    setAppliedDegree(prev => (validDegreeIds.has(prev) ? prev : 'All'));
+                }
             } catch (err) {
                 if (axios.isCancel(err) || (err as { code?: string })?.code === 'ERR_CANCELED' || controller.signal.aborted) {
                     return;
@@ -555,6 +607,11 @@ export function AdminUsers() {
             });
 
             if (!signal?.aborted) {
+                const maxPage = Math.max(1, Math.ceil(total / itemsPerPage));
+                if (total > 0 && currentPage > maxPage) {
+                    setCurrentPage(maxPage);
+                    return;
+                }
                 setUsers(mapped);
                 setTotalUsers(total);
             }

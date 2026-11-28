@@ -18,6 +18,11 @@ import {
     escapeCsvCell,
     type ColumnOption,
 } from '@components/admin/ColumnVisibilityDropdown';
+import {
+    readAdminContentFilters,
+    writeAdminContentFilters,
+    type ContentSortKey,
+} from '@components/admin/adminFilterStorage';
 import { startOfWeek, endOfWeek, startOfMonth, endOfMonth, startOfYear, endOfYear, format } from 'date-fns';
 
 type ContentColumnKey = 'title' | 'category' | 'author' | 'date' | 'status';
@@ -236,7 +241,20 @@ export function AdminContentTable({
     categories,
     onStatusChange
 }: AdminContentTableProps) {
-    const [itemsPerPage, setItemsPerPage] = useState(20);
+    const [searchParams, setSearchParams] = useSearchParams();
+    const [initialFilters] = useState(() =>
+        readAdminContentFilters(contentType, {
+            allowedStatuses: statuses,
+            allowedCategories: categories,
+        })
+    );
+
+    const urlTab = searchParams.get('tab');
+    const urlStart = searchParams.get('start');
+    const urlEnd = searchParams.get('end');
+    const urlSort = searchParams.get('sort');
+
+    const [itemsPerPage, setItemsPerPage] = useState(initialFilters.itemsPerPage);
 
     const [data, setData] = useState<ContentItem[]>([]);
     const [totalItems, setTotalItems] = useState(0);
@@ -275,29 +293,47 @@ export function AdminContentTable({
     };
 
 
-    const [searchParams, setSearchParams] = useSearchParams();
-    const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'All');
+    const [activeTab, setActiveTab] = useState(() =>
+        urlTab && statuses.includes(urlTab) ? urlTab : initialFilters.activeTab
+    );
 
     // Search & Filter state
-    const [searchName, setSearchName] = useState('');
-    const [searchAuthor, setSearchAuthor] = useState('');
-    const [searchStartDate, setSearchStartDate] = useState(searchParams.get('start') || '');
-    const [searchEndDate, setSearchEndDate] = useState(searchParams.get('end') || '');
-    const [datePreset, setDatePreset] = useState('all');
-    const [searchCategories, setSearchCategories] = useState<string[]>(['All']);
+    const [searchName, setSearchName] = useState(initialFilters.searchName);
+    const [searchAuthor, setSearchAuthor] = useState(initialFilters.searchAuthor);
+    const [searchStartDate, setSearchStartDate] = useState(() =>
+        urlStart !== null ? urlStart : initialFilters.searchStartDate
+    );
+    const [searchEndDate, setSearchEndDate] = useState(() =>
+        urlEnd !== null ? urlEnd : initialFilters.searchEndDate
+    );
+    const [datePreset, setDatePreset] = useState(() =>
+        urlStart !== null || urlEnd !== null
+            ? (urlStart || urlEnd ? 'custom' : 'all')
+            : initialFilters.datePreset
+    );
+    const [searchCategories, setSearchCategories] = useState<string[]>(initialFilters.searchCategories);
 
     // Explicit filter applied state
-    const [appliedSearchName, setAppliedSearchName] = useState('');
-    const [appliedSearchAuthor, setAppliedSearchAuthor] = useState('');
-    const [appliedSearchStartDate, setAppliedSearchStartDate] = useState(searchParams.get('start') || '');
-    const [appliedSearchEndDate, setAppliedSearchEndDate] = useState(searchParams.get('end') || '');
-    const [appliedSearchCategories, setAppliedSearchCategories] = useState<string[]>(['All']);
+    const [appliedSearchName, setAppliedSearchName] = useState(initialFilters.searchName);
+    const [appliedSearchAuthor, setAppliedSearchAuthor] = useState(initialFilters.searchAuthor);
+    const [appliedSearchStartDate, setAppliedSearchStartDate] = useState(() =>
+        urlStart !== null ? urlStart : initialFilters.searchStartDate
+    );
+    const [appliedSearchEndDate, setAppliedSearchEndDate] = useState(() =>
+        urlEnd !== null ? urlEnd : initialFilters.searchEndDate
+    );
+    const [appliedDatePreset, setAppliedDatePreset] = useState(() =>
+        urlStart !== null || urlEnd !== null
+            ? (urlStart || urlEnd ? 'custom' : 'all')
+            : initialFilters.datePreset
+    );
+    const [appliedSearchCategories, setAppliedSearchCategories] = useState<string[]>(initialFilters.searchCategories);
 
     // Sorting
     const [sortConfig, setSortConfig] = useState<{ key: keyof ContentItem; direction: 'asc' | 'desc' } | null>(() => {
-        const sort = searchParams.get('sort');
-        if (sort === 'asc') return { key: 'date', direction: 'asc' };
-        return { key: 'date', direction: 'desc' };
+        if (urlSort === 'asc') return { key: 'date', direction: 'asc' };
+        if (urlSort === 'desc') return { key: 'date', direction: 'desc' };
+        return initialFilters.sortConfig;
     });
 
     // Column Visibility (all columns shown by default)
@@ -361,6 +397,12 @@ export function AdminContentTable({
             setAppliedSearchEndDate(end);
         }
 
+        if (start !== null || end !== null) {
+            const nextPreset = start || end ? 'custom' : 'all';
+            setDatePreset(nextPreset);
+            setAppliedDatePreset(nextPreset);
+        }
+
         const sort = searchParams.get('sort');
         if (sort === 'asc') {
             setSortConfig({ key: 'date', direction: 'asc' });
@@ -370,7 +412,13 @@ export function AdminContentTable({
     }, [searchParams]);
 
     // Pagination
-    const [currentPage, setCurrentPage] = useState(1);
+    const [currentPage, setCurrentPage] = useState(() => {
+        const hasUrlFilterOverride =
+            (urlTab !== null && statuses.includes(urlTab) && urlTab !== initialFilters.activeTab) ||
+            (urlStart !== null && urlStart !== initialFilters.searchStartDate) ||
+            (urlEnd !== null && urlEnd !== initialFilters.searchEndDate);
+        return hasUrlFilterOverride ? 1 : initialFilters.currentPage;
+    });
 
     const handleSort = (key: keyof ContentItem) => {
         setSortConfig((prev) => {
@@ -414,19 +462,56 @@ export function AdminContentTable({
         setAppliedSearchAuthor(searchAuthor);
         setAppliedSearchStartDate(start);
         setAppliedSearchEndDate(end);
+        setAppliedDatePreset(filter);
         setAppliedSearchCategories(searchCategories);
         setAppliedAccountScope(accountScope);
         setCurrentPage(1);
     };
 
-    const [accountScope, setAccountScope] = useState<AccountScope[]>(['All']);
-    const [appliedAccountScope, setAppliedAccountScope] = useState<AccountScope[]>(['All']);
+    const [accountScope, setAccountScope] = useState<AccountScope[]>(
+        initialFilters.accountScope as AccountScope[]
+    );
+    const [appliedAccountScope, setAppliedAccountScope] = useState<AccountScope[]>(
+        initialFilters.accountScope as AccountScope[]
+    );
+
+    useEffect(() => {
+        writeAdminContentFilters(contentType, {
+            activeTab,
+            searchName: appliedSearchName,
+            searchAuthor: appliedSearchAuthor,
+            searchStartDate: appliedSearchStartDate,
+            searchEndDate: appliedSearchEndDate,
+            datePreset: appliedDatePreset,
+            searchCategories: appliedSearchCategories,
+            accountScope: appliedAccountScope,
+            sortConfig: sortConfig
+                ? { key: sortConfig.key as ContentSortKey, direction: sortConfig.direction }
+                : null,
+            itemsPerPage,
+            currentPage,
+        });
+    }, [
+        contentType,
+        activeTab,
+        appliedSearchName,
+        appliedSearchAuthor,
+        appliedSearchStartDate,
+        appliedSearchEndDate,
+        appliedDatePreset,
+        appliedSearchCategories,
+        appliedAccountScope,
+        sortConfig,
+        itemsPerPage,
+        currentPage,
+    ]);
 
     const handleApplyFilters = () => {
         setAppliedSearchName(searchName);
         setAppliedSearchAuthor(searchAuthor);
         setAppliedSearchStartDate(searchStartDate);
         setAppliedSearchEndDate(searchEndDate);
+        setAppliedDatePreset(datePreset);
         setAppliedSearchCategories(searchCategories);
         setAppliedAccountScope(accountScope);
         setCurrentPage(1);
@@ -437,15 +522,23 @@ export function AdminContentTable({
         setSearchAuthor('');
         setSearchStartDate('');
         setSearchEndDate('');
+        setDatePreset('all');
         setSearchCategories(['All']);
         setAccountScope(['All']);
         setAppliedSearchName('');
         setAppliedSearchAuthor('');
         setAppliedSearchStartDate('');
         setAppliedSearchEndDate('');
+        setAppliedDatePreset('all');
         setAppliedSearchCategories(['All']);
         setAppliedAccountScope(['All']);
         setCurrentPage(1);
+        if (searchParams.has('start') || searchParams.has('end')) {
+            const nextParams = new URLSearchParams(searchParams);
+            nextParams.delete('start');
+            nextParams.delete('end');
+            setSearchParams(nextParams, { replace: true });
+        }
     };
 
     const handleExportCSV = () => {
@@ -496,6 +589,11 @@ export function AdminContentTable({
                     signal: controller.signal
                 });
                 if (!controller.signal.aborted) {
+                    const maxPage = Math.max(1, Math.ceil(result.total / itemsPerPage));
+                    if (result.total > 0 && currentPage > maxPage) {
+                        setCurrentPage(maxPage);
+                        return;
+                    }
                     setData(result.data);
                     setTotalItems(result.total);
                 }
