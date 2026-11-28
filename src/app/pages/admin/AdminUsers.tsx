@@ -21,6 +21,7 @@ import {
     type ColumnOption,
 } from '@components/admin/ColumnVisibilityDropdown';
 import { toast } from 'sonner';
+import { EditProfileForm } from '@components/user/EditProfileForm';
 
 const USER_TABLE_COLUMNS = [
     { key: 'name', label: 'Name' },
@@ -71,11 +72,13 @@ const getDegreeBadgeClass = (degree: string) => {
 const UserTableRow = memo(({
     user,
     visibleColumns,
+    openStatusModal,
     openEditModal,
 }: {
     user: AdminUserRow;
     visibleColumns: Record<UserColumnKey, boolean>;
-    openEditModal: (user: AdminUserRow, status?: string) => void;
+    openStatusModal: (user: AdminUserRow, status?: string) => void;
+    openEditModal: (user: AdminUserRow) => void;
 }) => {
     const degreeTooltip = user.degreeName !== 'N/A' && user.degree !== 'N/A' && user.degree !== user.degreeName
         ? `${user.degreeName} (${user.degree})`
@@ -136,7 +139,7 @@ const UserTableRow = memo(({
                 <td className="px-6 py-4 whitespace-nowrap">
                     <button
                         type="button"
-                        onClick={() => openEditModal(user)}
+                        onClick={() => openStatusModal(user)}
                         title="Click to change status"
                         aria-label={`Change status for ${user.name} (currently ${user.status})`}
                         className={`group inline-flex items-center justify-between gap-1.5 rounded-full border w-32 px-3 py-1 text-xs font-semibold shadow-xs transition-[box-shadow,filter,transform] cursor-pointer hover:shadow hover:brightness-95 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary/50 focus-visible:ring-offset-1 ${getUserStatusClass(user.status)}`}
@@ -235,8 +238,9 @@ export function AdminUsers() {
     // Pagination
     const [currentPage, setCurrentPage] = useState(1);
 
-    // Editing
+    // Editing (Profile & Status)
     const [editingUser, setEditingUser] = useState<AdminUserRow | null>(null);
+    const [statusModalUser, setStatusModalUser] = useState<AdminUserRow | null>(null);
     const [editStatus, setEditStatus] = useState<string>('');
     const [editReason, setEditReason] = useState<string>('');
     const [editExpiryDate, setEditExpiryDate] = useState<string>('');
@@ -459,8 +463,8 @@ export function AdminUsers() {
         }
     };
 
-    const handleSaveEdit = async () => {
-        if (!editingUser) return;
+    const handleSaveStatus = async (targetUser: AdminUserRow | null) => {
+        if (!targetUser) return;
 
         if (editStatus === 'Suspended' && !editExpiryDate) {
             toast.error("Suspension expiry date is required.");
@@ -468,13 +472,13 @@ export function AdminUsers() {
         }
 
         try {
-            await api.post(`/admin/users/${editingUser.id}/status`, {
+            await api.post(`/admin/users/${targetUser.id}/status`, {
                 statusName: editStatus,
                 reason: editReason,
                 expiryDate: editStatus === 'Suspended' ? editExpiryDate : null
             });
             toast.success(`User status updated to ${editStatus}`);
-            setEditingUser(null);
+            setStatusModalUser(null);
             fetchUsersList();
         } catch (err: unknown) {
             const axiosErr = err as { response?: { data?: { error?: string } } };
@@ -577,9 +581,9 @@ export function AdminUsers() {
         setSearchParams({ tab: val }, { replace: true });
     };
 
-        const openEditModal = useCallback((user: AdminUserRow, specificStatus?: string) => {
-            setEditingUser(user);
-            setEditStatus(specificStatus || user.status);
+        const populateStatusFields = useCallback((user: AdminUserRow, specificStatus?: string) => {
+            const targetStatus = specificStatus || user.status;
+            setEditStatus(targetStatus);
             setEditReason(user.reason || '');
 
             let initialExpiry = '';
@@ -594,7 +598,7 @@ export function AdminUsers() {
                     initialExpiry = d.toISOString().split('T')[0];
                 }
             }
-            if ((specificStatus || user.status) === 'Suspended' && !initialExpiry) {
+            if (targetStatus === 'Suspended' && !initialExpiry) {
                 const defaultDate = new Date();
                 defaultDate.setDate(defaultDate.getDate() + 7);
                 initialExpiry = defaultDate.toISOString().split('T')[0];
@@ -603,7 +607,94 @@ export function AdminUsers() {
             setEditExpiryDate(initialExpiry);
         }, []);
 
+        const openStatusModal = useCallback((user: AdminUserRow, specificStatus?: string) => {
+            populateStatusFields(user, specificStatus);
+            setStatusModalUser(user);
+        }, [populateStatusFields]);
 
+        const openEditModal = useCallback((user: AdminUserRow) => {
+            setEditingUser(user);
+        }, []);
+
+
+
+        const renderStatusFormFields = () => (
+            <div className="space-y-4">
+                <div className="space-y-2">
+                    <Label>Status</Label>
+                    <Select
+                        value={editStatus}
+                        onValueChange={(val) => {
+                            setEditStatus(val);
+                            if (val === 'Suspended' && !editExpiryDate) {
+                                const defaultDate = new Date();
+                                defaultDate.setDate(defaultDate.getDate() + 7);
+                                setEditExpiryDate(defaultDate.toISOString().split('T')[0]);
+                            }
+                        }}
+                    >
+                        <SelectTrigger>
+                            <SelectValue placeholder="Select status" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            {dbStatuses.map(s => (
+                                <SelectItem key={s.id} value={s.statusName}>{s.statusName}</SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                </div>
+                <div className="space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
+                    {editStatus === 'Suspended' && (
+                        <div className="space-y-2">
+                            <div className="flex items-center justify-between">
+                                <Label>
+                                    Suspension Expiry Date <span className="text-red-500">*</span>
+                                </Label>
+                                {editExpiryDate && new Date(editExpiryDate).getFullYear() >= 3000 && (
+                                    <Badge className="bg-orange-100 text-orange-800 border-orange-200 text-xs">
+                                        Indefinite
+                                    </Badge>
+                                )}
+                            </div>
+                            <Input
+                                type="date"
+                                required
+                                value={editExpiryDate}
+                                onChange={(e) => setEditExpiryDate(e.target.value)}
+                                className={!editExpiryDate ? "border-red-300 focus-visible:ring-red-400" : ""}
+                            />
+                            {!editExpiryDate && (
+                                <p className="text-xs text-red-500 font-medium">Expiry date is required for suspending a user.</p>
+                            )}
+                            <div className="flex gap-2 pt-1 flex-wrap">
+                                <Button type="button" variant="outline" size="sm" onClick={() => setPresetDuration(3)}>3 Days</Button>
+                                <Button type="button" variant="outline" size="sm" onClick={() => setPresetDuration(7)}>1 Week</Button>
+                                <Button type="button" variant="outline" size="sm" onClick={() => setPresetDuration(30)}>1 Month</Button>
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    className={editExpiryDate && new Date(editExpiryDate).getFullYear() >= 3000 ? "bg-orange-50 border-orange-300 text-orange-700 font-semibold" : ""}
+                                    onClick={setIndefiniteDuration}
+                                >
+                                    Indefinite
+                                </Button>
+                            </div>
+                        </div>
+                    )}
+                    <div className="space-y-2">
+                        <Label>Reason / Administrative Note (Optional)</Label>
+                        <Textarea
+                            placeholder="Provide reasoning or record note..."
+                            value={editReason}
+                            onChange={(e) => setEditReason(e.target.value)}
+                            rows={3}
+                        />
+                        <p className="text-xs text-gray-500">This description will be recorded in the user status logs.</p>
+                    </div>
+                </div>
+            </div>
+        );
 
         const renderTable = () => {
             if (users.length === 0) {
@@ -687,6 +778,7 @@ export function AdminUsers() {
                                         key={user.id}
                                         user={user}
                                         visibleColumns={visibleColumns}
+                                        openStatusModal={openStatusModal}
                                         openEditModal={openEditModal}
                                     />
                                 ))}
@@ -896,99 +988,53 @@ export function AdminUsers() {
                     </TabsContent>
                 </Tabs>
 
-                {/* Edit / Status Change Modal */}
-                <Dialog open={!!editingUser} onOpenChange={(open) => !open && setEditingUser(null)}>
+                {/* Quick Status Change Modal */}
+                <Dialog open={!!statusModalUser} onOpenChange={(open) => !open && setStatusModalUser(null)}>
                     <DialogContent>
                         <DialogHeader>
-                            <DialogTitle>Edit User Status: {editingUser?.name}</DialogTitle>
+                            <DialogTitle>Edit User Status: {statusModalUser?.name}</DialogTitle>
                             <DialogDescription>
                                 Update user account status, duration, and administrative record.
                             </DialogDescription>
                         </DialogHeader>
-                        <div className="space-y-4 py-4">
-                            <div className="space-y-2">
-                                <Label>Status</Label>
-                                <Select
-                                    value={editStatus}
-                                    onValueChange={(val) => {
-                                        setEditStatus(val);
-                                        if (val === 'Suspended' && !editExpiryDate) {
-                                            const defaultDate = new Date();
-                                            defaultDate.setDate(defaultDate.getDate() + 7);
-                                            setEditExpiryDate(defaultDate.toISOString().split('T')[0]);
-                                        }
-                                    }}
-                                >
-                                    <SelectTrigger>
-                                        <SelectValue placeholder="Select status" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {dbStatuses.map(s => (
-                                            <SelectItem key={s.id} value={s.statusName}>{s.statusName}</SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                            <div className="space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
-                                {editStatus === 'Suspended' && (
-                                    <div className="space-y-2">
-                                        <div className="flex items-center justify-between">
-                                            <Label>
-                                                Suspension Expiry Date <span className="text-red-500">*</span>
-                                            </Label>
-                                            {editExpiryDate && new Date(editExpiryDate).getFullYear() >= 3000 && (
-                                                <Badge className="bg-orange-100 text-orange-800 border-orange-200 text-xs">
-                                                    Indefinite
-                                                </Badge>
-                                            )}
-                                        </div>
-                                        <Input
-                                            type="date"
-                                            required
-                                            value={editExpiryDate}
-                                            onChange={(e) => setEditExpiryDate(e.target.value)}
-                                            className={!editExpiryDate ? "border-red-300 focus-visible:ring-red-400" : ""}
-                                        />
-                                        {!editExpiryDate && (
-                                            <p className="text-xs text-red-500 font-medium">Expiry date is required for suspending a user.</p>
-                                        )}
-                                        <div className="flex gap-2 pt-1 flex-wrap">
-                                            <Button type="button" variant="outline" size="sm" onClick={() => setPresetDuration(3)}>3 Days</Button>
-                                            <Button type="button" variant="outline" size="sm" onClick={() => setPresetDuration(7)}>1 Week</Button>
-                                            <Button type="button" variant="outline" size="sm" onClick={() => setPresetDuration(30)}>1 Month</Button>
-                                            <Button
-                                                type="button"
-                                                variant="outline"
-                                                size="sm"
-                                                className={editExpiryDate && new Date(editExpiryDate).getFullYear() >= 3000 ? "bg-orange-50 border-orange-300 text-orange-700 font-semibold" : ""}
-                                                onClick={setIndefiniteDuration}
-                                            >
-                                                Indefinite
-                                            </Button>
-                                        </div>
-                                    </div>
-                                )}
-                                <div className="space-y-2">
-                                    <Label>Reason / Administrative Note (Optional)</Label>
-                                    <Textarea
-                                        placeholder="Provide reasoning or record note..."
-                                        value={editReason}
-                                        onChange={(e) => setEditReason(e.target.value)}
-                                        rows={3}
-                                    />
-                                    <p className="text-xs text-gray-500">This description will be recorded in the user status logs.</p>
-                                </div>
-                            </div>
+                        <div className="py-4">
+                            {renderStatusFormFields()}
                         </div>
                         <DialogFooter>
-                            <Button variant="outline" onClick={() => setEditingUser(null)}>Cancel</Button>
+                            <Button variant="outline" onClick={() => setStatusModalUser(null)}>Cancel</Button>
                             <Button
-                                onClick={handleSaveEdit}
+                                onClick={() => handleSaveStatus(statusModalUser)}
                                 disabled={editStatus === 'Suspended' && !editExpiryDate}
                             >
                                 Save Changes
                             </Button>
                         </DialogFooter>
+                    </DialogContent>
+                </Dialog>
+
+                {/* Edit User Modal (Profile) */}
+                <Dialog open={!!editingUser} onOpenChange={(open) => !open && setEditingUser(null)}>
+                    <DialogContent className="sm:max-w-2xl md:max-w-3xl max-h-[90vh] overflow-y-auto">
+                        <DialogHeader>
+                            <DialogTitle>Edit User: {editingUser?.name}</DialogTitle>
+                            <DialogDescription>
+                                Update this user&apos;s profile details.
+                            </DialogDescription>
+                        </DialogHeader>
+                        {editingUser && (
+                            <EditProfileForm
+                                key={editingUser.id}
+                                userId={editingUser.id}
+                                isAdmin={true}
+                                variant="modal"
+                                degrees={degrees}
+                                onCancel={() => setEditingUser(null)}
+                                onSuccess={() => {
+                                    setEditingUser(null);
+                                    fetchUsersList();
+                                }}
+                            />
+                        )}
                     </DialogContent>
                 </Dialog>
 
