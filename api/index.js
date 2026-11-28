@@ -1946,6 +1946,186 @@ app.get('/api/admin/dashboard-stats', authenticateAdminToken, async (req, res) =
 });
 
 
+const adminUserListSelect = {
+    id: true,
+    currentRecordId: true,
+    userStatus: { select: { id: true, statusName: true } },
+    profile: {
+        select: {
+            userName: true,
+            email: true,
+            batch: true,
+            degree: { select: { id: true, degreeName: true, degreeAbbr: true } }
+        }
+    }
+};
+
+const SQLITE_IN_CHUNK_SIZE = 500;
+
+function chunkIds(ids, chunkSize = SQLITE_IN_CHUNK_SIZE) {
+    const unique = Array.from(new Set(ids.filter(Boolean)));
+    const chunks = [];
+    for (let i = 0; i < unique.length; i += chunkSize) {
+        chunks.push(unique.slice(i, i + chunkSize));
+    }
+    return chunks;
+}
+
+function parsePositiveIntParam(raw) {
+    if (typeof raw !== 'string') return NaN;
+    const trimmed = raw.trim();
+    if (!/^[1-9]\d*$/.test(trimmed)) return NaN;
+    const parsed = Number(trimmed);
+    return Number.isSafeInteger(parsed) ? parsed : NaN;
+}
+
+async function attachCurrentRecords(users) {
+    const recIdChunks = chunkIds(users.map(u => u.currentRecordId));
+    const recordsMap = new Map();
+    for (const chunk of recIdChunks) {
+        const recs = await prisma.record.findMany({
+            where: { id: { in: chunk } },
+            select: { id: true, dateCreated: true, dateExpires: true, description: true }
+        });
+        for (const r of recs) {
+            recordsMap.set(r.id, r);
+        }
+    }
+    return users.map(u => {
+        const rec = u.currentRecordId ? recordsMap.get(u.currentRecordId) : undefined;
+        return {
+            ...u,
+            records: rec ? [rec] : []
+        };
+    });
+}
+
+// Admin GET Users (slim projection + single current record + grantedDate sorting)
+app.get('/api/admin/users', authenticateAdminToken, async (req, res) => {
+    try {
+        const hasPage = req.query._page !== undefined;
+        const hasPerPage = req.query._per_page !== undefined;
+        const hasLimit = req.query._limit !== undefined;
+        const page = hasPage ? parsePositiveIntParam(req.query._page) : undefined;
+        const perPage = hasPerPage
+            ? parsePositiveIntParam(req.query._per_page)
+            : (hasLimit ? parsePositiveIntParam(req.query._limit) : undefined);
+
+        if ((hasPage && Number.isNaN(page)) || (hasPerPage && Number.isNaN(perPage)) || (!hasPerPage && hasLimit && Number.isNaN(perPage))) {
+            return res.status(400).json({ error: 'Invalid pagination parameters: _page and _per_page must be positive integers' });
+        }
+
+        const where = parseWhere(req.query, 'user');
+        const isPaginated = page !== undefined && perPage !== undefined;
+
+        const rawSort = typeof req.query._sort === 'string' ? req.query._sort.trim() : '';
+        const isGrantedDateSort = rawSort === 'grantedDate' || rawSort === '-grantedDate';
+        const grantedDateDesc = rawSort === '-grantedDate';
+
+        if (isGrantedDateSort) {
+            const matchingUsers = await prisma.user.findMany({
+                where,
+                select: { id: true, currentRecordId: true }
+            });
+            const allRecIdChunks = chunkIds(matchingUsers.map(u => u.currentRecordId));
+            const dateMap = new Map();
+            for (const chunk of allRecIdChunks) {
+                const recDates = await prisma.record.findMany({
+                    where: { id: { in: chunk } },
+                    select: { id: true, dateCreated: true }
+                });
+                for (const r of recDates) {
+                    dateMap.set(r.id, r.dateCreated ? new Date(r.dateCreated).getTime() : 0);
+                }
+            }
+
+            matchingUsers.sort((a, b) => {
+                const ta = a.currentRecordId ? (dateMap.get(a.currentRecordId) ?? 0) : 0;
+                const tb = b.currentRecordId ? (dateMap.get(b.currentRecordId) ?? 0) : 0;
+                if (ta !== tb) return grantedDateDesc ? tb - ta : ta - tb;
+                return a.id.localeCompare(b.id);
+            });
+
+            const totalItems = matchingUsers.length;
+            const targetIds = isPaginated
+                ? matchingUsers.slice((page - 1) * perPage, page * perPage).map(u => u.id)
+                : (perPage !== undefined ? matchingUsers.slice(0, perPage).map(u => u.id) : matchingUsers.map(u => u.id));
+
+            const userById = new Map();
+            for (const chunk of chunkIds(targetIds)) {
+                const fetchedUsers = await prisma.user.findMany({
+                    where: { id: { in: chunk } },
+                    select: adminUserListSelect
+                });
+                for (const u of fetchedUsers) {
+                    userById.set(u.id, u);
+                }
+            }
+            const orderedUsers = targetIds.map(id => userById.get(id)).filter(Boolean);
+            const enriched = await attachCurrentRecords(orderedUsers);
+
+            if (isPaginated) {
+                const totalPages = Math.ceil(totalItems / perPage);
+                return res.json({
+                    first: 1,
+                    prev: page > 1 ? page - 1 : null,
+                    next: page < totalPages ? page + 1 : null,
+                    last: totalPages,
+                    pages: totalPages,
+                    items: totalItems,
+                    data: formatOutput('user', enriched)
+                });
+            }
+            return res.json(formatOutput('user', enriched));
+        }
+
+        const orderBy = parseSort(req.query._sort);
+        if (isPaginated) {
+            const skip = (page - 1) * perPage;
+            const [users, totalItems] = await Promise.all([
+                prisma.user.findMany({
+                    where,
+                    orderBy,
+                    skip,
+                    take: perPage,
+                    select: adminUserListSelect
+                }),
+                prisma.user.count({ where })
+            ]);
+            const enriched = await attachCurrentRecords(users);
+            const totalPages = Math.ceil(totalItems / perPage);
+            return res.json({
+                first: 1,
+                prev: page > 1 ? page - 1 : null,
+                next: page < totalPages ? page + 1 : null,
+                last: totalPages,
+                pages: totalPages,
+                items: totalItems,
+                data: formatOutput('user', enriched)
+            });
+        }
+
+        const users = await prisma.user.findMany({
+            where,
+            orderBy,
+            ...(perPage !== undefined && { take: perPage }),
+            select: adminUserListSelect
+        });
+        const enriched = await attachCurrentRecords(users);
+        return res.json(formatOutput('user', enriched));
+    } catch (error) {
+        console.error('Failed to fetch admin users:', error);
+        if (
+            error.name === 'PrismaClientValidationError' ||
+            error.code?.startsWith('P20') ||
+            (error.name === 'PrismaClientUnknownRequestError' && /skip|take|AssertionError|out of range|overflow/i.test(error.message || ''))
+        ) {
+            return res.status(400).json({ error: `Invalid query parameters: ${error.message}` });
+        }
+        res.status(500).json({ error: 'Failed to fetch admin users' });
+    }
+});
+
 // Admin POST Create User
 app.post('/api/admin/users', authenticateAdminToken, async (req, res) => {
     const { fullName, email, password, degreeId, batch, gender, userStatusId, reason } = req.body;
@@ -2715,28 +2895,23 @@ app.get('/api/server-time', async (req, res) => {
 // Donations Summary API
 app.get('/api/donations/summary', async (req, res) => {
     try {
-        const donations = await prisma.donation.findMany({
-            where: { status: { statusName: 'Completed' } },
-            select: {
-                donationAmount: true,
-                donationDate: true,
-                userId: true
-            }
-        });
-
-        const allDonations = await prisma.donation.findMany({
-            select: {
-                donationAmount: true,
-                status: { select: { statusName: true } },
-                bankName: true
-            }
-        });
-
-        const totalUsers = await prisma.user.count();
+        const [allDonations, totalUsers] = await Promise.all([
+            prisma.donation.findMany({
+                select: {
+                    donationAmount: true,
+                    donationDate: true,
+                    userId: true,
+                    bankName: true,
+                    status: { select: { statusName: true } }
+                }
+            }),
+            prisma.user.count()
+        ]);
 
         let totalRaised = 0;
         let pendingClearances = 0;
         let pendingCount = 0;
+        let completedCount = 0;
 
         const statusCounts = {};
         const bankCounts = {};
@@ -2756,42 +2931,40 @@ app.get('/api/donations/summary', async (req, res) => {
             statusCounts[status] = (statusCounts[status] || 0) + 1;
 
             if (status === 'Completed') {
+                completedCount++;
                 bankCounts[bank] = (bankCounts[bank] || 0) + 1;
+
+                const date = new Date(d.donationDate);
+                const year = date.getUTCFullYear();
+                const userId = d.userId;
+
+                if (year === currentYear) {
+                    totalRaised += amt;
+                }
+
+                if (userId) {
+                    allTimeUniqueDonors.add(userId);
+
+                    if (year === currentYear) {
+                        currentYearUniqueDonors.add(userId);
+                    } else if (year < currentYear) {
+                        previousYearUniqueDonors.add(userId);
+                    }
+
+                    if (!donorMap.has(userId)) {
+                        donorMap.set(userId, {
+                            userId,
+                            totalAmount: 0,
+                            count: 0
+                        });
+                    }
+                    const donorStats = donorMap.get(userId);
+                    donorStats.totalAmount += amt;
+                    donorStats.count += 1;
+                }
             } else if (status === 'Processing') {
                 pendingCount++;
                 pendingClearances += amt;
-            }
-        });
-
-        donations.forEach(d => {
-            const amt = d.donationAmount || 0;
-            const date = new Date(d.donationDate);
-            const year = date.getUTCFullYear();
-            const userId = d.userId;
-
-            if (year === currentYear) {
-                totalRaised += amt;
-            }
-
-            if (userId) {
-                allTimeUniqueDonors.add(userId);
-
-                if (year === currentYear) {
-                    currentYearUniqueDonors.add(userId);
-                } else if (year < currentYear) {
-                    previousYearUniqueDonors.add(userId);
-                }
-
-                if (!donorMap.has(userId)) {
-                    donorMap.set(userId, {
-                        userId,
-                        totalAmount: 0,
-                        count: 0
-                    });
-                }
-                const donorStats = donorMap.get(userId);
-                donorStats.totalAmount += amt;
-                donorStats.count += 1;
             }
         });
 
@@ -2819,8 +2992,8 @@ app.get('/api/donations/summary', async (req, res) => {
             uniqueDonors: currentYearUniqueDonors.size,
             allTimeUniqueDonors: uniqueDonorsCount,
             averageLifetimeValue: uniqueDonorsCount > 0 ? (totalRaised / uniqueDonorsCount) : 0,
-            averageDonationValue: donations.length > 0 ? (totalRaised / donations.length) : 0,
-            donationFrequency: uniqueDonorsCount > 0 ? (donations.length / uniqueDonorsCount) : 0,
+            averageDonationValue: completedCount > 0 ? (totalRaised / completedCount) : 0,
+            donationFrequency: uniqueDonorsCount > 0 ? (completedCount / uniqueDonorsCount) : 0,
             repeatDonationRate: uniqueDonorsCount > 0 ? (donorsWithMultiple / uniqueDonorsCount) : 0,
             yoyRetention: currentYearUniqueDonors.size > 0 ? (retainedDonors / currentYearUniqueDonors.size) : 0,
             engagementRate: totalUsers > 0 ? (uniqueDonorsCount / totalUsers) : 0,

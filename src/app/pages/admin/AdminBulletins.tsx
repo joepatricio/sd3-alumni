@@ -1,9 +1,10 @@
+import { useCallback } from 'react';
 import { AdminContentTable } from '@components/admin/AdminContentTable';
 import { api, unwrapListResponse, type BulletinData } from '@/app/views/api';
 import type { ContentItem } from '@components/admin/AdminContentTable';
 
 export function AdminBulletins() {
-    const fetchData: React.ComponentProps<typeof AdminContentTable>['fetchData'] = async (params) => {
+    const fetchData: React.ComponentProps<typeof AdminContentTable>['fetchData'] = useCallback(async (params) => {
         const whereClause: Record<string, unknown> = {};
         if (params.status !== 'All') {
             if (params.status === 'For Review') {
@@ -49,6 +50,7 @@ export function AdminBulletins() {
             if (sortKey === 'author') sortKey = 'author.profile.userName';
             else if (sortKey === 'date' || sortKey === 'rawDate') sortKey = 'bulletinDate';
             else if (sortKey === 'status') sortKey = 'status.statusName';
+            else if (sortKey === 'category') sortKey = 'category.bulletinCategoryName';
 
             sortStr = params.sort.direction === 'desc' ? `-${sortKey}` : sortKey;
         }
@@ -68,7 +70,8 @@ export function AdminBulletins() {
                 _per_page: params.perPage,
                 _sort: sortStr,
                 _where: Object.keys(whereClause).length > 0 ? JSON.stringify(whereClause) : undefined
-            }
+            },
+            signal: params.signal
         });
 
         const { items: data, total } = unwrapListResponse<BulletinData>(response);
@@ -95,13 +98,10 @@ export function AdminBulletins() {
         }));
 
         return { data: mappedBulletins, total };
-    };
+    }, []);
 
     const handleStatusChange = async (id: string, newStatus: string, adminNotes?: string | null) => {
         try {
-            // Get the old bulletin to check previous status and author
-            await api.get(`/bulletins/${id}`);
-
             // Patch status
             await api.patch(`/admin/bulletins/${id}/status`, { status: newStatus, adminNotes });
 

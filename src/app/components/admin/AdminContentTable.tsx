@@ -1,9 +1,10 @@
-import { useState, useEffect, lazy, Suspense, useCallback, useMemo, memo } from 'react';
+import { useState, useEffect, lazy, Suspense, useCallback, useMemo, useRef, memo } from 'react';
+import axios from 'axios';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@components/ui/card';
 import { Button } from '@components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@components/ui/tabs';
 import { Input } from '@components/ui/input';
-import { ArrowUp, ArrowDown, ArrowUpDown, Ban, ChevronLeft, ChevronRight, Search, Eye, FileText, HardHat, Lock, UserX } from 'lucide-react';
+import { ArrowUp, ArrowDown, ArrowUpDown, Ban, ChevronLeft, ChevronRight, Download, Search, Eye, FileText, HardHat, Lock, Pencil, UserX } from 'lucide-react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@components/ui/dialog';
@@ -11,7 +12,15 @@ import { Label } from '@components/ui/label';
 import { Textarea } from '@components/ui/textarea';
 import { toast } from 'sonner';
 import { getCategoryColor, formatDate } from '@/app/views/formatters';
+import {
+    ColumnVisibilityDropdown,
+    createDefaultColumnVisibility,
+    escapeCsvCell,
+    type ColumnOption,
+} from '@components/admin/ColumnVisibilityDropdown';
 import { startOfWeek, endOfWeek, startOfMonth, endOfMonth, startOfYear, endOfYear, format } from 'date-fns';
+
+type ContentColumnKey = 'title' | 'category' | 'author' | 'date' | 'status';
 
 import type { EventModalInitialData } from '@components/user/CreateEventModal';
 import type { BulletinModalInitialData } from '@components/user/CreateBulletinModal';
@@ -42,157 +51,134 @@ export interface ContentItem {
     adminNotes?: string | null;
 }
 
-interface ContentAction {
-    label: string;
-    targetStatus: string;
-    colorClass: string;
-}
-
-export function getContentActions(status: string, type: 'Event' | 'Bulletin'): ContentAction[] {
-    if (type === 'Event') {
-        switch (status) {
-            case 'Pending':
-                return [
-                    { label: 'Approve', targetStatus: 'Approved', colorClass: 'text-green-700 border-green-300 hover:bg-green-50' },
-                    { label: 'Reject', targetStatus: 'Rejected', colorClass: 'text-red-600 border-red-200 hover:bg-red-50' },
-                    { label: 'Archive', targetStatus: 'Archived', colorClass: 'text-gray-600 border-gray-200 hover:bg-gray-100' },
-                ];
-            case 'Approved':
-                return [
-                    { label: 'Reset', targetStatus: 'Pending', colorClass: 'text-blue-600 border-blue-200 hover:bg-blue-50' },
-                    { label: 'Conclude', targetStatus: 'Concluded', colorClass: 'text-indigo-600 border-indigo-200 hover:bg-indigo-50' },
-                    { label: 'Archive', targetStatus: 'Archived', colorClass: 'text-gray-600 border-gray-200 hover:bg-gray-100' },
-                ];
-            case 'Rejected':
-            case 'Cancelled':
-            case 'Concluded':
-                return [
-                    { label: 'Reset', targetStatus: 'Pending', colorClass: 'text-blue-600 border-blue-200 hover:bg-blue-50' },
-                    { label: 'Archive', targetStatus: 'Archived', colorClass: 'text-gray-600 border-gray-200 hover:bg-gray-100' },
-                ];
-            case 'Archived':
-            default:
-                return [
-                    { label: 'Reset', targetStatus: 'Pending', colorClass: 'text-blue-600 border-blue-200 hover:bg-blue-50' },
-                ];
-        }
-    } else {
-        // Bulletin
-        switch (status) {
-            case 'Pending':
-            case 'Flagged':
-                return [
-                    { label: 'Approve', targetStatus: 'Approved', colorClass: 'text-green-700 border-green-300 hover:bg-green-50' },
-                    { label: 'Reject', targetStatus: 'Rejected', colorClass: 'text-red-600 border-red-200 hover:bg-red-50' },
-                    { label: 'Archive', targetStatus: 'Archived', colorClass: 'text-gray-600 border-gray-200 hover:bg-gray-100' },
-                ];
-            case 'Approved':
-            case 'Rejected':
-                return [
-                    { label: 'Reset', targetStatus: 'Pending', colorClass: 'text-blue-600 border-blue-200 hover:bg-blue-50' },
-                    { label: 'Archive', targetStatus: 'Archived', colorClass: 'text-gray-600 border-gray-200 hover:bg-gray-100' },
-                ];
-            case 'Archived':
-            default:
-                return [
-                    { label: 'Reset', targetStatus: 'Pending', colorClass: 'text-blue-600 border-blue-200 hover:bg-blue-50' },
-                ];
-        }
+const getStatusClass = (category: string) => {
+    switch (category) {
+        case "All": return 'bg-gray-100 text-gray-800 border-gray-300';
+        case "For Review": return 'bg-amber-100 text-amber-800 border-amber-300';
+        case "Pending": return 'bg-yellow-100 text-yellow-800 border-yellow-300';
+        case "Approved": return 'bg-green-100 text-green-800 border-green-300';
+        case "Rejected": return 'bg-red-100 text-red-800 border-red-300';
+        case "Cancelled": return 'bg-gray-100 text-gray-800 border-gray-300';
+        case "Archived": return 'bg-slate-200 text-slate-800 border-slate-300';
+        case "Concluded": return 'bg-blue-100 text-blue-800 border-blue-300';
+        case "Flagged": return 'bg-orange-100 text-orange-800 border-orange-300';
+        default: return 'bg-gray-100 text-gray-800 border-gray-300';
     }
-}
+};
+
+const getCategoryClass = (category: string) => {
+    if (category === "All" || category === "For Review" || category === "Pending" || category === "Approved" || category === "Rejected" || category === "Cancelled" || category === "Archived" || category === "Concluded") {
+        return getStatusClass(category);
+    }
+    if (category === "Official") return 'bg-brand-primary text-white border-transparent';
+    if (category === "Regular") return 'bg-brand-accent text-white border-transparent';
+    const staticCategoryColor = getCategoryColor(category).replace(/\bhover:\S+/g, '').trim();
+    return `${staticCategoryColor} border-transparent`;
+};
 
 interface ContentTableRowProps {
     item: ContentItem;
-    getCategoryClass: (category: string) => string;
-    getStatusClass: (status: string) => string;
-    openStatusModal: (item: ContentItem, targetStatus: string) => void;
+    visibleColumns: Record<ContentColumnKey, boolean>;
+    openStatusModal: (item: ContentItem, targetStatus?: string) => void;
     setEditingItem: (item: ContentItem) => void;
-    loadCreateEventModal: () => Promise<unknown>;
-    loadCreateBulletinModal: () => Promise<unknown>;
 }
 
 const ContentTableRow = memo(({
     item,
-    getCategoryClass,
-    getStatusClass,
+    visibleColumns,
     openStatusModal,
     setEditingItem,
-    loadCreateEventModal,
-    loadCreateBulletinModal
 }: ContentTableRowProps) => {
-    const actions = getContentActions(item.status, item.type);
-
     return (
-        <tr className="border-t">
-            <td className="px-6 py-4 w-96 max-w-md">
-                <div className="flex items-center justify-between gap-2 min-w-0">
-                    <Link
-                        to={`/${item.type === 'Bulletin' ? 'bulletin' : 'events'}/${item.id}`}
-                        className="text-gray-900 hover:text-brand-primary hover:underline font-semibold truncate flex-1 min-w-0"
-                        title={item.title}
-                    >
-                        {item.title}
-                    </Link>
-                    <div className="flex items-center gap-2 shrink-0 ml-auto">
-                        <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold shrink-0 ${getCategoryClass(item.category)}`}>
-                            {item.category}
-                        </span>
+        <tr className="border-t divide-x divide-gray-100">
+            {visibleColumns.title && (
+                <td className="px-6 py-0 w-96 max-w-sm h-px">
+                    <div className="flex items-stretch justify-between gap-2 min-w-0 h-full">
+                        <div className="flex-1 min-w-0 py-4 flex flex-col justify-center">
+                            <Link
+                                to={`/${item.type === 'Bulletin' ? 'bulletin' : 'events'}/${item.id}`}
+                                className="text-gray-900 hover:text-brand-primary hover:underline font-semibold truncate w-fit max-w-full"
+                                title={item.title}
+                            >
+                                {item.title}
+                            </Link>
+                            <div className="text-xs text-gray-500 truncate" title={item.description || ''}>{item.description}</div>
+                        </div>
                         <Link
                             to={`/admin/preview/${item.type === 'Bulletin' ? 'bulletin' : 'event'}/${item.id}`}
-                            className="text-gray-400 hover:text-brand-primary shrink-0"
+                            className="flex items-center justify-center self-stretch px-1 text-gray-400 hover:text-brand-primary transition-colors shrink-0"
                             title="Preview as Approved"
                         >
                             <Eye className="w-4 h-4" />
                         </Link>
                     </div>
-                </div>
-                <div className="text-xs text-gray-500 truncate" title={item.description || ''}>{item.description}</div>
-            </td>
-            <td className="px-6 py-4 w-48 max-w-[200px]">
-                <div className="flex items-center gap-2 min-w-0">
-                    {item.isOfficial && <HardHat className="w-4 h-4 text-brand-primary shrink-0" />}
-                    {item.isBanned && (
-                        <span title="Banned User" className="shrink-0">
-                            <Ban className="w-4 h-4 text-red-600" />
-                        </span>
-                    )}
-                    {item.isSuspended && (
-                        <span title="Suspended User" className="shrink-0">
-                            <Lock className="w-4 h-4 text-yellow-600" />
-                        </span>
-                    )}
-                    {item.isDeactivated && (
-                        <span title="Deactivated User" className="shrink-0">
-                            <UserX className="w-4 h-4 text-gray-500" />
-                        </span>
-                    )}
-                    <span className="truncate" title={item.author}>{item.author}</span>
-                    {item.authorId ? (
-                        <Link to={`/admin/preview/user/${item.authorId}`} className="text-gray-400 hover:text-brand-primary shrink-0" title="Preview Profile">
-                            <Eye className="w-4 h-4" />
-                        </Link>
-                    ) : null}
-                </div>
-            </td>
-            <td className="px-6 py-4 whitespace-nowrap">{formatDate(item.date, 'long')}</td>
-            <td className="px-6 py-4">
-                <div className="flex items-center gap-1.5 whitespace-nowrap">
-                    <span className={`inline-flex items-center justify-center text-center rounded-full border w-[4.5rem] px-2 py-0.5 text-xs font-semibold mr-1 shrink-0 ${getStatusClass(item.status)}`}>
-                        {item.status}
+                </td>
+            )}
+            {visibleColumns.category && (
+                <td className="px-6 py-4 whitespace-nowrap">
+                    <span
+                        title={item.category}
+                        className={`inline-flex items-center justify-center rounded-full border w-30 px-2.5 py-1 text-xs font-semibold ${getCategoryClass(item.category)}`}
+                    >
+                        <span className="truncate">{item.category}</span>
                     </span>
-
-                    {actions.map((act) => (
-                        <button
-                            key={act.label}
-                            className={`inline-flex items-center justify-center rounded-md text-xs font-medium transition-colors border h-8 px-2.5 shrink-0 ${act.colorClass}`}
-                            onClick={() => openStatusModal(item, act.targetStatus)}
-                        >
-                            {act.label}
-                        </button>
-                    ))}
-
+                </td>
+            )}
+            {visibleColumns.author && (
+                <td className="px-6 py-0 w-48 max-w-[200px] h-px">
+                    <div className="flex items-stretch justify-between gap-2 min-w-0 h-full">
+                        <div className="flex items-center gap-2 flex-1 min-w-0 py-4">
+                            {item.isOfficial && <HardHat className="w-4 h-4 text-brand-primary shrink-0" />}
+                            {item.isBanned && (
+                                <span title="Banned User" className="shrink-0">
+                                    <Ban className="w-4 h-4 text-red-600" />
+                                </span>
+                            )}
+                            {item.isSuspended && (
+                                <span title="Suspended User" className="shrink-0">
+                                    <Lock className="w-4 h-4 text-yellow-600" />
+                                </span>
+                            )}
+                            {item.isDeactivated && (
+                                <span title="Deactivated User" className="shrink-0">
+                                    <UserX className="w-4 h-4 text-gray-500" />
+                                </span>
+                            )}
+                            <span className="truncate" title={item.author}>{item.author}</span>
+                        </div>
+                        {item.authorId ? (
+                            <Link
+                                to={`/admin/preview/user/${item.authorId}`}
+                                className="flex items-center justify-center self-stretch px-1 text-gray-400 hover:text-brand-primary transition-colors shrink-0"
+                                title="Preview Profile"
+                            >
+                                <Eye className="w-4 h-4" />
+                            </Link>
+                        ) : null}
+                    </div>
+                </td>
+            )}
+            {visibleColumns.date && (
+                <td className="px-6 py-4 whitespace-nowrap">{formatDate(item.date, 'long')}</td>
+            )}
+            {visibleColumns.status && (
+                <td className="px-6 py-4 whitespace-nowrap">
                     <button
-                        className="ml-auto shrink-0 inline-flex items-center justify-center rounded-md text-xs font-medium transition-colors hover:bg-gray-200 h-8 px-2.5 border border-gray-200 text-gray-700"
+                        type="button"
+                        onClick={() => openStatusModal(item)}
+                        title="Click to change status"
+                        aria-label={`Change status for ${item.title} (currently ${item.status})`}
+                        className={`group inline-flex items-center justify-between gap-1.5 rounded-full border w-32 px-3 py-1 text-xs font-semibold shadow-xs transition-[box-shadow,filter,transform] cursor-pointer hover:shadow hover:brightness-95 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary/50 focus-visible:ring-offset-1 ${getStatusClass(item.status)}`}
+                    >
+                        <span className="truncate">{item.status}</span>
+                        <Pencil className="w-3 h-3 opacity-60 group-hover:opacity-100 transition-opacity shrink-0" />
+                    </button>
+                </td>
+            )}
+            <td className="px-6 py-4 text-right">
+                <div className="flex items-center justify-end gap-1.5 whitespace-nowrap">
+                    <button
+                        className="shrink-0 inline-flex items-center justify-center rounded-md text-xs font-medium transition-colors hover:bg-gray-200 h-8 px-2.5 border border-gray-200 text-gray-700"
                         onMouseEnter={() => {
                             if (item.type === 'Event') loadCreateEventModal();
                             else if (item.type === 'Bulletin') loadCreateBulletinModal();
@@ -229,7 +215,8 @@ interface AdminContentTableProps {
         status: string,
         categories?: string[],
         accountScope?: AccountScope[],
-        sort: { key: string, direction: 'asc' | 'desc' } | null
+        sort: { key: string, direction: 'asc' | 'desc' } | null,
+        signal?: AbortSignal
     }) => Promise<{ data: ContentItem[], total: number }>;
     primaryColorClass: string;
     outlineColorClass: string;
@@ -261,9 +248,9 @@ export function AdminContentTable({
     const [statusModalTarget, setStatusModalTarget] = useState<string>('');
     const [statusModalNote, setStatusModalNote] = useState<string>('');
 
-    const openStatusModal = useCallback((item: ContentItem, targetStatus: string) => {
+    const openStatusModal = useCallback((item: ContentItem, targetStatus?: string) => {
         setStatusModalItem(item);
-        setStatusModalTarget(targetStatus);
+        setStatusModalTarget(targetStatus ?? item.status);
         setStatusModalNote(item.adminNotes || '');
     }, []);
 
@@ -309,9 +296,54 @@ export function AdminContentTable({
     // Sorting
     const [sortConfig, setSortConfig] = useState<{ key: keyof ContentItem; direction: 'asc' | 'desc' } | null>(() => {
         const sort = searchParams.get('sort');
-        if (sort === 'asc') return { key: 'rawDate', direction: 'asc' };
-        return { key: 'rawDate', direction: 'desc' };
+        if (sort === 'asc') return { key: 'date', direction: 'asc' };
+        return { key: 'date', direction: 'desc' };
     });
+
+    // Column Visibility (all columns shown by default)
+    const tableColumns = useMemo<readonly ColumnOption<ContentColumnKey>[]>(() => [
+        { key: 'title', label: 'Title' },
+        { key: 'category', label: 'Category' },
+        { key: 'author', label: 'Author' },
+        { key: 'date', label: contentType === 'Event' ? 'Event Date' : 'Date Submitted' },
+        { key: 'status', label: 'Status' },
+    ], [contentType]);
+
+    const [visibleColumns, setVisibleColumns] = useState<Record<ContentColumnKey, boolean>>(() =>
+        createDefaultColumnVisibility(tableColumns)
+    );
+
+    const visibleColumnsRef = useRef(visibleColumns);
+    useEffect(() => {
+        visibleColumnsRef.current = visibleColumns;
+    }, [visibleColumns]);
+
+    const sortConfigRef = useRef(sortConfig);
+    useEffect(() => {
+        sortConfigRef.current = sortConfig;
+    }, [sortConfig]);
+
+    const handleToggleColumn = useCallback((key: ContentColumnKey) => {
+        const current = visibleColumnsRef.current;
+        const currentlyVisible = current[key];
+        const visibleCount = Object.values(current).filter(Boolean).length;
+        if (currentlyVisible && visibleCount <= 1) return;
+        const nextVisible = !currentlyVisible;
+        const nextColumns = { ...current, [key]: nextVisible };
+        visibleColumnsRef.current = nextColumns;
+        setVisibleColumns(nextColumns);
+        const currentSort = sortConfigRef.current;
+        if (!nextVisible && (currentSort?.key === key || (key === 'date' && currentSort?.key === 'rawDate'))) {
+            sortConfigRef.current = null;
+            setSortConfig(null);
+        }
+    }, []);
+
+    const handleShowAllColumns = useCallback(() => {
+        const allVisible = createDefaultColumnVisibility(tableColumns);
+        visibleColumnsRef.current = allVisible;
+        setVisibleColumns(allVisible);
+    }, [tableColumns]);
 
     useEffect(() => {
         const tab = searchParams.get('tab');
@@ -331,9 +363,9 @@ export function AdminContentTable({
 
         const sort = searchParams.get('sort');
         if (sort === 'asc') {
-            setSortConfig({ key: 'rawDate', direction: 'asc' });
+            setSortConfig({ key: 'date', direction: 'asc' });
         } else if (sort === 'desc') {
-            setSortConfig({ key: 'rawDate', direction: 'desc' });
+            setSortConfig({ key: 'date', direction: 'desc' });
         }
     }, [searchParams]);
 
@@ -341,16 +373,18 @@ export function AdminContentTable({
     const [currentPage, setCurrentPage] = useState(1);
 
     const handleSort = (key: keyof ContentItem) => {
-        let direction: 'asc' | 'desc' = 'asc';
-        if (sortConfig && sortConfig.key === key && sortConfig.direction === 'asc') {
-            direction = 'desc';
-        }
-        setSortConfig({ key, direction });
+        setSortConfig((prev) => {
+            if (!prev || prev.key !== key) return { key, direction: 'desc' };
+            if (prev.direction === 'desc') return { key, direction: 'asc' };
+            return null;
+        });
     };
 
     const renderSortIcon = (key: keyof ContentItem) => {
-        if (!sortConfig || sortConfig.key !== key) return <ArrowUpDown className="ml-1 w-4 h-4 text-gray-400" />;
-        return sortConfig.direction === 'asc' ? <ArrowUp className="ml-1 w-4 h-4 text-gray-700" /> : <ArrowDown className="ml-1 w-4 h-4 text-gray-700" />;
+        if (!sortConfig || sortConfig.key !== key) return <ArrowUpDown size={14} className="text-gray-400 shrink-0" />;
+        return sortConfig.direction === 'asc'
+            ? <ArrowUp size={14} className="text-gray-700 shrink-0" />
+            : <ArrowDown size={14} className="text-gray-700 shrink-0" />;
     };
 
     const applyQuickFilter = (filter: 'this_week' | 'this_month' | 'this_year' | 'all') => {
@@ -415,22 +449,36 @@ export function AdminContentTable({
     };
 
     const handleExportCSV = () => {
-        const headers = ['Title', 'Author', 'Date', 'Type', 'Status'];
-        const csvContent = data.map(c =>
-            `"${c.title.replace(/"/g, '""')}","${c.author}","${formatDate(c.date, 'long')}","${c.type}","${c.status}"`
+        const csvColumns: Array<{ header: string; getValue: (c: ContentItem) => unknown }> = [];
+        if (visibleColumns.title) csvColumns.push({ header: 'Title', getValue: (c) => c.title });
+        if (visibleColumns.category) csvColumns.push({ header: 'Category', getValue: (c) => c.category });
+        if (visibleColumns.author) csvColumns.push({ header: 'Author', getValue: (c) => c.author });
+        if (visibleColumns.date) csvColumns.push({ header: 'Date', getValue: (c) => formatDate(c.date, 'long') });
+        csvColumns.push({ header: 'Type', getValue: (c) => c.type });
+        if (visibleColumns.status) csvColumns.push({ header: 'Status', getValue: (c) => c.status });
+
+        const headers = csvColumns.map((col) => col.header);
+        const csvContent = data.map((c) =>
+            csvColumns.map((col) => escapeCsvCell(col.getValue(c))).join(',')
         );
 
         const csvString = [headers.join(','), ...csvContent].join('\n');
         const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
         const link = document.createElement('a');
-        link.href = URL.createObjectURL(blob);
+        const url = URL.createObjectURL(blob);
+        link.href = url;
         link.download = `${contentType.toLowerCase()}s_export_${new Date().toISOString().split('T')[0]}.csv`;
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
         link.click();
+        document.body.removeChild(link);
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
     };
 
     const [refreshKey, setRefreshKey] = useState(0);
 
     useEffect(() => {
+        const controller = new AbortController();
         const load = async () => {
             setIsLoading(true);
             try {
@@ -444,18 +492,27 @@ export function AdminContentTable({
                     status: activeTab,
                     categories: appliedSearchCategories,
                     accountScope: appliedAccountScope,
-                    sort: sortConfig
+                    sort: sortConfig,
+                    signal: controller.signal
                 });
-                setData(result.data);
-                setTotalItems(result.total);
+                if (!controller.signal.aborted) {
+                    setData(result.data);
+                    setTotalItems(result.total);
+                }
             } catch (err) {
+                if (axios.isCancel(err) || (err as { code?: string })?.code === 'ERR_CANCELED' || controller.signal.aborted) {
+                    return;
+                }
                 console.error(err);
             } finally {
-                setIsLoading(false);
+                if (!controller.signal.aborted) {
+                    setIsLoading(false);
+                }
             }
         };
         load();
-    }, [currentPage, appliedSearchName, appliedSearchAuthor, appliedSearchStartDate, appliedSearchEndDate, appliedSearchCategories, appliedAccountScope, activeTab, sortConfig, fetchData, refreshKey]);
+        return () => controller.abort();
+    }, [currentPage, itemsPerPage, appliedSearchName, appliedSearchAuthor, appliedSearchStartDate, appliedSearchEndDate, appliedSearchCategories, appliedAccountScope, activeTab, sortConfig, fetchData, refreshKey]);
 
     const totalPages = Math.ceil(totalItems / itemsPerPage);
     const paginatedContent = data;
@@ -480,30 +537,6 @@ export function AdminContentTable({
             default: return { title: `${status} ${contentType}s`, description: `Viewing ${status.toLowerCase()} items` };
         }
     };
-
-    const getStatusClass = (category: string) => {
-        switch (category) {
-            case "All": return 'bg-gray-100 text-gray-800';
-            case "For Review": return 'bg-amber-100 text-amber-800';
-            case "Pending": return 'bg-yellow-100 text-yellow-800';
-            case "Approved": return 'bg-green-100 text-green-800';
-            case "Rejected": return 'bg-red-100 text-red-800';
-            case "Cancelled": return 'bg-gray-100 text-gray-800';
-            case "Archived": return 'bg-slate-200 text-slate-800';
-            case "Concluded": return 'bg-blue-100 text-blue-800';
-            case "Flagged": return 'bg-orange-100 text-orange-800';
-            default: return 'bg-gray-100 text-gray-800';
-        }
-    }
-
-    const getCategoryClass = useCallback((category: string) => {
-        if (category === "All" || category === "For Review" || category === "Pending" || category === "Approved" || category === "Rejected" || category === "Cancelled" || category === "Archived" || category === "Concluded") {
-            return getStatusClass(category);
-        }
-        if (category === "Official") return 'bg-brand-primary text-white';
-        if (category === "Regular") return 'bg-brand-accent text-white';
-        return getCategoryColor(category);
-    }, []);
 
     const modalStatusOptions = useMemo(() => {
         const list = assignableStatuses || statuses;
@@ -559,19 +592,35 @@ export function AdminContentTable({
                 <div className="border rounded-md bg-white overflow-x-auto">
                     <table className="w-full text-sm text-left">
                         <thead className="bg-gray-50 text-gray-700">
-                            <tr>
-                                <th className="w-96 max-w-md px-6 py-3 cursor-pointer hover:bg-gray-100 transition-colors" onClick={() => handleSort('title')}>
-                                    <div className="flex items-center gap-1">Title {renderSortIcon('title')}</div>
-                                </th>
-                                <th className="w-48 max-w-[200px] px-6 py-3 cursor-pointer hover:bg-gray-100 transition-colors" onClick={() => handleSort('author')}>
-                                    <div className="flex items-center gap-1">Author {renderSortIcon('author')}</div>
-                                </th>
-                                <th className="w-44 px-6 py-3 whitespace-nowrap cursor-pointer hover:bg-gray-100 transition-colors" onClick={() => handleSort('date')}>
-                                    <div className="flex items-center gap-1">
-                                        {contentType === 'Event' ? 'Event Date' : 'Date Submitted'}{renderSortIcon('date')}
-                                    </div>
-                                </th>
-                                <th className="px-6 py-3">Actions</th>
+                            <tr className="divide-x divide-gray-200/70">
+                                {visibleColumns.title && (
+                                    <th className="w-96 max-w-sm px-6 py-3 cursor-pointer hover:bg-gray-100 transition-colors" onClick={() => handleSort('title')}>
+                                        <div className="flex items-center gap-1">Title {renderSortIcon('title')}</div>
+                                    </th>
+                                )}
+                                {visibleColumns.category && (
+                                    <th className="px-6 py-3 whitespace-nowrap cursor-pointer hover:bg-gray-100 transition-colors" onClick={() => handleSort('category')}>
+                                        <div className="flex items-center gap-1">Category {renderSortIcon('category')}</div>
+                                    </th>
+                                )}
+                                {visibleColumns.author && (
+                                    <th className="w-48 max-w-[200px] px-6 py-3 cursor-pointer hover:bg-gray-100 transition-colors" onClick={() => handleSort('author')}>
+                                        <div className="flex items-center gap-1">Author {renderSortIcon('author')}</div>
+                                    </th>
+                                )}
+                                {visibleColumns.date && (
+                                    <th className="w-44 px-6 py-3 whitespace-nowrap cursor-pointer hover:bg-gray-100 transition-colors" onClick={() => handleSort('date')}>
+                                        <div className="flex items-center gap-1">
+                                            {contentType === 'Event' ? 'Event Date' : 'Date Submitted'}{renderSortIcon('date')}
+                                        </div>
+                                    </th>
+                                )}
+                                {visibleColumns.status && (
+                                    <th className="px-6 py-3 whitespace-nowrap cursor-pointer hover:bg-gray-100 transition-colors" onClick={() => handleSort('status')}>
+                                        <div className="flex items-center gap-1">Status {renderSortIcon('status')}</div>
+                                    </th>
+                                )}
+                                <th className="px-6 py-3 text-right whitespace-nowrap">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -579,12 +628,9 @@ export function AdminContentTable({
                                 <ContentTableRow
                                     key={item.id}
                                     item={item}
-                                    getCategoryClass={getCategoryClass}
-                                    getStatusClass={getStatusClass}
+                                    visibleColumns={visibleColumns}
                                     openStatusModal={openStatusModal}
                                     setEditingItem={setEditingItem}
-                                    loadCreateEventModal={loadCreateEventModal}
-                                    loadCreateBulletinModal={loadCreateBulletinModal}
                                 />
                             ))}
                         </tbody>
@@ -603,7 +649,7 @@ export function AdminContentTable({
 
             <Tabs value={activeTab} onValueChange={onTabChange} className="w-full">
                 <div className="overflow-x-auto pb-2 flex justify-between items-center gap-4">
-                    <TabsList className="mb-4 inline-flex min-w-full sm:min-w-0 flex-1">
+                    <TabsList className="inline-flex min-w-full sm:min-w-0 flex-1">
                         {statuses.map(status => (
                             <TabsTrigger key={status} value={status}>{status}</TabsTrigger>
                         ))}
@@ -611,12 +657,16 @@ export function AdminContentTable({
                 </div>
 
                 <div className="p-4 bg-white border rounded-md shadow-sm mb-6 flex flex-col gap-4">
-                    <div className="flex justify-between items-center">
+                    <div className="flex flex-wrap justify-between items-center gap-4">
                         <div className="text-sm font-medium text-gray-700">Filters</div>
+                        <div className="flex items-center gap-2 shrink-0">
+                            <Button size="sm" variant="outline" onClick={handleClearFilters} className="border border-gray-300 w-24">Clear</Button>
+                            <Button size="sm" className="bg-brand-primary hover:bg-brand-primary-hover text-white w-24" onClick={handleApplyFilters}>Submit</Button>
+                        </div>
                     </div>
-                    <div className="grid grid-cols-8 gap-4">
-                        <div className='col-span-3 flex flex-row gap-2'>
-                            <div className="relative flex items-center flex-1">
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+                        <div className="col-span-full flex flex-col sm:flex-row gap-2 min-w-0">
+                            <div className="relative flex items-center flex-1 min-w-0">
                                 <Search className="absolute left-3 text-gray-400 w-4 h-4 pointer-events-none" />
                                 <Input
                                     placeholder="Search by Title..."
@@ -631,7 +681,7 @@ export function AdminContentTable({
                                     }}
                                 />
                             </div>
-                            <div className="relative flex items-center flex-1">
+                            <div className="relative flex items-center flex-1 min-w-0">
                                 <Input
                                     placeholder="Search by Author..."
                                     className="h-10 w-full bg-white border border-gray-300"
@@ -647,8 +697,8 @@ export function AdminContentTable({
                             </div>
                         </div>
 
-                        <div className="flex items-center gap-2 flex-1 col-span-3">
-                            <span className="text-sm text-gray-500 shrink-0">Date:</span>
+                        <div className="col-span-full flex flex-wrap items-center gap-2 min-w-0">
+                            <span className="text-sm font-medium text-gray-700 w-28 shrink-0">Date</span>
                             <Select value={datePreset} onValueChange={(val: string) => {
                                 setDatePreset(val);
                                 if (val === 'this_week' || val === 'this_month' || val === 'this_year' || val === 'all') {
@@ -667,11 +717,11 @@ export function AdminContentTable({
                                 </SelectContent>
                             </Select>
 
-                            <div className="flex items-center gap-2 flex-1">
+                            <div className="flex flex-wrap sm:flex-nowrap items-center gap-2">
                                 <span className={`text-xs shrink-0 ${datePreset === 'custom' ? 'text-gray-500' : 'text-gray-300'}`}>From</span>
                                 <Input
                                     type="date"
-                                    className="h-10 w-full bg-white px-2 text-sm text-gray-700 border border-gray-300 disabled:bg-gray-100 disabled:text-gray-400"
+                                    className="h-10 w-40 bg-white px-2 text-sm text-gray-700 border border-gray-300 disabled:bg-gray-100 disabled:text-gray-400"
                                     value={searchStartDate}
                                     disabled={datePreset !== 'custom'}
                                     onChange={(e) => setSearchStartDate(e.target.value)}
@@ -685,7 +735,7 @@ export function AdminContentTable({
                                 <span className={`text-xs shrink-0 ${datePreset === 'custom' ? 'text-gray-500' : 'text-gray-300'}`}>To</span>
                                 <Input
                                     type="date"
-                                    className="h-10 w-full bg-white px-2 text-sm text-gray-700 border border-gray-300 disabled:bg-gray-100 disabled:text-gray-400"
+                                    className="h-10 w-40 bg-white px-2 text-sm text-gray-700 border border-gray-300 disabled:bg-gray-100 disabled:text-gray-400"
                                     value={searchEndDate}
                                     disabled={datePreset !== 'custom'}
                                     onChange={(e) => setSearchEndDate(e.target.value)}
@@ -699,14 +749,8 @@ export function AdminContentTable({
                             </div>
                         </div>
 
-                        <div className="flex items-center justify-end gap-2 ml-auto shrink-0 col-span-2">
-                            <Button variant="outline" onClick={handleClearFilters} className="border border-gray-300 w-24">Clear</Button>
-                            <Button className="bg-brand-primary hover:bg-brand-primary-hover text-white w-24" onClick={handleApplyFilters}>Submit</Button>
-                        </div>
-
-
-                        <div className="flex lg:col-span-8 items-center gap-2 overflow-x-auto hide-scrollbar pb-1">
-                            <span className="text-sm font-medium text-gray-700 mr-2 flex items-center gap-1.5">
+                        <div className="flex col-span-full items-center gap-2 overflow-x-auto hide-scrollbar pb-1">
+                            <span className="text-sm font-medium text-gray-700 w-28 shrink-0 flex items-center gap-1.5">
                                 Account Scope
                             </span>
                             {ACCOUNT_SCOPES
@@ -717,7 +761,7 @@ export function AdminContentTable({
                                             key={scope}
                                             variant={isSelected ? "default" : "outline"}
                                             size="sm"
-                                            className={isSelected ? "bg-brand-secondary hover:bg-brand-secondary-hover text-white" : "border border-gray-300"}
+                                            className={isSelected ? "border border-transparent bg-brand-secondary hover:bg-brand-secondary-hover text-white" : "border border-gray-300"}
                                             onClick={() => {
                                                 let newScope = [...accountScope];
                                                 if (scope === 'All') {
@@ -748,11 +792,11 @@ export function AdminContentTable({
 
 
                         {categories && categories.length > 0 && (
-                            <div className="flex lg:col-span-8 items-center gap-2 overflow-x-auto hide-scrollbar pb-1">
-                                <span className="text-sm font-medium text-gray-700 mr-5">Categories</span>
+                            <div className="flex col-span-full items-center gap-2 overflow-x-auto hide-scrollbar pb-1">
+                                <span className="text-sm font-medium text-gray-700 w-28 shrink-0">Categories</span>
                                 <Button
                                     variant={searchCategories.includes('All') ? "default" : "outline"}
-                                    className={searchCategories.includes('All') ? "bg-brand-secondary hover:bg-brand-secondary-hover text-white" : ""}
+                                    className={searchCategories.includes('All') ? "border border-transparent bg-brand-secondary hover:bg-brand-secondary-hover text-white" : "border border-gray-300"}
                                     onClick={() => {
                                         setSearchCategories(['All']);
                                         setAppliedSearchCategories(['All']);
@@ -766,7 +810,7 @@ export function AdminContentTable({
                                     <Button
                                         key={cat}
                                         variant={searchCategories.includes(cat) ? "default" : "outline"}
-                                        className={searchCategories.includes(cat) ? getCategoryColor(cat) : ""}
+                                        className={searchCategories.includes(cat) ? `border border-transparent ${getCategoryColor(cat)}` : "border border-gray-300"}
                                         onClick={() => {
                                             let next: string[];
                                             if (searchCategories.includes(cat)) {
@@ -805,26 +849,37 @@ export function AdminContentTable({
                     </div>
                 </div>
 
-                {
-                    statuses.map(status => (
-                        <TabsContent key={status} value={status}>
-                            <Card className="border-none shadow-md">
-                                <CardHeader className="flex flex-row items-center justify-between">
-                                    <div>
-                                        <CardTitle>{getStatusConfig(status).title}</CardTitle>
-                                        <CardDescription>
-                                            {getStatusConfig(status).description}
-                                        </CardDescription>
-                                    </div>
-                                    <Button variant="outline" onClick={handleExportCSV} className="border border-gray-300">Export CSV</Button>
-                                </CardHeader>
-                                <CardContent>
-                                    {renderTable()}
-                                </CardContent>
-                            </Card>
-                        </TabsContent>
-                    ))
-                }
+                <TabsContent value={activeTab}>
+                    <Card className="border-none shadow-md">
+                        <CardHeader className="flex flex-row items-center justify-between gap-4">
+                            <div>
+                                <CardTitle>{getStatusConfig(activeTab).title}</CardTitle>
+                                <CardDescription>
+                                    {getStatusConfig(activeTab).description}
+                                </CardDescription>
+                            </div>
+                            <div className="flex items-center gap-2 shrink-0">
+                                <ColumnVisibilityDropdown
+                                    columns={tableColumns}
+                                    visibleColumns={visibleColumns}
+                                    onToggleColumn={handleToggleColumn}
+                                    onShowAll={handleShowAllColumns}
+                                />
+                                <Button
+                                    variant="outline"
+                                    onClick={handleExportCSV}
+                                    className="gap-2 border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 shrink-0"
+                                >
+                                    <Download className="h-4 w-4" />
+                                    Export CSV
+                                </Button>
+                            </div>
+                        </CardHeader>
+                        <CardContent>
+                            {renderTable()}
+                        </CardContent>
+                    </Card>
+                </TabsContent>
             </Tabs >
 
             {/* Status Change / Decision Modal */}

@@ -274,6 +274,7 @@ export interface Donation {
     rawDate: number;
     bankName: string;
     donationReference: string;
+    userId?: string | null;
 }
 
 export interface AchievementData {
@@ -336,6 +337,8 @@ export interface AdminUserRow {
     id: string;
     name: string;
     email: string;
+    degree: string;
+    degreeName: string;
     batch: string;
     status: string;
     reason?: string;
