@@ -30,6 +30,17 @@ export interface AnimatedMarqueeHeroProps {
   emptyState?: React.ReactNode;
 }
 
+const resolveExternalUrl = (rawUrl?: string | null): string | null => {
+  const trimmed = rawUrl?.trim();
+  if (!trimmed) return null;
+  try {
+    const parsed = new URL(trimmed);
+    return parsed.protocol === "http:" || parsed.protocol === "https:" ? parsed.href : null;
+  } catch {
+    return null;
+  }
+};
+
 /**
  * Individual Marquee Card with double-buffered image loading and smooth cross-fade
  */
@@ -137,10 +148,18 @@ const MarqueeCard: React.FC<MarqueeCardProps> = ({ item, singleRow }) => {
     }
   }, [currentUrl]);
 
+  const resolvedSourceUrl = resolveExternalUrl(item.sourceUrl);
+  const sourceLabel = item.albumId ? "Original Album" : "Original Post";
+  const linkTitle = item.title
+    ? `${item.title} — Open ${item.albumId ? "source album" : "original post"} in new tab`
+    : item.albumId
+      ? "Open source album in new tab"
+      : "Open original post in new tab";
+
   const cardContent = (
     <div
       className={cn(
-        "group/card relative shrink-0 overflow-hidden rounded-2xl border border-gray-200/90 bg-gray-100 shadow-sm transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:border-brand-primary/40 transform-gpu",
+        "group/card relative shrink-0 overflow-hidden rounded-2xl border border-gray-200/90 bg-gray-100 shadow-sm transition-[box-shadow,border-color] duration-300 hover:shadow-xl hover:border-brand-primary/40",
         singleRow
           ? "h-56 w-80 sm:h-64 sm:w-96 md:h-72 md:w-[28rem]"
           : "h-44 w-64 sm:h-52 sm:w-76 md:h-56 md:w-84"
@@ -205,11 +224,11 @@ const MarqueeCard: React.FC<MarqueeCardProps> = ({ item, singleRow }) => {
       )}
 
       {/* Hover action overlay */}
-      {item.sourceUrl ? (
-        <div className="absolute inset-0 z-30 flex items-end bg-gradient-to-t from-black/80 via-black/20 to-transparent p-3 opacity-0 transition-opacity duration-300 group-hover/card:opacity-100">
+      {resolvedSourceUrl ? (
+        <div className="absolute inset-0 z-30 flex items-end bg-gradient-to-t from-black/80 via-black/20 to-transparent p-3 opacity-0 transition-opacity duration-300 group-hover/card:opacity-100 group-focus-visible/link:opacity-100">
           <span className="inline-flex items-center gap-1.5 rounded-full bg-white/95 px-3 py-1 text-xs font-semibold text-gray-900 shadow-sm transition-colors hover:bg-white">
             <ExternalLink className="h-3 w-3 text-brand-primary" />
-            <span>Original Album</span>
+            <span>{sourceLabel}</span>
           </span>
         </div>
       ) : (
@@ -218,14 +237,15 @@ const MarqueeCard: React.FC<MarqueeCardProps> = ({ item, singleRow }) => {
     </div>
   );
 
-  if (item.sourceUrl) {
+  if (resolvedSourceUrl) {
     return (
       <a
-        href={item.sourceUrl}
+        href={resolvedSourceUrl}
         target="_blank"
         rel="noopener noreferrer"
-        className="focus:outline-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2 rounded-2xl block"
-        title="Open source album in new tab"
+        className="group/link cursor-pointer focus:outline-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2 rounded-2xl block"
+        title={linkTitle}
+        aria-label={linkTitle}
       >
         {cardContent}
       </a>
@@ -439,15 +459,9 @@ export const AnimatedMarqueeHero: React.FC<AnimatedMarqueeHeroProps> = ({
         }
         .animate-marquee-row1 {
           animation: marquee-scroll-left var(--duration-row1-mobile, 45s) linear infinite;
-          will-change: transform;
-          transform: translate3d(0, 0, 0);
-          backface-visibility: hidden;
         }
         .animate-marquee-row2 {
           animation: marquee-scroll-right var(--duration-row2-mobile, 48s) linear infinite;
-          will-change: transform;
-          transform: translate3d(0, 0, 0);
-          backface-visibility: hidden;
         }
         @media (min-width: 768px) {
           .animate-marquee-row1 {
@@ -462,6 +476,10 @@ export const AnimatedMarqueeHero: React.FC<AnimatedMarqueeHeroProps> = ({
           .marquee-row:hover .animate-marquee-row2 {
             animation-play-state: paused;
           }
+        }
+        .marquee-row:focus-within .animate-marquee-row1,
+        .marquee-row:focus-within .animate-marquee-row2 {
+          animation-play-state: paused;
         }
       `}</style>
 
