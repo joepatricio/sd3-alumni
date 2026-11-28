@@ -97,8 +97,8 @@ const ContentTableRow = memo(({
     return (
         <tr className="border-t divide-x divide-gray-100">
             {visibleColumns.title && (
-                <td className="px-6 py-0 w-96 max-w-sm h-px">
-                    <div className="flex items-stretch justify-between gap-2 min-w-0 h-full">
+                <td className="px-6 py-0 w-96 max-w-sm">
+                    <div className="flex items-stretch justify-between gap-2 min-w-0">
                         <div className="flex-1 min-w-0 py-4 flex flex-col justify-center">
                             <Link
                                 to={`/${item.type === 'Bulletin' ? 'bulletin' : 'events'}/${item.id}`}
@@ -130,8 +130,8 @@ const ContentTableRow = memo(({
                 </td>
             )}
             {visibleColumns.author && (
-                <td className="px-6 py-0 w-48 max-w-[200px] h-px">
-                    <div className="flex items-stretch justify-between gap-2 min-w-0 h-full">
+                <td className="px-6 py-0 w-48 max-w-[200px]">
+                    <div className="flex items-stretch justify-between gap-2 min-w-0">
                         <div className="flex items-center gap-2 flex-1 min-w-0 py-4">
                             {item.isOfficial && <HardHat className="w-4 h-4 text-brand-primary shrink-0" />}
                             {item.isBanned && (

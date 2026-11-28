@@ -91,8 +91,8 @@ const UserTableRow = memo(({
     return (
         <tr className="border-t divide-x divide-gray-100">
             {visibleColumns.name && (
-                <td className="px-6 py-0 font-medium max-w-xs h-px">
-                    <div className="flex items-stretch justify-between gap-2 min-w-0 h-full">
+                <td className="px-6 py-0 font-medium max-w-xs">
+                    <div className="flex items-stretch justify-between gap-2 min-w-0">
                         <div className="flex items-center flex-1 min-w-0 py-4">
                             <Link
                                 to={`/profile/${user.id}`}

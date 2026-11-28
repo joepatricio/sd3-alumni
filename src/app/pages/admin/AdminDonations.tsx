@@ -56,8 +56,8 @@ const DonationTableRow = memo(({
             <td className="px-6 py-4 whitespace-nowrap text-gray-600">{donation.date}</td>
         )}
         {visibleColumns.donor && (
-            <td className="px-6 py-0 font-medium text-gray-900 max-w-xs h-px">
-                <div className="flex items-stretch justify-between gap-2 min-w-0 h-full">
+            <td className="px-6 py-0 font-medium text-gray-900 max-w-xs">
+                <div className="flex items-stretch justify-between gap-2 min-w-0">
                     <div className="flex items-center flex-1 min-w-0 py-4">
                         {donation.userId ? (
                             <Link
