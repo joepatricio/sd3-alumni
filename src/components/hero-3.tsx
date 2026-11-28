@@ -30,6 +30,17 @@ export interface AnimatedMarqueeHeroProps {
   emptyState?: React.ReactNode;
 }
 
+const resolveExternalUrl = (rawUrl?: string | null): string | null => {
+  const trimmed = rawUrl?.trim();
+  if (!trimmed) return null;
+  try {
+    const parsed = new URL(trimmed);
+    return parsed.protocol === "http:" || parsed.protocol === "https:" ? parsed.href : null;
+  } catch {
+    return null;
+  }
+};
+
 /**
  * Individual Marquee Card with double-buffered image loading and smooth cross-fade
  */
@@ -137,6 +148,14 @@ const MarqueeCard: React.FC<MarqueeCardProps> = ({ item, singleRow }) => {
     }
   }, [currentUrl]);
 
+  const resolvedSourceUrl = resolveExternalUrl(item.sourceUrl);
+  const sourceLabel = item.albumId ? "Original Album" : "Original Post";
+  const linkTitle = item.title
+    ? `${item.title} — Open ${item.albumId ? "source album" : "original post"} in new tab`
+    : item.albumId
+      ? "Open source album in new tab"
+      : "Open original post in new tab";
+
   const cardContent = (
     <div
       className={cn(
@@ -205,11 +224,11 @@ const MarqueeCard: React.FC<MarqueeCardProps> = ({ item, singleRow }) => {
       )}
 
       {/* Hover action overlay */}
-      {item.sourceUrl ? (
-        <div className="absolute inset-0 z-30 flex items-end bg-gradient-to-t from-black/80 via-black/20 to-transparent p-3 opacity-0 transition-opacity duration-300 group-hover/card:opacity-100">
+      {resolvedSourceUrl ? (
+        <div className="absolute inset-0 z-30 flex items-end bg-gradient-to-t from-black/80 via-black/20 to-transparent p-3 opacity-0 transition-opacity duration-300 group-hover/card:opacity-100 group-focus-visible/link:opacity-100">
           <span className="inline-flex items-center gap-1.5 rounded-full bg-white/95 px-3 py-1 text-xs font-semibold text-gray-900 shadow-sm transition-colors hover:bg-white">
             <ExternalLink className="h-3 w-3 text-brand-primary" />
-            <span>Original Album</span>
+            <span>{sourceLabel}</span>
           </span>
         </div>
       ) : (
@@ -218,14 +237,15 @@ const MarqueeCard: React.FC<MarqueeCardProps> = ({ item, singleRow }) => {
     </div>
   );
 
-  if (item.sourceUrl) {
+  if (resolvedSourceUrl) {
     return (
       <a
-        href={item.sourceUrl}
+        href={resolvedSourceUrl}
         target="_blank"
         rel="noopener noreferrer"
-        className="focus:outline-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2 rounded-2xl block"
-        title="Open source album in new tab"
+        className="group/link cursor-pointer focus:outline-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2 rounded-2xl block"
+        title={linkTitle}
+        aria-label={linkTitle}
       >
         {cardContent}
       </a>
@@ -462,6 +482,10 @@ export const AnimatedMarqueeHero: React.FC<AnimatedMarqueeHeroProps> = ({
           .marquee-row:hover .animate-marquee-row2 {
             animation-play-state: paused;
           }
+        }
+        .marquee-row:focus-within .animate-marquee-row1,
+        .marquee-row:focus-within .animate-marquee-row2 {
+          animation-play-state: paused;
         }
       `}</style>
 
