@@ -153,7 +153,6 @@ export function AdminUsers() {
 
     // Editing (Profile & Status)
     const [editingUser, setEditingUser] = useState<AdminUserRow | null>(null);
-    const [editModalTab, setEditModalTab] = useState<'profile' | 'status'>('profile');
     const [statusModalUser, setStatusModalUser] = useState<AdminUserRow | null>(null);
     const [editStatus, setEditStatus] = useState<string>('');
     const [editReason, setEditReason] = useState<string>('');
@@ -342,7 +341,6 @@ export function AdminUsers() {
             });
             toast.success(`User status updated to ${editStatus}`);
             setStatusModalUser(null);
-            setEditingUser(null);
             fetchUsersList();
         } catch (err: unknown) {
             const axiosErr = err as { response?: { data?: { error?: string } } };
@@ -518,10 +516,8 @@ export function AdminUsers() {
         }, [populateStatusFields]);
 
         const openEditModal = useCallback((user: AdminUserRow) => {
-            populateStatusFields(user);
-            setEditModalTab('profile');
             setEditingUser(user);
-        }, [populateStatusFields]);
+        }, []);
 
 
 
@@ -847,58 +843,29 @@ export function AdminUsers() {
                     </DialogContent>
                 </Dialog>
 
-                {/* Edit User Modal (Profile + Account Status) */}
+                {/* Edit User Modal (Profile) */}
                 <Dialog open={!!editingUser} onOpenChange={(open) => !open && setEditingUser(null)}>
                     <DialogContent className="sm:max-w-2xl md:max-w-3xl max-h-[90vh] overflow-y-auto">
                         <DialogHeader>
                             <DialogTitle>Edit User: {editingUser?.name}</DialogTitle>
                             <DialogDescription>
-                                Update this user&apos;s profile details or manage their account status.
+                                Update this user&apos;s profile details.
                             </DialogDescription>
                         </DialogHeader>
-                        <Tabs
-                            value={editModalTab}
-                            onValueChange={(val) => setEditModalTab(val as 'profile' | 'status')}
-                            className="w-full"
-                        >
-                            <TabsList className="grid w-full grid-cols-2 mb-4">
-                                <TabsTrigger value="profile">Edit Profile</TabsTrigger>
-                                <TabsTrigger value="status">Account Status</TabsTrigger>
-                            </TabsList>
-
-                            <TabsContent value="profile" className="mt-0">
-                                {editingUser && (
-                                    <EditProfileForm
-                                        key={editingUser.id}
-                                        userId={editingUser.id}
-                                        isAdmin={true}
-                                        variant="modal"
-                                        degrees={degrees}
-                                        onCancel={() => setEditingUser(null)}
-                                        onSuccess={() => {
-                                            setEditingUser(null);
-                                            fetchUsersList();
-                                        }}
-                                    />
-                                )}
-                            </TabsContent>
-
-                            <TabsContent value="status" className="mt-0">
-                                <div className="space-y-4 py-2">
-                                    {renderStatusFormFields()}
-                                    <DialogFooter className="pt-2 border-t border-gray-100">
-                                        <Button variant="outline" onClick={() => setEditingUser(null)}>Cancel</Button>
-                                        <Button
-                                            className="bg-brand-primary hover:bg-brand-primary-hover text-white"
-                                            onClick={() => handleSaveStatus(editingUser)}
-                                            disabled={editStatus === 'Suspended' && !editExpiryDate}
-                                        >
-                                            Save Status
-                                        </Button>
-                                    </DialogFooter>
-                                </div>
-                            </TabsContent>
-                        </Tabs>
+                        {editingUser && (
+                            <EditProfileForm
+                                key={editingUser.id}
+                                userId={editingUser.id}
+                                isAdmin={true}
+                                variant="modal"
+                                degrees={degrees}
+                                onCancel={() => setEditingUser(null)}
+                                onSuccess={() => {
+                                    setEditingUser(null);
+                                    fetchUsersList();
+                                }}
+                            />
+                        )}
                     </DialogContent>
                 </Dialog>
 
