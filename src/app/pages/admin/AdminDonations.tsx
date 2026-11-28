@@ -14,6 +14,10 @@ import {
     escapeCsvCell,
     type ColumnOption,
 } from '@components/admin/ColumnVisibilityDropdown';
+import {
+    readAdminDonationsFilters,
+    writeAdminDonationsFilters,
+} from '@components/admin/adminFilterStorage';
 import { formatCurrency, getBankColor, formatDate } from '@/app/views/formatters';
 import { Printer, Download, Search, ArrowUp, ArrowDown, ArrowUpDown, ChevronLeft, ChevronRight, Loader2, Info, Mail, MapPin, GraduationCap, Briefcase, Eye } from 'lucide-react';
 import { api, unwrapListResponse, type Donation, type DonationData, type DonorLeaderboardEntry } from '@/app/views/api';
@@ -545,7 +549,8 @@ interface DonationsTableProps {
 }
 
 const DonationsTable = memo(function DonationsTable({ dbStatuses, uniqueBanks }: DonationsTableProps) {
-    const [itemsPerPage, setItemsPerPage] = useState(20);
+    const [initialFilters] = useState(() => readAdminDonationsFilters());
+    const [itemsPerPage, setItemsPerPage] = useState(initialFilters.itemsPerPage);
     const [donations, setDonations] = useState<Donation[]>([]);
     const [totalDonations, setTotalDonations] = useState(0);
     const [isTableLoading, setIsTableLoading] = useState(true);
@@ -553,28 +558,69 @@ const DonationsTable = memo(function DonationsTable({ dbStatuses, uniqueBanks }:
     const isExportingCsvRef = useRef(false);
 
     // Filter State
-    const [activeTab, setActiveTab] = useState('All');
-    const [searchDonor, setSearchDonor] = useState('');
-    const [searchRef, setSearchRef] = useState('');
-    const [minAmount, setMinAmount] = useState('');
-    const [maxAmount, setMaxAmount] = useState('');
-    const [startDate, setStartDate] = useState('');
-    const [endDate, setEndDate] = useState('');
-    const [datePreset, setDatePreset] = useState('all');
-    const [amountPreset, setAmountPreset] = useState('all');
-    const [searchBankName, setSearchBankName] = useState('All');
+    const [activeTab, setActiveTab] = useState(initialFilters.activeTab);
+    const [searchDonor, setSearchDonor] = useState(initialFilters.searchDonor);
+    const [searchRef, setSearchRef] = useState(initialFilters.searchRef);
+    const [minAmount, setMinAmount] = useState(initialFilters.minAmount);
+    const [maxAmount, setMaxAmount] = useState(initialFilters.maxAmount);
+    const [startDate, setStartDate] = useState(initialFilters.startDate);
+    const [endDate, setEndDate] = useState(initialFilters.endDate);
+    const [datePreset, setDatePreset] = useState(initialFilters.datePreset);
+    const [amountPreset, setAmountPreset] = useState(initialFilters.amountPreset);
+    const [searchBankName, setSearchBankName] = useState(initialFilters.searchBankName);
 
     // Explicit filter applied state
-    const [appliedSearchDonor, setAppliedSearchDonor] = useState('');
-    const [appliedSearchRef, setAppliedSearchRef] = useState('');
-    const [appliedMinAmount, setAppliedMinAmount] = useState('');
-    const [appliedMaxAmount, setAppliedMaxAmount] = useState('');
-    const [appliedStartDate, setAppliedStartDate] = useState('');
-    const [appliedEndDate, setAppliedEndDate] = useState('');
-    const [appliedSearchBankName, setAppliedSearchBankName] = useState('All');
+    const [appliedSearchDonor, setAppliedSearchDonor] = useState(initialFilters.searchDonor);
+    const [appliedSearchRef, setAppliedSearchRef] = useState(initialFilters.searchRef);
+    const [appliedMinAmount, setAppliedMinAmount] = useState(initialFilters.minAmount);
+    const [appliedMaxAmount, setAppliedMaxAmount] = useState(initialFilters.maxAmount);
+    const [appliedStartDate, setAppliedStartDate] = useState(initialFilters.startDate);
+    const [appliedEndDate, setAppliedEndDate] = useState(initialFilters.endDate);
+    const [appliedDatePreset, setAppliedDatePreset] = useState(initialFilters.datePreset);
+    const [appliedAmountPreset, setAppliedAmountPreset] = useState(initialFilters.amountPreset);
+    const [appliedSearchBankName, setAppliedSearchBankName] = useState(initialFilters.searchBankName);
 
-    const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>({ key: 'date', direction: 'desc' });
-    const [currentPage, setCurrentPage] = useState(1);
+    const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>(initialFilters.sortConfig);
+    const [currentPage, setCurrentPage] = useState(initialFilters.currentPage);
+
+    useEffect(() => {
+        if (dbStatuses.length > 0) {
+            const validStatuses = new Set(['All', ...dbStatuses]);
+            setActiveTab(prev => (validStatuses.has(prev) ? prev : 'All'));
+        }
+    }, [dbStatuses]);
+
+    useEffect(() => {
+        writeAdminDonationsFilters({
+            activeTab,
+            searchDonor: appliedSearchDonor,
+            searchRef: appliedSearchRef,
+            minAmount: appliedMinAmount,
+            maxAmount: appliedMaxAmount,
+            startDate: appliedStartDate,
+            endDate: appliedEndDate,
+            datePreset: appliedDatePreset,
+            amountPreset: appliedAmountPreset,
+            searchBankName: appliedSearchBankName,
+            sortConfig,
+            itemsPerPage,
+            currentPage,
+        });
+    }, [
+        activeTab,
+        appliedSearchDonor,
+        appliedSearchRef,
+        appliedMinAmount,
+        appliedMaxAmount,
+        appliedStartDate,
+        appliedEndDate,
+        appliedDatePreset,
+        appliedAmountPreset,
+        appliedSearchBankName,
+        sortConfig,
+        itemsPerPage,
+        currentPage,
+    ]);
 
     // Column Visibility (all columns shown by default)
     const [visibleColumns, setVisibleColumns] = useState<Record<DonationColumnKey, boolean>>(() =>
@@ -652,6 +698,8 @@ const DonationsTable = memo(function DonationsTable({ dbStatuses, uniqueBanks }:
         setAppliedMaxAmount(maxAmount);
         setAppliedStartDate(start);
         setAppliedEndDate(end);
+        setAppliedDatePreset(filter);
+        setAppliedAmountPreset(amountPreset);
         setAppliedSearchBankName(searchBankName);
         setCurrentPage(1);
     };
@@ -679,6 +727,8 @@ const DonationsTable = memo(function DonationsTable({ dbStatuses, uniqueBanks }:
         setAppliedMaxAmount(max);
         setAppliedStartDate(startDate);
         setAppliedEndDate(endDate);
+        setAppliedDatePreset(datePreset);
+        setAppliedAmountPreset(filter);
         setAppliedSearchBankName(searchBankName);
         setCurrentPage(1);
     };
@@ -872,6 +922,11 @@ const DonationsTable = memo(function DonationsTable({ dbStatuses, uniqueBanks }:
                     userId: d.userId
                 }));
                 if (!controller.signal.aborted) {
+                    const maxPage = Math.max(1, Math.ceil(total / itemsPerPage));
+                    if (total > 0 && currentPage > maxPage) {
+                        setCurrentPage(maxPage);
+                        return;
+                    }
                     setDonations(mapped);
                     setTotalDonations(total);
                 }
@@ -897,6 +952,8 @@ const DonationsTable = memo(function DonationsTable({ dbStatuses, uniqueBanks }:
         setAppliedMaxAmount(maxAmount);
         setAppliedStartDate(startDate);
         setAppliedEndDate(endDate);
+        setAppliedDatePreset(datePreset);
+        setAppliedAmountPreset(amountPreset);
         setAppliedSearchBankName(searchBankName);
         setCurrentPage(1);
     };
@@ -908,6 +965,8 @@ const DonationsTable = memo(function DonationsTable({ dbStatuses, uniqueBanks }:
         setMaxAmount('');
         setStartDate('');
         setEndDate('');
+        setDatePreset('all');
+        setAmountPreset('all');
         setSearchBankName('All');
 
         setAppliedSearchDonor('');
@@ -916,6 +975,8 @@ const DonationsTable = memo(function DonationsTable({ dbStatuses, uniqueBanks }:
         setAppliedMaxAmount('');
         setAppliedStartDate('');
         setAppliedEndDate('');
+        setAppliedDatePreset('all');
+        setAppliedAmountPreset('all');
         setAppliedSearchBankName('All');
 
         setCurrentPage(1);

@@ -4,6 +4,7 @@ import { LogOut, LayoutDashboard, Users, FileText, ChevronLeft, CreditCard, Cale
 import ScrollToTop from '../ScrollToTop';
 import { api } from '@/app/views/api';
 import { adminLoaders, prefetchAdminRoutes } from '@/app/AppRoutes';
+import { clearAllAdminFilters } from '@components/admin/adminFilterStorage';
 
 
 import { formatDate } from '@/app/views/formatters';
@@ -126,6 +127,7 @@ export function AdminLayout() {
     }, []);
 
     const handleLogout = async () => {
+        clearAllAdminFilters();
         try {
             await api.post('/auth/admin/logout');
         } catch {
