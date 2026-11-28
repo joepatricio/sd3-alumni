@@ -715,23 +715,29 @@ export function AdminUsers() {
                         </TabsList>
                     </div>
                     <div className="p-4 bg-white border rounded-md shadow-sm mb-6 flex flex-col gap-4">
-                        <div className="flex items-center justify-between gap-4">
+                        <div className="flex flex-wrap items-center justify-between gap-4">
                             <div className="text-sm font-medium text-gray-700">Filters</div>
-                            <Button
-                                size="sm"
-                                className="bg-brand-secondary hover:bg-brand-secondary-hover text-white hover:text-white"
-                                onMouseEnter={loadCreateUserModal}
-                                onFocus={loadCreateUserModal}
-                                onClick={() => {
-                                    loadCreateUserModal();
-                                    setIsCreateOpen(true);
-                                }}
-                            >
-                                <Plus className="mr-1 h-4 w-4" /> Create User
-                            </Button>
+                            <div className="flex flex-wrap items-center gap-4">
+                                <Button
+                                    size="sm"
+                                    className="bg-brand-secondary hover:bg-brand-secondary-hover text-white hover:text-white"
+                                    onMouseEnter={loadCreateUserModal}
+                                    onFocus={loadCreateUserModal}
+                                    onClick={() => {
+                                        loadCreateUserModal();
+                                        setIsCreateOpen(true);
+                                    }}
+                                >
+                                    <Plus className="mr-1 h-4 w-4" /> Create User
+                                </Button>
+                                <div className="flex items-center gap-2">
+                                    <Button size="sm" variant="outline" onClick={handleClearFilters} className="w-24 border border-gray-300">Clear</Button>
+                                    <Button size="sm" className="w-24 bg-brand-primary hover:bg-brand-primary-hover text-white" onClick={handleApplyFilters}>Submit</Button>
+                                </div>
+                            </div>
                         </div>
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3 items-center">
-                            <div className="sm:col-span-2 lg:col-span-6 relative">
+                            <div className="sm:col-span-2 lg:col-span-12 relative">
                                 <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
                                 <Input
                                     placeholder="Search user by name..."
@@ -741,7 +747,7 @@ export function AdminUsers() {
                                     onKeyDown={(e) => { if (e.key === 'Enter') handleApplyFilters(); }}
                                 />
                             </div>
-                            <div className="sm:col-span-2 lg:col-span-6">
+                            <div className="sm:col-span-2 lg:col-span-5">
                                 <Select
                                     value={selectedDegree}
                                     onValueChange={(val) => {
@@ -822,7 +828,7 @@ export function AdminUsers() {
                                 </Select>
                             </div>
                             {batchRange === 'All Batches' ? (
-                                <div className="sm:col-span-1 lg:col-span-5">
+                                <div className="sm:col-span-1 lg:col-span-4">
                                     <Input
                                         placeholder="Batch year..."
                                         value={searchBatch}
@@ -833,7 +839,7 @@ export function AdminUsers() {
                             ) : (
                                 // The earliest possible batch for Engineering is 1966.
                                 // For simplicity sake, the range entered here will not be validated.
-                                <div className="sm:col-span-1 lg:col-span-5 flex gap-2 items-center min-w-0">
+                                <div className="sm:col-span-1 lg:col-span-4 flex gap-2 items-center min-w-0">
                                     <Input
                                         placeholder="Min"
                                         type="number"
@@ -853,10 +859,6 @@ export function AdminUsers() {
                                     />
                                 </div>
                             )}
-                            <div className="sm:col-span-2 lg:col-span-4 flex justify-end gap-2">
-                                <Button variant="outline" onClick={handleClearFilters} className="w-24 border border-gray-300">Clear</Button>
-                                <Button className="w-24 bg-brand-primary hover:bg-brand-primary-hover text-white" onClick={handleApplyFilters}>Submit</Button>
-                            </div>
                         </div>
                     </div>
 

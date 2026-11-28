@@ -657,11 +657,15 @@ export function AdminContentTable({
                 </div>
 
                 <div className="p-4 bg-white border rounded-md shadow-sm mb-6 flex flex-col gap-4">
-                    <div className="flex justify-between items-center">
+                    <div className="flex flex-wrap justify-between items-center gap-4">
                         <div className="text-sm font-medium text-gray-700">Filters</div>
+                        <div className="flex items-center gap-2 shrink-0">
+                            <Button size="sm" variant="outline" onClick={handleClearFilters} className="border border-gray-300 w-24">Clear</Button>
+                            <Button size="sm" className="bg-brand-primary hover:bg-brand-primary-hover text-white w-24" onClick={handleApplyFilters}>Submit</Button>
+                        </div>
                     </div>
                     <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
-                        <div className="lg:col-span-8 flex flex-col sm:flex-row gap-2 min-w-0">
+                        <div className="col-span-full flex flex-col sm:flex-row gap-2 min-w-0">
                             <div className="relative flex items-center flex-1 min-w-0">
                                 <Search className="absolute left-3 text-gray-400 w-4 h-4 pointer-events-none" />
                                 <Input
@@ -693,13 +697,8 @@ export function AdminContentTable({
                             </div>
                         </div>
 
-                        <div className="flex items-center justify-end gap-2 shrink-0 lg:col-span-4">
-                            <Button variant="outline" onClick={handleClearFilters} className="border border-gray-300 w-24">Clear</Button>
-                            <Button className="bg-brand-primary hover:bg-brand-primary-hover text-white w-24" onClick={handleApplyFilters}>Submit</Button>
-                        </div>
-
-                        <div className="col-span-full flex flex-wrap lg:flex-nowrap items-center gap-2 min-w-0">
-                            <span className="text-sm text-gray-500 shrink-0">Date:</span>
+                        <div className="col-span-full flex flex-wrap items-center gap-2 min-w-0">
+                            <span className="text-sm font-medium text-gray-700 w-28 shrink-0">Date</span>
                             <Select value={datePreset} onValueChange={(val: string) => {
                                 setDatePreset(val);
                                 if (val === 'this_week' || val === 'this_month' || val === 'this_year' || val === 'all') {
@@ -718,11 +717,11 @@ export function AdminContentTable({
                                 </SelectContent>
                             </Select>
 
-                            <div className="flex flex-wrap sm:flex-nowrap items-center gap-2 flex-1 min-w-[260px]">
+                            <div className="flex flex-wrap sm:flex-nowrap items-center gap-2">
                                 <span className={`text-xs shrink-0 ${datePreset === 'custom' ? 'text-gray-500' : 'text-gray-300'}`}>From</span>
                                 <Input
                                     type="date"
-                                    className="h-10 flex-1 min-w-0 bg-white px-2 text-sm text-gray-700 border border-gray-300 disabled:bg-gray-100 disabled:text-gray-400"
+                                    className="h-10 w-40 bg-white px-2 text-sm text-gray-700 border border-gray-300 disabled:bg-gray-100 disabled:text-gray-400"
                                     value={searchStartDate}
                                     disabled={datePreset !== 'custom'}
                                     onChange={(e) => setSearchStartDate(e.target.value)}
@@ -736,7 +735,7 @@ export function AdminContentTable({
                                 <span className={`text-xs shrink-0 ${datePreset === 'custom' ? 'text-gray-500' : 'text-gray-300'}`}>To</span>
                                 <Input
                                     type="date"
-                                    className="h-10 flex-1 min-w-0 bg-white px-2 text-sm text-gray-700 border border-gray-300 disabled:bg-gray-100 disabled:text-gray-400"
+                                    className="h-10 w-40 bg-white px-2 text-sm text-gray-700 border border-gray-300 disabled:bg-gray-100 disabled:text-gray-400"
                                     value={searchEndDate}
                                     disabled={datePreset !== 'custom'}
                                     onChange={(e) => setSearchEndDate(e.target.value)}
