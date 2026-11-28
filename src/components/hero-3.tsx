@@ -159,7 +159,7 @@ const MarqueeCard: React.FC<MarqueeCardProps> = ({ item, singleRow }) => {
   const cardContent = (
     <div
       className={cn(
-        "group/card relative shrink-0 overflow-hidden rounded-2xl border border-gray-200/90 bg-gray-100 shadow-sm transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:border-brand-primary/40 transform-gpu",
+        "group/card relative shrink-0 overflow-hidden rounded-2xl border border-gray-200/90 bg-gray-100 shadow-sm transition-[box-shadow,border-color] duration-300 hover:shadow-xl hover:border-brand-primary/40",
         singleRow
           ? "h-56 w-80 sm:h-64 sm:w-96 md:h-72 md:w-[28rem]"
           : "h-44 w-64 sm:h-52 sm:w-76 md:h-56 md:w-84"
@@ -459,15 +459,9 @@ export const AnimatedMarqueeHero: React.FC<AnimatedMarqueeHeroProps> = ({
         }
         .animate-marquee-row1 {
           animation: marquee-scroll-left var(--duration-row1-mobile, 45s) linear infinite;
-          will-change: transform;
-          transform: translate3d(0, 0, 0);
-          backface-visibility: hidden;
         }
         .animate-marquee-row2 {
           animation: marquee-scroll-right var(--duration-row2-mobile, 48s) linear infinite;
-          will-change: transform;
-          transform: translate3d(0, 0, 0);
-          backface-visibility: hidden;
         }
         @media (min-width: 768px) {
           .animate-marquee-row1 {
